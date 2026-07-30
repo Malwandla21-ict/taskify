@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sale Item Details — Taskify</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <section class="section">
+    <a href="./sales.html" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Sales</a>
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-shopping-bag" aria-hidden="true"></i> Sale Item Details</h2>
+        <p>Review the item before contacting the seller</p>
+      </div>
+    </div>
+    <div id="saleDetailsContainer" class="form-panel">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div><h3>Loading item…</h3></div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/sale-details.js"></script>
+</body>
+</html>

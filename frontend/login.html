@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Sign In</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-container">
+    <div class="auth-left">
+      <div>
+        <div class="logo-row">
+          <img src="./assets/logo/T_Transparent.png" alt="Taskify" class="taskify-logo" />
+          <div class="logo-text">Taskify</div>
+        </div>
+      </div>
+      <div>
+        <h1>Your campus.<br />Your marketplace.</h1>
+        <p>Connect with fellow UMP students for academic help, services, and campus essentials.</p>
+        <div class="stats-grid">
+          <div class="stat-card"><h2>4,200+</h2><p>Active Students</p></div>
+          <div class="stat-card"><h2>1,800+</h2><p>Services Listed</p></div>
+          <div class="stat-card"><h2>9,400+</h2><p>Tasks Completed</p></div>
+          <div class="stat-card"><h2>4.8★</h2><p>Avg. Rating</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="auth-right">
+      <h1>Welcome back</h1>
+      <p class="auth-subtitle">Sign in to your UMP student account</p>
+      <button class="secondary-button" style="margin-bottom:8px;">
+        <i class="ti ti-school" aria-hidden="true"></i> Login with UMP Student Account
+      </button>
+      <div class="divider-row">or use student email</div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email"><i class="ti ti-mail" aria-hidden="true"></i> Student Email</label>
+          <input type="email" id="email" placeholder="s123456789@ump.ac.za" required />
+        </div>
+        <div class="form-group">
+          <label for="password"><i class="ti ti-lock" aria-hidden="true"></i> Password</label>
+          <div class="password-input-wrap">
+            <input type="password" id="password" placeholder="Enter your password" required />
+            <button type="button" class="password-toggle" data-target="password" aria-label="Show password">
+              <i class="ti ti-eye" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="auth-links-row">
+          <label class="checkbox-row" style="margin:0;">
+            <input type="checkbox" /> Remember me
+          </label>
+          <a href="#">Forgot password?</a>
+        </div>
+        <button type="submit" class="primary-button">
+          <i class="ti ti-login" aria-hidden="true"></i> Sign In
+        </button>
+      </form>
+      <div class="auth-footer">
+        New to Taskify? <a href="./register.html">Create account</a>
+      </div>
+      <p id="loginMessage" style="margin-top:14px;text-align:center;font-weight:600;font-size:13px;"></p>
+    </div>
+  </div>
+</div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/login.js"></script>
+</body>
+</html>

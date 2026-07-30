@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Tasks</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Task Marketplace</div>
+    <h1>Post or accept student tasks</h1>
+    <p>Create tasks step-by-step and connect with verified UMP students.</p>
+    <div class="hero-tags">
+      <a href="./academic.html" class="hero-tag"><i class="ti ti-school" aria-hidden="true"></i> Academic Tasks</a>
+      <a href="./general.html"  class="hero-tag"><i class="ti ti-building-store" aria-hidden="true"></i> General Tasks</a>
+    </div>
+  </div>
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-plus" aria-hidden="true"></i> Create a Task</h2>
+        <p>Use the guided form to post a clear task</p>
+      </div>
+    </div>
+    <div class="form-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span id="taskStepText" class="step-label">Step 1 of 3</span>
+        <div style="display:flex;gap:5px;">
+          <div class="step-dot active" id="tDot1"></div>
+          <div class="step-dot" id="tDot2"></div>
+          <div class="step-dot" id="tDot3"></div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="taskProgressFill" style="width:33%;"></div>
+      </div>
+      <form id="taskForm">
+        <div class="task-step" id="taskStep1">
+          <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Task Basics</h2>
+          <p class="auth-subtitle">Start with the main task information</p>
+          <div class="form-group">
+            <label for="title"><i class="ti ti-pencil" aria-hidden="true"></i> Task Title</label>
+            <input type="text" id="title" placeholder="e.g. Need help with Java assignment" required />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+              <input type="text" id="category" placeholder="e.g. Programming, Tutoring" required />
+            </div>
+            <div class="form-group">
+              <label for="taskSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
+              <select id="taskSection" required>
+                <option value="General">General</option>
+                <option value="Academic">Academic</option>
+              </select>
+            </div>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="urgent" />
+            <i class="ti ti-flame" style="color:var(--ump-red);" aria-hidden="true"></i> Mark as urgent
+          </label>
+          <button type="button" class="primary-button" id="nextTaskStep2" style="margin-top:10px;">
+            Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="task-step" id="taskStep2" style="display:none;">
+          <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Task Details</h2>
+          <p class="auth-subtitle">Explain what needs to be done</p>
+          <div class="form-group">
+            <label for="description"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
+            <textarea id="description" placeholder="Describe the task clearly..." required></textarea>
+          </div>
+          <div class="form-group">
+            <label for="location"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
+            <input type="text" id="location" placeholder="e.g. UMP Library, Mbombela Campus" required />
+          </div>
+          <div class="form-row">
+            <button type="button" class="secondary-button" id="backTaskStep1">
+              <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+            </button>
+            <button type="button" class="primary-button" id="nextTaskStep3">
+              Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <div class="task-step" id="taskStep3" style="display:none;">
+          <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Budget &amp; Confirm</h2>
+          <p class="auth-subtitle">Set your budget and review before posting</p>
+          <div class="form-group">
+            <label for="price"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Budget (R)</label>
+            <input type="number" id="price" placeholder="e.g. 150" required />
+          </div>
+          <div class="form-group">
+            <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
+            <div class="upload-area" id="taskUploadArea">
+              <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
+              <div class="upload-area-label">Click or drag images here</div>
+              <div class="upload-area-hint">JPEG, PNG or WebP · max 5MB each</div>
+              <div class="upload-counter">0/5 images</div>
+            </div>
+            <div class="upload-preview-grid" id="taskPreviewGrid"></div>
+          </div>
+          <div id="taskPreview" class="form-panel" style="box-shadow:none;background:var(--background);margin-bottom:18px;">
+            <p style="color:var(--muted);font-size:13px;">Preview will appear here.</p>
+          </div>
+          <div class="form-row">
+            <button type="button" class="secondary-button" id="backTaskStep2">
+              <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+            </button>
+            <button type="submit" class="primary-button">
+              <i class="ti ti-send" aria-hidden="true"></i> Post Task
+            </button>
+          </div>
+        </div>
+      </form>
+      <p id="taskMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-list-search" aria-hidden="true"></i> Available Tasks</h2>
+        <p>Browse tasks posted by students</p>
+      </div>
+    </div>
+    <div class="filters-row">
+      <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+      <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
+      <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
+    </div>
+    <div id="tasksContainer" class="marketplace-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+        <h3>Loading tasks…</h3>
+      </div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-history" aria-hidden="true"></i> My Task History</h2>
+        <p>Reviews only appear after a task is completed</p>
+      </div>
+    </div>
+    <div id="historyContainer" class="marketplace-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="ti ti-clock" aria-hidden="true"></i></div>
+        <h3>No history yet</h3>
+        <p>Completed tasks will show here.</p>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="overlay"></div>
+<div id="toastContainer" class="toast-container"></div>
+<div id="reviewModal">
+  <h2><i class="ti ti-star" aria-hidden="true"></i> Leave a Review</h2>
+  <form id="reviewForm">
+    <input type="hidden" id="reviewTaskId" />
+    <div class="form-group">
+      <label><i class="ti ti-star" aria-hidden="true"></i> Rating (1–5)</label>
+      <input type="number" id="rating" min="1" max="5" required />
+    </div>
+    <div class="form-group">
+      <label><i class="ti ti-message" aria-hidden="true"></i> Comment</label>
+      <textarea id="comment"></textarea>
+    </div>
+    <div class="form-row">
+      <button type="button" id="closeReviewModal" class="secondary-button">
+        <i class="ti ti-x" aria-hidden="true"></i> Cancel
+      </button>
+      <button type="submit" class="primary-button">
+        <i class="ti ti-check" aria-hidden="true"></i> Submit Review
+      </button>
+    </div>
+  </form>
+  <p id="reviewMessage" style="margin-top:12px;font-size:13px;font-weight:600;"></p>
+</div>
+<div id="profileModal">
+  <h2><i class="ti ti-user" aria-hidden="true"></i> User Trust Profile</h2>
+  <div id="profileContent"><p>Loading profile...</p></div>
+  <button type="button" id="closeProfileModal" class="secondary-button" style="margin-top:14px;">
+    <i class="ti ti-x" aria-hidden="true"></i> Close
+  </button>
+</div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/tasks.js"></script>
+</body>
+</html>

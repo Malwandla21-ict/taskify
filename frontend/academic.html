@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Academic Marketplace</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body" data-section="Academic">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-school" aria-hidden="true"></i> Academic Marketplace</div>
+    <h1>Academic help, tools &amp;<br>study essentials</h1>
+    <p>Find tutoring, programming help, textbooks, toolkits, uniforms, safety boots and other academic resources.</p>
+    <div class="hero-search">
+      <input type="text" id="sectionSearch" placeholder="Search academic tasks, rentals or items..." />
+      <button type="button" id="sectionSearchButton">
+        <i class="ti ti-search" aria-hidden="true"></i> Search
+      </button>
+    </div>
+    <div class="hero-tags">
+      <a href="./tasks.html"     class="hero-tag"><i class="ti ti-plus" aria-hidden="true"></i> Post Academic Task</a>
+      <a href="./equipment.html" class="hero-tag"><i class="ti ti-package" aria-hidden="true"></i> List Equipment</a>
+      <a href="./sales.html"     class="hero-tag"><i class="ti ti-tag" aria-hidden="true"></i> Sell Material</a>
+    </div>
+  </div>
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-layout-grid" aria-hidden="true"></i> Academic Categories</h2>
+        <p>Quick access to common academic needs</p>
+      </div>
+    </div>
+    <div class="categories-grid">
+      <div class="category-card">
+        <div class="category-icon blue"><i class="ti ti-book" aria-hidden="true"></i></div>
+        <h3>Textbooks</h3><p>Buy or sell books</p>
+      </div>
+      <div class="category-card">
+        <div class="category-icon gold"><i class="ti ti-tool" aria-hidden="true"></i></div>
+        <h3>Toolkits</h3><p>Practical tools</p>
+      </div>
+      <div class="category-card">
+        <div class="category-icon green"><i class="ti ti-school" aria-hidden="true"></i></div>
+        <h3>Tutoring</h3><p>Academic support</p>
+      </div>
+      <div class="category-card">
+        <div class="category-icon navy"><i class="ti ti-code" aria-hidden="true"></i></div>
+        <h3>Programming</h3><p>Coding help</p>
+      </div>
+      <div class="category-card">
+        <div class="category-icon red"><i class="ti ti-shirt" aria-hidden="true"></i></div>
+        <h3>Uniforms</h3><p>Campus attire</p>
+      </div>
+      <div class="category-card">
+        <div class="category-icon default"><i class="ti ti-boot" aria-hidden="true"></i></div>
+        <h3>Safety Boots</h3><p>Practical workwear</p>
+      </div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-clipboard-list" aria-hidden="true"></i> Academic Tasks</h2>
+        <p>Academic help requested by students</p>
+      </div>
+      <a href="./tasks.html" class="view-all-link">View all tasks <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="sectionTasksContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div><h3>Loading tasks…</h3></div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-package" aria-hidden="true"></i> Academic Rentals</h2>
+        <p>Equipment useful for study and practicals</p>
+      </div>
+      <a href="./equipment.html" class="view-all-link">View rentals <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="sectionEquipmentContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-package" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-shopping-bag" aria-hidden="true"></i> Academic Materials for Sale</h2>
+        <p>Textbooks, uniforms, toolkits and study materials</p>
+      </div>
+      <a href="./sales.html" class="view-all-link">View sales <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="sectionSalesContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/section-marketplace.js"></script>
+</body>
+</html>

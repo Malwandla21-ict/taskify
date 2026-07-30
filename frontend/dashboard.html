@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Home</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <!-- HERO -->
+  <section class="hero-section">
+    <div class="hero-content">
+      <div class="hero-welcome">
+        <i class="ti ti-wave-sine" aria-hidden="true"></i>
+        Welcome back, <span id="heroName" style="margin-left:3px;">Student</span>
+      </div>
+      <h1>Your campus.<br>Your community.</h1>
+      <p class="hero-sub">Connect. Help. Earn. All in one place.</p>
+      <div class="hero-actions">
+        <a href="./academic.html" class="hero-btn-primary">
+          <i class="ti ti-school" aria-hidden="true"></i> Browse Academic
+        </a>
+        <a href="./general.html" class="hero-btn-secondary">
+          <i class="ti ti-building-store" aria-hidden="true"></i> Browse General
+        </a>
+      </div>
+    </div>
+    <div class="hero-image-side">
+      <img src="./assets/images/ump-gate.png" alt="UMP Campus" />
+      <div class="hero-image-overlay"></div>
+    </div>
+  </section>
+  <!-- STATS BAR -->
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-icon green">
+        <i class="ti ti-clipboard-check" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div class="hero-stat-value" id="statTasks">—</div>
+        <div class="hero-stat-label">Active Tasks</div>
+      </div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-icon blue">
+        <i class="ti ti-package" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div class="hero-stat-value" id="statRentals">—</div>
+        <div class="hero-stat-label">Rentals Booked</div>
+      </div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-icon gold">
+        <i class="ti ti-shopping-cart" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div class="hero-stat-value" id="statSales">—</div>
+        <div class="hero-stat-label">Items for Sale</div>
+      </div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-icon red">
+        <i class="ti ti-star" aria-hidden="true"></i>
+      </div>
+      <div>
+        <div class="hero-stat-value" id="statRating">—</div>
+        <div class="hero-stat-label">Your Rating</div>
+      </div>
+    </div>
+  </div>
+  <!-- MARKETPLACE BLOCKS -->
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-layout-grid" aria-hidden="true"></i> Explore Marketplace</h2>
+        <p>Everything you need on campus</p>
+      </div>
+    </div>
+    <div class="section-marketplace-grid">
+      <a href="./academic.html" class="section-block-card green" style="text-decoration:none;">
+        <div>
+          <div class="section-block-icon"><i class="ti ti-school" aria-hidden="true"></i></div>
+          <h3>Academic</h3>
+          <p>Textbooks, tutoring, toolkits and more.</p>
+        </div>
+        <span class="explore-link"><i class="ti ti-arrow-right" aria-hidden="true"></i> Explore Academic</span>
+      </a>
+      <a href="./general.html" class="section-block-card blue" style="text-decoration:none;">
+        <div>
+          <div class="section-block-icon"><i class="ti ti-building-store" aria-hidden="true"></i></div>
+          <h3>General</h3>
+          <p>Services, deliveries, electronics and more.</p>
+        </div>
+        <span class="explore-link"><i class="ti ti-arrow-right" aria-hidden="true"></i> Explore General</span>
+      </a>
+      <a href="./equipment.html" class="section-block-card gold" style="text-decoration:none;">
+        <div>
+          <div class="section-block-icon"><i class="ti ti-camera" aria-hidden="true"></i></div>
+          <h3>Rentals</h3>
+          <p>Equipment, devices and more to rent.</p>
+        </div>
+        <span class="explore-link" style="color:var(--ump-navy);"><i class="ti ti-arrow-right" aria-hidden="true"></i> Explore Rentals</span>
+      </a>
+      <a href="./sales.html" class="section-block-card red" style="text-decoration:none;">
+        <div>
+          <div class="section-block-icon"><i class="ti ti-tag" aria-hidden="true"></i></div>
+          <h3>Sales</h3>
+          <p>Buy and sell items with students.</p>
+        </div>
+        <span class="explore-link"><i class="ti ti-arrow-right" aria-hidden="true"></i> Explore Sales</span>
+      </a>
+    </div>
+  </section>
+  <!-- FEATURED TASKS -->
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-clipboard-list" aria-hidden="true"></i> Featured Tasks</h2>
+        <p>Recently posted task opportunities</p>
+      </div>
+      <a href="./tasks.html" class="view-all-link">
+        View all <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+    <div id="featuredTasksContainer" class="marketplace-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+        <h3>Loading tasks…</h3>
+      </div>
+    </div>
+  </section>
+  <!-- FEATURED EQUIPMENT -->
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-package" aria-hidden="true"></i> Popular Rentals</h2>
+        <p>Available equipment on campus</p>
+      </div>
+      <a href="./equipment.html" class="view-all-link">
+        View all <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </a>
+    </div>
+    <div id="featuredEquipmentContainer" class="marketplace-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="ti ti-package" aria-hidden="true"></i></div>
+        <h3>Loading rentals…</h3>
+      </div>
+    </div>
+  </section>
+  <!-- CTA BANNER -->
+  <section class="section" style="padding-top:0;">
+    <div class="cta-banner">
+      <div style="position:relative;z-index:2;">
+        <h2>Safe, trusted &<br>campus-focused</h2>
+        <p>Taskify focuses on verified student interaction, reviews, moderation and safer campus transactions.</p>
+        <div class="cta-tags">
+          <div class="cta-tag"><i class="ti ti-shield-check" aria-hidden="true"></i> Student Accounts</div>
+          <div class="cta-tag"><i class="ti ti-star" aria-hidden="true"></i> Reviews</div>
+          <div class="cta-tag"><i class="ti ti-flag" aria-hidden="true"></i> Reporting</div>
+        </div>
+      </div>
+      <div class="cta-actions">
+        <a href="./tasks.html" class="cta-btn-white">
+          <i class="ti ti-plus" aria-hidden="true"></i> Post a Task
+        </a>
+        <a href="./equipment.html" class="cta-btn-outline">
+          <i class="ti ti-package" aria-hidden="true"></i> Rent Equipment
+        </a>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/dashboard.js"></script>
+</body>
+</html>

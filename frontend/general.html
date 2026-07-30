@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — General Marketplace</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-building-store" aria-hidden="true"></i> General Marketplace</div>
+    <h1>Campus services, rentals &amp; items</h1>
+    <p>Browse general campus tasks, rental items and student sales that are not strictly academic.</p>
+    <div class="hero-search">
+      <input type="text" id="generalSearch" placeholder="Search delivery, electronics, services..." />
+      <button type="button" id="generalSearchButton">
+        <i class="ti ti-search" aria-hidden="true"></i> Search
+      </button>
+    </div>
+    <div class="hero-tags">
+      <a href="./tasks.html"     class="hero-tag"><i class="ti ti-plus" aria-hidden="true"></i> Post General Task</a>
+      <a href="./equipment.html" class="hero-tag"><i class="ti ti-package" aria-hidden="true"></i> List Rental</a>
+      <a href="./sales.html"     class="hero-tag"><i class="ti ti-tag" aria-hidden="true"></i> Sell Item</a>
+    </div>
+  </div>
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-layout-grid" aria-hidden="true"></i> Popular Categories</h2>
+        <p>Quick access to common marketplace needs</p>
+      </div>
+    </div>
+    <div class="categories-grid">
+      <div class="category-card"><div class="category-icon blue"><i class="ti ti-device-mobile" aria-hidden="true"></i></div><h3>Electronics</h3><p>Phones, chargers, gadgets</p></div>
+      <div class="category-card"><div class="category-icon green"><i class="ti ti-bike" aria-hidden="true"></i></div><h3>Delivery</h3><p>Campus errands</p></div>
+      <div class="category-card"><div class="category-icon navy"><i class="ti ti-printer" aria-hidden="true"></i></div><h3>Printing</h3><p>Print and copy help</p></div>
+      <div class="category-card"><div class="category-icon gold"><i class="ti ti-bed" aria-hidden="true"></i></div><h3>Room Essentials</h3><p>Student living items</p></div>
+      <div class="category-card"><div class="category-icon red"><i class="ti ti-camera" aria-hidden="true"></i></div><h3>Camera Rentals</h3><p>Photos and events</p></div>
+      <div class="category-card"><div class="category-icon default"><i class="ti ti-handshake" aria-hidden="true"></i></div><h3>General Services</h3><p>Student-to-student help</p></div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div><h2><i class="ti ti-clipboard-list" aria-hidden="true"></i> General Tasks</h2><p>Campus services requested by students</p></div>
+      <a href="./tasks.html" class="view-all-link">View all <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="generalTasksContainer" class="marketplace-grid"><div class="empty-state"><div class="empty-state-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div><h3>Loading tasks…</h3></div></div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div><h2><i class="ti ti-package" aria-hidden="true"></i> General Rentals</h2><p>Equipment and items available for rent</p></div>
+      <a href="./equipment.html" class="view-all-link">View rentals <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="generalEquipmentContainer" class="marketplace-grid"><div class="empty-state"><div class="empty-state-icon"><i class="ti ti-package" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div></div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div><h2><i class="ti ti-shopping-bag" aria-hidden="true"></i> Items for Sale</h2><p>Browse items sold by students</p></div>
+      <a href="./sales.html" class="view-all-link">View sales <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="generalSalesContainer" class="marketplace-grid"><div class="empty-state"><div class="empty-state-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div><h3>Loading items…</h3></div></div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/section-marketplace.js"></script>
+</body>
+</html>

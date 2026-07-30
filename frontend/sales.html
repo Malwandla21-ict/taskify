@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Sales Marketplace</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Sales Marketplace</div>
+    <h1>Buy and sell campus essentials</h1>
+    <p>Sell textbooks, uniforms, toolkits, calculators, safety boots and other student essentials.</p>
+    <div class="hero-search">
+      <input type="text" id="salesSearch" placeholder="Search textbooks, uniforms, toolkits..." />
+      <button type="button" id="salesSearchButton"><i class="ti ti-search" aria-hidden="true"></i> Search</button>
+    </div>
+  </div>
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-plus" aria-hidden="true"></i> Sell an Item</h2>
+        <p>Create a listing for academic or general student items</p>
+      </div>
+    </div>
+    <div class="form-panel">
+      <form id="salesForm">
+        <div class="form-group">
+          <label for="salesTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Item Title</label>
+          <input type="text" id="salesTitle" placeholder="e.g. Engineering Toolkit" required />
+        </div>
+        <div class="form-group">
+          <label for="salesDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
+          <textarea id="salesDescription" placeholder="Describe the item condition, usage and what's included..." required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="salesCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+            <input type="text" id="salesCategory" placeholder="Textbook, Uniform, Toolkit" required />
+          </div>
+          <div class="form-group">
+            <label for="salesSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
+            <select id="salesSection" required>
+              <option value="Academic">Academic</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="salesPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Price (R)</label>
+            <input type="number" id="salesPrice" placeholder="e.g. 450" required />
+          </div>
+          <div class="form-group">
+            <label for="salesCondition"><i class="ti ti-star" aria-hidden="true"></i> Condition</label>
+            <select id="salesCondition">
+              <option value="New">New</option>
+              <option value="Excellent">Excellent</option>
+              <option value="Good" selected>Good</option>
+              <option value="Fair">Fair</option>
+              <option value="Used">Used</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="salesLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
+          <input type="text" id="salesLocation" placeholder="e.g. Mbombela Campus" required />
+        </div>
+
+        <div class="form-group">
+          <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
+          <div class="upload-area" id="salesUploadArea">
+            <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
+            <div class="upload-area-label">Click or drag images here</div>
+            <div class="upload-area-hint">JPEG, PNG or WebP · max 5MB each</div>
+            <div class="upload-counter">0/5 images</div>
+          </div>
+          <div class="upload-preview-grid" id="salesPreviewGrid"></div>
+        </div>
+
+        <button type="submit" class="primary-button">
+          <i class="ti ti-send" aria-hidden="true"></i> Publish Item
+        </button>
+      </form>
+      <p id="salesMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-list-search" aria-hidden="true"></i> Available Items</h2>
+        <p>Browse items students are selling</p>
+      </div>
+    </div>
+    <div class="filters-row">
+      <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+      <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
+      <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
+      <select id="categoryFilter" style="max-width:190px;padding:7px 14px;border-radius:999px;border:1.5px solid var(--border);font-size:12px;font-weight:600;background:white;font-family:inherit;">
+        <option value="All">All Categories</option>
+      </select>
+    </div>
+    <div id="salesContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-list" aria-hidden="true"></i> My Listings</h2>
+        <p>Manage items you listed for sale</p>
+      </div>
+    </div>
+    <div id="mySalesContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-tag" aria-hidden="true"></i></div><h3>No listings yet</h3></div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/sales.js"></script>
+</body>
+</html>

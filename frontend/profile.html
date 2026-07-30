@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Profile</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <section class="section" style="padding-bottom:0;">
+    <div id="profileMainCard">
+      <div class="profile-header-card">
+        <div class="profile-avatar-large"><i class="ti ti-user" aria-hidden="true"></i></div>
+        <div class="profile-header-info">
+          <p style="opacity:0.65;font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading profile…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:16px;padding-bottom:0;">
+    <div class="profile-stats-row">
+      <div class="profile-stat">
+        <div class="profile-stat-value" id="pStatTasks">—</div>
+        <div class="profile-stat-label"><i class="ti ti-clipboard-check" aria-hidden="true"></i> Tasks Completed</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" id="pStatRating">—</div>
+        <div class="profile-stat-label"><i class="ti ti-star" aria-hidden="true"></i> Trust Rating</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" id="pStatRentals">—</div>
+        <div class="profile-stat-label"><i class="ti ti-package" aria-hidden="true"></i> Rentals</div>
+      </div>
+      <div class="profile-stat">
+        <div class="profile-stat-value" id="pStatListings">—</div>
+        <div class="profile-stat-label"><i class="ti ti-tag" aria-hidden="true"></i> Listings</div>
+      </div>
+    </div>
+  </section>
+  <section class="section" style="padding-bottom:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-bolt" aria-hidden="true"></i> Quick Actions</h2>
+        <p>Manage your Taskify activity</p>
+      </div>
+    </div>
+    <div class="categories-grid">
+      <a href="./tasks.html" class="category-card">
+        <div class="category-icon green"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+        <h3>Task Marketplace</h3><p>Post or accept tasks</p>
+      </a>
+      <a href="./equipment.html" class="category-card">
+        <div class="category-icon blue"><i class="ti ti-package" aria-hidden="true"></i></div>
+        <h3>Equipment Rentals</h3><p>List or book equipment</p>
+      </a>
+      <a href="./sales.html" class="category-card">
+        <div class="category-icon gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>
+        <h3>Sales</h3><p>Buy and sell items</p>
+      </a>
+      <a href="./dashboard.html" class="category-card">
+        <div class="category-icon navy"><i class="ti ti-home" aria-hidden="true"></i></div>
+        <h3>Dashboard</h3><p>Return to overview</p>
+      </a>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-star" aria-hidden="true"></i> Recent Reviews</h2>
+        <p>What other students say about you</p>
+      </div>
+    </div>
+    <div id="recentReviewsContainer" class="marketplace-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="ti ti-star" aria-hidden="true"></i></div>
+        <h3>No reviews yet</h3>
+        <p>Reviews appear here after completed tasks.</p>
+      </div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/profile.js"></script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Create Account</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-container" style="max-width:660px;grid-template-columns:1fr;">
+    <div class="auth-right">
+      <div class="logo-row" style="margin-bottom:26px;">
+        <img src="./assets/logo/ump logoT.png" alt="UMP Logo" class="ump-logo" />
+        <div class="logo-text" style="font-size:24px;">Taskify</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span id="stepText" class="step-label">Step 1 of 3</span>
+        <div style="display:flex;gap:5px;">
+          <div class="step-dot active" id="dot1"></div>
+          <div class="step-dot" id="dot2"></div>
+          <div class="step-dot" id="dot3"></div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:33%;"></div>
+      </div>
+      <form id="registerForm">
+        <!-- STEP 1: Personal Details -->
+        <div class="register-step" id="step1">
+          <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Create your account</h1>
+          <p class="auth-subtitle">Enter your UMP details to get started</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName"><i class="ti ti-user" aria-hidden="true"></i> First Name</label>
+              <input type="text" id="firstName" placeholder="Sipho" required />
+            </div>
+            <div class="form-group">
+              <label for="lastName"><i class="ti ti-user" aria-hidden="true"></i> Last Name</label>
+              <input type="text" id="lastName" placeholder="Ndlovu" required />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="studentNumber"><i class="ti ti-id-badge" aria-hidden="true"></i> Student / Staff Number</label>
+            <input type="text" id="studentNumber" placeholder="s202312345" required />
+          </div>
+          <div class="form-group">
+            <label for="email"><i class="ti ti-mail" aria-hidden="true"></i> UMP Email</label>
+            <input type="email" id="email" placeholder="s202312345@ump.ac.za" required />
+          </div>
+          <div class="form-group">
+            <label for="phoneNumber"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp Number</label>
+            <input type="tel" id="phoneNumber" placeholder="0821234567" required />
+          </div>
+          <button type="button" class="primary-button" id="nextToStep2">
+            Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
+          </button>
+        </div>
+        <!-- STEP 2: Account Type & Academic Details -->
+        <div class="register-step" id="step2" style="display:none;">
+          <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Account type</h1>
+          <p class="auth-subtitle">Tell us who you are at UMP</p>
+          <div class="form-group">
+            <label><i class="ti ti-user-check" aria-hidden="true"></i> I am a</label>
+            <div class="role-grid">
+              <div class="role-option active" data-role="Student">
+                <i class="ti ti-school" aria-hidden="true"></i> Student
+              </div>
+              <div class="role-option" data-role="Staff">
+                <i class="ti ti-building" aria-hidden="true"></i> UMP Staff
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="faculty"><i class="ti ti-building" aria-hidden="true"></i> Faculty / Department</label>
+            <select id="faculty" required>
+              <option value="">Select Faculty / Department</option>
+              <option>Agriculture &amp; Environmental Sciences</option>
+              <option>Economics, Development &amp; Business Sciences</option>
+              <option>Hospitality &amp; Tourism</option>
+              <option>Education</option>
+              <option>ICT</option>
+              <option>Administration</option>
+              <option>Finance</option>
+              <option>Student Affairs</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <!-- Only shown when Student is selected -->
+          <div class="form-group" id="academicYearGroup">
+            <label for="academicYear"><i class="ti ti-calendar" aria-hidden="true"></i> Academic Year</label>
+            <select id="academicYear">
+              <option value="">Select Year</option>
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>Honours</option>
+              <option>Masters</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <button type="button" class="secondary-button" id="backToStep1">
+              <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+            </button>
+            <button type="button" class="primary-button" id="nextToStep3">
+              Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <!-- STEP 3: Security -->
+        <div class="register-step" id="step3" style="display:none;">
+          <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Set your password</h1>
+          <p class="auth-subtitle">Almost done — secure your account</p>
+          <div class="upload-box" id="uploadBox">
+            <i class="ti ti-camera" aria-hidden="true"></i>
+            Upload Photo
+          </div>
+          <div class="form-group">
+            <label for="password"><i class="ti ti-lock" aria-hidden="true"></i> Password</label>
+            <div class="password-input-wrap">
+              <input type="password" id="password" placeholder="Min 6 characters" required />
+              <button type="button" class="password-toggle" data-target="password" aria-label="Show password">
+                <i class="ti ti-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="confirmPassword"><i class="ti ti-lock-check" aria-hidden="true"></i> Confirm Password</label>
+            <div class="password-input-wrap">
+              <input type="password" id="confirmPassword" placeholder="Repeat your password" required />
+              <button type="button" class="password-toggle" data-target="confirmPassword" aria-label="Show confirm password">
+                <i class="ti ti-eye" aria-hidden="true"></i>
+              </button>
+            </div>
+          </div>
+          <label class="checkbox-row">
+            <input type="checkbox" id="termsCheckbox" required />
+            I agree to the Terms &amp; Conditions and Privacy Policy
+          </label>
+          <div class="form-row" style="margin-top:12px;">
+            <button type="button" class="secondary-button" id="backToStep2">
+              <i class="ti ti-arrow-left" aria-hidden="true"></i> Back
+            </button>
+            <button type="submit" class="primary-button" id="createAccountButton">
+              <i class="ti ti-user-plus" aria-hidden="true"></i> Create Account
+            </button>
+          </div>
+        </div>
+      </form>
+      <div class="auth-footer">
+        Already have an account? <a href="./login.html">Sign in</a>
+      </div>
+      <p id="registerMessage" style="margin-top:14px;text-align:center;font-weight:600;font-size:13px;"></p>
+    </div>
+  </div>
+</div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/register.js"></script>
+</body>
+</html>

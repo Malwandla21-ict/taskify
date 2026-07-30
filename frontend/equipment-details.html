@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Equipment Details — Taskify</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <section class="section">
+    <a href="./equipment.html" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Rentals</a>
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-package" aria-hidden="true"></i> Equipment Details</h2>
+        <p>Review rental information before booking</p>
+      </div>
+    </div>
+    <div id="equipmentDetailsContainer" class="form-panel">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-package" aria-hidden="true"></i></div><h3>Loading equipment…</h3></div>
+    </div>
+  </section>
+</div>
+<div id="overlay"></div>
+<div id="toastContainer" class="toast-container"></div>
+<div id="bookingModal">
+  <h2><i class="ti ti-calendar-plus" aria-hidden="true"></i> Book Equipment</h2>
+  <form id="bookingForm">
+    <input type="hidden" id="bookingEquipmentId" />
+    <div class="form-group"><label><i class="ti ti-calendar" aria-hidden="true"></i> Start Date</label><input type="date" id="bookingStartDate" required /></div>
+    <div class="form-group"><label><i class="ti ti-calendar" aria-hidden="true"></i> End Date</label><input type="date" id="bookingEndDate" required /></div>
+    <div class="form-row">
+      <button type="button" id="closeBookingModal" class="secondary-button"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+      <button type="submit" class="primary-button"><i class="ti ti-check" aria-hidden="true"></i> Confirm Booking</button>
+    </div>
+  </form>
+  <p id="bookingMessage" style="margin-top:12px;font-size:13px;font-weight:600;"></p>
+</div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/equipment-details.js"></script>
+</body>
+</html>
