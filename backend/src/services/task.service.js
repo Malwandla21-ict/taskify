@@ -211,9 +211,25 @@ async function getTaskById(taskId) {
   return parseImageUrls(rows[0]);
 }
 
-/* Parse image_urls JSON string → array */
+/*
+  Parse image_urls into a plain JS array, regardless of how the DB driver
+  handed it back to us.
+
+  - If the `image_urls` column is a MySQL JSON type, mysql2 auto-parses it
+    into a real array before we ever see it — in that case we must NOT
+    call JSON.parse() on it again (that would stringify the array via
+    toString(), then fail to parse, and silently get swallowed by the
+    catch block, wiping out the images).
+  - If the column is TEXT/VARCHAR, it comes back as a JSON string and
+    needs JSON.parse() as before.
+*/
 function parseImageUrls(row) {
   if (!row) return row;
+
+  if (Array.isArray(row.image_urls)) {
+    return row; // already parsed by the driver (JSON column)
+  }
+
   try {
     row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
   } catch {
@@ -223,6 +239,7 @@ function parseImageUrls(row) {
 }
 
 module.exports = {
+  deleteTask,
   createTask,
   getAllTasks,
   acceptTask,
@@ -230,3 +247,25 @@ module.exports = {
   cancelTask,
   getUserTaskHistory
 };
+
+async function deleteTask(taskId, userId) {
+  const [taskRows] = await pool.execute(
+    `SELECT id, created_by, status FROM tasks WHERE id = ? LIMIT 1`, [taskId]
+  );
+
+  if (taskRows.length === 0) {
+    const error = new Error("Task not found."); error.statusCode = 404; throw error;
+  }
+
+  const task = taskRows[0];
+
+  if (Number(task.created_by) !== Number(userId)) {
+    const error = new Error("Only the task creator can delete this task."); error.statusCode = 403; throw error;
+  }
+
+  if (["In Progress", "Accepted"].includes(task.status)) {
+    const error = new Error("Cannot delete a task that is accepted or in progress."); error.statusCode = 400; throw error;
+  }
+
+  await pool.execute(`DELETE FROM tasks WHERE id = ?`, [taskId]);
+}

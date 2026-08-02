@@ -115,11 +115,15 @@ function equipmentCard(item) {
         </div>
         <div class="market-footer">
           <div class="market-price">R${item.daily_price} <span>/day</span></div>
-          <div style="display:flex;gap:8px;align-items:center;">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <a href="./equipment-details.html?id=${item.id}" class="market-action-btn">
               <i class="ti ti-eye" aria-hidden="true"></i> View
             </a>
-            ${isOwn ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Yours</div>` : ""}
+            ${isOwn ? `
+              <div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Yours</div>
+              <button class="market-action-btn outline delete-equipment-btn" data-equipment-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+                <i class="ti ti-trash" aria-hidden="true"></i> Delete
+              </button>` : ""}
           </div>
         </div>
       </div>
@@ -132,6 +136,7 @@ function renderEquipment(items) {
   equipmentContainer.innerHTML = filtered.length
     ? filtered.map(equipmentCard).join("")
     : emptyState("ti-package", "No equipment found", "Try a different filter or list your own.");
+  attachDeleteEquipmentEvents();
 }
 
 /* ── History card ── */
@@ -162,6 +167,25 @@ function historyCard(booking) {
           </button>` : ""}
       </div>
     </div>`;
+}
+
+function attachDeleteEquipmentEvents() {
+  document.querySelectorAll(".delete-equipment-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Permanently delete this equipment listing?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/equipment/${btn.dataset.equipmentId}`, "DELETE");
+        showToast("Equipment listing deleted.");
+        await loadEquipment();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i> Delete`;
+      }
+    });
+  });
 }
 
 function attachReturnEquipmentButtonEvents() {

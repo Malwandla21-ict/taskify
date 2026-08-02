@@ -167,6 +167,10 @@ function taskCard(task) {
               <i class="ti ti-eye" aria-hidden="true"></i> View
             </a>
             ${canCancel ? `<button class="market-action-btn outline cancel-task-btn" data-task-id="${task.id}"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>` : ""}
+            ${isOwn && task.status === "Posted" ? `
+              <button class="market-action-btn outline delete-task-btn" data-task-id="${task.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+                <i class="ti ti-trash" aria-hidden="true"></i> Delete
+              </button>` : ""}
           </div>
         </div>
       </div>
@@ -180,7 +184,28 @@ function renderTasks(tasks) {
     ? filtered.map(taskCard).join("")
     : emptyState("ti-clipboard-list", "No tasks found", "Try a different filter or post a new task.");
   attachCancelButtonEvents();
+  attachDeleteTaskEvents();
   attachProfileLinkEvents();
+}
+
+function attachDeleteTaskEvents() {
+  document.querySelectorAll(".delete-task-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Permanently delete this task?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/tasks/${btn.dataset.taskId}`, "DELETE");
+        showToast("Task deleted.");
+        await loadTasks();
+        await loadTaskHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i> Delete`;
+      }
+    });
+  });
 }
 
 /* ── History card ── */

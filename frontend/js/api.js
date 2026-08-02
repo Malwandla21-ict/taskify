@@ -22,3 +22,19 @@ async function apiRequest(endpoint, method = "GET", body = null, token = null) {
 
   return data;
 }
+
+async function apiMultipartRequest(endpoint, method, formData, token = null) {
+  const resolvedToken = token || localStorage.getItem("taskifyToken");
+  const headers = {};
+  if (resolvedToken) headers.Authorization = `Bearer ${resolvedToken}`;
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, { method, headers, body: formData });
+  const contentType = response.headers.get("content-type");
+  if (!contentType || !contentType.includes("application/json")) {
+    throw new Error(`Server error (${response.status}). Is your backend running?`);
+  }
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || "Something went wrong.");
+  return data;
+}

@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const userService = require("../services/user.service");
+const { uploadProfilePhoto } = require("./upload.controller");
 
 async function getUserProfile(req, res, next) {
   try {
@@ -26,6 +27,26 @@ async function getUserProfile(req, res, next) {
   }
 }
 
+async function updateMyProfilePhoto(req, res, next) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "Please choose an image to upload." });
+    }
+
+    const profilePhotoUrl = await uploadProfilePhoto(req.file);
+    const user = await userService.updateProfilePhoto(req.user.id, profilePhotoUrl);
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile photo updated successfully.",
+      data: user
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
-  getUserProfile
+  getUserProfile,
+  updateMyProfilePhoto
 };

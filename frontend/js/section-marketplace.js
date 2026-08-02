@@ -1,12 +1,15 @@
 requireAuth();
 
-const sectionSearch          = document.getElementById("sectionSearch");
-const sectionSearchButton    = document.getElementById("sectionSearchButton");
-const sectionTasksContainer  = document.getElementById("sectionTasksContainer");
-const sectionEquipmentContainer = document.getElementById("sectionEquipmentContainer");
-const sectionSalesContainer  = document.getElementById("sectionSalesContainer");
-
 const pageSection = document.body.dataset.section || "Academic";
+
+/* Support both ID naming conventions:
+   academic.html uses sectionXxxContainer
+   general.html  uses generalXxxContainer */
+const sectionSearch          = document.getElementById("sectionSearch")   || document.getElementById("generalSearch");
+const sectionSearchButton    = document.getElementById("sectionSearchButton") || document.getElementById("generalSearchButton");
+const sectionTasksContainer  = document.getElementById("sectionTasksContainer")  || document.getElementById("generalTasksContainer");
+const sectionEquipmentContainer = document.getElementById("sectionEquipmentContainer") || document.getElementById("generalEquipmentContainer");
+const sectionSalesContainer  = document.getElementById("sectionSalesContainer")  || document.getElementById("generalSalesContainer");
 
 let cachedTasks     = [];
 let cachedEquipment = [];
@@ -23,7 +26,6 @@ function renderAll() {
 
 function getSearch() { return sectionSearch?.value.trim().toLowerCase() || ""; }
 
-/* ── Loaders ── */
 async function loadSectionData() {
   try {
     const [tr, er, sr] = await Promise.all([
@@ -40,8 +42,8 @@ async function loadSectionData() {
   }
 }
 
-/* ── Task card ── */
 function renderSectionTasks() {
+  if (!sectionTasksContainer) return;
   const q        = getSearch();
   const filtered = cachedTasks.filter(t =>
     [t.title, t.description, t.category, t.location].some(f => f?.toLowerCase().includes(q))
@@ -89,8 +91,8 @@ function renderSectionTasks() {
   }).join("");
 }
 
-/* ── Equipment card ── */
 function renderSectionEquipment() {
+  if (!sectionEquipmentContainer) return;
   const q        = getSearch();
   const filtered = cachedEquipment.filter(i =>
     [i.name, i.description, i.category].some(f => f?.toLowerCase().includes(q))
@@ -137,8 +139,8 @@ function renderSectionEquipment() {
   }).join("");
 }
 
-/* ── Sales card ── */
 function renderSectionSales() {
+  if (!sectionSalesContainer) return;
   const q        = getSearch();
   const filtered = cachedSales.filter(i =>
     [i.title, i.description, i.category, i.location].some(f => f?.toLowerCase().includes(q))
@@ -178,7 +180,7 @@ function renderSectionSales() {
           </div>
           <div class="market-footer">
             <div class="market-price">R${item.price}</div>
-            <a href="${waLink}" target="_blank" class="market-action-btn">
+            <a href="${waLink}" target="_blank" class="market-action-btn" style="background:var(--ump-green);">
               <i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp
             </a>
           </div>

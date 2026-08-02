@@ -1,8 +1,25 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
 
+/*
+  Parse image_urls into a plain JS array, regardless of how the DB driver
+  handed it back to us.
+
+  - If the `image_urls` column is a MySQL JSON type, mysql2 auto-parses it
+    into a real array before we ever see it — in that case we must NOT
+    call JSON.parse() on it again (that would stringify the array via
+    toString(), then fail to parse, and silently get swallowed by the
+    catch block, wiping out the images).
+  - If the column is TEXT/VARCHAR, it comes back as a JSON string and
+    needs JSON.parse() as before.
+*/
 function parseImageUrls(row) {
   if (!row) return row;
+
+  if (Array.isArray(row.image_urls)) {
+    return row; // already parsed by the driver (JSON column)
+  }
+
   try {
     row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
   } catch {
@@ -181,9 +198,32 @@ async function getEquipmentById(equipmentId) {
 }
 
 module.exports = {
+  deleteEquipment,
   createEquipment,
   getAllAvailableEquipment,
   bookEquipment,
   returnEquipment,
   getEquipmentHistory
 };
+
+async function deleteEquipment(equipmentId, userId) {
+  const [rows] = await pool.execute(
+    `SELECT id, owner_id, is_available FROM equipment WHERE id = ? LIMIT 1`, [equipmentId]
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Equipment not found."); error.statusCode = 404; throw error;
+  }
+
+  const item = rows[0];
+
+  if (Number(item.owner_id) !== Number(userId)) {
+    const error = new Error("Only the owner can delete this listing."); error.statusCode = 403; throw error;
+  }
+
+  if (!item.is_available) {
+    const error = new Error("Cannot delete equipment that is currently booked."); error.statusCode = 400; throw error;
+  }
+
+  await pool.execute(`DELETE FROM equipment WHERE id = ?`, [equipmentId]);
+}

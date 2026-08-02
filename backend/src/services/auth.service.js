@@ -30,7 +30,7 @@ function generateToken(user) {
   );
 }
 
-async function registerUser({ fullName, email, phoneNumber, password }) {
+async function registerUser({ fullName, email, phoneNumber, password, profilePhotoUrl = null }) {
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
@@ -65,15 +65,17 @@ async function registerUser({ fullName, email, phoneNumber, password }) {
         email,
         phone_number,
         password_hash,
+        profile_photo_url,
         role
       )
-      VALUES (?, ?, ?, ?, 'user')
+      VALUES (?, ?, ?, ?, ?, 'user')
     `,
     [
       fullName.trim(),
       normalizedEmail,
       normalizedPhone,
-      hashedPassword
+      hashedPassword,
+      profilePhotoUrl
     ]
   );
 
@@ -84,6 +86,7 @@ async function registerUser({ fullName, email, phoneNumber, password }) {
         full_name,
         email,
         phone_number,
+        profile_photo_url AS profilePhoto,
         role,
         rating_average,
         total_reviews
@@ -113,6 +116,7 @@ async function loginUser({ email, password }) {
         full_name,
         email,
         phone_number,
+        profile_photo_url AS profilePhoto,
         password_hash,
         role,
         rating_average,

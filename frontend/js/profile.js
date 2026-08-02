@@ -6,6 +6,7 @@ const pStatTasks    = document.getElementById("pStatTasks");
 const pStatRating   = document.getElementById("pStatRating");
 const pStatRentals  = document.getElementById("pStatRentals");
 const pStatListings = document.getElementById("pStatListings");
+const profilePhotoInput = document.getElementById("profilePhotoInput");
 
 async function loadProfile() {
   try {
@@ -16,7 +17,9 @@ async function loadProfile() {
     const initials = avatarInitials(profile.full_name);
     profileMainCard.innerHTML = `
       <div class="profile-header-card">
-        <div class="profile-avatar-large">${initials}</div>
+        <button type="button" class="profile-avatar-large" id="changeProfilePhoto" aria-label="Change profile photo" title="Change profile photo" style="cursor:pointer;overflow:hidden;position:relative;">
+          ${profile.profilePhoto ? `<img src="${profile.profilePhoto}" alt="${profile.full_name}'s profile photo" />` : initials}
+        </button>
         <div class="profile-header-info">
           <h2>${profile.full_name}</h2>
           <p>
@@ -42,6 +45,34 @@ async function loadProfile() {
     showToast(err.message, "error");
   }
 }
+
+profilePhotoInput?.addEventListener("change", async () => {
+  const file = profilePhotoInput.files?.[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    showToast("Choose a JPEG, PNG or WebP image smaller than 5 MB.", "error");
+    profilePhotoInput.value = "";
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("profilePhoto", file);
+  try {
+    const response = await apiMultipartRequest("/users/me/profile-photo", "PATCH", formData);
+    const user = { ...currentUser, ...response.data };
+    localStorage.setItem("taskifyUser", JSON.stringify(user));
+    showToast("Profile photo updated.");
+    await loadProfile();
+  } catch (error) {
+    showToast(error.message, "error");
+  } finally {
+    profilePhotoInput.value = "";
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest("#changeProfilePhoto")) profilePhotoInput?.click();
+});
 
 function renderReviews(reviews) {
   if (!reviews.length) {

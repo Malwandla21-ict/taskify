@@ -8,6 +8,7 @@ async function getUserProfile(userId) {
         full_name,
         email,
         phone_number,
+        profile_photo_url AS profilePhoto,
         role,
         rating_average,
         total_reviews,
@@ -58,6 +59,7 @@ async function getUserProfile(userId) {
     full_name: user.full_name,
     email: user.email,
     phone_number: user.phone_number,
+    profilePhoto: user.profilePhoto,
     role: user.role,
     rating_average: user.rating_average,
     total_reviews: user.total_reviews,
@@ -67,6 +69,21 @@ async function getUserProfile(userId) {
   };
 }
 
+async function updateProfilePhoto(userId, profilePhotoUrl) {
+  await pool.execute(
+    `UPDATE users SET profile_photo_url = ? WHERE id = ?`,
+    [profilePhotoUrl, userId]
+  );
+
+  const [rows] = await pool.execute(
+    `SELECT id, full_name, email, phone_number, profile_photo_url AS profilePhoto
+     FROM users WHERE id = ? LIMIT 1`,
+    [userId]
+  );
+  return rows[0];
+}
+
 module.exports = {
-  getUserProfile
+  getUserProfile,
+  updateProfilePhoto
 };

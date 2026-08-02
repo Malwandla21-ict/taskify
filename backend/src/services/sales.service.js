@@ -1,7 +1,24 @@
 const pool = require("../config/db");
 
+/*
+  Parse image_urls into a plain JS array, regardless of how the DB driver
+  handed it back to us.
+
+  - If the `image_urls` column is a MySQL JSON type, mysql2 auto-parses it
+    into a real array before we ever see it — in that case we must NOT
+    call JSON.parse() on it again (that would stringify the array via
+    toString(), then fail to parse, and silently get swallowed by the
+    catch block, wiping out the images).
+  - If the column is TEXT/VARCHAR, it comes back as a JSON string and
+    needs JSON.parse() as before.
+*/
 function parseImageUrls(row) {
   if (!row) return row;
+
+  if (Array.isArray(row.image_urls)) {
+    return row; // already parsed by the driver (JSON column)
+  }
+
   try {
     row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
   } catch {
@@ -94,8 +111,27 @@ async function getSalesItemById(itemId) {
 }
 
 module.exports = {
+  deleteSalesItem,
   createSalesItem,
   getAllAvailableSalesItems,
   getMySalesItems,
   markSalesItemAsSold
 };
+
+async function deleteSalesItem(itemId, userId) {
+  const [rows] = await pool.execute(
+    `SELECT id, seller_id, status FROM sales_items WHERE id = ? LIMIT 1`, [itemId]
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Sales item not found."); error.statusCode = 404; throw error;
+  }
+
+  const item = rows[0];
+
+  if (Number(item.seller_id) !== Number(userId)) {
+    const error = new Error("Only the seller can delete this listing."); error.statusCode = 403; throw error;
+  }
+
+  await pool.execute(`DELETE FROM sales_items WHERE id = ?`, [itemId]);
+}

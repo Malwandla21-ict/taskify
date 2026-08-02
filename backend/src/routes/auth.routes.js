@@ -1,11 +1,13 @@
 const express = require("express");
 const { body } = require("express-validator");
 const authController = require("../controllers/auth.controller");
+const upload = require("../middleware/upload.middleware");
 
 const router = express.Router();
 
 router.post(
   "/register",
+  upload.single("profilePhoto"),
   [
     body("fullName")
       .trim()

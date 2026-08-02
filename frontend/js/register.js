@@ -22,6 +22,22 @@ const academicYearGroup = document.getElementById("academicYearGroup");
 const academicYearSelect = document.getElementById("academicYear");
 
 let selectedRole = "Student";
+const profilePhotoInput = document.getElementById("profilePhoto");
+const profilePhotoPreview = document.getElementById("profilePhotoPreview");
+const profilePhotoLabel = document.getElementById("profilePhotoLabel");
+
+profilePhotoInput?.addEventListener("change", () => {
+  const file = profilePhotoInput.files?.[0];
+  if (!file) return;
+  if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+    showMessage("Choose a JPEG, PNG or WebP image smaller than 5 MB.");
+    profilePhotoInput.value = "";
+    return;
+  }
+  profilePhotoPreview.src = URL.createObjectURL(file);
+  profilePhotoPreview.style.display = "block";
+  profilePhotoLabel.textContent = "Change photo";
+});
 
 /* ── Step navigation ── */
 function showStep(n) {
@@ -155,23 +171,19 @@ registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!validateStep3()) return;
 
-  const registerData = {
-    fullName:      buildFullName(),
-    email:         document.getElementById("email").value.trim(),
-    phoneNumber:   document.getElementById("phoneNumber").value.trim(),
-    studentNumber: document.getElementById("studentNumber").value.trim(),
-    faculty:       document.getElementById("faculty").value,
-    academicYear:  academicYearSelect.value || null,
-    role:          selectedRole,
-    password:      document.getElementById("password").value,
-  };
+  const registerData = new FormData();
+  registerData.append("fullName", buildFullName());
+  registerData.append("email", document.getElementById("email").value.trim());
+  registerData.append("phoneNumber", document.getElementById("phoneNumber").value.trim());
+  registerData.append("password", document.getElementById("password").value);
+  if (profilePhotoInput?.files?.[0]) registerData.append("profilePhoto", profilePhotoInput.files[0]);
 
   const submitBtn = document.getElementById("createAccountButton");
   submitBtn.disabled = true;
   showMessage("Creating your account…", "#687280");
 
   try {
-    const response = await apiRequest("/auth/register", "POST", registerData);
+    const response = await apiMultipartRequest("/auth/register", "POST", registerData);
 
     const token = response.data.token;
     const user  = response.data.user;

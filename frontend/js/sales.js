@@ -85,10 +85,15 @@ function myListingCard(item) {
           ${conditionBadge(item.condition_status)}
           <div class="market-price" style="font-size:16px;">R${item.price}</div>
         </div>
-        ${!isSold ? `
-          <button class="market-action-btn mark-sold-btn" data-item-id="${item.id}" style="margin-top:14px;width:100%;">
-            <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
-          </button>` : ""}
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          ${!isSold ? `
+            <button class="market-action-btn mark-sold-btn" data-item-id="${item.id}" style="flex:1;">
+              <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
+            </button>` : ""}
+          <button class="market-action-btn outline delete-sale-btn" data-item-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+            <i class="ti ti-trash" aria-hidden="true"></i> Delete
+          </button>
+        </div>
       </div>
     </div>`;
 }
@@ -112,6 +117,7 @@ function renderMySalesItems(items) {
     ? items.map(myListingCard).join("")
     : emptyState("ti-tag", "No listings yet", "Items you list for sale appear here.");
   attachMarkSoldEvents();
+  attachDeleteSaleEvents();
 }
 
 function populateCategoryFilter(items) {
@@ -119,6 +125,26 @@ function populateCategoryFilter(items) {
   if (!categoryFilter) return;
   categoryFilter.innerHTML = `<option value="All">All Categories</option>` +
     cats.map(c => `<option value="${c}">${c}</option>`).join("");
+}
+
+function attachDeleteSaleEvents() {
+  document.querySelectorAll(".delete-sale-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Permanently delete this listing?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/sales/${btn.dataset.itemId}`, "DELETE");
+        showToast("Listing deleted.");
+        await loadSalesItems();
+        await loadMySalesItems();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i> Delete`;
+      }
+    });
+  });
 }
 
 function attachMarkSoldEvents() {

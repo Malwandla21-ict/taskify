@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const authService = require("../services/auth.service");
+const { uploadProfilePhoto } = require("./upload.controller");
 
 async function register(req, res, next) {
   try {
@@ -13,11 +14,14 @@ async function register(req, res, next) {
       });
     }
 
+    const profilePhotoUrl = await uploadProfilePhoto(req.file);
+
     const result = await authService.registerUser({
       fullName: req.body.fullName,
       email: req.body.email,
       phoneNumber: req.body.phoneNumber,
-      password: req.body.password
+      password: req.body.password,
+      profilePhotoUrl
     });
 
     return res.status(201).json({
