@@ -44,7 +44,8 @@ async function getUserProfile(userId) {
         r.rating,
         r.comment,
         r.created_at,
-        reviewer.full_name AS reviewer_name
+        reviewer.full_name AS reviewer_name,
+        reviewer.profile_photo_url AS reviewer_profile_photo
       FROM reviews r
       INNER JOIN users reviewer ON r.reviewer_id = reviewer.id
       WHERE r.reviewee_id = ?

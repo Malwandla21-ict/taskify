@@ -32,6 +32,7 @@ const SELECT_FIELDS = `
   si.section, si.price, si.condition_status, si.location,
   si.status, si.created_at, si.image_urls,
   u.full_name AS seller_name,
+  u.profile_photo_url AS seller_profile_photo,
   u.phone_number AS seller_phone_number
 `;
 

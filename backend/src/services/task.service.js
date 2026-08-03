@@ -21,7 +21,8 @@ async function createTask({
 }
 
 async function getAllTasks() {
-  /* Returns ALL tasks except Cancelled so detail pages always find them */
+  /* The marketplace is for work that can still be accepted.  Completed and
+     cancelled tasks belong in the owner's history, not the public feed. */
   const [rows] = await pool.execute(
     `SELECT
        t.id, t.title, t.description, t.category, t.section,
@@ -29,11 +30,12 @@ async function getAllTasks() {
        t.created_by, t.accepted_by, t.created_at,
        t.image_urls,
        u.full_name AS created_by_name,
+       u.profile_photo_url AS created_by_profile_photo,
        p.status AS payment_status
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
      LEFT JOIN payments p ON t.id = p.task_id
-     WHERE t.status != 'Cancelled'
+     WHERE t.status = 'Posted'
      ORDER BY t.urgent DESC, t.created_at DESC`
   );
 
@@ -182,6 +184,7 @@ async function getUserTaskHistory(userId) {
        t.created_by, t.accepted_by, t.created_at,
        t.image_urls,
        u.full_name AS created_by_name,
+       u.profile_photo_url AS created_by_profile_photo,
        p.status AS payment_status
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
@@ -201,6 +204,7 @@ async function getTaskById(taskId) {
        t.created_by, t.accepted_by, t.created_at,
        t.image_urls,
        u.full_name AS created_by_name,
+       u.profile_photo_url AS created_by_profile_photo,
        p.status AS payment_status
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
@@ -250,7 +254,7 @@ module.exports = {
 
 async function deleteTask(taskId, userId) {
   const [taskRows] = await pool.execute(
-    `SELECT id, created_by, status FROM tasks WHERE id = ? LIMIT 1`, [taskId]
+    `SELECT id, title, created_by, accepted_by, status FROM tasks WHERE id = ? LIMIT 1`, [taskId]
   );
 
   if (taskRows.length === 0) {
@@ -263,9 +267,13 @@ async function deleteTask(taskId, userId) {
     const error = new Error("Only the task creator can delete this task."); error.statusCode = 403; throw error;
   }
 
-  if (["In Progress", "Accepted"].includes(task.status)) {
-    const error = new Error("Cannot delete a task that is accepted or in progress."); error.statusCode = 400; throw error;
-  }
-
   await pool.execute(`DELETE FROM tasks WHERE id = ?`, [taskId]);
+
+  if (task.accepted_by) {
+    await notificationService.createNotification({
+      userId: task.accepted_by,
+      title: "Task Withdrawn",
+      message: `The task "${task.title}" was deleted by its creator.`
+    });
+  }
 }

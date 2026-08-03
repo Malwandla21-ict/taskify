@@ -51,7 +51,8 @@ async function getAllAvailableEquipment() {
        e.id, e.owner_id, e.name, e.description, e.category,
        e.section, e.daily_price, e.is_available, e.created_at,
        e.image_urls,
-       u.full_name AS owner_name
+       u.full_name AS owner_name,
+       u.profile_photo_url AS owner_profile_photo
      FROM equipment e
      INNER JOIN users u ON e.owner_id = u.id
      WHERE e.is_available = 1
@@ -170,7 +171,9 @@ async function getEquipmentHistory(userId) {
        e.name AS equipment_name, e.category, e.section,
        e.daily_price, e.owner_id, e.image_urls,
        owner.full_name AS owner_name,
-       renter.full_name AS renter_name
+       owner.profile_photo_url AS owner_profile_photo,
+       renter.full_name AS renter_name,
+       renter.profile_photo_url AS renter_profile_photo
      FROM equipment_bookings eb
      INNER JOIN equipment e ON eb.equipment_id = e.id
      INNER JOIN users owner ON e.owner_id = owner.id
@@ -188,7 +191,8 @@ async function getEquipmentById(equipmentId) {
        e.id, e.owner_id, e.name, e.description, e.category,
        e.section, e.daily_price, e.is_available, e.created_at,
        e.image_urls,
-       u.full_name AS owner_name
+       u.full_name AS owner_name,
+       u.profile_photo_url AS owner_profile_photo
      FROM equipment e
      INNER JOIN users u ON e.owner_id = u.id
      WHERE e.id = ? LIMIT 1`,
