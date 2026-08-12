@@ -21,7 +21,11 @@ async function register(req, res, next) {
       email: req.body.email,
       phoneNumber: req.body.phoneNumber,
       password: req.body.password,
-      profilePhotoUrl
+      profilePhotoUrl,
+      studentNumber: req.body.studentNumber,
+      memberType: req.body.memberType,
+      faculty: req.body.faculty,
+      academicYear: req.body.academicYear
     });
 
     return res.status(201).json({

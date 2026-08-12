@@ -25,6 +25,16 @@ async function getAllTasks(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getTaskById(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const task = await taskService.getTaskByIdForViewing(Number(req.params.id));
+    return res.status(200).json({ success: true, message: "Task fetched successfully.", data: task });
+  } catch (error) { next(error); }
+}
+
 async function acceptTask(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -42,6 +52,26 @@ async function updateTaskStatus(req, res, next) {
 
     const task = await taskService.updateTaskStatus(Number(req.params.id), req.user.id, req.body.status);
     return res.status(200).json({ success: true, message: "Task status updated successfully.", data: task });
+  } catch (error) { next(error); }
+}
+
+async function confirmTaskCompletion(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const task = await taskService.confirmTaskCompletion(Number(req.params.id), req.user.id);
+    return res.status(200).json({ success: true, message: "Task completion confirmed and payment released.", data: task });
+  } catch (error) { next(error); }
+}
+
+async function withdrawFromTask(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const task = await taskService.withdrawFromTask(Number(req.params.id), req.user.id);
+    return res.status(200).json({ success: true, message: "You have withdrawn from this task.", data: task });
   } catch (error) { next(error); }
 }
 
@@ -72,4 +102,15 @@ async function deleteTask(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { createTask, getAllTasks, acceptTask, updateTaskStatus, cancelTask, getUserTaskHistory, deleteTask };
+module.exports = {
+  createTask,
+  getAllTasks,
+  getTaskById,
+  acceptTask,
+  updateTaskStatus,
+  confirmTaskCompletion,
+  withdrawFromTask,
+  cancelTask,
+  getUserTaskHistory,
+  deleteTask
+};

@@ -42,9 +42,25 @@ router.patch(
   [
     param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer."),
     body("status").trim().notEmpty().withMessage("Status is required.")
-      .isIn(["In Progress", "Completed"]).withMessage("Status must be 'In Progress' or 'Completed'.")
+      .isIn(["In Progress", "Awaiting Confirmation"]).withMessage("Status must be 'In Progress' or 'Awaiting Confirmation'.")
   ],
   taskController.updateTaskStatus
+);
+
+/* Owner-only: closes the loop and releases the held payment */
+router.patch(
+  "/:id/confirm-completion",
+  authenticate,
+  [ param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer.") ],
+  taskController.confirmTaskCompletion
+);
+
+/* Worker-only: back out before starting work */
+router.patch(
+  "/:id/withdraw",
+  authenticate,
+  [ param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer.") ],
+  taskController.withdrawFromTask
 );
 
 router.patch(
@@ -60,6 +76,21 @@ router.delete(
   authenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer.") ],
   taskController.deleteTask
+);
+
+/*
+  GET /:id — single-task lookup, unfiltered by status. Placed after the
+  literal "/history" route (and after all the more-specific PATCH/DELETE
+  routes above, which Express matches independently since they're a
+  different HTTP method) so "/history" is never swallowed by this
+  wildcard. This is what lets task-details.js load a task once it has
+  moved past "Posted" — the public GET / list intentionally excludes those.
+*/
+router.get(
+  "/:id",
+  authenticate,
+  [ param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer.") ],
+  taskController.getTaskById
 );
 
 module.exports = router;

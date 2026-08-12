@@ -26,7 +26,6 @@ router.post(
         if (!value.toLowerCase().endsWith("@ump.ac.za")) {
           throw new Error("Only UMP student emails are allowed.");
         }
-
         return true;
       }),
 
@@ -41,7 +40,26 @@ router.post(
       .notEmpty()
       .withMessage("Password is required.")
       .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters long.")
+      .withMessage("Password must be at least 6 characters long."),
+
+    body("studentNumber")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ max: 50 }).withMessage("Student/staff number is too long."),
+
+    body("memberType")
+      .optional({ checkFalsy: true })
+      .isIn(["Student", "Staff"]).withMessage("Member type must be Student or Staff."),
+
+    body("faculty")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ max: 150 }).withMessage("Faculty/department is too long."),
+
+    body("academicYear")
+      .optional({ checkFalsy: true })
+      .trim()
+      .isLength({ max: 50 }).withMessage("Academic year is too long.")
   ],
   authController.register
 );

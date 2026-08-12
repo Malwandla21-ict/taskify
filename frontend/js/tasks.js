@@ -28,9 +28,6 @@ const commentInput          = document.getElementById("comment");
 const closeReviewModalButton = document.getElementById("closeReviewModal");
 const reviewMessage         = document.getElementById("reviewMessage");
 
-const profileModal          = document.getElementById("profileModal");
-const profileContent        = document.getElementById("profileContent");
-const closeProfileModalButton = document.getElementById("closeProfileModal");
 const overlay               = document.getElementById("overlay");
 
 let cachedTasks    = [];
@@ -50,10 +47,8 @@ function closeModal(modal, form, msgEl) {
 }
 
 closeReviewModalButton?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
-closeProfileModalButton?.addEventListener("click", () => closeModal(profileModal, null, null));
 overlay?.addEventListener("click", () => {
   closeModal(reviewModal, reviewForm, reviewMessage);
-  closeModal(profileModal, null, null);
 });
 
 /* ── Step navigation ── */
@@ -131,7 +126,6 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
 
 /* ── Card builder ── */
 function taskCard(task) {
-  const initials  = avatarInitials(task.created_by_name);
   const isOwn     = Number(task.created_by) === Number(currentUser.id);
   const canCancel = isOwn && ["Posted", "Accepted"].includes(task.status);
 
@@ -146,9 +140,9 @@ function taskCard(task) {
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar">${initials}</div>
+            <div class="market-avatar">${avatarHtml(task.created_by_profile_photo, task.created_by_name)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${task.created_by_name}</div>
+              <div class="market-user-name profile-link" data-user-id="${task.created_by}" data-user-name="${task.created_by_name}" style="cursor:pointer;">${task.created_by_name}</div>
               <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student</div>
             </div>
           </div>
@@ -185,7 +179,7 @@ function renderTasks(tasks) {
     : emptyState("ti-clipboard-list", "No tasks found", "Try a different filter or post a new task.");
   attachCancelButtonEvents();
   attachDeleteTaskEvents();
-  attachProfileLinkEvents();
+  attachProfileLinkEvents(tasksContainer);
 }
 
 function attachDeleteTaskEvents() {
@@ -210,6 +204,41 @@ function attachDeleteTaskEvents() {
 
 /* ── History card ── */
 function historyCard(task) {
+  const isOwn    = Number(task.created_by)  === Number(currentUser.id);
+  const isWorker = Number(task.accepted_by) === Number(currentUser.id);
+
+  const counterpartId   = isOwn ? task.accepted_by : task.created_by;
+  const counterpartName = isOwn ? task.accepted_by_name : task.created_by_name;
+
+  let actionArea = "";
+  if (task.status === "Completed") {
+    actionArea = `
+      <button class="market-action-btn review-task-btn" data-task-id="${task.id}" style="margin-top:14px;width:100%;">
+        <i class="ti ti-star" aria-hidden="true"></i> Leave Review
+      </button>`;
+  } else if (isOwn && task.status === "Awaiting Confirmation") {
+    actionArea = `
+      <button class="market-action-btn confirm-completion-btn" data-task-id="${task.id}" style="margin-top:14px;width:100%;background:var(--ump-green);">
+        <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion & Release Payment
+      </button>`;
+  } else if (isWorker && task.status === "Accepted") {
+    actionArea = `
+      <button class="market-action-btn outline withdraw-task-btn" data-task-id="${task.id}" style="margin-top:14px;width:100%;">
+        <i class="ti ti-logout" aria-hidden="true"></i> Withdraw
+      </button>`;
+  } else if (isWorker && task.status === "Awaiting Confirmation") {
+    actionArea = `
+      <p style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center;">
+        <i class="ti ti-hourglass" aria-hidden="true"></i> Waiting for owner to confirm completion
+      </p>`;
+  }
+
+  const reportButton = counterpartId
+    ? `<button class="market-action-btn outline report-task-btn" data-task-id="${task.id}" data-task-title="${task.title}" data-user-id="${counterpartId}" data-user-name="${counterpartName || "this user"}" style="margin-top:8px;width:100%;color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+         <i class="ti ti-flag" aria-hidden="true"></i> Report an Issue
+       </button>`
+    : "";
+
   return `
     <div class="market-card">
       <div class="market-content">
@@ -222,69 +251,10 @@ function historyCard(task) {
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-credit-card" aria-hidden="true"></i> ${task.payment_status || "N/A"}</div>
         </div>
-        ${task.status === "Completed" ? `
-          <button class="market-action-btn review-task-btn" data-task-id="${task.id}" style="margin-top:14px;width:100%;">
-            <i class="ti ti-star" aria-hidden="true"></i> Leave Review
-          </button>` : ""}
+        ${actionArea}
+        ${reportButton}
       </div>
     </div>`;
-}
-
-/* ── Profile modal ── */
-async function loadUserProfile(userId) {
-  profileContent.innerHTML = `<p style="color:var(--muted);font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>`;
-  openModal(profileModal);
-  try {
-    const res     = await apiRequest(`/users/${userId}/profile`);
-    const profile = res.data;
-    const reviews = profile.recent_reviews.length
-      ? profile.recent_reviews.map(r => `
-          <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <span style="font-size:13px;font-weight:600;">${r.reviewer_name}</span>
-              <div class="badge"><i class="ti ti-star" aria-hidden="true"></i> ${r.rating}/5</div>
-            </div>
-            <p style="font-size:13px;color:var(--muted);">${r.comment || "No comment provided."}</p>
-          </div>`).join("")
-      : `<p style="color:var(--muted);font-size:13px;">No reviews yet.</p>`;
-
-    profileContent.innerHTML = `
-      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
-        <div class="market-avatar" style="width:48px;height:48px;font-size:16px;">${avatarInitials(profile.full_name)}</div>
-        <div>
-          <div style="font-weight:700;font-size:15px;">${profile.full_name}</div>
-          <div style="font-size:12px;color:var(--muted);">${profile.email}</div>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
-        <div style="text-align:center;background:var(--background);border-radius:var(--radius);padding:12px;">
-          <div style="font-size:18px;font-weight:800;color:var(--ump-green);">${Number(profile.rating_average || 0).toFixed(1)}</div>
-          <div style="font-size:11px;color:var(--muted);">Rating</div>
-        </div>
-        <div style="text-align:center;background:var(--background);border-radius:var(--radius);padding:12px;">
-          <div style="font-size:18px;font-weight:800;">${profile.total_reviews}</div>
-          <div style="font-size:11px;color:var(--muted);">Reviews</div>
-        </div>
-        <div style="text-align:center;background:var(--background);border-radius:var(--radius);padding:12px;">
-          <div style="font-size:18px;font-weight:800;">${profile.completed_tasks}</div>
-          <div style="font-size:11px;color:var(--muted);">Tasks</div>
-        </div>
-      </div>
-      <div class="market-tags" style="margin-bottom:14px;">
-        <div class="badge"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified</div>
-        <div class="badge blue">${profile.role}</div>
-      </div>
-      <h4 style="font-size:13px;font-weight:700;margin-bottom:6px;">Recent Reviews</h4>
-      ${reviews}`;
-  } catch (err) {
-    profileContent.innerHTML = errorState(err.message);
-  }
-}
-
-function attachProfileLinkEvents() {
-  document.querySelectorAll(".profile-link").forEach(link => {
-    link.addEventListener("click", () => loadUserProfile(link.dataset.userId));
-  });
 }
 
 /* ── Cancel events ── */
@@ -308,6 +278,62 @@ function attachCancelButtonEvents() {
   });
 }
 
+/* ── Confirm completion (owner) ── */
+function attachConfirmCompletionEvents() {
+  document.querySelectorAll(".confirm-completion-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Confirm this task is complete? This will release payment to the worker.")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Confirming…`;
+      try {
+        await apiRequest(`/tasks/${btn.dataset.taskId}/confirm-completion`, "PATCH");
+        showToast("Task completed and payment released!");
+        await loadTaskHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion & Release Payment`;
+      }
+    });
+  });
+}
+
+/* ── Withdraw (worker) ── */
+function attachWithdrawTaskEvents() {
+  document.querySelectorAll(".withdraw-task-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Withdraw from this task? It will be reposted for other students.")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Withdrawing…`;
+      try {
+        await apiRequest(`/tasks/${btn.dataset.taskId}/withdraw`, "PATCH");
+        showToast("You have withdrawn from this task.");
+        await loadTasks();
+        await loadTaskHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-logout" aria-hidden="true"></i> Withdraw`;
+      }
+    });
+  });
+}
+
+/* ── Report events (history) ── */
+function attachHistoryReportEvents() {
+  document.querySelectorAll(".report-task-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      openReportModal({
+        reportedUserId: btn.dataset.userId,
+        reportedUserName: btn.dataset.userName,
+        contextType: "task",
+        contextId: btn.dataset.taskId,
+        contextLabel: btn.dataset.taskTitle
+      });
+    });
+  });
+}
+
 /* ── Review events ── */
 function attachReviewButtonEvents() {
   document.querySelectorAll(".review-task-btn").forEach(btn => {
@@ -322,6 +348,10 @@ function attachReviewButtonEvents() {
 
 reviewForm?.addEventListener("submit", async e => {
   e.preventDefault();
+  const submitBtn = reviewForm.querySelector("button[type='submit']");
+  const originalLabel = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Submitting…`;
   try {
     await apiRequest(`/reviews/tasks/${reviewTaskIdInput.value}`, "POST", {
       rating: Number(ratingInput.value),
@@ -334,6 +364,9 @@ reviewForm?.addEventListener("submit", async e => {
     reviewMessage.textContent = err.message;
     reviewMessage.style.color = "red";
     showToast(err.message, "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalLabel;
   }
 });
 
@@ -357,6 +390,9 @@ async function loadTaskHistory() {
       ? tasks.map(historyCard).join("")
       : emptyState("ti-clock", "No history yet", "Completed tasks appear here.");
     attachReviewButtonEvents();
+    attachConfirmCompletionEvents();
+    attachWithdrawTaskEvents();
+    attachHistoryReportEvents();
   } catch (err) {
     historyContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
@@ -370,14 +406,13 @@ taskForm?.addEventListener("submit", async e => {
   if (!price) { showToast("Please enter a budget.", "error"); return; }
 
   const submitBtn = taskForm.querySelector("button[type='submit']");
+  const originalLabel = submitBtn.innerHTML;
   submitBtn.disabled = true;
   submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Posting…`;
 
   try {
-    /* Upload images first if any were selected */
     let imageUrls = [];
     if (taskUploader && taskUploader.getFiles().length) {
-      showToast("Uploading images…", "warning");
       imageUrls = await taskUploader.upload("tasks");
     }
 
@@ -403,7 +438,7 @@ taskForm?.addEventListener("submit", async e => {
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Post Task`;
+    submitBtn.innerHTML = originalLabel;
   }
 });
 

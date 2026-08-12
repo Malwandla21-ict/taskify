@@ -17,7 +17,6 @@ const eDot3                     = document.getElementById("eDot3");
 let cachedEquipment  = [];
 let selectedSection  = "All";
 
-/* ── Step navigation ── */
 function showEquipmentStep(n) {
   equipmentStep1.style.display = n === 1 ? "block" : "none";
   equipmentStep2.style.display = n === 2 ? "block" : "none";
@@ -32,7 +31,6 @@ function showEquipmentStep(n) {
   });
 }
 
-/* ── Preview ── */
 function updateEquipmentPreview() {
   const name       = document.getElementById("equipmentName").value.trim();
   const category   = document.getElementById("equipmentCategory").value.trim();
@@ -54,7 +52,6 @@ function updateEquipmentPreview() {
     </div>`;
 }
 
-/* ── Validators ── */
 function validateEquipmentStep1() {
   if (!document.getElementById("equipmentName").value.trim() ||
       !document.getElementById("equipmentCategory").value.trim()) {
@@ -76,7 +73,6 @@ document.getElementById("backEquipmentStep1")?.addEventListener("click", () => s
 document.getElementById("backEquipmentStep2")?.addEventListener("click", () => showEquipmentStep(2));
 document.getElementById("equipmentDailyPrice")?.addEventListener("input", updateEquipmentPreview);
 
-/* ── Filters ── */
 document.querySelectorAll(".filter-pill").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
@@ -86,10 +82,8 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
   });
 });
 
-/* ── Card builder ── */
 function equipmentCard(item) {
-  const initials = avatarInitials(item.owner_name);
-  const isOwn    = Number(item.owner_id) === Number(currentUser.id);
+  const isOwn = Number(item.owner_id) === Number(currentUser.id);
   return `
     <div class="market-card">
       <div class="market-image" style="background:linear-gradient(135deg,#E6F1FB,#B5D4F4);">
@@ -100,9 +94,9 @@ function equipmentCard(item) {
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${initials}</div>
+            <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_profile_photo, item.owner_name)}</div>
             <div>
-              <div class="market-user-name">${item.owner_name}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.owner_id}" data-user-name="${item.owner_name}" style="cursor:pointer;">${item.owner_name}</div>
               <div class="market-user-meta"><i class="ti ti-package" aria-hidden="true"></i> Equipment Owner</div>
             </div>
           </div>
@@ -130,20 +124,67 @@ function equipmentCard(item) {
     </div>`;
 }
 
-/* ── Render ── */
 function renderEquipment(items) {
   const filtered = items.filter(i => selectedSection === "All" || i.section === selectedSection);
   equipmentContainer.innerHTML = filtered.length
     ? filtered.map(equipmentCard).join("")
     : emptyState("ti-package", "No equipment found", "Try a different filter or list your own.");
   attachDeleteEquipmentEvents();
+  attachProfileLinkEvents(equipmentContainer);
 }
 
-/* ── History card ── */
+function whatsappBtn(phone, title) {
+  if (!phone) return "";
+  return `<a href="${createWhatsAppLink(phone, title)}" target="_blank" class="market-action-btn outline" style="margin-top:8px;width:100%;justify-content:center;color:var(--ump-green);border-color:rgba(0,155,114,0.30);">
+             <i class="ti ti-brand-whatsapp" aria-hidden="true"></i> Message
+           </a>`;
+}
+
 function historyCard(booking) {
   const isOwner  = Number(booking.owner_id)  === Number(currentUser.id);
   const isRenter = Number(booking.renter_id) === Number(currentUser.id);
-  const canReturn = booking.status === "Booked" && (isOwner || isRenter);
+
+  let actionArea = "";
+  if (booking.status === "Pending" && isOwner) {
+    actionArea = `
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="market-action-btn confirm-booking-btn" data-booking-id="${booking.id}" style="flex:1;background:var(--ump-green);">
+          <i class="ti ti-check" aria-hidden="true"></i> Confirm
+        </button>
+        <button class="market-action-btn outline decline-booking-btn" data-booking-id="${booking.id}" style="flex:1;background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+          <i class="ti ti-x" aria-hidden="true"></i> Decline
+        </button>
+      </div>
+      ${whatsappBtn(booking.renter_phone_number, booking.equipment_name)}`;
+  } else if (booking.status === "Pending" && isRenter) {
+    actionArea = `
+      <p style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center;">
+        <i class="ti ti-hourglass" aria-hidden="true"></i> Waiting for owner to confirm
+      </p>
+      <button class="market-action-btn outline cancel-booking-btn" data-booking-id="${booking.id}" style="margin-top:8px;width:100%;">
+        <i class="ti ti-x" aria-hidden="true"></i> Cancel Request
+      </button>
+      ${whatsappBtn(booking.owner_phone_number, booking.equipment_name)}`;
+  } else if (booking.status === "Confirmed" && (isOwner || isRenter)) {
+    const label       = isOwner ? "Confirm Return" : "Return Equipment";
+    const confirmText = isOwner
+      ? "Confirm that this equipment has been returned to you?"
+      : "Confirm you are returning this equipment?";
+    const contactPhone = isOwner ? booking.renter_phone_number : booking.owner_phone_number;
+    actionArea = `
+      <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" data-confirm-text="${confirmText}" style="margin-top:14px;width:100%;">
+        <i class="ti ti-package-export" aria-hidden="true"></i> ${label}
+      </button>
+      ${whatsappBtn(contactPhone, booking.equipment_name)}`;
+  }
+
+  const counterpartId   = isOwner ? booking.renter_id : booking.owner_id;
+  const counterpartName = isOwner ? booking.renter_name : booking.owner_name;
+
+  const reportButton = `
+    <button class="market-action-btn outline report-booking-btn" data-booking-id="${booking.id}" data-equipment-name="${booking.equipment_name}" data-user-id="${counterpartId}" data-user-name="${counterpartName}" style="margin-top:8px;width:100%;color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+      <i class="ti ti-flag" aria-hidden="true"></i> Report an Issue
+    </button>`;
 
   return `
     <div class="market-card">
@@ -154,17 +195,15 @@ function historyCard(booking) {
         </div>
         <h3>${booking.equipment_name}</h3>
         <div class="market-tags" style="margin:10px 0;">
-          <div class="market-tag"><i class="ti ti-user" aria-hidden="true"></i> Owner: ${booking.owner_name}</div>
-          <div class="market-tag"><i class="ti ti-user-check" aria-hidden="true"></i> Renter: ${booking.renter_name}</div>
+          <div class="market-tag profile-link" data-user-id="${booking.owner_id}" data-user-name="${booking.owner_name}" style="cursor:pointer;"><i class="ti ti-user" aria-hidden="true"></i> Owner: ${booking.owner_name}</div>
+          <div class="market-tag profile-link" data-user-id="${booking.renter_id}" data-user-name="${booking.renter_name}" style="cursor:pointer;"><i class="ti ti-user-check" aria-hidden="true"></i> Renter: ${booking.renter_name}</div>
         </div>
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${booking.start_date}</div>
           <div class="market-tag"><i class="ti ti-calendar-off" aria-hidden="true"></i> ${booking.end_date}</div>
         </div>
-        ${canReturn ? `
-          <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;">
-            <i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment
-          </button>` : ""}
+        ${actionArea}
+        ${reportButton}
       </div>
     </div>`;
 }
@@ -188,27 +227,98 @@ function attachDeleteEquipmentEvents() {
   });
 }
 
-function attachReturnEquipmentButtonEvents() {
-  document.querySelectorAll(".return-equipment-btn").forEach(btn => {
+function attachConfirmBookingEvents() {
+  document.querySelectorAll(".confirm-booking-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
-      if (!confirm("Confirm equipment return?")) return;
       btn.disabled = true;
-      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Returning…`;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
       try {
-        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/return`, "PATCH");
-        showToast("Equipment returned successfully.");
-        await loadEquipment();
+        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/confirm`, "PATCH");
+        showToast("Booking confirmed!");
         await loadEquipmentHistory();
       } catch (err) {
         showToast(err.message, "error");
         btn.disabled = false;
-        btn.innerHTML = `<i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment`;
+        btn.innerHTML = `<i class="ti ti-check" aria-hidden="true"></i> Confirm`;
       }
     });
   });
 }
 
-/* ── Loaders ── */
+function attachDeclineBookingEvents() {
+  document.querySelectorAll(".decline-booking-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Decline this booking request?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/decline`, "PATCH");
+        showToast("Booking declined.");
+        await loadEquipment();
+        await loadEquipmentHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-x" aria-hidden="true"></i> Decline`;
+      }
+    });
+  });
+}
+
+function attachCancelBookingEvents() {
+  document.querySelectorAll(".cancel-booking-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Cancel this booking request?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Cancelling…`;
+      try {
+        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/cancel`, "PATCH");
+        showToast("Booking request cancelled.");
+        await loadEquipment();
+        await loadEquipmentHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-x" aria-hidden="true"></i> Cancel Request`;
+      }
+    });
+  });
+}
+
+function attachReturnEquipmentButtonEvents() {
+  document.querySelectorAll(".return-equipment-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm(btn.dataset.confirmText || "Confirm equipment return?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Working…`;
+      try {
+        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/return`, "PATCH");
+        showToast("Equipment marked as returned.");
+        await loadEquipment();
+        await loadEquipmentHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-package-export" aria-hidden="true"></i> Return`;
+      }
+    });
+  });
+}
+
+function attachReportBookingEvents() {
+  document.querySelectorAll(".report-booking-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      openReportModal({
+        reportedUserId: btn.dataset.userId,
+        reportedUserName: btn.dataset.userName,
+        contextType: "equipment_booking",
+        contextId: btn.dataset.bookingId,
+        contextLabel: btn.dataset.equipmentName
+      });
+    });
+  });
+}
+
 async function loadEquipment() {
   try {
     const res = await apiRequest("/equipment");
@@ -227,27 +337,31 @@ async function loadEquipmentHistory() {
     equipmentHistoryContainer.innerHTML = items.length
       ? items.map(historyCard).join("")
       : emptyState("ti-clock", "No history yet", "Your bookings and listings appear here.");
+    attachConfirmBookingEvents();
+    attachDeclineBookingEvents();
+    attachCancelBookingEvents();
     attachReturnEquipmentButtonEvents();
+    attachReportBookingEvents();
+    attachProfileLinkEvents(equipmentHistoryContainer);
   } catch (err) {
     equipmentHistoryContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
   }
 }
 
-/* ── Form submit ── */
 equipmentForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const price = document.getElementById("equipmentDailyPrice").value.trim();
   if (!price) { showToast("Please enter a rental price.", "error"); return; }
 
   const submitBtn = equipmentForm.querySelector("button[type='submit']");
+  const originalLabel = submitBtn.innerHTML;
   submitBtn.disabled = true;
   submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Publishing…`;
 
   try {
     let imageUrls = [];
     if (equipmentUploader && equipmentUploader.getFiles().length) {
-      showToast("Uploading images…", "warning");
       imageUrls = await equipmentUploader.upload("equipment");
     }
 
@@ -271,12 +385,11 @@ equipmentForm?.addEventListener("submit", async e => {
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Publish Listing`;
+    submitBtn.innerHTML = originalLabel;
   }
 });
 
 loadEquipment();
 loadEquipmentHistory();
 
-/* ── Image uploader init ── */
 const equipmentUploader = initImageUploader("equipmentUploadArea", "equipmentPreviewGrid");

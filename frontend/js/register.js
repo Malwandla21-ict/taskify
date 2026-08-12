@@ -26,7 +26,11 @@ const profilePhotoInput = document.getElementById("profilePhoto");
 const profilePhotoPreview = document.getElementById("profilePhotoPreview");
 const profilePhotoLabel = document.getElementById("profilePhotoLabel");
 
-profilePhotoInput?.addEventListener("change", () => {
+/* Holds the cropped result — used instead of profilePhotoInput.files[0]
+   at submit time, since a file input's FileList can't be reassigned. */
+let croppedProfilePhotoBlob = null;
+
+profilePhotoInput?.addEventListener("change", async () => {
   const file = profilePhotoInput.files?.[0];
   if (!file) return;
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
@@ -34,7 +38,15 @@ profilePhotoInput?.addEventListener("change", () => {
     profilePhotoInput.value = "";
     return;
   }
-  profilePhotoPreview.src = URL.createObjectURL(file);
+
+  const blob = await openImageCropper(file, { aspect: 1 });
+  if (!blob) {
+    profilePhotoInput.value = "";
+    return;
+  }
+
+  croppedProfilePhotoBlob = blob;
+  profilePhotoPreview.src = URL.createObjectURL(blob);
   profilePhotoPreview.style.display = "block";
   profilePhotoLabel.textContent = "Change photo";
 });
@@ -48,7 +60,6 @@ function showStep(n) {
   stepText.textContent    = `Step ${n} of 3`;
   progressFill.style.width = n === 1 ? "33%" : n === 2 ? "66%" : "100%";
 
-  /* Sync step dots */
   [dot1, dot2, dot3].forEach((dot, i) => {
     dot.classList.remove("active", "done");
     if (i + 1 < n)  dot.classList.add("done");
@@ -176,10 +187,21 @@ registerForm.addEventListener("submit", async (e) => {
   registerData.append("email", document.getElementById("email").value.trim());
   registerData.append("phoneNumber", document.getElementById("phoneNumber").value.trim());
   registerData.append("password", document.getElementById("password").value);
-  if (profilePhotoInput?.files?.[0]) registerData.append("profilePhoto", profilePhotoInput.files[0]);
+  registerData.append("studentNumber", document.getElementById("studentNumber").value.trim());
+  registerData.append("memberType", selectedRole);
+  registerData.append("faculty", document.getElementById("faculty").value);
+  if (selectedRole === "Student") {
+    registerData.append("academicYear", document.getElementById("academicYear").value);
+  }
+
+  if (croppedProfilePhotoBlob) {
+    registerData.append("profilePhoto", croppedProfilePhotoBlob, "profile.jpg");
+  }
 
   const submitBtn = document.getElementById("createAccountButton");
+  const originalLabel = submitBtn.innerHTML;
   submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Creating account…`;
   showMessage("Creating your account…", "#687280");
 
   try {
@@ -194,12 +216,13 @@ registerForm.addEventListener("submit", async (e) => {
     showMessage("Account created! Redirecting you now…", "var(--ump-green)");
 
     setTimeout(() => {
-      window.location.href = "./dashboard.html";
+      window.location.href = "./profile.html";
     }, 900);
 
   } catch (error) {
     showMessage(error.message || "Something went wrong. Please try again.", "red");
     submitBtn.disabled = false;
+    submitBtn.innerHTML = originalLabel;
   }
 });
 

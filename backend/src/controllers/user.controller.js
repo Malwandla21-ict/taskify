@@ -46,7 +46,31 @@ async function updateMyProfilePhoto(req, res, next) {
   }
 }
 
+async function updateMyProfileDetails(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    }
+
+    const profile = await userService.updateProfileDetails(req.user.id, {
+      faculty: req.body.faculty,
+      academicYear: req.body.academicYear,
+      phoneNumber: req.body.phoneNumber
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully.",
+      data: profile
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getUserProfile,
-  updateMyProfilePhoto
+  updateMyProfilePhoto,
+  updateMyProfileDetails
 };

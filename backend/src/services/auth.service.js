@@ -30,7 +30,10 @@ function generateToken(user) {
   );
 }
 
-async function registerUser({ fullName, email, phoneNumber, password, profilePhotoUrl = null }) {
+async function registerUser({
+  fullName, email, phoneNumber, password, profilePhotoUrl = null,
+  studentNumber = null, memberType = "Student", faculty = null, academicYear = null
+}) {
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
@@ -41,12 +44,7 @@ async function registerUser({ fullName, email, phoneNumber, password, profilePho
   }
 
   const [existingRows] = await pool.execute(
-    `
-      SELECT id
-      FROM users
-      WHERE email = ?
-      LIMIT 1
-    `,
+    `SELECT id FROM users WHERE email = ? LIMIT 1`,
     [normalizedEmail]
   );
 
@@ -58,42 +56,36 @@ async function registerUser({ fullName, email, phoneNumber, password, profilePho
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  /* Staff accounts don't have an academic year — normalize to null
+     regardless of what was sent, rather than trusting the client. */
+  const normalizedAcademicYear = memberType === "Staff" ? null : (academicYear || null);
+
   const [result] = await pool.execute(
-    `
-      INSERT INTO users (
-        full_name,
-        email,
-        phone_number,
-        password_hash,
-        profile_photo_url,
-        role
-      )
-      VALUES (?, ?, ?, ?, ?, 'user')
-    `,
+    `INSERT INTO users (
+       full_name, student_number, email, phone_number, password_hash,
+       profile_photo_url, member_type, faculty, academic_year, role
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'user')`,
     [
       fullName.trim(),
+      studentNumber ? studentNumber.trim() : null,
       normalizedEmail,
       normalizedPhone,
       hashedPassword,
-      profilePhotoUrl
+      profilePhotoUrl,
+      memberType === "Staff" ? "Staff" : "Student",
+      faculty || null,
+      normalizedAcademicYear
     ]
   );
 
   const [userRows] = await pool.execute(
-    `
-      SELECT
-        id,
-        full_name,
-        email,
-        phone_number,
-        profile_photo_url AS profilePhoto,
-        role,
-        rating_average,
-        total_reviews
-      FROM users
-      WHERE id = ?
-      LIMIT 1
-    `,
+    `SELECT
+       id, full_name, student_number, email, phone_number,
+       profile_photo_url AS profilePhoto, member_type, faculty, academic_year,
+       role, rating_average, total_reviews
+     FROM users
+     WHERE id = ?
+     LIMIT 1`,
     [result.insertId]
   );
 
@@ -110,21 +102,13 @@ async function loginUser({ email, password }) {
   const normalizedEmail = email.trim().toLowerCase();
 
   const [rows] = await pool.execute(
-    `
-      SELECT
-        id,
-        full_name,
-        email,
-        phone_number,
-        profile_photo_url AS profilePhoto,
-        password_hash,
-        role,
-        rating_average,
-        total_reviews
-      FROM users
-      WHERE email = ?
-      LIMIT 1
-    `,
+    `SELECT
+       id, full_name, email, phone_number,
+       profile_photo_url AS profilePhoto, password_hash, role,
+       suspension_reason, ban_reason, rating_average, total_reviews
+     FROM users
+     WHERE email = ?
+     LIMIT 1`,
     [normalizedEmail]
   );
 
@@ -137,7 +121,15 @@ async function loginUser({ email, password }) {
   const user = rows[0];
 
   if (user.role === "suspended") {
-    const error = new Error("Your account has been suspended.");
+    const reasonText = user.suspension_reason ? ` Reason: ${user.suspension_reason}` : "";
+    const error = new Error(`Your account has been suspended.${reasonText}`);
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (user.role === "banned") {
+    const reasonText = user.ban_reason ? ` Reason: ${user.ban_reason}` : "";
+    const error = new Error(`Your account has been banned.${reasonText}`);
     error.statusCode = 403;
     throw error;
   }
@@ -151,6 +143,8 @@ async function loginUser({ email, password }) {
   }
 
   delete user.password_hash;
+  delete user.suspension_reason;
+  delete user.ban_reason;
 
   const token = generateToken(user);
 

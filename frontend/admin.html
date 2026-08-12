@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Admin Dashboard</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-shield-lock" aria-hidden="true"></i> Admin Dashboard</div>
+    <h1>Reports, users &amp; audit log</h1>
+    <p>Review reports, moderate accounts, and see a full history of admin actions.</p>
+  </div>
+
+  <section class="section">
+    <div id="adminStatsGrid" class="admin-stats-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading stats…</h3></div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div class="admin-tabs">
+      <button type="button" class="admin-tab active" data-tab="reports"><i class="ti ti-flag" aria-hidden="true"></i> Reports</button>
+      <button type="button" class="admin-tab" data-tab="users"><i class="ti ti-users" aria-hidden="true"></i> Users</button>
+      <button type="button" class="admin-tab" data-tab="audit"><i class="ti ti-history" aria-hidden="true"></i> Audit Log</button>
+    </div>
+
+    <div id="reportsTab" class="admin-tab-panel">
+      <div id="reportsListContainer" class="admin-list"></div>
+    </div>
+
+    <div id="usersTab" class="admin-tab-panel" style="display:none;">
+      <div class="admin-search-row">
+        <input type="text" id="userSearchInput" placeholder="Search by name or email..." />
+      </div>
+      <div id="usersListContainer" class="admin-list"></div>
+    </div>
+
+    <div id="auditTab" class="admin-tab-panel" style="display:none;">
+      <div id="auditListContainer" class="admin-list"></div>
+    </div>
+  </section>
+</div>
+
+<div id="adminOverlay"></div>
+<div id="adminActionModal">
+  <h2 id="adminActionModalTitle"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Confirm Action</h2>
+  <div class="form-group">
+    <label><i class="ti ti-message" aria-hidden="true"></i> Reason (optional but recommended)</label>
+    <textarea id="adminActionModalReason" placeholder="Explain why you're taking this action..."></textarea>
+  </div>
+  <div class="form-row">
+    <button type="button" class="secondary-button" id="adminActionModalCancel"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+    <button type="button" class="primary-button" id="adminActionModalConfirm" style="background:var(--ump-red);">Confirm</button>
+  </div>
+</div>
+
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/admin.js"></script>
+</body>
+</html>

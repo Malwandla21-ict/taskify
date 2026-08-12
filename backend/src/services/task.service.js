@@ -21,8 +21,6 @@ async function createTask({
 }
 
 async function getAllTasks() {
-  /* The marketplace is for work that can still be accepted.  Completed and
-     cancelled tasks belong in the owner's history, not the public feed. */
   const [rows] = await pool.execute(
     `SELECT
        t.id, t.title, t.description, t.category, t.section,
@@ -31,9 +29,14 @@ async function getAllTasks() {
        t.image_urls,
        u.full_name AS created_by_name,
        u.profile_photo_url AS created_by_profile_photo,
+       u.phone_number AS created_by_phone_number,
+       w.full_name AS accepted_by_name,
+       w.profile_photo_url AS accepted_by_profile_photo,
+       w.phone_number AS accepted_by_phone_number,
        p.status AS payment_status
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
+     LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
      WHERE t.status = 'Posted'
      ORDER BY t.urgent DESC, t.created_at DESC`
@@ -43,54 +46,70 @@ async function getAllTasks() {
 }
 
 async function acceptTask(taskId, userId) {
-  const [taskRows] = await pool.execute(
-    `SELECT id, created_by, accepted_by, status, price, title
-     FROM tasks WHERE id = ? LIMIT 1`,
-    [taskId]
-  );
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  if (taskRows.length === 0) {
-    const error = new Error("Task not found."); error.statusCode = 404; throw error;
+    const [taskRows] = await connection.execute(
+      `SELECT id, created_by, accepted_by, status, price, title
+       FROM tasks WHERE id = ? LIMIT 1 FOR UPDATE`,
+      [taskId]
+    );
+
+    if (taskRows.length === 0) {
+      const error = new Error("Task not found."); error.statusCode = 404; throw error;
+    }
+
+    const task = taskRows[0];
+
+    if (Number(task.created_by) === Number(userId)) {
+      const error = new Error("You cannot accept your own task."); error.statusCode = 400; throw error;
+    }
+    if (task.accepted_by) {
+      const error = new Error("This task has already been accepted."); error.statusCode = 400; throw error;
+    }
+    if (task.status !== "Posted") {
+      const error = new Error("Only posted tasks can be accepted."); error.statusCode = 400; throw error;
+    }
+
+    await connection.execute(
+      `UPDATE tasks SET accepted_by = ?, status = 'Accepted' WHERE id = ?`,
+      [userId, taskId]
+    );
+
+    await connection.execute(
+      `INSERT INTO payments (task_id, amount, status)
+       VALUES (?, ?, 'Held')
+       ON DUPLICATE KEY UPDATE amount = VALUES(amount), status = 'Held'`,
+      [taskId, task.price]
+    );
+
+    await connection.commit();
+
+    const [userRows] = await pool.execute(
+      `SELECT full_name FROM users WHERE id = ? LIMIT 1`, [userId]
+    );
+    const accepterName = userRows[0]?.full_name || "A student";
+
+    await notificationService.createNotification({
+      userId: task.created_by,
+      title: "Task Accepted",
+      message: `${accepterName} accepted your task "${task.title}".`,
+      contextType: "task",
+      contextId: taskId
+    });
+
+    return getTaskById(taskId);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
   }
-
-  const task = taskRows[0];
-
-  if (Number(task.created_by) === Number(userId)) {
-    const error = new Error("You cannot accept your own task."); error.statusCode = 400; throw error;
-  }
-  if (task.accepted_by) {
-    const error = new Error("This task has already been accepted."); error.statusCode = 400; throw error;
-  }
-  if (task.status !== "Posted") {
-    const error = new Error("Only posted tasks can be accepted."); error.statusCode = 400; throw error;
-  }
-
-  await pool.execute(
-    `UPDATE tasks SET accepted_by = ?, status = 'Accepted' WHERE id = ?`,
-    [userId, taskId]
-  );
-
-  await pool.execute(
-    `INSERT INTO payments (task_id, amount, status) VALUES (?, ?, 'Held')`,
-    [taskId, task.price]
-  );
-
-  const [userRows] = await pool.execute(
-    `SELECT full_name FROM users WHERE id = ? LIMIT 1`, [userId]
-  );
-  const accepterName = userRows[0]?.full_name || "A student";
-
-  await notificationService.createNotification({
-    userId: task.created_by,
-    title: "Task Accepted",
-    message: `${accepterName} accepted your task "${task.title}".`
-  });
-
-  return getTaskById(taskId);
 }
 
 async function updateTaskStatus(taskId, userId, newStatus) {
-  const allowed = ["In Progress", "Completed"];
+  const allowed = ["In Progress", "Awaiting Confirmation"];
   if (!allowed.includes(newStatus)) {
     const error = new Error("Invalid status update."); error.statusCode = 400; throw error;
   }
@@ -115,8 +134,8 @@ async function updateTaskStatus(taskId, userId, newStatus) {
   if (newStatus === "In Progress" && task.status !== "Accepted") {
     const error = new Error("Only accepted tasks can move to In Progress."); error.statusCode = 400; throw error;
   }
-  if (newStatus === "Completed" && task.status !== "In Progress") {
-    const error = new Error("Only tasks in progress can be completed."); error.statusCode = 400; throw error;
+  if (newStatus === "Awaiting Confirmation" && task.status !== "In Progress") {
+    const error = new Error("Only tasks in progress can be marked as done."); error.statusCode = 400; throw error;
   }
 
   await pool.execute(`UPDATE tasks SET status = ? WHERE id = ?`, [newStatus, taskId]);
@@ -125,55 +144,175 @@ async function updateTaskStatus(taskId, userId, newStatus) {
     await notificationService.createNotification({
       userId: task.created_by,
       title: "Task Started",
-      message: `Work has started on your task "${task.title}".`
+      message: `Work has started on your task "${task.title}".`,
+      contextType: "task",
+      contextId: taskId
     });
   }
 
-  if (newStatus === "Completed") {
-    await pool.execute(
-      `UPDATE payments SET status = 'Released' WHERE task_id = ?`, [taskId]
-    );
+  if (newStatus === "Awaiting Confirmation") {
     await notificationService.createNotification({
       userId: task.created_by,
-      title: "Task Completed",
-      message: `Your task "${task.title}" has been completed.`
-    });
-    await notificationService.createNotification({
-      userId: task.accepted_by,
-      title: "Task Completed",
-      message: `You completed "${task.title}".`
+      title: "Task Marked as Done",
+      message: `The work on "${task.title}" has been marked as done. Please confirm completion to release payment.`,
+      contextType: "task",
+      contextId: taskId
     });
   }
 
   return getTaskById(taskId);
 }
 
+async function confirmTaskCompletion(taskId, ownerId) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [taskRows] = await connection.execute(
+      `SELECT id, title, created_by, accepted_by, status FROM tasks WHERE id = ? LIMIT 1 FOR UPDATE`,
+      [taskId]
+    );
+
+    if (taskRows.length === 0) {
+      const error = new Error("Task not found."); error.statusCode = 404; throw error;
+    }
+
+    const task = taskRows[0];
+
+    if (Number(task.created_by) !== Number(ownerId)) {
+      const error = new Error("Only the task owner can confirm completion."); error.statusCode = 403; throw error;
+    }
+    if (task.status !== "Awaiting Confirmation") {
+      const error = new Error("This task is not awaiting confirmation."); error.statusCode = 400; throw error;
+    }
+
+    await connection.execute(`UPDATE tasks SET status = 'Completed' WHERE id = ?`, [taskId]);
+    await connection.execute(`UPDATE payments SET status = 'Released' WHERE task_id = ?`, [taskId]);
+
+    await connection.commit();
+
+    await notificationService.createNotification({
+      userId: task.created_by,
+      title: "Task Completed",
+      message: `Your task "${task.title}" has been completed and payment released.`,
+      contextType: "task",
+      contextId: taskId
+    });
+    await notificationService.createNotification({
+      userId: task.accepted_by,
+      title: "Payment Released",
+      message: `You completed "${task.title}" and payment has been released.`,
+      contextType: "task",
+      contextId: taskId
+    });
+
+    return getTaskById(taskId);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function withdrawFromTask(taskId, workerId) {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [taskRows] = await connection.execute(
+      `SELECT id, title, created_by, accepted_by, status FROM tasks WHERE id = ? LIMIT 1 FOR UPDATE`,
+      [taskId]
+    );
+
+    if (taskRows.length === 0) {
+      const error = new Error("Task not found."); error.statusCode = 404; throw error;
+    }
+
+    const task = taskRows[0];
+
+    if (Number(task.accepted_by) !== Number(workerId)) {
+      const error = new Error("Only the assigned user can withdraw from this task."); error.statusCode = 403; throw error;
+    }
+    if (task.status !== "Accepted") {
+      const error = new Error("You can only withdraw before starting the task."); error.statusCode = 400; throw error;
+    }
+
+    await connection.execute(`UPDATE tasks SET status = 'Posted', accepted_by = NULL WHERE id = ?`, [taskId]);
+    await connection.execute(`UPDATE payments SET status = 'Cancelled' WHERE task_id = ?`, [taskId]);
+
+    await connection.commit();
+
+    await notificationService.createNotification({
+      userId: task.created_by,
+      title: "Worker Withdrew",
+      message: `The student who accepted "${task.title}" has withdrawn. Your task is posted again.`,
+      contextType: "task",
+      contextId: taskId
+    });
+
+    return getTaskById(taskId);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 async function cancelTask(taskId, userId) {
-  const [taskRows] = await pool.execute(
-    `SELECT id, created_by, status FROM tasks WHERE id = ? LIMIT 1`, [taskId]
-  );
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
 
-  if (taskRows.length === 0) {
-    const error = new Error("Task not found."); error.statusCode = 404; throw error;
-  }
+    const [taskRows] = await connection.execute(
+      `SELECT id, title, created_by, accepted_by, status FROM tasks WHERE id = ? LIMIT 1 FOR UPDATE`, [taskId]
+    );
 
-  const task = taskRows[0];
+    if (taskRows.length === 0) {
+      const error = new Error("Task not found."); error.statusCode = 404; throw error;
+    }
 
-  if (Number(task.created_by) !== Number(userId)) {
-    const error = new Error("Only the task creator can cancel this task."); error.statusCode = 403; throw error;
-  }
-  if (task.status === "In Progress") {
-    const error = new Error("Tasks in progress cannot be cancelled."); error.statusCode = 400; throw error;
-  }
-  if (task.status === "Completed") {
-    const error = new Error("Completed tasks cannot be cancelled."); error.statusCode = 400; throw error;
-  }
-  if (task.status === "Cancelled") {
-    const error = new Error("This task is already cancelled."); error.statusCode = 400; throw error;
-  }
+    const task = taskRows[0];
 
-  await pool.execute(`UPDATE tasks SET status = 'Cancelled' WHERE id = ?`, [taskId]);
-  return getTaskById(taskId);
+    if (Number(task.created_by) !== Number(userId)) {
+      const error = new Error("Only the task creator can cancel this task."); error.statusCode = 403; throw error;
+    }
+    if (["In Progress", "Awaiting Confirmation"].includes(task.status)) {
+      const error = new Error("Tasks that are already underway cannot be cancelled."); error.statusCode = 400; throw error;
+    }
+    if (task.status === "Completed") {
+      const error = new Error("Completed tasks cannot be cancelled."); error.statusCode = 400; throw error;
+    }
+    if (task.status === "Cancelled") {
+      const error = new Error("This task is already cancelled."); error.statusCode = 400; throw error;
+    }
+
+    await connection.execute(`UPDATE tasks SET status = 'Cancelled' WHERE id = ?`, [taskId]);
+
+    if (task.accepted_by) {
+      await connection.execute(`UPDATE payments SET status = 'Cancelled' WHERE task_id = ?`, [taskId]);
+    }
+
+    await connection.commit();
+
+    if (task.accepted_by) {
+      await notificationService.createNotification({
+        userId: task.accepted_by,
+        title: "Task Cancelled",
+        message: `The task "${task.title}" was cancelled by its creator.`,
+        contextType: "task",
+        contextId: taskId
+      });
+    }
+
+    return getTaskById(taskId);
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 }
 
 async function getUserTaskHistory(userId) {
@@ -185,15 +324,28 @@ async function getUserTaskHistory(userId) {
        t.image_urls,
        u.full_name AS created_by_name,
        u.profile_photo_url AS created_by_profile_photo,
+       u.phone_number AS created_by_phone_number,
+       w.full_name AS accepted_by_name,
+       w.profile_photo_url AS accepted_by_profile_photo,
+       w.phone_number AS accepted_by_phone_number,
        p.status AS payment_status
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
+     LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
      WHERE t.created_by = ? OR t.accepted_by = ?
      ORDER BY t.created_at DESC`,
     [userId, userId]
   );
   return rows.map(parseImageUrls);
+}
+
+async function getTaskByIdForViewing(taskId) {
+  const task = await getTaskById(taskId);
+  if (!task) {
+    const error = new Error("Task not found."); error.statusCode = 404; throw error;
+  }
+  return task;
 }
 
 async function getTaskById(taskId) {
@@ -205,52 +357,20 @@ async function getTaskById(taskId) {
        t.image_urls,
        u.full_name AS created_by_name,
        u.profile_photo_url AS created_by_profile_photo,
+       u.phone_number AS created_by_phone_number,
+       w.full_name AS accepted_by_name,
+       w.profile_photo_url AS accepted_by_profile_photo,
+       w.phone_number AS accepted_by_phone_number,
        p.status AS payment_status
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
+     LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
      WHERE t.id = ? LIMIT 1`,
     [taskId]
   );
   return parseImageUrls(rows[0]);
 }
-
-/*
-  Parse image_urls into a plain JS array, regardless of how the DB driver
-  handed it back to us.
-
-  - If the `image_urls` column is a MySQL JSON type, mysql2 auto-parses it
-    into a real array before we ever see it — in that case we must NOT
-    call JSON.parse() on it again (that would stringify the array via
-    toString(), then fail to parse, and silently get swallowed by the
-    catch block, wiping out the images).
-  - If the column is TEXT/VARCHAR, it comes back as a JSON string and
-    needs JSON.parse() as before.
-*/
-function parseImageUrls(row) {
-  if (!row) return row;
-
-  if (Array.isArray(row.image_urls)) {
-    return row; // already parsed by the driver (JSON column)
-  }
-
-  try {
-    row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
-  } catch {
-    row.image_urls = [];
-  }
-  return row;
-}
-
-module.exports = {
-  deleteTask,
-  createTask,
-  getAllTasks,
-  acceptTask,
-  updateTaskStatus,
-  cancelTask,
-  getUserTaskHistory
-};
 
 async function deleteTask(taskId, userId) {
   const [taskRows] = await pool.execute(
@@ -266,6 +386,9 @@ async function deleteTask(taskId, userId) {
   if (Number(task.created_by) !== Number(userId)) {
     const error = new Error("Only the task creator can delete this task."); error.statusCode = 403; throw error;
   }
+  if (!["Posted", "Cancelled"].includes(task.status)) {
+    const error = new Error("Only posted or cancelled tasks can be deleted."); error.statusCode = 400; throw error;
+  }
 
   await pool.execute(`DELETE FROM tasks WHERE id = ?`, [taskId]);
 
@@ -273,7 +396,33 @@ async function deleteTask(taskId, userId) {
     await notificationService.createNotification({
       userId: task.accepted_by,
       title: "Task Withdrawn",
-      message: `The task "${task.title}" was deleted by its creator.`
+      message: `The task "${task.title}" was deleted by its creator.`,
+      contextType: "task",
+      contextId: taskId
     });
   }
 }
+
+function parseImageUrls(row) {
+  if (!row) return row;
+  if (Array.isArray(row.image_urls)) return row;
+  try {
+    row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
+  } catch {
+    row.image_urls = [];
+  }
+  return row;
+}
+
+module.exports = {
+  createTask,
+  getAllTasks,
+  acceptTask,
+  updateTaskStatus,
+  confirmTaskCompletion,
+  withdrawFromTask,
+  cancelTask,
+  getUserTaskHistory,
+  getTaskByIdForViewing,
+  deleteTask
+};

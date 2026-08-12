@@ -32,7 +32,9 @@ if (loginForm) {
     const password = document.getElementById("password").value.trim();
 
     const submitBtn = loginForm.querySelector("button[type='submit']");
+    const originalLabel = submitBtn.innerHTML;
     submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Signing in…`;
     showMessage("Signing you in…", "#687280");
 
     try {
@@ -43,13 +45,17 @@ if (loginForm) {
 
       showMessage("Login successful. Redirecting…", "var(--ump-green)");
 
+      /* Every login now lands on the profile page rather than the
+         dashboard — it's the natural "check who I am / what's
+         outstanding" landing spot. */
       setTimeout(() => {
-        window.location.href = "./dashboard.html";
-      }, 1000);
+        window.location.href = "./profile.html";
+      }, 900);
 
     } catch (error) {
       showMessage(error.message || "Invalid email or password.", "red");
       submitBtn.disabled = false;
+      submitBtn.innerHTML = originalLabel;
     }
   });
 }

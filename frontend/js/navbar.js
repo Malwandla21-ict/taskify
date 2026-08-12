@@ -9,16 +9,17 @@ async function loadNavbar() {
 
     highlightActiveLink();
     populateAvatar();
+    applyAdminVisibility();
     loadNotificationCount();
     startNotificationPolling();
     setupLogout();
+    initActivityTracker();
 
   } catch (error) {
     console.error("Navbar failed to load:", error);
   }
 }
 
-/* ── Active link highlight ── */
 function highlightActiveLink() {
   const currentPage = window.location.pathname.split("/").pop() || "dashboard.html";
 
@@ -30,44 +31,38 @@ function highlightActiveLink() {
   });
 }
 
-/* ── Avatar initials from stored user ── */
 function populateAvatar() {
-  const avatarEl    = document.getElementById("navAvatar");
-  const initialsEl  = document.getElementById("navAvatarInitials");
-  if (!avatarEl || !initialsEl) return;
+  const avatarEl = document.getElementById("navAvatar");
+  if (!avatarEl) return;
 
   try {
     const raw  = localStorage.getItem("taskifyUser");
     const user = raw ? JSON.parse(raw) : null;
-
     if (!user) return;
 
-    /* If user has a profile photo, show it */
-    if (user.profilePhoto) {
-      initialsEl.style.display = "none";
-      const img = document.createElement("img");
-      img.src = user.profilePhoto;
-      img.alt = "Profile photo";
-      avatarEl.appendChild(img);
-      return;
-    }
-
-    /* Otherwise build initials from firstName + lastName or name */
-    const nameParts = (user.full_name || user.name || "").trim().split(/\s+/);
-    const first = user.firstName || nameParts[0] || "";
-    const last  = user.lastName  || nameParts[1] || "";
-    const initials = (first[0] || "") + (last[0] || "");
-    initialsEl.textContent = initials.toUpperCase() || "?";
-
+    const name = user.full_name || user.name || "";
+    avatarEl.innerHTML = avatarHtml(user.profilePhoto, name);
   } catch (e) {
     console.warn("Could not parse taskifyUser:", e);
   }
 }
 
-/* ── Notification badge ── */
+function applyAdminVisibility() {
+  const adminLink = document.getElementById("adminNavLink");
+  if (!adminLink) return;
+
+  try {
+    const raw  = localStorage.getItem("taskifyUser");
+    const user = raw ? JSON.parse(raw) : null;
+    if (user && user.role === "admin") {
+      adminLink.style.display = "flex";
+    }
+  } catch (_) { /* leave hidden */ }
+}
+
 async function loadNotificationCount() {
-  const badge = document.getElementById("navNotifCount");
-  if (!badge) return;
+  const badgeEl = document.getElementById("navNotifCount");
+  if (!badgeEl) return;
 
   try {
     const token = localStorage.getItem("taskifyToken");
@@ -83,10 +78,10 @@ async function loadNotificationCount() {
     const count = data.count ?? data.unreadCount ?? 0;
 
     if (count > 0) {
-      badge.textContent    = count > 99 ? "99+" : count;
-      badge.style.display  = "flex";
+      badgeEl.textContent    = count > 99 ? "99+" : count;
+      badgeEl.style.display  = "flex";
     } else {
-      badge.style.display  = "none";
+      badgeEl.style.display  = "none";
     }
 
   } catch (e) {
@@ -95,8 +90,6 @@ async function loadNotificationCount() {
 }
 
 function notificationPriority(notification) {
-  /* Task acceptance needs a decision/response and is therefore interruptive.
-     Other lifecycle updates are informative and should not block the user. */
   return notification.title === "Task Accepted" ? "high" : "normal";
 }
 
@@ -170,7 +163,6 @@ function startNotificationPolling() {
   }, 30000);
 }
 
-/* ── Logout ── */
 function setupLogout() {
   const logoutButton = document.getElementById("logoutButton");
   if (!logoutButton) return;
@@ -179,6 +171,240 @@ function setupLogout() {
     localStorage.removeItem("taskifyToken");
     localStorage.removeItem("taskifyUser");
     window.location.href = "./login.html";
+  });
+}
+
+/* ─────────────────────────────────────────
+   ACTIVITY TRACKER — floating "what's in progress" widget.
+   Items that need a decision now render inline Confirm/Decline (bookings)
+   or Confirm Completion (tasks) buttons, so acting doesn't require
+   leaving the current page — this is the second place (besides
+   notifications) the owner can act from, per the request.
+───────────────────────────────────────── */
+function initActivityTracker() {
+  if (!localStorage.getItem("taskifyToken")) return;
+  if (document.getElementById("activityTrackerFab")) return;
+
+  const fab = document.createElement("button");
+  fab.type = "button";
+  fab.id = "activityTrackerFab";
+  fab.className = "activity-tracker-fab";
+  fab.setAttribute("aria-label", "Track my active tasks and rentals");
+  fab.innerHTML = `
+    <i class="ti ti-list-check" aria-hidden="true"></i>
+    <span class="activity-tracker-badge" id="activityTrackerBadge" style="display:none;">0</span>`;
+
+  const panel = document.createElement("div");
+  panel.id = "activityTrackerPanel";
+  panel.className = "activity-tracker-panel";
+  panel.innerHTML = `
+    <div class="activity-tracker-header">
+      <span><i class="ti ti-bolt" aria-hidden="true"></i> In Progress</span>
+      <button type="button" id="activityTrackerClose" aria-label="Close">
+        <i class="ti ti-x" aria-hidden="true"></i>
+      </button>
+    </div>
+    <div class="activity-tracker-body" id="activityTrackerBody">
+      <p class="activity-tracker-empty">Loading…</p>
+    </div>`;
+
+  document.body.appendChild(panel);
+  document.body.appendChild(fab);
+
+  fab.addEventListener("click", () => {
+    panel.classList.toggle("open");
+    if (panel.classList.contains("open")) loadActivityTracker();
+  });
+
+  panel.querySelector("#activityTrackerClose").addEventListener("click", () => {
+    panel.classList.remove("open");
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!panel.contains(event.target) && !fab.contains(event.target)) {
+      panel.classList.remove("open");
+    }
+  });
+
+  loadActivityTracker();
+  window.setInterval(loadActivityTracker, 30000);
+}
+
+function activityTaskLabel(task, userId) {
+  const isOwn    = Number(task.created_by)  === Number(userId);
+  const isWorker = Number(task.accepted_by) === Number(userId);
+
+  if (task.status === "Accepted") {
+    return isWorker ? "You accepted this — start when ready" : "Waiting for the worker to start";
+  }
+  if (task.status === "In Progress") {
+    return isWorker ? "You're working on this" : "Worker is in progress";
+  }
+  if (task.status === "Awaiting Confirmation") {
+    return isOwn ? "Confirm to release payment" : "Waiting for owner to confirm";
+  }
+  return task.status;
+}
+
+function activityBookingLabel(booking, userId) {
+  const isOwner  = Number(booking.owner_id)  === Number(userId);
+  const isRenter = Number(booking.renter_id) === Number(userId);
+
+  if (booking.status === "Pending") {
+    return isOwner ? "Confirm or decline this request" : "Waiting for owner to confirm";
+  }
+  if (booking.status === "Confirmed") {
+    return isOwner ? "Rented out — confirm return when it comes back" : "You're renting this — return when done";
+  }
+  return booking.status;
+}
+
+async function loadActivityTracker() {
+  const body    = document.getElementById("activityTrackerBody");
+  const badgeEl = document.getElementById("activityTrackerBadge");
+  if (!body) return;
+
+  const token = localStorage.getItem("taskifyToken");
+  if (!token) return;
+
+  try {
+    const raw  = localStorage.getItem("taskifyUser");
+    const user = raw ? JSON.parse(raw) : null;
+    if (!user) return;
+
+    const authHeaders = { Authorization: `Bearer ${token}` };
+
+    const [taskRes, equipRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/tasks/history`, { headers: authHeaders }).then(r => r.json()),
+      fetch(`${API_BASE_URL}/equipment/history`, { headers: authHeaders }).then(r => r.json())
+    ]);
+
+    const activeTasks = (taskRes.data || []).filter(t =>
+      ["Accepted", "In Progress", "Awaiting Confirmation"].includes(t.status)
+    );
+    const activeBookings = (equipRes.data || []).filter(b =>
+      ["Pending", "Confirmed"].includes(b.status)
+    );
+
+    const total = activeTasks.length + activeBookings.length;
+
+    if (badgeEl) {
+      if (total > 0) {
+        badgeEl.textContent   = total > 9 ? "9+" : total;
+        badgeEl.style.display = "flex";
+      } else {
+        badgeEl.style.display = "none";
+      }
+    }
+
+    if (!total) {
+      body.innerHTML = `<p class="activity-tracker-empty">Nothing in progress right now.</p>`;
+      return;
+    }
+
+    const taskItems = activeTasks.map(t => {
+      const isOwn = Number(t.created_by) === Number(user.id);
+      const inlineAction = (isOwn && t.status === "Awaiting Confirmation")
+        ? `<button class="market-action-btn confirm-tracker-task-btn" data-task-id="${t.id}" style="margin-top:6px;width:100%;background:var(--ump-green);">
+             <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion
+           </button>`
+        : "";
+      return `
+        <div class="activity-tracker-item-wrapper">
+          <a class="activity-tracker-item" href="./task-details.html?id=${t.id}">
+            <div class="activity-tracker-item-icon"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+            <div class="activity-tracker-item-body">
+              <div class="activity-tracker-item-title">${t.title}</div>
+              <div class="activity-tracker-item-sub">${activityTaskLabel(t, user.id)}</div>
+            </div>
+            ${typeof statusBadge === "function" ? statusBadge(t.status) : ""}
+          </a>
+          ${inlineAction}
+        </div>`;
+    }).join("");
+
+    const bookingItems = activeBookings.map(b => {
+      const isOwner = Number(b.owner_id) === Number(user.id);
+      const inlineAction = (isOwner && b.status === "Pending")
+        ? `<div style="display:flex;gap:6px;margin-top:6px;">
+             <button class="market-action-btn confirm-tracker-booking-btn" data-booking-id="${b.id}" style="flex:1;background:var(--ump-green);">
+               <i class="ti ti-check" aria-hidden="true"></i> Confirm
+             </button>
+             <button class="market-action-btn outline decline-tracker-booking-btn" data-booking-id="${b.id}" style="flex:1;background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+               <i class="ti ti-x" aria-hidden="true"></i> Decline
+             </button>
+           </div>`
+        : "";
+      return `
+        <div class="activity-tracker-item-wrapper">
+          <a class="activity-tracker-item" href="./equipment-details.html?id=${b.equipment_id}">
+            <div class="activity-tracker-item-icon"><i class="ti ti-package" aria-hidden="true"></i></div>
+            <div class="activity-tracker-item-body">
+              <div class="activity-tracker-item-title">${b.equipment_name}</div>
+              <div class="activity-tracker-item-sub">${activityBookingLabel(b, user.id)}</div>
+            </div>
+            ${typeof statusBadge === "function" ? statusBadge(b.status) : ""}
+          </a>
+          ${inlineAction}
+        </div>`;
+    }).join("");
+
+    body.innerHTML = taskItems + bookingItems;
+    attachActivityTrackerActionEvents();
+  } catch (_) {
+    /* Non-critical widget; fail silently. */
+  }
+}
+
+function attachActivityTrackerActionEvents() {
+  document.querySelectorAll(".confirm-tracker-task-btn").forEach(btn => {
+    btn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      if (!confirm("Confirm this task is complete? This will release payment to the worker.")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/tasks/${btn.dataset.taskId}/confirm-completion`, "PATCH");
+        showToast("Task completed and payment released!");
+        await loadActivityTracker();
+      } catch (err) {
+        showToast(err.message, "error");
+        await loadActivityTracker();
+      }
+    });
+  });
+
+  document.querySelectorAll(".confirm-tracker-booking-btn").forEach(btn => {
+    btn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/confirm`, "PATCH");
+        showToast("Booking confirmed!");
+        await loadActivityTracker();
+      } catch (err) {
+        showToast(err.message, "error");
+        await loadActivityTracker();
+      }
+    });
+  });
+
+  document.querySelectorAll(".decline-tracker-booking-btn").forEach(btn => {
+    btn.addEventListener("click", async (event) => {
+      event.preventDefault();
+      if (!confirm("Decline this booking request?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/decline`, "PATCH");
+        showToast("Booking declined.");
+        await loadActivityTracker();
+      } catch (err) {
+        showToast(err.message, "error");
+        await loadActivityTracker();
+      }
+    });
   });
 }
 

@@ -1,4 +1,4 @@
-requireAuth();
+const currentUser = requireAuth();
 
 const pageSection = document.body.dataset.section || "Academic";
 
@@ -56,6 +56,7 @@ function renderSectionTasks() {
 
   sectionTasksContainer.innerHTML = filtered.map(task => {
     const initials = avatarInitials(task.created_by_name);
+    const canDelete = Number(task.created_by) === Number(currentUser.id);
     return `
       <div class="market-card">
         <div class="market-image">
@@ -82,13 +83,36 @@ function renderSectionTasks() {
           </div>
           <div class="market-footer">
             <div class="market-price">R${task.price} <span>/task</span></div>
-            <a href="./task-details.html?id=${task.id}" class="market-action-btn">
-              <i class="ti ti-eye" aria-hidden="true"></i> View
-            </a>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <a href="./task-details.html?id=${task.id}" class="market-action-btn">
+                <i class="ti ti-eye" aria-hidden="true"></i> View
+              </a>
+              ${canDelete ? `<button class="market-action-btn outline section-delete-task-btn" data-task-id="${task.id}" data-task-status="${task.status}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+                <i class="ti ti-trash" aria-hidden="true"></i> Delete
+              </button>` : ""}
+            </div>
           </div>
         </div>
       </div>`;
   }).join("");
+  attachSectionTaskDeleteEvents();
+}
+
+function attachSectionTaskDeleteEvents() {
+  document.querySelectorAll(".section-delete-task-btn").forEach((button) => {
+    button.addEventListener("click", async () => {
+      if (!confirm("Permanently delete this task?")) return;
+      button.disabled = true;
+      try {
+        await apiRequest(`/tasks/${button.dataset.taskId}`, "DELETE");
+        showToast("Task deleted.");
+        await loadSectionData();
+      } catch (error) {
+        showToast(error.message, "error");
+        button.disabled = false;
+      }
+    });
+  });
 }
 
 function renderSectionEquipment() {

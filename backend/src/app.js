@@ -12,6 +12,7 @@ const userRoutes         = require("./routes/user.routes");
 const salesRoutes        = require("./routes/sales.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const uploadRoutes       = require("./routes/upload.routes");
+const adminRoutes        = require("./routes/admin.routes");
 
 const { errorHandler }   = require("./middleware/error.middleware");
 
@@ -37,6 +38,7 @@ app.use("/api/users",         userRoutes);
 app.use("/api/sales",         salesRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/upload",        uploadRoutes);
+app.use("/api/admin",         adminRoutes);
 
 app.use(errorHandler);
 

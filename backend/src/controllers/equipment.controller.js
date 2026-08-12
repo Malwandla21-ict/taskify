@@ -24,6 +24,16 @@ async function getAllAvailableEquipment(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getEquipmentById(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const item = await equipmentService.getEquipmentByIdForViewing(Number(req.params.id), req.user.id);
+    return res.status(200).json({ success: true, message: "Equipment fetched successfully.", data: item });
+  } catch (error) { next(error); }
+}
+
 async function bookEquipment(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -34,7 +44,37 @@ async function bookEquipment(req, res, next) {
       startDate: req.body.startDate, endDate: req.body.endDate
     });
 
-    return res.status(201).json({ success: true, message: "Equipment booked successfully.", data: booking });
+    return res.status(201).json({ success: true, message: "Booking request sent.", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function confirmBooking(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const booking = await equipmentService.confirmBooking(Number(req.params.bookingId), req.user.id);
+    return res.status(200).json({ success: true, message: "Booking confirmed successfully.", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function declineBooking(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const booking = await equipmentService.declineBooking(Number(req.params.bookingId), req.user.id);
+    return res.status(200).json({ success: true, message: "Booking declined.", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function cancelBooking(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const booking = await equipmentService.cancelBookingByRenter(Number(req.params.bookingId), req.user.id);
+    return res.status(200).json({ success: true, message: "Booking request cancelled.", data: booking });
   } catch (error) { next(error); }
 }
 
@@ -65,4 +105,15 @@ async function deleteEquipment(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { createEquipment, getAllAvailableEquipment, bookEquipment, returnEquipment, getEquipmentHistory, deleteEquipment };
+module.exports = {
+  createEquipment,
+  getAllAvailableEquipment,
+  getEquipmentById,
+  bookEquipment,
+  confirmBooking,
+  declineBooking,
+  cancelBooking,
+  returnEquipment,
+  getEquipmentHistory,
+  deleteEquipment
+};

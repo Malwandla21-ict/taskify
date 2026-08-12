@@ -37,6 +37,29 @@ router.post(
   equipmentController.bookEquipment
 );
 
+/* Owner: approve or reject a booking request */
+router.patch(
+  "/bookings/:bookingId/confirm",
+  authenticate,
+  [ param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer.") ],
+  equipmentController.confirmBooking
+);
+
+router.patch(
+  "/bookings/:bookingId/decline",
+  authenticate,
+  [ param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer.") ],
+  equipmentController.declineBooking
+);
+
+/* Renter: back out of a request that hasn't been confirmed yet */
+router.patch(
+  "/bookings/:bookingId/cancel",
+  authenticate,
+  [ param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer.") ],
+  equipmentController.cancelBooking
+);
+
 router.patch(
   "/bookings/:bookingId/return",
   authenticate,
@@ -50,6 +73,22 @@ router.delete(
   authenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Equipment ID must be a valid positive integer.") ],
   equipmentController.deleteEquipment
+);
+
+/*
+  GET /:id — single-item lookup, unfiltered by is_available. Placed last
+  so it never swallows the more specific routes above (Express matches
+  by exact path + method, so "/history", "/:id/book", and the
+  "/bookings/..." routes are unaffected regardless of order — this
+  ordering is just for readability). This is what equipment-details.js
+  needs to load an item once it's booked, since GET / only returns
+  available equipment.
+*/
+router.get(
+  "/:id",
+  authenticate,
+  [ param("id").isInt({ min: 1 }).withMessage("Equipment ID must be a valid positive integer.") ],
+  equipmentController.getEquipmentById
 );
 
 module.exports = router;
