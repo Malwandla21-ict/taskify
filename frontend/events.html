@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Campus Events</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-calendar-event" aria-hidden="true"></i> Campus Events</div>
+    <h1>What's happening on campus</h1>
+    <p>Discover workshops, society meetups, sports and academic talks — and RSVP in one tap.</p>
+  </div>
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-plus" aria-hidden="true"></i> Post an Event</h2>
+        <p>Share something happening on campus</p>
+      </div>
+    </div>
+    <div class="form-panel">
+      <form id="eventForm">
+        <div class="form-group">
+          <label for="eventTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Event Title</label>
+          <input type="text" id="eventTitle" placeholder="e.g. Career Readiness Workshop" required />
+        </div>
+        <div class="form-group">
+          <label for="eventDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
+          <textarea id="eventDescription" placeholder="What's it about, who should attend..." required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+            <input type="text" id="eventCategory" placeholder="e.g. Workshop, Sports, Society" required />
+          </div>
+          <div class="form-group">
+            <label for="eventSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
+            <select id="eventSection" required>
+              <option value="General">General</option>
+              <option value="Academic">Academic</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="eventDate"><i class="ti ti-calendar" aria-hidden="true"></i> Date &amp; Time</label>
+            <input type="datetime-local" id="eventDate" required />
+          </div>
+          <div class="form-group">
+            <label for="eventCapacity"><i class="ti ti-users" aria-hidden="true"></i> Capacity (optional)</label>
+            <input type="number" id="eventCapacity" placeholder="Leave blank for unlimited" min="1" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="eventLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
+          <input type="text" id="eventLocation" placeholder="e.g. UMP Auditorium, Mbombela Campus" required />
+        </div>
+        <div class="form-group">
+          <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
+          <div class="upload-area" id="eventUploadArea">
+            <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
+            <div class="upload-area-label">Click or drag images here</div>
+            <div class="upload-area-hint">JPEG, PNG or WebP · max 5MB each</div>
+            <div class="upload-counter">0/5 images</div>
+          </div>
+          <div class="upload-preview-grid" id="eventPreviewGrid"></div>
+        </div>
+        <button type="submit" class="primary-button">
+          <i class="ti ti-send" aria-hidden="true"></i> Post Event
+        </button>
+      </form>
+      <p id="eventMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-list-search" aria-hidden="true"></i> Upcoming Events</h2>
+        <p>Browse and RSVP to what's coming up</p>
+      </div>
+    </div>
+    <div class="filters-row">
+      <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+      <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
+      <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
+    </div>
+    <div id="eventsContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-calendar-event" aria-hidden="true"></i></div><h3>Loading events…</h3></div>
+    </div>
+  </section>
+  <section class="section" style="padding-top:0;">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-history" aria-hidden="true"></i> My Events</h2>
+        <p>Events you're organizing or attending</p>
+      </div>
+    </div>
+    <div id="myEventsContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-clock" aria-hidden="true"></i></div><h3>No events yet</h3></div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/events.js"></script>
+</body>
+</html>

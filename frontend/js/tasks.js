@@ -30,6 +30,22 @@ const reviewMessage         = document.getElementById("reviewMessage");
 
 const overlay               = document.getElementById("overlay");
 
+/* ── Creation modal ── */
+const taskCreateOverlay = document.getElementById("taskCreateOverlay");
+const taskCreateModal   = document.getElementById("taskCreateModal");
+
+function openTaskCreateModal() {
+  taskCreateModal.classList.add("open");
+  taskCreateOverlay.classList.add("open");
+}
+function closeTaskCreateModal() {
+  taskCreateModal.classList.remove("open");
+  taskCreateOverlay.classList.remove("open");
+}
+document.getElementById("openTaskModalButton")?.addEventListener("click", openTaskCreateModal);
+document.getElementById("closeTaskModalButton")?.addEventListener("click", closeTaskCreateModal);
+taskCreateOverlay?.addEventListener("click", closeTaskCreateModal);
+
 let cachedTasks    = [];
 let selectedSection = "All";
 
@@ -124,7 +140,7 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
   });
 });
 
-/* ── Card builder ── */
+/* ── Card builder (marketplace grid) ── */
 function taskCard(task) {
   const isOwn     = Number(task.created_by) === Number(currentUser.id);
   const canCancel = isOwn && ["Posted", "Accepted"].includes(task.status);
@@ -202,57 +218,112 @@ function attachDeleteTaskEvents() {
   });
 }
 
-/* ── History card ── */
+/* ── Detailed history card ── */
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
 function historyCard(task) {
   const isOwn    = Number(task.created_by)  === Number(currentUser.id);
   const isWorker = Number(task.accepted_by) === Number(currentUser.id);
 
-  const counterpartId   = isOwn ? task.accepted_by : task.created_by;
-  const counterpartName = isOwn ? task.accepted_by_name : task.created_by_name;
-
   let actionArea = "";
   if (task.status === "Completed") {
     actionArea = `
-      <button class="market-action-btn review-task-btn" data-task-id="${task.id}" style="margin-top:14px;width:100%;">
+      <button class="market-action-btn review-task-btn" data-task-id="${task.id}">
         <i class="ti ti-star" aria-hidden="true"></i> Leave Review
       </button>`;
   } else if (isOwn && task.status === "Awaiting Confirmation") {
     actionArea = `
-      <button class="market-action-btn confirm-completion-btn" data-task-id="${task.id}" style="margin-top:14px;width:100%;background:var(--ump-green);">
+      <button class="market-action-btn confirm-completion-btn" data-task-id="${task.id}" style="background:var(--ump-green);">
         <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion & Release Payment
       </button>`;
   } else if (isWorker && task.status === "Accepted") {
     actionArea = `
-      <button class="market-action-btn outline withdraw-task-btn" data-task-id="${task.id}" style="margin-top:14px;width:100%;">
+      <button class="market-action-btn outline withdraw-task-btn" data-task-id="${task.id}">
         <i class="ti ti-logout" aria-hidden="true"></i> Withdraw
       </button>`;
   } else if (isWorker && task.status === "Awaiting Confirmation") {
     actionArea = `
-      <p style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center;">
-        <i class="ti ti-hourglass" aria-hidden="true"></i> Waiting for owner to confirm completion
-      </p>`;
+      <div class="badge gold"><i class="ti ti-hourglass" aria-hidden="true"></i> Waiting for owner to confirm</div>`;
   }
 
+  const counterpartId   = isOwn ? task.accepted_by : task.created_by;
+  const counterpartName = isOwn ? task.accepted_by_name : task.created_by_name;
+  const counterpartPhoto = isOwn ? task.accepted_by_profile_photo : task.created_by_profile_photo;
+
   const reportButton = counterpartId
-    ? `<button class="market-action-btn outline report-task-btn" data-task-id="${task.id}" data-task-title="${task.title}" data-user-id="${counterpartId}" data-user-name="${counterpartName || "this user"}" style="margin-top:8px;width:100%;color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
-         <i class="ti ti-flag" aria-hidden="true"></i> Report an Issue
+    ? `<button class="market-action-btn outline report-task-btn" data-task-id="${task.id}" data-task-title="${task.title}" data-user-id="${counterpartId}" data-user-name="${counterpartName || "this user"}" style="color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+         <i class="ti ti-flag" aria-hidden="true"></i> Report
        </button>`
     : "";
 
+  const peopleHtml = `
+    <div class="history-card-people">
+      <div class="history-person">
+        <div class="market-avatar" style="width:32px;height:32px;">${avatarHtml(task.created_by_profile_photo, task.created_by_name)}</div>
+        <div>
+          <div class="history-person-role">Posted by</div>
+          <div class="history-person-name profile-link" data-user-id="${task.created_by}" data-user-name="${task.created_by_name}">${isOwn ? "You" : task.created_by_name}</div>
+        </div>
+      </div>
+      ${task.accepted_by ? `
+        <div class="history-person">
+          <div class="market-avatar" style="width:32px;height:32px;">${avatarHtml(counterpartPhoto, counterpartName)}</div>
+          <div>
+            <div class="history-person-role">${isOwn ? "Working with" : "You are"}</div>
+            <div class="history-person-name profile-link" data-user-id="${task.accepted_by}" data-user-name="${task.accepted_by_name}">${isWorker ? "You" : task.accepted_by_name}</div>
+          </div>
+        </div>` : `
+        <div class="history-person">
+          <div class="history-person-role" style="color:var(--muted);"><i class="ti ti-user-question" aria-hidden="true"></i> No one has accepted this task yet</div>
+        </div>`}
+    </div>`;
+
   return `
-    <div class="market-card">
-      <div class="market-content">
-        <div class="market-top">
-          ${sectionBadge(task.section || "General")}
+    <div class="history-card">
+      <div class="history-card-image">
+        ${task.image_urls?.length
+          ? `<img src="${task.image_urls[0]}" alt="${task.title}" />`
+          : `<div class="market-image-placeholder"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
+      </div>
+      <div class="history-card-body">
+        <div class="history-card-top">
+          <div>
+            <div class="history-card-title">${task.title}</div>
+            <div class="market-tags" style="margin-bottom:0;">
+              ${sectionBadge(task.section || "General")}
+              <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
+              ${task.urgent ? `<div class="market-tag" style="background:rgba(224,58,62,0.10);color:var(--ump-red);"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
+            </div>
+          </div>
           ${statusBadge(task.status)}
         </div>
-        <h3>${task.title}</h3>
-        <p style="color:var(--muted);font-size:13px;margin:8px 0 12px;">${task.description}</p>
-        <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-credit-card" aria-hidden="true"></i> ${task.payment_status || "N/A"}</div>
+        <p class="history-card-desc">${task.description}</p>
+        <div class="history-card-meta-grid">
+          <div class="history-meta-item">
+            <i class="ti ti-currency-dollar" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Budget</div><div class="history-meta-value">R${task.price}</div></div>
+          </div>
+          <div class="history-meta-item">
+            <i class="ti ti-map-pin" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Location</div><div class="history-meta-value">${task.location}</div></div>
+          </div>
+          <div class="history-meta-item">
+            <i class="ti ti-calendar" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Posted</div><div class="history-meta-value">${formatDate(task.created_at)}</div></div>
+          </div>
+          <div class="history-meta-item">
+            <i class="ti ti-credit-card" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Payment</div><div class="history-meta-value">${task.payment_status || "N/A"}</div></div>
+          </div>
         </div>
-        ${actionArea}
-        ${reportButton}
+        ${peopleHtml}
+        <div class="history-card-actions">
+          ${actionArea}
+          ${reportButton}
+        </div>
       </div>
     </div>`;
 }
@@ -388,11 +459,12 @@ async function loadTaskHistory() {
     const tasks = res.data;
     historyContainer.innerHTML = tasks.length
       ? tasks.map(historyCard).join("")
-      : emptyState("ti-clock", "No history yet", "Completed tasks appear here.");
+      : emptyState("ti-clock", "No history yet", "Tasks you post or accept will show here.");
     attachReviewButtonEvents();
     attachConfirmCompletionEvents();
     attachWithdrawTaskEvents();
     attachHistoryReportEvents();
+    attachProfileLinkEvents(historyContainer);
   } catch (err) {
     historyContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
@@ -430,6 +502,7 @@ taskForm?.addEventListener("submit", async e => {
     taskForm.reset();
     if (taskUploader) taskUploader.reset();
     showTaskStep(1);
+    closeTaskCreateModal();
     await loadTasks();
     await loadTaskHistory();
   } catch (err) {

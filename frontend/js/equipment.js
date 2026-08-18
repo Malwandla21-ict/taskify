@@ -14,6 +14,22 @@ const eDot1                     = document.getElementById("eDot1");
 const eDot2                     = document.getElementById("eDot2");
 const eDot3                     = document.getElementById("eDot3");
 
+/* ── Creation modal ── */
+const equipmentCreateOverlay = document.getElementById("equipmentCreateOverlay");
+const equipmentCreateModal   = document.getElementById("equipmentCreateModal");
+
+function openEquipmentCreateModal() {
+  equipmentCreateModal.classList.add("open");
+  equipmentCreateOverlay.classList.add("open");
+}
+function closeEquipmentCreateModal() {
+  equipmentCreateModal.classList.remove("open");
+  equipmentCreateOverlay.classList.remove("open");
+}
+document.getElementById("openEquipmentModalButton")?.addEventListener("click", openEquipmentCreateModal);
+document.getElementById("closeEquipmentModalButton")?.addEventListener("click", closeEquipmentCreateModal);
+equipmentCreateOverlay?.addEventListener("click", closeEquipmentCreateModal);
+
 let cachedEquipment  = [];
 let selectedSection  = "All";
 
@@ -133,9 +149,20 @@ function renderEquipment(items) {
   attachProfileLinkEvents(equipmentContainer);
 }
 
+/* ── Detailed history card ── */
+function formatDate(dateStr) {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function rentalDays(start, end) {
+  const diff = Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
+  return Math.max(diff, 1);
+}
+
 function whatsappBtn(phone, title) {
   if (!phone) return "";
-  return `<a href="${createWhatsAppLink(phone, title)}" target="_blank" class="market-action-btn outline" style="margin-top:8px;width:100%;justify-content:center;color:var(--ump-green);border-color:rgba(0,155,114,0.30);">
+  return `<a href="${createWhatsAppLink(phone, title)}" target="_blank" class="market-action-btn outline" style="color:var(--ump-green);border-color:rgba(0,155,114,0.30);">
              <i class="ti ti-brand-whatsapp" aria-hidden="true"></i> Message
            </a>`;
 }
@@ -143,25 +170,23 @@ function whatsappBtn(phone, title) {
 function historyCard(booking) {
   const isOwner  = Number(booking.owner_id)  === Number(currentUser.id);
   const isRenter = Number(booking.renter_id) === Number(currentUser.id);
+  const days     = rentalDays(booking.start_date, booking.end_date);
+  const total    = (Number(booking.daily_price) * days).toFixed(2);
 
   let actionArea = "";
   if (booking.status === "Pending" && isOwner) {
     actionArea = `
-      <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="market-action-btn confirm-booking-btn" data-booking-id="${booking.id}" style="flex:1;background:var(--ump-green);">
-          <i class="ti ti-check" aria-hidden="true"></i> Confirm
-        </button>
-        <button class="market-action-btn outline decline-booking-btn" data-booking-id="${booking.id}" style="flex:1;background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
-          <i class="ti ti-x" aria-hidden="true"></i> Decline
-        </button>
-      </div>
+      <button class="market-action-btn confirm-booking-btn" data-booking-id="${booking.id}" style="background:var(--ump-green);">
+        <i class="ti ti-check" aria-hidden="true"></i> Confirm
+      </button>
+      <button class="market-action-btn outline decline-booking-btn" data-booking-id="${booking.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+        <i class="ti ti-x" aria-hidden="true"></i> Decline
+      </button>
       ${whatsappBtn(booking.renter_phone_number, booking.equipment_name)}`;
   } else if (booking.status === "Pending" && isRenter) {
     actionArea = `
-      <p style="margin-top:14px;font-size:12px;color:var(--muted);text-align:center;">
-        <i class="ti ti-hourglass" aria-hidden="true"></i> Waiting for owner to confirm
-      </p>
-      <button class="market-action-btn outline cancel-booking-btn" data-booking-id="${booking.id}" style="margin-top:8px;width:100%;">
+      <div class="badge gold"><i class="ti ti-hourglass" aria-hidden="true"></i> Waiting for owner</div>
+      <button class="market-action-btn outline cancel-booking-btn" data-booking-id="${booking.id}">
         <i class="ti ti-x" aria-hidden="true"></i> Cancel Request
       </button>
       ${whatsappBtn(booking.owner_phone_number, booking.equipment_name)}`;
@@ -172,7 +197,7 @@ function historyCard(booking) {
       : "Confirm you are returning this equipment?";
     const contactPhone = isOwner ? booking.renter_phone_number : booking.owner_phone_number;
     actionArea = `
-      <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" data-confirm-text="${confirmText}" style="margin-top:14px;width:100%;">
+      <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" data-confirm-text="${confirmText}">
         <i class="ti ti-package-export" aria-hidden="true"></i> ${label}
       </button>
       ${whatsappBtn(contactPhone, booking.equipment_name)}`;
@@ -182,28 +207,66 @@ function historyCard(booking) {
   const counterpartName = isOwner ? booking.renter_name : booking.owner_name;
 
   const reportButton = `
-    <button class="market-action-btn outline report-booking-btn" data-booking-id="${booking.id}" data-equipment-name="${booking.equipment_name}" data-user-id="${counterpartId}" data-user-name="${counterpartName}" style="margin-top:8px;width:100%;color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
-      <i class="ti ti-flag" aria-hidden="true"></i> Report an Issue
+    <button class="market-action-btn outline report-booking-btn" data-booking-id="${booking.id}" data-equipment-name="${booking.equipment_name}" data-user-id="${counterpartId}" data-user-name="${counterpartName}" style="color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+      <i class="ti ti-flag" aria-hidden="true"></i> Report
     </button>`;
 
   return `
-    <div class="market-card">
-      <div class="market-content">
-        <div class="market-top">
-          ${sectionBadge(booking.section || "General")}
+    <div class="history-card">
+      <div class="history-card-image">
+        ${booking.image_urls?.length
+          ? `<img src="${booking.image_urls[0]}" alt="${booking.equipment_name}" />`
+          : `<div class="market-image-placeholder" style="color:var(--ump-blue);"><i class="ti ti-package" aria-hidden="true"></i></div>`}
+      </div>
+      <div class="history-card-body">
+        <div class="history-card-top">
+          <div>
+            <div class="history-card-title">${booking.equipment_name}</div>
+            <div class="market-tags" style="margin-bottom:0;">
+              ${sectionBadge(booking.section || "General")}
+              <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${booking.category}</div>
+            </div>
+          </div>
           ${statusBadge(booking.status)}
         </div>
-        <h3>${booking.equipment_name}</h3>
-        <div class="market-tags" style="margin:10px 0;">
-          <div class="market-tag profile-link" data-user-id="${booking.owner_id}" data-user-name="${booking.owner_name}" style="cursor:pointer;"><i class="ti ti-user" aria-hidden="true"></i> Owner: ${booking.owner_name}</div>
-          <div class="market-tag profile-link" data-user-id="${booking.renter_id}" data-user-name="${booking.renter_name}" style="cursor:pointer;"><i class="ti ti-user-check" aria-hidden="true"></i> Renter: ${booking.renter_name}</div>
+        <div class="history-card-meta-grid">
+          <div class="history-meta-item">
+            <i class="ti ti-currency-dollar" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Daily Rate</div><div class="history-meta-value">R${booking.daily_price}/day</div></div>
+          </div>
+          <div class="history-meta-item">
+            <i class="ti ti-calendar-time" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Duration</div><div class="history-meta-value">${days} day${days === 1 ? "" : "s"}</div></div>
+          </div>
+          <div class="history-meta-item">
+            <i class="ti ti-receipt" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Total Cost</div><div class="history-meta-value">R${total}</div></div>
+          </div>
+          <div class="history-meta-item">
+            <i class="ti ti-calendar" aria-hidden="true"></i>
+            <div><div class="history-meta-label">Rental Period</div><div class="history-meta-value">${formatDate(booking.start_date)} → ${formatDate(booking.end_date)}</div></div>
+          </div>
         </div>
-        <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${booking.start_date}</div>
-          <div class="market-tag"><i class="ti ti-calendar-off" aria-hidden="true"></i> ${booking.end_date}</div>
+        <div class="history-card-people">
+          <div class="history-person">
+            <div class="market-avatar" style="width:32px;height:32px;">${avatarHtml(booking.owner_profile_photo, booking.owner_name)}</div>
+            <div>
+              <div class="history-person-role">Owner</div>
+              <div class="history-person-name profile-link" data-user-id="${booking.owner_id}" data-user-name="${booking.owner_name}">${isOwner ? "You" : booking.owner_name}</div>
+            </div>
+          </div>
+          <div class="history-person">
+            <div class="market-avatar" style="width:32px;height:32px;">${avatarHtml(booking.renter_profile_photo, booking.renter_name)}</div>
+            <div>
+              <div class="history-person-role">Renter</div>
+              <div class="history-person-name profile-link" data-user-id="${booking.renter_id}" data-user-name="${booking.renter_name}">${isRenter ? "You" : booking.renter_name}</div>
+            </div>
+          </div>
         </div>
-        ${actionArea}
-        ${reportButton}
+        <div class="history-card-actions">
+          ${actionArea}
+          ${reportButton}
+        </div>
       </div>
     </div>`;
 }
@@ -378,6 +441,7 @@ equipmentForm?.addEventListener("submit", async e => {
     equipmentForm.reset();
     if (equipmentUploader) equipmentUploader.reset();
     showEquipmentStep(1);
+    closeEquipmentCreateModal();
     await loadEquipment();
   } catch (err) {
     equipmentMessage.textContent = err.message;

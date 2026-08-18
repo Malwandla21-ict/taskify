@@ -21,19 +21,13 @@ async function loadSaleDetails() {
 
 function renderSaleDetails(item) {
   const isOwn    = Number(item.seller_id) === Number(currentUser.id);
-  const waLink   = createWhatsAppLink(item.seller_phone_number, item.title);
+  const initials = avatarInitials(item.seller_name);
 
   const actionArea = isOwn
     ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>`
-    : `<a href="${waLink}" target="_blank" class="primary-button">
-         <i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp Seller
-       </a>`;
-
-  const reportButton = !isOwn
-    ? `<button type="button" class="secondary-button" id="reportSaleButton" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.30);">
-         <i class="ti ti-flag" aria-hidden="true"></i> Report an Issue
-       </button>`
-    : "";
+    : `<button class="primary-button" id="messageSellerButton">
+         <i class="ti ti-message-circle" aria-hidden="true"></i> Message Seller
+       </button>`;
 
   saleDetailsContainer.innerHTML = `
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
@@ -54,9 +48,9 @@ function renderSaleDetails(item) {
           <i class="ti ti-receipt" aria-hidden="true"></i> Item Summary
         </h3>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
-          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_profile_photo, item.seller_name)}</div>
+          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;background:rgba(245,180,0,0.14);color:#b38900;">${initials}</div>
           <div>
-            <div class="profile-link" data-user-id="${item.seller_id}" data-user-name="${item.seller_name}" style="font-weight:600;font-size:13px;cursor:pointer;">${item.seller_name}</div>
+            <div style="font-weight:600;font-size:13px;">${item.seller_name}</div>
             <div style="font-size:11px;color:var(--muted);">Student Seller</div>
           </div>
         </div>
@@ -78,20 +72,11 @@ function renderSaleDetails(item) {
         <a href="./sales.html" class="secondary-button" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Sales
         </a>
-        ${reportButton}
       </div>
     </div>`;
 
-  attachProfileLinkEvents(saleDetailsContainer);
-
-  document.getElementById("reportSaleButton")?.addEventListener("click", () => {
-    openReportModal({
-      reportedUserId: item.seller_id,
-      reportedUserName: item.seller_name,
-      contextType: "sales_item",
-      contextId: item.id,
-      contextLabel: item.title
-    });
+  document.getElementById("messageSellerButton")?.addEventListener("click", () => {
+    startConversationAndRedirect("sale", saleId);
   });
 }
 

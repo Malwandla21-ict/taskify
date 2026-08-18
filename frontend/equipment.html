@@ -14,99 +14,26 @@
     <h1>Rent or list student equipment</h1>
     <p>List laptops, calculators, toolkits, cameras and more using the guided setup flow.</p>
   </div>
+
   <section class="section">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-plus" aria-hidden="true"></i> List Equipment</h2>
-        <p>Create a rental listing step-by-step</p>
+        <p>Create a rental listing in a few guided steps</p>
       </div>
     </div>
-    <div class="form-panel">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <span id="equipmentStepText" class="step-label">Step 1 of 3</span>
-        <div style="display:flex;gap:5px;">
-          <div class="step-dot active" id="eDot1"></div>
-          <div class="step-dot" id="eDot2"></div>
-          <div class="step-dot" id="eDot3"></div>
-        </div>
+    <div class="create-cta-panel">
+      <div class="create-cta-icon"><i class="ti ti-package" aria-hidden="true"></i></div>
+      <div class="create-cta-text">
+        <h3>Got equipment to rent out?</h3>
+        <p>List it and start earning from students who need it.</p>
       </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="equipmentProgressFill" style="width:33%;"></div>
-      </div>
-      <form id="equipmentForm">
-        <div class="equipment-step" id="equipmentStep1">
-          <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Equipment Basics</h2>
-          <p class="auth-subtitle">Start with the main equipment information</p>
-          <div class="form-group">
-            <label for="equipmentName"><i class="ti ti-package" aria-hidden="true"></i> Equipment Name</label>
-            <input type="text" id="equipmentName" placeholder="e.g. HP Laptop" required />
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="equipmentCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
-              <input type="text" id="equipmentCategory" placeholder="e.g. Laptop, Toolkit, Camera" required />
-            </div>
-            <div class="form-group">
-              <label for="equipmentSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
-              <select id="equipmentSection" required>
-                <option value="General">General</option>
-                <option value="Academic">Academic</option>
-              </select>
-            </div>
-          </div>
-          <button type="button" class="primary-button" id="nextEquipmentStep2">
-            Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
-          </button>
-        </div>
-        <div class="equipment-step" id="equipmentStep2" style="display:none;">
-          <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Equipment Details</h2>
-          <p class="auth-subtitle">Describe the condition and usage</p>
-          <div class="form-group">
-            <label for="equipmentDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
-            <textarea id="equipmentDescription" placeholder="Describe the equipment, its use and any rules..." required></textarea>
-          </div>
-          <div class="form-group">
-            <label for="equipmentCondition"><i class="ti ti-star" aria-hidden="true"></i> Condition</label>
-            <select id="equipmentCondition">
-              <option value="Excellent">Excellent</option>
-              <option value="Good">Good</option>
-              <option value="Fair">Fair</option>
-            </select>
-          </div>
-          <div class="form-row">
-            <button type="button" class="secondary-button" id="backEquipmentStep1"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
-            <button type="button" class="primary-button"   id="nextEquipmentStep3">Continue <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
-          </div>
-        </div>
-        <div class="equipment-step" id="equipmentStep3" style="display:none;">
-          <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Pricing &amp; Confirm</h2>
-          <p class="auth-subtitle">Set rental pricing and review listing</p>
-          <div class="form-group">
-            <label for="equipmentDailyPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Daily Rental Price (R)</label>
-            <input type="number" id="equipmentDailyPrice" placeholder="e.g. 50" required />
-          </div>
-          <div class="form-group">
-            <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
-            <div class="upload-area" id="equipmentUploadArea">
-              <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
-              <div class="upload-area-label">Click or drag images here</div>
-              <div class="upload-area-hint">JPEG, PNG or WebP · max 5MB each</div>
-              <div class="upload-counter">0/5 images</div>
-            </div>
-            <div class="upload-preview-grid" id="equipmentPreviewGrid"></div>
-          </div>
-          <div id="equipmentPreview" class="form-panel" style="box-shadow:none;background:var(--background);margin-bottom:18px;">
-            <p style="color:var(--muted);font-size:13px;">Preview will appear here.</p>
-          </div>
-          <div class="form-row">
-            <button type="button" class="secondary-button" id="backEquipmentStep2"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
-            <button type="submit" class="primary-button"><i class="ti ti-send" aria-hidden="true"></i> Publish Listing</button>
-          </div>
-        </div>
-      </form>
-      <p id="equipmentMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
+      <button type="button" class="primary-button" id="openEquipmentModalButton" style="width:auto;">
+        <i class="ti ti-plus" aria-hidden="true"></i> List Equipment
+      </button>
     </div>
   </section>
+
   <section class="section" style="padding-top:0;">
     <div class="section-header">
       <div>
@@ -123,44 +50,110 @@
       <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-package" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div>
     </div>
   </section>
+
   <section class="section" style="padding-top:0;">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-history" aria-hidden="true"></i> My Equipment History</h2>
-        <p>Track bookings and returns</p>
+        <p>Every rental you've booked or listed, with full details</p>
       </div>
     </div>
-    <div id="equipmentHistoryContainer" class="marketplace-grid">
+    <div id="equipmentHistoryContainer" class="history-list">
       <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-clock" aria-hidden="true"></i></div><h3>No bookings yet</h3></div>
     </div>
   </section>
 </div>
-<div id="overlay"></div>
-<div id="toastContainer" class="toast-container"></div>
-<div id="bookingModal">
-  <h2><i class="ti ti-calendar-plus" aria-hidden="true"></i> Book Equipment</h2>
-  <form id="bookingForm">
-    <input type="hidden" id="bookingEquipmentId" />
-    <div class="form-group">
-      <label><i class="ti ti-calendar" aria-hidden="true"></i> Start Date</label>
-      <input type="date" id="bookingStartDate" required />
+
+<!-- Equipment creation modal -->
+<div id="equipmentCreateOverlay" class="creation-modal-overlay"></div>
+<div id="equipmentCreateModal" class="creation-modal">
+  <button type="button" class="creation-modal-close" id="closeEquipmentModalButton" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <span id="equipmentStepText" class="step-label">Step 1 of 3</span>
+    <div style="display:flex;gap:5px;">
+      <div class="step-dot active" id="eDot1"></div>
+      <div class="step-dot" id="eDot2"></div>
+      <div class="step-dot" id="eDot3"></div>
     </div>
-    <div class="form-group">
-      <label><i class="ti ti-calendar" aria-hidden="true"></i> End Date</label>
-      <input type="date" id="bookingEndDate" required />
+  </div>
+  <div class="progress-bar">
+    <div class="progress-fill" id="equipmentProgressFill" style="width:33%;"></div>
+  </div>
+  <form id="equipmentForm">
+    <div class="equipment-step" id="equipmentStep1">
+      <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Equipment Basics</h2>
+      <p class="auth-subtitle">Start with the main equipment information</p>
+      <div class="form-group">
+        <label for="equipmentName"><i class="ti ti-package" aria-hidden="true"></i> Equipment Name</label>
+        <input type="text" id="equipmentName" placeholder="e.g. HP Laptop" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="equipmentCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+          <input type="text" id="equipmentCategory" placeholder="e.g. Laptop, Toolkit, Camera" required />
+        </div>
+        <div class="form-group">
+          <label for="equipmentSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
+          <select id="equipmentSection" required>
+            <option value="General">General</option>
+            <option value="Academic">Academic</option>
+          </select>
+        </div>
+      </div>
+      <button type="button" class="primary-button" id="nextEquipmentStep2">
+        Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
+      </button>
     </div>
-    <div class="form-row">
-      <button type="button" id="closeBookingModal" class="secondary-button"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
-      <button type="submit" class="primary-button"><i class="ti ti-check" aria-hidden="true"></i> Confirm Booking</button>
+    <div class="equipment-step" id="equipmentStep2" style="display:none;">
+      <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Equipment Details</h2>
+      <p class="auth-subtitle">Describe the condition and usage</p>
+      <div class="form-group">
+        <label for="equipmentDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
+        <textarea id="equipmentDescription" placeholder="Describe the equipment, its use and any rules..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label for="equipmentCondition"><i class="ti ti-star" aria-hidden="true"></i> Condition</label>
+        <select id="equipmentCondition">
+          <option value="Excellent">Excellent</option>
+          <option value="Good">Good</option>
+          <option value="Fair">Fair</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <button type="button" class="secondary-button" id="backEquipmentStep1"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+        <button type="button" class="primary-button"   id="nextEquipmentStep3">Continue <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+      </div>
+    </div>
+    <div class="equipment-step" id="equipmentStep3" style="display:none;">
+      <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Pricing &amp; Confirm</h2>
+      <p class="auth-subtitle">Set rental pricing and review listing</p>
+      <div class="form-group">
+        <label for="equipmentDailyPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Daily Rental Price (R)</label>
+        <input type="number" id="equipmentDailyPrice" placeholder="e.g. 50" required />
+      </div>
+      <div class="form-group">
+        <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
+        <div class="upload-area" id="equipmentUploadArea">
+          <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
+          <div class="upload-area-label">Click or drag images here</div>
+          <div class="upload-area-hint">JPEG, PNG or WebP · max 5MB each</div>
+          <div class="upload-counter">0/5 images</div>
+        </div>
+        <div class="upload-preview-grid" id="equipmentPreviewGrid"></div>
+      </div>
+      <div id="equipmentPreview" class="form-panel" style="box-shadow:none;background:var(--background);margin-bottom:18px;">
+        <p style="color:var(--muted);font-size:13px;">Preview will appear here.</p>
+      </div>
+      <div class="form-row">
+        <button type="button" class="secondary-button" id="backEquipmentStep2"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+        <button type="submit" class="primary-button"><i class="ti ti-send" aria-hidden="true"></i> Publish Listing</button>
+      </div>
     </div>
   </form>
-  <p id="bookingMessage" style="margin-top:12px;font-size:13px;font-weight:600;"></p>
+  <p id="equipmentMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
 </div>
-<div id="profileModal">
-  <h2><i class="ti ti-user" aria-hidden="true"></i> User Trust Profile</h2>
-  <div id="profileContent"><p>Loading profile...</p></div>
-  <button type="button" id="closeProfileModal" class="secondary-button" style="margin-top:14px;"><i class="ti ti-x" aria-hidden="true"></i> Close</button>
-</div>
+
+<div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>
 <script src="./js/navbar.js"></script>

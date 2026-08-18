@@ -1,6 +1,7 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../config/db");
+const adminAllowlistService = require("./adminAllowlist.service");
 
 function normalizePhoneNumber(phoneNumber) {
   let phone = String(phoneNumber || "").replace(/\s+/g, "").replace(/-/g, "");
@@ -30,10 +31,7 @@ function generateToken(user) {
   );
 }
 
-async function registerUser({
-  fullName, email, phoneNumber, password, profilePhotoUrl = null,
-  studentNumber = null, memberType = "Student", faculty = null, academicYear = null
-}) {
+async function registerUser({ fullName, email, phoneNumber, password, profilePhotoUrl = null }) {
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedPhone = normalizePhoneNumber(phoneNumber);
 
@@ -44,7 +42,12 @@ async function registerUser({
   }
 
   const [existingRows] = await pool.execute(
-    `SELECT id FROM users WHERE email = ? LIMIT 1`,
+    `
+      SELECT id
+      FROM users
+      WHERE email = ?
+      LIMIT 1
+    `,
     [normalizedEmail]
   );
 
@@ -56,36 +59,53 @@ async function registerUser({
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  /* Staff accounts don't have an academic year — normalize to null
-     regardless of what was sent, rather than trusting the client. */
-  const normalizedAcademicYear = memberType === "Staff" ? null : (academicYear || null);
+  /*
+    Institutional policy (per panel feedback): admin role is never assigned
+    by another user through the interface. Eligibility is tied entirely to
+    an allow-list of UMP staff emails, maintained only via a server-side
+    CLI script. This registration check is the single automatic promotion
+    path — there is no in-app equivalent.
+  */
+  const isAdminEligible = await adminAllowlistService.isEmailAllowlisted(normalizedEmail);
+  const assignedRole = isAdminEligible ? "admin" : "user";
 
   const [result] = await pool.execute(
-    `INSERT INTO users (
-       full_name, student_number, email, phone_number, password_hash,
-       profile_photo_url, member_type, faculty, academic_year, role
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'user')`,
+    `
+      INSERT INTO users (
+        full_name,
+        email,
+        phone_number,
+        password_hash,
+        profile_photo_url,
+        role
+      )
+      VALUES (?, ?, ?, ?, ?, ?)
+    `,
     [
       fullName.trim(),
-      studentNumber ? studentNumber.trim() : null,
       normalizedEmail,
       normalizedPhone,
       hashedPassword,
       profilePhotoUrl,
-      memberType === "Staff" ? "Staff" : "Student",
-      faculty || null,
-      normalizedAcademicYear
+      assignedRole
     ]
   );
 
   const [userRows] = await pool.execute(
-    `SELECT
-       id, full_name, student_number, email, phone_number,
-       profile_photo_url AS profilePhoto, member_type, faculty, academic_year,
-       role, rating_average, total_reviews
-     FROM users
-     WHERE id = ?
-     LIMIT 1`,
+    `
+      SELECT
+        id,
+        full_name,
+        email,
+        phone_number,
+        profile_photo_url AS profilePhoto,
+        role,
+        rating_average,
+        total_reviews
+      FROM users
+      WHERE id = ?
+      LIMIT 1
+    `,
     [result.insertId]
   );
 
@@ -102,13 +122,21 @@ async function loginUser({ email, password }) {
   const normalizedEmail = email.trim().toLowerCase();
 
   const [rows] = await pool.execute(
-    `SELECT
-       id, full_name, email, phone_number,
-       profile_photo_url AS profilePhoto, password_hash, role,
-       suspension_reason, ban_reason, rating_average, total_reviews
-     FROM users
-     WHERE email = ?
-     LIMIT 1`,
+    `
+      SELECT
+        id,
+        full_name,
+        email,
+        phone_number,
+        profile_photo_url AS profilePhoto,
+        password_hash,
+        role,
+        rating_average,
+        total_reviews
+      FROM users
+      WHERE email = ?
+      LIMIT 1
+    `,
     [normalizedEmail]
   );
 
@@ -121,15 +149,7 @@ async function loginUser({ email, password }) {
   const user = rows[0];
 
   if (user.role === "suspended") {
-    const reasonText = user.suspension_reason ? ` Reason: ${user.suspension_reason}` : "";
-    const error = new Error(`Your account has been suspended.${reasonText}`);
-    error.statusCode = 403;
-    throw error;
-  }
-
-  if (user.role === "banned") {
-    const reasonText = user.ban_reason ? ` Reason: ${user.ban_reason}` : "";
-    const error = new Error(`Your account has been banned.${reasonText}`);
+    const error = new Error("Your account has been suspended.");
     error.statusCode = 403;
     throw error;
   }
@@ -143,8 +163,6 @@ async function loginUser({ email, password }) {
   }
 
   delete user.password_hash;
-  delete user.suspension_reason;
-  delete user.ban_reason;
 
   const token = generateToken(user);
 

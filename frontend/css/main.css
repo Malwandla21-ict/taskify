@@ -1469,18 +1469,18 @@ textarea { min-height: 110px; resize: vertical; }
 /* ==============================
    PROFILE
 ============================== */
-
 .profile-header-card {
   background: var(--ump-navy);
   border-radius: var(--radius-xl);
-  padding: 36px 40px;
+  padding: clamp(28px, 4vw, 44px);
   color: white;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: clamp(20px, 3vw, 32px);
   position: relative;
   overflow: hidden;
   box-shadow: var(--shadow-md);
+  flex-wrap: wrap;
 }
 
 .profile-header-card::after {
@@ -1496,15 +1496,15 @@ textarea { min-height: 110px; resize: vertical; }
 }
 
 .profile-avatar-large {
-  width: 80px;
-  height: 80px;
+  width: clamp(80px, 14vw, 160px);
+  height: clamp(80px, 14vw, 160px);
   border-radius: 50%;
   border: 3px solid rgba(255,255,255,0.28);
   background: rgba(255,255,255,0.14);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 28px;
+  font-size: clamp(28px, 4vw, 52px);
   font-weight: 700;
   flex-shrink: 0;
   overflow: hidden;
@@ -2620,12 +2620,13 @@ textarea { min-height: 110px; resize: vertical; }
   position: relative;
   flex-shrink: 0;
 }
+
 .profile-photo-edit-btn {
   position: absolute;
-  bottom: -2px;
-  right: -2px;
-  width: 32px;
-  height: 32px;
+  bottom: 2%;
+  right: 2%;
+  width: clamp(30px, 4vw, 40px);
+  height: clamp(30px, 4vw, 40px);
   border-radius: 50%;
   background: var(--ump-green);
   color: white;
@@ -2633,8 +2634,175 @@ textarea { min-height: 110px; resize: vertical; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: clamp(13px, 1.6vw, 17px);
   cursor: pointer;
   box-shadow: var(--shadow-sm);
 }
 .profile-photo-edit-btn:hover { background: #007a5a; }
+
+/* ==============================
+   CREATE-VIA-MODAL: CTA panel + modal shell
+============================== */
+.create-cta-panel {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--shadow-sm);
+  flex-wrap: wrap;
+}
+.create-cta-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-lg);
+  background: rgba(0,155,114,0.10);
+  color: var(--ump-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  flex-shrink: 0;
+}
+.create-cta-text { flex: 1; min-width: 200px; }
+.create-cta-text h3 { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+.create-cta-text p { font-size: 13px; color: var(--muted); }
+
+.creation-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12,29,74,0.55);
+  z-index: 2600;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+.creation-modal-overlay.open { opacity: 1; visibility: visible; }
+
+.creation-modal {
+  position: fixed;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: var(--radius-xl);
+  width: min(640px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 30px 32px;
+  box-shadow: 0 20px 60px rgba(12,29,74,0.18);
+  z-index: 2700;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+.creation-modal.open { opacity: 1; visibility: visible; }
+
+.creation-modal-close {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  z-index: 2;
+}
+.creation-modal-close:hover { color: var(--ump-red); border-color: rgba(224,58,62,0.30); }
+
+/* ==============================
+   DETAILED HISTORY CARDS
+============================== */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.history-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+}
+
+.history-card-image {
+  width: 170px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg,#E8F5F1,#D1ECE4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.history-card-image img { width: 100%; height: 100%; object-fit: cover; }
+.history-card-image .market-image-placeholder { font-size: 34px; }
+
+.history-card-body { flex: 1; padding: 18px 22px; min-width: 0; }
+
+.history-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.history-card-title { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+
+.history-card-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin-bottom: 14px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.history-card-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.history-meta-item { display: flex; align-items: center; gap: 8px; }
+.history-meta-item i { font-size: 16px; color: var(--ump-green); flex-shrink: 0; }
+.history-meta-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.history-meta-value { font-size: 13px; font-weight: 700; color: var(--text); }
+
+.history-card-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: var(--background);
+  border-radius: var(--radius);
+}
+
+.history-person { display: flex; align-items: center; gap: 9px; }
+.history-person-role { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+.history-person-name { font-size: 13px; font-weight: 700; cursor: pointer; }
+.history-person-name:hover { color: var(--ump-green); }
+
+.history-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+@media (max-width: 700px) {
+  .history-card { flex-direction: column; }
+  .history-card-image { width: 100%; height: 170px; }
+}

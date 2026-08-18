@@ -105,8 +105,8 @@ function renderGeneralTasks() {
             <div class="market-footer">
               <div class="market-price">R${task.price}</div>
 
-              <a
-                href="./tasks.html"
+              
+                href="./task-details.html?id=${task.id}"
                 class="primary-button"
                 style="width:auto;padding:12px 18px;"
               >
@@ -158,8 +158,8 @@ function renderGeneralEquipment() {
             <div class="market-footer">
               <div class="market-price">R${item.daily_price}/day</div>
 
-              <a
-                href="./equipment.html"
+              
+                href="./equipment-details.html?id=${item.id}"
                 class="primary-button"
                 style="width:auto;padding:12px 18px;"
               >
@@ -171,23 +171,6 @@ function renderGeneralEquipment() {
       `
     )
     .join("");
-}
-
-function createWhatsAppLink(phoneNumber, itemTitle) {
-  if (!phoneNumber) {
-    return "#";
-  }
-
-  const cleanPhone = String(phoneNumber)
-    .replace(/\s+/g, "")
-    .replace(/-/g, "")
-    .replace("+", "");
-
-  const message = encodeURIComponent(
-    `Hi, I saw your item "${itemTitle}" on Taskify and I am interested.`
-  );
-
-  return `https://wa.me/${cleanPhone}?text=${message}`;
 }
 
 function renderGeneralSales() {
@@ -210,11 +193,6 @@ function renderGeneralSales() {
   generalSalesContainer.innerHTML = filteredSales
     .slice(0, 6)
     .map((item) => {
-      const whatsappLink = createWhatsAppLink(
-        item.seller_phone_number,
-        item.title
-      );
-
       return `
         <div class="market-card">
           <div class="market-content">
@@ -235,13 +213,12 @@ function renderGeneralSales() {
             <div class="market-footer">
               <div class="market-price">R${item.price}</div>
 
-              <a
-                href="${whatsappLink}"
-                target="_blank"
+              
+                href="./sale-details.html?id=${item.id}"
                 class="primary-button"
                 style="width:auto;padding:12px 18px;"
               >
-                WhatsApp
+                View
               </a>
             </div>
           </div>

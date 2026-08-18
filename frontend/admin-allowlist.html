@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Admin Allow-list</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-shield-lock" aria-hidden="true"></i> Admin Access Control</div>
+    <h1>Institutional admin allow-list</h1>
+    <p>This list is view-only here. Admin eligibility is granted or revoked exclusively through a server-side script run by someone with direct institutional access — never through this interface — so there is one auditable source of truth.</p>
+  </div>
+  <section class="section">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-list" aria-hidden="true"></i> Current Allow-list</h2>
+        <p>Emails currently eligible for automatic admin assignment at registration</p>
+      </div>
+    </div>
+    <div id="allowlistContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-shield-lock" aria-hidden="true"></i></div><h3>Loading…</h3></div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/admin-allowlist.js"></script>
+</body>
+</html>

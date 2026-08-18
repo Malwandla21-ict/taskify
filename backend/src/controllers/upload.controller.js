@@ -57,7 +57,7 @@ async function uploadImages(req, res, next) {
       return res.status(400).json({ success: false, message: "No images provided." });
     }
 
-    const allowedFolders = new Set(["tasks", "equipment", "sales"]);
+    const allowedFolders = new Set(["tasks", "equipment", "sales", "events"]);
     const requestedFolder = String(req.query.folder || "general").toLowerCase();
     const folder = `taskify/${allowedFolders.has(requestedFolder) ? requestedFolder : "general"}`;
 

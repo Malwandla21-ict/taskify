@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Messages</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <div class="hero-section-simple">
+    <div class="hero-badge"><i class="ti ti-message-circle" aria-hidden="true"></i> Messages</div>
+    <h1>Your conversations</h1>
+    <p>Every conversation is tied to a task, rental or sale — and stays on Taskify so it's covered by our reporting and moderation.</p>
+  </div>
+  <section class="section">
+    <div id="conversationsContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-message-circle" aria-hidden="true"></i></div><h3>Loading conversations…</h3></div>
+    </div>
+  </section>
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/messages.js"></script>
+</body>
+</html>

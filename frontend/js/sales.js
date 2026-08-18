@@ -28,6 +28,7 @@ salesSearchButton?.addEventListener("click", () => renderSalesItems(cachedSalesI
 
 /* ── Card builder ── */
 function saleCard(item) {
+  const initials  = avatarInitials(item.seller_name);
   const isOwn     = Number(item.seller_id) === Number(currentUser.id);
 
   return `
@@ -40,9 +41,9 @@ function saleCard(item) {
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_profile_photo, item.seller_name)}</div>
+            <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${initials}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" data-user-name="${item.seller_name}" style="cursor:pointer;">${item.seller_name}</div>
+              <div class="market-user-name">${item.seller_name}</div>
               <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
             </div>
           </div>
@@ -108,7 +109,6 @@ function renderSalesItems(items) {
   salesContainer.innerHTML = filtered.length
     ? filtered.map(saleCard).join("")
     : emptyState("ti-shopping-bag", "No items found", "Try a different filter or list your own.");
-  attachProfileLinkEvents(salesContainer);
 }
 
 function renderMySalesItems(items) {
@@ -192,13 +192,13 @@ async function loadMySalesItems() {
 salesForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const submitBtn = salesForm.querySelector("button[type='submit']");
-  const originalLabel = submitBtn.innerHTML;
   submitBtn.disabled = true;
   submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Publishing…`;
 
   try {
     let imageUrls = [];
     if (salesUploader && salesUploader.getFiles().length) {
+      showToast("Uploading images…", "warning");
       imageUrls = await salesUploader.upload("sales");
     }
 
@@ -223,7 +223,7 @@ salesForm?.addEventListener("submit", async e => {
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = originalLabel;
+    submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Publish Item`;
   }
 });
 

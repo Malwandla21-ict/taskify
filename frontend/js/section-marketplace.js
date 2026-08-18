@@ -1,4 +1,4 @@
-const currentUser = requireAuth();
+requireAuth();
 
 const pageSection = document.body.dataset.section || "Academic";
 
@@ -56,7 +56,6 @@ function renderSectionTasks() {
 
   sectionTasksContainer.innerHTML = filtered.map(task => {
     const initials = avatarInitials(task.created_by_name);
-    const canDelete = Number(task.created_by) === Number(currentUser.id);
     return `
       <div class="market-card">
         <div class="market-image">
@@ -83,36 +82,13 @@ function renderSectionTasks() {
           </div>
           <div class="market-footer">
             <div class="market-price">R${task.price} <span>/task</span></div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;">
-              <a href="./task-details.html?id=${task.id}" class="market-action-btn">
-                <i class="ti ti-eye" aria-hidden="true"></i> View
-              </a>
-              ${canDelete ? `<button class="market-action-btn outline section-delete-task-btn" data-task-id="${task.id}" data-task-status="${task.status}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
-                <i class="ti ti-trash" aria-hidden="true"></i> Delete
-              </button>` : ""}
-            </div>
+            <a href="./task-details.html?id=${task.id}" class="market-action-btn">
+              <i class="ti ti-eye" aria-hidden="true"></i> View
+            </a>
           </div>
         </div>
       </div>`;
   }).join("");
-  attachSectionTaskDeleteEvents();
-}
-
-function attachSectionTaskDeleteEvents() {
-  document.querySelectorAll(".section-delete-task-btn").forEach((button) => {
-    button.addEventListener("click", async () => {
-      if (!confirm("Permanently delete this task?")) return;
-      button.disabled = true;
-      try {
-        await apiRequest(`/tasks/${button.dataset.taskId}`, "DELETE");
-        showToast("Task deleted.");
-        await loadSectionData();
-      } catch (error) {
-        showToast(error.message, "error");
-        button.disabled = false;
-      }
-    });
-  });
 }
 
 function renderSectionEquipment() {
@@ -177,7 +153,6 @@ function renderSectionSales() {
 
   sectionSalesContainer.innerHTML = filtered.map(item => {
     const initials = avatarInitials(item.seller_name);
-    const waLink   = createWhatsAppLink(item.seller_phone_number, item.title);
     return `
       <div class="market-card">
         <div class="market-image" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">
@@ -204,8 +179,8 @@ function renderSectionSales() {
           </div>
           <div class="market-footer">
             <div class="market-price">R${item.price}</div>
-            <a href="${waLink}" target="_blank" class="market-action-btn" style="background:var(--ump-green);">
-              <i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp
+            <a href="./sale-details.html?id=${item.id}" class="market-action-btn">
+              <i class="ti ti-eye" aria-hidden="true"></i> View
             </a>
           </div>
         </div>

@@ -124,8 +124,8 @@ function renderAcademicTasks() {
               R${task.price}
             </div>
 
-            <a
-              href="./tasks.html"
+            
+              href="./task-details.html?id=${task.id}"
               class="primary-button"
               style="width:auto;padding:12px 18px;"
             >
@@ -183,8 +183,8 @@ function renderAcademicEquipment() {
               R${item.daily_price}/day
             </div>
 
-            <a
-              href="./equipment.html"
+            
+              href="./equipment-details.html?id=${item.id}"
               class="primary-button"
               style="width:auto;padding:12px 18px;"
             >
@@ -199,23 +199,6 @@ function renderAcademicEquipment() {
     `
     )
     .join("");
-}
-
-function createWhatsAppLink(phoneNumber, itemTitle) {
-  if (!phoneNumber) {
-    return "#";
-  }
-
-  const cleanPhone = String(phoneNumber)
-    .replace(/\s+/g, "")
-    .replace(/-/g, "")
-    .replace("+", "");
-
-  const message = encodeURIComponent(
-    `Hi, I saw your item "${itemTitle}" on Taskify and I am interested.`
-  );
-
-  return `https://wa.me/${cleanPhone}?text=${message}`;
 }
 
 function renderAcademicSales() {
@@ -238,11 +221,6 @@ function renderAcademicSales() {
   sectionSalesContainer.innerHTML = filteredSales
     .slice(0, 6)
     .map((item) => {
-      const whatsappLink = createWhatsAppLink(
-        item.seller_phone_number,
-        item.title
-      );
-
       return `
         <div class="market-card">
 
@@ -264,13 +242,12 @@ function renderAcademicSales() {
                 R${item.price}
               </div>
 
-              <a
-                href="${whatsappLink}"
-                target="_blank"
+              
+                href="./sale-details.html?id=${item.id}"
                 class="primary-button"
                 style="width:auto;padding:12px 18px;"
               >
-                WhatsApp
+                View
               </a>
 
             </div>
