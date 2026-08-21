@@ -2,9 +2,6 @@ requireAuth();
 
 const pageSection = document.body.dataset.section || "Academic";
 
-/* Support both ID naming conventions:
-   academic.html uses sectionXxxContainer
-   general.html  uses generalXxxContainer */
 const sectionSearch          = document.getElementById("sectionSearch")   || document.getElementById("generalSearch");
 const sectionSearchButton    = document.getElementById("sectionSearchButton") || document.getElementById("generalSearchButton");
 const sectionTasksContainer  = document.getElementById("sectionTasksContainer")  || document.getElementById("generalTasksContainer");
@@ -54,9 +51,7 @@ function renderSectionTasks() {
     return;
   }
 
-  sectionTasksContainer.innerHTML = filtered.map(task => {
-    const initials = avatarInitials(task.created_by_name);
-    return `
+  sectionTasksContainer.innerHTML = filtered.map(task => `
       <div class="market-card">
         <div class="market-image">
           ${task.image_urls?.length
@@ -67,7 +62,7 @@ function renderSectionTasks() {
         <div class="market-content">
           <div class="market-top">
             <div class="market-user">
-              <div class="market-avatar">${initials}</div>
+              <div class="market-avatar">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
               <div>
                 <div class="market-user-name">${task.created_by_name}</div>
                 <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student</div>
@@ -87,8 +82,7 @@ function renderSectionTasks() {
             </a>
           </div>
         </div>
-      </div>`;
-  }).join("");
+      </div>`).join("");
 }
 
 function renderSectionEquipment() {
@@ -103,9 +97,7 @@ function renderSectionEquipment() {
     return;
   }
 
-  sectionEquipmentContainer.innerHTML = filtered.map(item => {
-    const initials = avatarInitials(item.owner_name);
-    return `
+  sectionEquipmentContainer.innerHTML = filtered.map(item => `
       <div class="market-card">
         <div class="market-image" style="background:linear-gradient(135deg,#E6F1FB,#B5D4F4);">
           ${item.image_urls?.length
@@ -115,7 +107,7 @@ function renderSectionEquipment() {
         <div class="market-content">
           <div class="market-top">
             <div class="market-user">
-              <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${initials}</div>
+              <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
               <div>
                 <div class="market-user-name">${item.owner_name}</div>
                 <div class="market-user-meta"><i class="ti ti-package" aria-hidden="true"></i> Equipment Owner</div>
@@ -135,8 +127,7 @@ function renderSectionEquipment() {
             </a>
           </div>
         </div>
-      </div>`;
-  }).join("");
+      </div>`).join("");
 }
 
 function renderSectionSales() {
@@ -151,9 +142,7 @@ function renderSectionSales() {
     return;
   }
 
-  sectionSalesContainer.innerHTML = filtered.map(item => {
-    const initials = avatarInitials(item.seller_name);
-    return `
+  sectionSalesContainer.innerHTML = filtered.map(item => `
       <div class="market-card">
         <div class="market-image" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">
           ${item.image_urls?.length
@@ -163,7 +152,7 @@ function renderSectionSales() {
         <div class="market-content">
           <div class="market-top">
             <div class="market-user">
-              <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${initials}</div>
+              <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
               <div>
                 <div class="market-user-name">${item.seller_name}</div>
                 <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
@@ -184,8 +173,7 @@ function renderSectionSales() {
             </a>
           </div>
         </div>
-      </div>`;
-  }).join("");
+      </div>`).join("");
 }
 
 loadSectionData();

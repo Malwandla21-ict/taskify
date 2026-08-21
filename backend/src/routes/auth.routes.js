@@ -9,19 +9,11 @@ router.post(
   "/register",
   upload.single("profilePhoto"),
   [
-    body("fullName")
-      .trim()
-      .notEmpty()
-      .withMessage("Full name is required.")
-      .isLength({ min: 2, max: 100 })
-      .withMessage("Full name must be between 2 and 100 characters."),
+    body("fullName").trim().notEmpty().withMessage("Full name is required.")
+      .isLength({ min: 2, max: 100 }).withMessage("Full name must be between 2 and 100 characters."),
 
-    body("email")
-      .trim()
-      .notEmpty()
-      .withMessage("Email is required.")
-      .isEmail()
-      .withMessage("Email must be valid.")
+    body("email").trim().notEmpty().withMessage("Email is required.")
+      .isEmail().withMessage("Email must be valid.")
       .custom((value) => {
         if (!value.toLowerCase().endsWith("@ump.ac.za")) {
           throw new Error("Only UMP student emails are allowed.");
@@ -29,37 +21,23 @@ router.post(
         return true;
       }),
 
-    body("phoneNumber")
-      .trim()
-      .notEmpty()
-      .withMessage("Phone number is required.")
-      .matches(/^(\+27|27|0)[0-9]{9}$/)
-      .withMessage("Phone number must be a valid South African number."),
+    body("phoneNumber").trim().notEmpty().withMessage("Phone number is required.")
+      .matches(/^(\+27|27|0)[0-9]{9}$/).withMessage("Phone number must be a valid South African number."),
 
-    body("password")
-      .notEmpty()
-      .withMessage("Password is required.")
-      .isLength({ min: 6 })
-      .withMessage("Password must be at least 6 characters long."),
+    body("password").notEmpty().withMessage("Password is required.")
+      .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long."),
 
-    body("studentNumber")
-      .optional({ checkFalsy: true })
-      .trim()
-      .isLength({ max: 50 }).withMessage("Student/staff number is too long."),
+    body("studentNumber").optional({ checkFalsy: true }).trim()
+      .isLength({ max: 50 }).withMessage("Student/staff number must be under 50 characters."),
 
-    body("memberType")
-      .optional({ checkFalsy: true })
-      .isIn(["Student", "Staff"]).withMessage("Member type must be Student or Staff."),
+    body("memberType").optional({ checkFalsy: true })
+      .isIn(["Student", "Staff"]).withMessage("Account type must be Student or Staff."),
 
-    body("faculty")
-      .optional({ checkFalsy: true })
-      .trim()
-      .isLength({ max: 150 }).withMessage("Faculty/department is too long."),
+    body("faculty").optional({ checkFalsy: true }).trim()
+      .isLength({ max: 150 }).withMessage("Faculty must be under 150 characters."),
 
-    body("academicYear")
-      .optional({ checkFalsy: true })
-      .trim()
-      .isLength({ max: 50 }).withMessage("Academic year is too long.")
+    body("academicYear").optional({ checkFalsy: true }).trim()
+      .isLength({ max: 50 }).withMessage("Academic year must be under 50 characters.")
   ],
   authController.register
 );
@@ -67,16 +45,9 @@ router.post(
 router.post(
   "/login",
   [
-    body("email")
-      .trim()
-      .notEmpty()
-      .withMessage("Email is required.")
-      .isEmail()
-      .withMessage("Email must be valid."),
-
-    body("password")
-      .notEmpty()
-      .withMessage("Password is required.")
+    body("email").trim().notEmpty().withMessage("Email is required.")
+      .isEmail().withMessage("Email must be valid."),
+    body("password").notEmpty().withMessage("Password is required.")
   ],
   authController.login
 );

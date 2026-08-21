@@ -1,19 +1,37 @@
 const currentUser = requireAuth();
 
-const heroNameEl                       = document.getElementById("heroName");
-const featuredTasksContainer           = document.getElementById("featuredTasksContainer");
-const featuredRentalsSalesContainer    = document.getElementById("featuredRentalsSalesContainer");
+const heroNameEl               = document.getElementById("heroName");
+const featuredTasksContainer   = document.getElementById("featuredTasksContainer");
+const featuredEquipmentContainer = document.getElementById("featuredEquipmentContainer");
+const heroSearch               = document.getElementById("heroSearch");
+const heroSearchButton         = document.getElementById("heroSearchButton");
 
 const statTasks   = document.getElementById("statTasks");
 const statRentals = document.getElementById("statRentals");
 const statSales   = document.getElementById("statSales");
 const statRating  = document.getElementById("statRating");
 
+/* ── Welcome ── */
 if (heroNameEl && currentUser) {
   const first = currentUser.full_name?.split(" ")[0] || "Student";
   heroNameEl.textContent = first;
 }
 
+/* ── Hero search ── */
+if (heroSearchButton) {
+  heroSearchButton.addEventListener("click", () => {
+    const q = heroSearch?.value.trim();
+    if (q) window.location.href = `./tasks.html?search=${encodeURIComponent(q)}`;
+  });
+}
+
+if (heroSearch) {
+  heroSearch.addEventListener("keydown", e => {
+    if (e.key === "Enter") heroSearchButton.click();
+  });
+}
+
+/* ── Stats bar ── */
 async function loadStats() {
   try {
     const [tasks, equipment, sales, profile] = await Promise.all([
@@ -32,6 +50,7 @@ async function loadStats() {
   } catch (_) { /* stats are non-critical */ }
 }
 
+/* ── Task card ── */
 function taskCard(task) {
   return `
     <div class="market-card">
@@ -44,7 +63,7 @@ function taskCard(task) {
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar">${avatarHtml(task.created_by_profile_photo, task.created_by_name)}</div>
+            <div class="market-avatar">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
             <div>
               <div class="market-user-name">${task.created_by_name}</div>
               <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student</div>
@@ -67,6 +86,7 @@ function taskCard(task) {
     </div>`;
 }
 
+/* ── Equipment card ── */
 function equipmentCard(item) {
   return `
     <div class="market-card">
@@ -78,7 +98,7 @@ function equipmentCard(item) {
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_profile_photo, item.owner_name)}</div>
+            <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
             <div>
               <div class="market-user-name">${item.owner_name}</div>
               <div class="market-user-meta"><i class="ti ti-package" aria-hidden="true"></i> Equipment Owner</div>
@@ -101,41 +121,7 @@ function equipmentCard(item) {
     </div>`;
 }
 
-function saleCardMini(item) {
-  const waLink = createWhatsAppLink(item.seller_phone_number, item.title);
-  return `
-    <div class="market-card">
-      <div class="market-image" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">
-        ${item.image_urls?.length
-          ? `<img src="${item.image_urls[0]}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="market-image-placeholder" style="color:#c99200;"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
-      </div>
-      <div class="market-content">
-        <div class="market-top">
-          <div class="market-user">
-            <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_profile_photo, item.seller_name)}</div>
-            <div>
-              <div class="market-user-name">${item.seller_name}</div>
-              <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
-            </div>
-          </div>
-          ${sectionBadge(item.section)}
-        </div>
-        <h3>${item.title}</h3>
-        <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
-          ${conditionBadge(item.condition_status)}
-        </div>
-        <div class="market-footer">
-          <div class="market-price">R${item.price}</div>
-          <a href="${waLink}" target="_blank" class="market-action-btn" style="background:var(--ump-green);">
-            <i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp
-          </a>
-        </div>
-      </div>
-    </div>`;
-}
-
+/* ── Loaders ── */
 async function loadFeaturedTasks() {
   try {
     const res   = await apiRequest("/tasks");
@@ -150,34 +136,20 @@ async function loadFeaturedTasks() {
   }
 }
 
-/* Combined "Rentals & Sales" feed — interleaves equipment and sales items
-   instead of showing only equipment, per request. */
-async function loadFeaturedRentalsAndSales() {
+async function loadFeaturedEquipment() {
   try {
-    const [equipRes, salesRes] = await Promise.all([
-      apiRequest("/equipment"),
-      apiRequest("/sales")
-    ]);
+    const res   = await apiRequest("/equipment");
+    const items = res.data.slice(0, 3);
 
-    const equipment = equipRes.data.slice(0, 3);
-    const sales      = salesRes.data.slice(0, 3);
-
-    const combined = [];
-    const max = Math.max(equipment.length, sales.length);
-    for (let i = 0; i < max; i++) {
-      if (equipment[i]) combined.push(equipmentCard(equipment[i]));
-      if (sales[i])      combined.push(saleCardMini(sales[i]));
-    }
-
-    featuredRentalsSalesContainer.innerHTML = combined.length
-      ? combined.join("")
-      : emptyState("ti-shopping-cart", "Nothing listed yet", "Be the first to list equipment or an item for sale!");
+    featuredEquipmentContainer.innerHTML = items.length
+      ? items.map(equipmentCard).join("")
+      : emptyState("ti-package", "No rentals yet", "List your equipment to get started!");
   } catch (err) {
-    featuredRentalsSalesContainer.innerHTML = errorState(err.message);
+    featuredEquipmentContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
   }
 }
 
 loadStats();
 loadFeaturedTasks();
-loadFeaturedRentalsAndSales();
+loadFeaturedEquipment();

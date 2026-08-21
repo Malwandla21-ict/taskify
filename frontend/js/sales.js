@@ -12,7 +12,6 @@ let cachedSalesItems  = [];
 let selectedSection   = "All";
 let selectedCategory  = "All";
 
-/* ── Filters ── */
 document.querySelectorAll(".filter-pill").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
@@ -26,24 +25,34 @@ categoryFilter?.addEventListener("change", () => { selectedCategory = categoryFi
 salesSearch?.addEventListener("input", () => renderSalesItems(cachedSalesItems));
 salesSearchButton?.addEventListener("click", () => renderSalesItems(cachedSalesItems));
 
-/* ── Card builder ── */
+function safeMap(items, builder, label) {
+  return items.map(item => {
+    try {
+      return builder(item);
+    } catch (err) {
+      console.error(`${label} card failed to render for item:`, item, err);
+      return "";
+    }
+  }).join("");
+}
+
 function saleCard(item) {
-  const initials  = avatarInitials(item.seller_name);
-  const isOwn     = Number(item.seller_id) === Number(currentUser.id);
+  const isOwn = Number(item.seller_id) === Number(currentUser.id);
+  const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
 
   return `
     <div class="market-card">
       <div class="market-image" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">
-        ${item.image_urls?.length
-          ? `<img src="${item.image_urls[0]}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;" />`
+        ${imageUrl
+          ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="sale-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="market-image-placeholder" style="color:#c99200;"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
       </div>
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${initials}</div>
+            <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
             <div>
-              <div class="market-user-name">${item.seller_name}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${item.seller_name}</div>
               <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
             </div>
           </div>
@@ -67,11 +76,16 @@ function saleCard(item) {
     </div>`;
 }
 
-/* ── My listing card ── */
 function myListingCard(item) {
   const isSold = item.status !== "Available";
+  const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
   return `
     <div class="market-card">
+      <div class="market-image" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">
+        ${imageUrl
+          ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="mylisting-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+          : `<div class="market-image-placeholder" style="color:#c99200;"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
+      </div>
       <div class="market-content">
         <div class="market-top">
           ${sectionBadge(item.section)}
@@ -97,7 +111,6 @@ function myListingCard(item) {
     </div>`;
 }
 
-/* ── Render ── */
 function renderSalesItems(items) {
   const q = salesSearch?.value.trim().toLowerCase() || "";
   const filtered = items.filter(item =>
@@ -107,13 +120,14 @@ function renderSalesItems(items) {
       .some(f => f?.toLowerCase().includes(q))
   );
   salesContainer.innerHTML = filtered.length
-    ? filtered.map(saleCard).join("")
+    ? safeMap(filtered, saleCard, "sale")
     : emptyState("ti-shopping-bag", "No items found", "Try a different filter or list your own.");
+  attachProfileLinkEvents();
 }
 
 function renderMySalesItems(items) {
   mySalesContainer.innerHTML = items.length
-    ? items.map(myListingCard).join("")
+    ? safeMap(items, myListingCard, "my listing")
     : emptyState("ti-tag", "No listings yet", "Items you list for sale appear here.");
   attachMarkSoldEvents();
   attachDeleteSaleEvents();
@@ -165,14 +179,14 @@ function attachMarkSoldEvents() {
   });
 }
 
-/* ── Loaders ── */
 async function loadSalesItems() {
   try {
     const res = await apiRequest("/sales");
-    cachedSalesItems = res.data;
+    cachedSalesItems = Array.isArray(res.data) ? res.data : [];
     populateCategoryFilter(cachedSalesItems);
     renderSalesItems(cachedSalesItems);
   } catch (err) {
+    console.error("loadSalesItems failed:", err);
     salesContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
   }
@@ -181,14 +195,14 @@ async function loadSalesItems() {
 async function loadMySalesItems() {
   try {
     const res = await apiRequest("/sales/my-listings");
-    renderMySalesItems(res.data);
+    renderMySalesItems(Array.isArray(res.data) ? res.data : []);
   } catch (err) {
+    console.error("loadMySalesItems failed:", err);
     mySalesContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
   }
 }
 
-/* ── Form submit ── */
 salesForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const submitBtn = salesForm.querySelector("button[type='submit']");
@@ -230,5 +244,4 @@ salesForm?.addEventListener("submit", async e => {
 loadSalesItems();
 loadMySalesItems();
 
-/* ── Image uploader init ── */
 const salesUploader = initImageUploader("salesUploadArea", "salesPreviewGrid");

@@ -5,13 +5,8 @@ const { uploadProfilePhoto } = require("./upload.controller");
 async function register(req, res, next) {
   try {
     const errors = validationResult(req);
-
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed.",
-        errors: errors.array()
-      });
+      return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
     }
 
     const profilePhotoUrl = await uploadProfilePhoto(req.file);
@@ -28,11 +23,7 @@ async function register(req, res, next) {
       academicYear: req.body.academicYear
     });
 
-    return res.status(201).json({
-      success: true,
-      message: "User registered successfully.",
-      data: result
-    });
+    return res.status(201).json({ success: true, message: "User registered successfully.", data: result });
   } catch (error) {
     next(error);
   }
@@ -41,13 +32,8 @@ async function register(req, res, next) {
 async function login(req, res, next) {
   try {
     const errors = validationResult(req);
-
     if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed.",
-        errors: errors.array()
-      });
+      return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
     }
 
     const result = await authService.loginUser({
@@ -55,17 +41,10 @@ async function login(req, res, next) {
       password: req.body.password
     });
 
-    return res.status(200).json({
-      success: true,
-      message: "Login successful.",
-      data: result
-    });
+    return res.status(200).json({ success: true, message: "Login successful.", data: result });
   } catch (error) {
     next(error);
   }
 }
 
-module.exports = {
-  register,
-  login
-};
+module.exports = { register, login };

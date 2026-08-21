@@ -8,16 +8,12 @@ const bookingStartDateInput     = document.getElementById("bookingStartDate");
 const bookingEndDateInput       = document.getElementById("bookingEndDate");
 const closeBookingModalButton   = document.getElementById("closeBookingModal");
 const bookingMessage            = document.getElementById("bookingMessage");
-const overlay                   = document.getElementById("overlay");
 
 const params      = new URLSearchParams(window.location.search);
 const equipmentId = params.get("id");
 
-function openModal(modal)            { modal.style.display = "block"; overlay.style.display = "block"; }
-function closeModal(modal, form, msg){ modal.style.display = "none";  overlay.style.display = "none"; if (form) form.reset(); if (msg) msg.textContent = ""; }
-
 closeBookingModalButton?.addEventListener("click", () => closeModal(bookingModal, bookingForm, bookingMessage));
-overlay?.addEventListener("click", () => closeModal(bookingModal, bookingForm, bookingMessage));
+document.getElementById("overlay")?.addEventListener("click", () => closeModal(bookingModal, bookingForm, bookingMessage));
 
 async function loadEquipmentDetails() {
   try {
@@ -36,8 +32,7 @@ async function loadEquipmentDetails() {
 }
 
 function renderEquipmentDetails(item) {
-  const isOwn    = Number(item.owner_id) === Number(currentUser.id);
-  const initials = avatarInitials(item.owner_name);
+  const isOwn = Number(item.owner_id) === Number(currentUser.id);
 
   const actionArea = isOwn
     ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your listing</div>`
@@ -66,9 +61,9 @@ function renderEquipmentDetails(item) {
           <i class="ti ti-receipt" aria-hidden="true"></i> Rental Summary
         </h3>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
-          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${initials}</div>
+          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
           <div>
-            <div style="font-weight:600;font-size:13px;">${item.owner_name}</div>
+            <div class="profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${item.owner_name}</div>
             <div style="font-size:11px;color:var(--muted);">Equipment Owner</div>
           </div>
         </div>
@@ -86,6 +81,8 @@ function renderEquipmentDetails(item) {
         </a>
       </div>
     </div>`;
+
+  attachProfileLinkEvents();
 
   document.getElementById("openBookingButton")?.addEventListener("click", () => {
     bookingForm.reset();

@@ -4,7 +4,6 @@ const conversationsContainer = document.getElementById("conversationsContainer")
 const contextIcon = { task: "ti-clipboard-list", equipment: "ti-package", sale: "ti-shopping-bag" };
 
 function conversationCard(conv) {
-  const initials = avatarInitials(conv.other_user_name);
   const preview = conv.last_message
     ? (conv.last_message.length > 60 ? conv.last_message.slice(0, 60) + "…" : conv.last_message)
     : "No messages yet — say hello!";
@@ -15,7 +14,7 @@ function conversationCard(conv) {
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar">${initials}</div>
+            <div class="market-avatar">${avatarHtml(conv.other_user_name, conv.other_user_photo)}</div>
             <div>
               <div class="market-user-name">${conv.other_user_name}</div>
               <div class="market-user-meta"><i class="ti ${contextIcon[conv.context_type]}" aria-hidden="true"></i> ${conv.context_title}</div>

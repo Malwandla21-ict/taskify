@@ -20,12 +20,11 @@ async function loadTaskDetails() {
 }
 
 function renderTaskDetails(task) {
-  const isOwn          = Number(task.created_by)  === Number(currentUser.id);
-  const isAcceptedByMe  = Number(task.accepted_by) === Number(currentUser.id);
-  const initials        = avatarInitials(task.created_by_name);
+  const isOwn           = Number(task.created_by)  === Number(currentUser.id);
+  const isAcceptedByMe   = Number(task.accepted_by) === Number(currentUser.id);
   const canMessagePoster = !isOwn;
 
-  let primaryAction = "";
+  let primaryAction;
   if (!isOwn && task.status === "Posted") {
     primaryAction = `<button class="primary-button" id="acceptTaskButton" data-task-id="${task.id}">
                         <i class="ti ti-check" aria-hidden="true"></i> Accept Task
@@ -38,8 +37,6 @@ function renderTaskDetails(task) {
     primaryAction = `<button class="primary-button" id="completeTaskButton" data-task-id="${task.id}">
                         <i class="ti ti-circle-check" aria-hidden="true"></i> Mark Complete
                       </button>`;
-  } else if (!isOwn) {
-    primaryAction = statusBadge(task.status);
   } else {
     primaryAction = statusBadge(task.status);
   }
@@ -69,9 +66,9 @@ function renderTaskDetails(task) {
           <i class="ti ti-receipt" aria-hidden="true"></i> Task Summary
         </h3>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
-          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${initials}</div>
+          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
           <div>
-            <div style="font-weight:600;font-size:13px;">${task.created_by_name}</div>
+            <div class="profile-link" data-user-id="${task.created_by}" style="cursor:pointer;font-weight:600;font-size:13px;">${task.created_by_name}</div>
             <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px;">
               <i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student
             </div>
@@ -94,6 +91,7 @@ function renderTaskDetails(task) {
     </div>`;
 
   attachTaskActionEvents();
+  attachProfileLinkEvents();
 
   document.getElementById("messagePosterButton")?.addEventListener("click", () => {
     startConversationAndRedirect("task", taskId);

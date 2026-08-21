@@ -18,26 +18,75 @@
       <button type="button" id="salesSearchButton"><i class="ti ti-search" aria-hidden="true"></i> Search</button>
     </div>
   </div>
-
   <section class="section">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-plus" aria-hidden="true"></i> Sell an Item</h2>
-        <p>List an academic or general student item</p>
+        <p>Create a listing for academic or general student items</p>
       </div>
     </div>
-    <div class="create-cta-panel">
-      <div class="create-cta-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>
-      <div class="create-cta-text">
-        <h3>Got something to sell?</h3>
-        <p>List textbooks, uniforms, toolkits, or anything else another student might need.</p>
-      </div>
-      <button type="button" class="primary-button" id="openSalesModalButton" style="width:auto;">
-        <i class="ti ti-plus" aria-hidden="true"></i> Sell an Item
-      </button>
+    <div class="form-panel">
+      <form id="salesForm">
+        <div class="form-group">
+          <label for="salesTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Item Title</label>
+          <input type="text" id="salesTitle" placeholder="e.g. Engineering Toolkit" required />
+        </div>
+        <div class="form-group">
+          <label for="salesDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
+          <textarea id="salesDescription" placeholder="Describe the item condition, usage and what's included..." required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="salesCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+            <input type="text" id="salesCategory" placeholder="Textbook, Uniform, Toolkit" required />
+          </div>
+          <div class="form-group">
+            <label for="salesSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
+            <select id="salesSection" required>
+              <option value="Academic">Academic</option>
+              <option value="General">General</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="salesPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Price (R)</label>
+            <input type="number" id="salesPrice" placeholder="e.g. 450" required />
+          </div>
+          <div class="form-group">
+            <label for="salesCondition"><i class="ti ti-star" aria-hidden="true"></i> Condition</label>
+            <select id="salesCondition">
+              <option value="New">New</option>
+              <option value="Excellent">Excellent</option>
+              <option value="Good" selected>Good</option>
+              <option value="Fair">Fair</option>
+              <option value="Used">Used</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="salesLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
+          <input type="text" id="salesLocation" placeholder="e.g. Mbombela Campus" required />
+        </div>
+
+        <div class="form-group">
+          <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
+          <div class="upload-area" id="salesUploadArea">
+            <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
+            <div class="upload-area-label">Click or drag images here</div>
+            <div class="upload-area-hint">JPEG, PNG or WebP · max 5MB each</div>
+            <div class="upload-counter">0/5 images</div>
+          </div>
+          <div class="upload-preview-grid" id="salesPreviewGrid"></div>
+        </div>
+
+        <button type="submit" class="primary-button">
+          <i class="ti ti-send" aria-hidden="true"></i> Publish Item
+        </button>
+      </form>
+      <p id="salesMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
     </div>
   </section>
-
   <section class="section" style="padding-top:0;">
     <div class="section-header">
       <div>
@@ -57,7 +106,6 @@
       <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
     </div>
   </section>
-
   <section class="section" style="padding-top:0;">
     <div class="section-header">
       <div>
@@ -70,74 +118,15 @@
     </div>
   </section>
 </div>
-
-<!-- Sales creation modal -->
-<div id="salesCreateOverlay" class="creation-modal-overlay"></div>
-<div id="salesCreateModal" class="creation-modal">
-  <button type="button" class="creation-modal-close" id="closeSalesModalButton" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
-  <h2 style="font-size:18px;font-weight:800;margin-bottom:16px;">Sell an Item</h2>
-  <form id="salesForm">
-    <div class="form-group">
-      <label for="salesTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Item Title</label>
-      <input type="text" id="salesTitle" placeholder="e.g. Engineering Toolkit" required />
-    </div>
-    <div class="form-group">
-      <label for="salesDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
-      <textarea id="salesDescription" placeholder="Describe the item condition, usage and what's included..." required></textarea>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="salesCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
-        <input type="text" id="salesCategory" placeholder="Textbook, Uniform, Toolkit" required />
-      </div>
-      <div class="form-group">
-        <label for="salesSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
-        <select id="salesSection" required>
-          <option value="Academic">Academic</option>
-          <option value="General">General</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label for="salesPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Price (R)</label>
-        <input type="number" id="salesPrice" placeholder="e.g. 450" required />
-      </div>
-      <div class="form-group">
-        <label for="salesCondition"><i class="ti ti-star" aria-hidden="true"></i> Condition</label>
-        <select id="salesCondition">
-          <option value="New">New</option>
-          <option value="Excellent">Excellent</option>
-          <option value="Good" selected>Good</option>
-          <option value="Fair">Fair</option>
-          <option value="Used">Used</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="salesLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
-      <input type="text" id="salesLocation" placeholder="e.g. Mbombela Campus" required />
-    </div>
-
-    <div class="form-group">
-      <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
-      <div class="upload-area" id="salesUploadArea">
-        <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
-        <div class="upload-area-label">Click or drag images here</div>
-        <div class="upload-area-hint">JPEG, PNG or WebP · max 5MB each</div>
-        <div class="upload-counter">0/5 images</div>
-      </div>
-      <div class="upload-preview-grid" id="salesPreviewGrid"></div>
-    </div>
-
-    <button type="submit" class="primary-button">
-      <i class="ti ti-send" aria-hidden="true"></i> Publish Item
-    </button>
-  </form>
-  <p id="salesMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
-</div>
-
+<div id="overlay"></div>
 <div id="toastContainer" class="toast-container"></div>
+<div id="profileModal">
+  <h2><i class="ti ti-user" aria-hidden="true"></i> User Trust Profile</h2>
+  <div id="profileContent"><p>Loading profile...</p></div>
+  <button type="button" id="closeProfileModal" class="secondary-button" style="margin-top:14px;">
+    <i class="ti ti-x" aria-hidden="true"></i> Close
+  </button>
+</div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>
 <script src="./js/navbar.js"></script>

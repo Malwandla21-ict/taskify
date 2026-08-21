@@ -17,20 +17,16 @@ const nextToStep3 = document.getElementById("nextToStep3");
 const backToStep1 = document.getElementById("backToStep1");
 const backToStep2 = document.getElementById("backToStep2");
 
-const roleOptions       = document.querySelectorAll(".role-option");
-const academicYearGroup = document.getElementById("academicYearGroup");
+const roleOptions        = document.querySelectorAll(".role-option");
+const academicYearGroup  = document.getElementById("academicYearGroup");
 const academicYearSelect = document.getElementById("academicYear");
 
 let selectedRole = "Student";
-const profilePhotoInput = document.getElementById("profilePhoto");
+const profilePhotoInput   = document.getElementById("profilePhoto");
 const profilePhotoPreview = document.getElementById("profilePhotoPreview");
-const profilePhotoLabel = document.getElementById("profilePhotoLabel");
+const profilePhotoLabel   = document.getElementById("profilePhotoLabel");
 
-/* Holds the cropped result — used instead of profilePhotoInput.files[0]
-   at submit time, since a file input's FileList can't be reassigned. */
-let croppedProfilePhotoBlob = null;
-
-profilePhotoInput?.addEventListener("change", async () => {
+profilePhotoInput?.addEventListener("change", () => {
   const file = profilePhotoInput.files?.[0];
   if (!file) return;
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
@@ -38,20 +34,11 @@ profilePhotoInput?.addEventListener("change", async () => {
     profilePhotoInput.value = "";
     return;
   }
-
-  const blob = await openImageCropper(file, { aspect: 1 });
-  if (!blob) {
-    profilePhotoInput.value = "";
-    return;
-  }
-
-  croppedProfilePhotoBlob = blob;
-  profilePhotoPreview.src = URL.createObjectURL(blob);
+  profilePhotoPreview.src = URL.createObjectURL(file);
   profilePhotoPreview.style.display = "block";
   profilePhotoLabel.textContent = "Change photo";
 });
 
-/* ── Step navigation ── */
 function showStep(n) {
   step1.style.display = n === 1 ? "block" : "none";
   step2.style.display = n === 2 ? "block" : "none";
@@ -69,13 +56,11 @@ function showStep(n) {
   showMessage("");
 }
 
-/* ── Messages ── */
 function showMessage(msg, color = "red") {
   registerMessage.textContent = msg;
   registerMessage.style.color = color;
 }
 
-/* ── Role toggle: hide Academic Year for Staff ── */
 function applyRoleUI() {
   const isStudent = selectedRole === "Student";
   academicYearGroup.style.display = isStudent ? "block" : "none";
@@ -91,13 +76,12 @@ roleOptions.forEach(option => {
   });
 });
 
-/* ── Validators ── */
 function validateStep1() {
-  const firstName    = document.getElementById("firstName").value.trim();
-  const lastName     = document.getElementById("lastName").value.trim();
+  const firstName     = document.getElementById("firstName").value.trim();
+  const lastName      = document.getElementById("lastName").value.trim();
   const studentNumber = document.getElementById("studentNumber").value.trim();
-  const email        = document.getElementById("email").value.trim();
-  const phoneNumber  = document.getElementById("phoneNumber").value.trim();
+  const email         = document.getElementById("email").value.trim();
+  const phoneNumber   = document.getElementById("phoneNumber").value.trim();
 
   if (!firstName || !lastName || !studentNumber || !email || !phoneNumber) {
     showMessage("Please complete all fields before continuing.");
@@ -158,7 +142,6 @@ function validateStep3() {
   return true;
 }
 
-/* ── Step buttons ── */
 nextToStep2.addEventListener("click", () => {
   if (validateStep1()) showStep(2);
 });
@@ -170,14 +153,12 @@ nextToStep3.addEventListener("click", () => {
 backToStep1.addEventListener("click", () => showStep(1));
 backToStep2.addEventListener("click", () => showStep(2));
 
-/* ── Helpers ── */
 function buildFullName() {
   const first = document.getElementById("firstName").value.trim();
   const last  = document.getElementById("lastName").value.trim();
   return `${first} ${last}`.trim();
 }
 
-/* ── Submit ── */
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!validateStep3()) return;
@@ -190,18 +171,11 @@ registerForm.addEventListener("submit", async (e) => {
   registerData.append("studentNumber", document.getElementById("studentNumber").value.trim());
   registerData.append("memberType", selectedRole);
   registerData.append("faculty", document.getElementById("faculty").value);
-  if (selectedRole === "Student") {
-    registerData.append("academicYear", document.getElementById("academicYear").value);
-  }
-
-  if (croppedProfilePhotoBlob) {
-    registerData.append("profilePhoto", croppedProfilePhotoBlob, "profile.jpg");
-  }
+  registerData.append("academicYear", academicYearSelect.value);
+  if (profilePhotoInput?.files?.[0]) registerData.append("profilePhoto", profilePhotoInput.files[0]);
 
   const submitBtn = document.getElementById("createAccountButton");
-  const originalLabel = submitBtn.innerHTML;
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Creating account…`;
   showMessage("Creating your account…", "#687280");
 
   try {
@@ -216,17 +190,15 @@ registerForm.addEventListener("submit", async (e) => {
     showMessage("Account created! Redirecting you now…", "var(--ump-green)");
 
     setTimeout(() => {
-      window.location.href = "./profile.html";
+      window.location.href = "./dashboard.html";
     }, 900);
 
   } catch (error) {
     showMessage(error.message || "Something went wrong. Please try again.", "red");
     submitBtn.disabled = false;
-    submitBtn.innerHTML = originalLabel;
   }
 });
 
-/* ── Password visibility toggles ── */
 function initPasswordToggles() {
   document.querySelectorAll(".password-toggle").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -242,6 +214,5 @@ function initPasswordToggles() {
   });
 }
 
-/* ── Init ── */
 applyRoleUI();
 initPasswordToggles();

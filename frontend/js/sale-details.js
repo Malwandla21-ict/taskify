@@ -20,8 +20,7 @@ async function loadSaleDetails() {
 }
 
 function renderSaleDetails(item) {
-  const isOwn    = Number(item.seller_id) === Number(currentUser.id);
-  const initials = avatarInitials(item.seller_name);
+  const isOwn = Number(item.seller_id) === Number(currentUser.id);
 
   const actionArea = isOwn
     ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>`
@@ -48,9 +47,9 @@ function renderSaleDetails(item) {
           <i class="ti ti-receipt" aria-hidden="true"></i> Item Summary
         </h3>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
-          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;background:rgba(245,180,0,0.14);color:#b38900;">${initials}</div>
+          <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
           <div>
-            <div style="font-weight:600;font-size:13px;">${item.seller_name}</div>
+            <div class="profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${item.seller_name}</div>
             <div style="font-size:11px;color:var(--muted);">Student Seller</div>
           </div>
         </div>
@@ -74,6 +73,8 @@ function renderSaleDetails(item) {
         </a>
       </div>
     </div>`;
+
+  attachProfileLinkEvents();
 
   document.getElementById("messageSellerButton")?.addEventListener("click", () => {
     startConversationAndRedirect("sale", saleId);

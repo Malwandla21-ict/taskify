@@ -4,12 +4,74 @@ const eventForm         = document.getElementById("eventForm");
 const eventMessage      = document.getElementById("eventMessage");
 const eventsContainer   = document.getElementById("eventsContainer");
 const myEventsContainer = document.getElementById("myEventsContainer");
+const eventSearch       = document.getElementById("eventSearch");
+const eventSearchButton = document.getElementById("eventSearchButton");
+
+const bookingModal          = document.getElementById("bookingModal"); /* repurposed as the event-creation modal */
+const openCreateEventButton = document.getElementById("openCreateEventButton");
+const closeEventModalButton = document.getElementById("closeEventModal");
+
+const eventStep1    = document.getElementById("eventStep1");
+const eventStep2    = document.getElementById("eventStep2");
+const eventStep3    = document.getElementById("eventStep3");
+const eventStepText = document.getElementById("eventStepText");
+const eventProgressFill = document.getElementById("eventProgressFill");
+const eDot1 = document.getElementById("eDot1");
+const eDot2 = document.getElementById("eDot2");
+const eDot3 = document.getElementById("eDot3");
 
 let cachedEvents    = [];
 let myRsvpIds       = [];
 let selectedSection = "All";
 
-/* ── Filters ── */
+/* ── Modal open/close ── */
+openCreateEventButton?.addEventListener("click", () => {
+  eventForm.reset();
+  eventMessage.textContent = "";
+  showEventStep(1);
+  if (eventUploader) eventUploader.reset();
+  openModal(bookingModal);
+});
+closeEventModalButton?.addEventListener("click", () => closeModal(bookingModal, null, null));
+document.getElementById("overlay")?.addEventListener("click", () => closeModal(bookingModal, null, null));
+
+/* ── Step navigation ── */
+function showEventStep(n) {
+  eventStep1.style.display = n === 1 ? "block" : "none";
+  eventStep2.style.display = n === 2 ? "block" : "none";
+  eventStep3.style.display = n === 3 ? "block" : "none";
+  eventStepText.textContent = `Step ${n} of 3`;
+  eventProgressFill.style.width = n === 1 ? "33%" : n === 2 ? "66%" : "100%";
+  [eDot1, eDot2, eDot3].forEach((dot, i) => {
+    if (!dot) return;
+    dot.classList.remove("active", "done");
+    if (i + 1 < n)  dot.classList.add("done");
+    if (i + 1 === n) dot.classList.add("active");
+  });
+}
+
+function validateEventStep1() {
+  if (!document.getElementById("eventTitle").value.trim() || !document.getElementById("eventCategory").value.trim()) {
+    showToast("Please complete the event title and category.", "error");
+    return false;
+  }
+  return true;
+}
+
+function validateEventStep2() {
+  if (!document.getElementById("eventDescription").value.trim() || !document.getElementById("eventLocation").value.trim()) {
+    showToast("Please complete the description and location.", "error");
+    return false;
+  }
+  return true;
+}
+
+document.getElementById("nextEventStep2")?.addEventListener("click", () => { if (validateEventStep1()) showEventStep(2); });
+document.getElementById("nextEventStep3")?.addEventListener("click", () => { if (validateEventStep2()) showEventStep(3); });
+document.getElementById("backEventStep1")?.addEventListener("click", () => showEventStep(1));
+document.getElementById("backEventStep2")?.addEventListener("click", () => showEventStep(2));
+
+/* ── Filters / search ── */
 document.querySelectorAll(".filter-pill").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
@@ -18,6 +80,8 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
     renderEvents(cachedEvents);
   });
 });
+eventSearch?.addEventListener("input", () => renderEvents(cachedEvents));
+eventSearchButton?.addEventListener("click", () => renderEvents(cachedEvents));
 
 function formatEventDate(iso) {
   return new Date(iso).toLocaleString("en-ZA", {
@@ -28,7 +92,6 @@ function formatEventDate(iso) {
 
 /* ── Card builder ── */
 function eventCard(event) {
-  const initials  = avatarInitials(event.organizer_name);
   const isOwn     = Number(event.organizer_id) === Number(currentUser.id);
   const hasRsvped = myRsvpIds.includes(event.id);
   const isFull    = event.capacity && event.rsvp_count >= event.capacity;
@@ -52,15 +115,15 @@ function eventCard(event) {
     <div class="market-card">
       <div class="market-image" style="background:linear-gradient(135deg,#EAF6EF,#B9E4CB);">
         ${event.image_urls?.length
-          ? `<img src="${event.image_urls[0]}" alt="${event.title}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${event.image_urls[0]}" alt="${event.title}" class="lightbox-img" data-gallery="event-${event.id}" data-full="${event.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="market-image-placeholder" style="color:var(--ump-green);"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}
       </div>
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
-            <div class="market-avatar">${initials}</div>
+            <div class="market-avatar">${avatarHtml(event.organizer_name, event.organizer_profile_photo)}</div>
             <div>
-              <div class="market-user-name">${event.organizer_name}</div>
+              <div class="market-user-name profile-link" data-user-id="${event.organizer_id}" style="cursor:pointer;">${event.organizer_name}</div>
               <div class="market-user-meta"><i class="ti ti-calendar-event" aria-hidden="true"></i> Organizer</div>
             </div>
           </div>
@@ -76,7 +139,10 @@ function eventCard(event) {
           <div style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;">
             <i class="ti ti-users" aria-hidden="true"></i> ${event.rsvp_count}${event.capacity ? `/${event.capacity}` : ""} going
           </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">${actionArea}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <a href="./event-details.html?id=${event.id}" class="market-action-btn outline"><i class="ti ti-eye" aria-hidden="true"></i> View</a>
+            ${actionArea}
+          </div>
         </div>
       </div>
     </div>`;
@@ -86,6 +152,11 @@ function myEventCard(event) {
   const isOwn = Number(event.organizer_id) === Number(currentUser.id);
   return `
     <div class="market-card">
+      <div class="market-image" style="background:linear-gradient(135deg,#EAF6EF,#B9E4CB);">
+        ${event.image_urls?.length
+          ? `<img src="${event.image_urls[0]}" alt="${event.title}" class="lightbox-img" data-gallery="myevent-${event.id}" data-full="${event.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
+          : `<div class="market-image-placeholder" style="color:var(--ump-green);"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}
+      </div>
       <div class="market-content">
         <div class="market-top">
           ${sectionBadge(event.section || "General")}
@@ -96,17 +167,25 @@ function myEventCard(event) {
           <div class="market-tag"><i class="ti ti-clock" aria-hidden="true"></i> ${formatEventDate(event.event_date)}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
         </div>
+        <a href="./event-details.html?id=${event.id}" class="market-action-btn outline" style="margin-top:10px;width:100%;justify-content:center;">
+          <i class="ti ti-eye" aria-hidden="true"></i> View Details
+        </a>
       </div>
     </div>`;
 }
 
 /* ── Render ── */
 function renderEvents(events) {
-  const filtered = events.filter(e => selectedSection === "All" || e.section === selectedSection);
+  const q = eventSearch?.value.trim().toLowerCase() || "";
+  const filtered = events.filter(e =>
+    (selectedSection === "All" || e.section === selectedSection) &&
+    [e.title, e.description, e.category, e.location].some(f => f?.toLowerCase().includes(q))
+  );
   eventsContainer.innerHTML = filtered.length
     ? filtered.map(eventCard).join("")
     : emptyState("ti-calendar-event", "No events found", "Try a different filter or post one yourself.");
   attachEventButtonEvents();
+  attachProfileLinkEvents();
 }
 
 function attachEventButtonEvents() {
@@ -171,6 +250,7 @@ async function loadEvents() {
     myRsvpIds    = rsvpRes.data;
     renderEvents(cachedEvents);
   } catch (err) {
+    console.error("loadEvents failed:", err);
     eventsContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
   }
@@ -183,6 +263,7 @@ async function loadMyEvents() {
       ? res.data.map(myEventCard).join("")
       : emptyState("ti-clock", "No events yet", "Events you organize or RSVP to appear here.");
   } catch (err) {
+    console.error("loadMyEvents failed:", err);
     myEventsContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
   }
@@ -216,7 +297,7 @@ eventForm?.addEventListener("submit", async e => {
     });
 
     showToast("Event posted successfully!");
-    eventForm.reset();
+    closeModal(bookingModal, eventForm, eventMessage);
     if (eventUploader) eventUploader.reset();
     await Promise.all([loadEvents(), loadMyEvents()]);
   } catch (err) {
@@ -232,5 +313,4 @@ eventForm?.addEventListener("submit", async e => {
 loadEvents();
 loadMyEvents();
 
-/* ── Image uploader init ── */
 const eventUploader = initImageUploader("eventUploadArea", "eventPreviewGrid");

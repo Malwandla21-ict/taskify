@@ -58,7 +58,7 @@ async function loadConversation() {
     if (conv) {
       conversationHeader.innerHTML = `
         <div style="display:flex;align-items:center;gap:12px;">
-          <div class="market-avatar" style="width:44px;height:44px;">${avatarInitials(conv.other_user_name)}</div>
+          <div class="market-avatar" style="width:44px;height:44px;">${avatarHtml(conv.other_user_name, conv.other_user_photo)}</div>
           <div>
             <div style="font-weight:700;font-size:15px;">${conv.other_user_name}</div>
             <a href="./${contextPath[conv.context_type]}?id=${conv.context_id}" style="font-size:12px;color:var(--ump-navy);font-weight:600;">
