@@ -52,4 +52,18 @@ router.delete(
   eventController.deleteEvent
 );
 
+/*
+  GET /:id — single-event lookup, unfiltered by status/date. Placed after
+  the literal "/my" and "/rsvp-status" routes so it never swallows them
+  (Express matches literal path segments before the ":id" wildcard only if
+  ordered correctly). This is what lets event-details.js load an event
+  once it has passed or been cancelled — GET / only returns upcoming ones.
+*/
+router.get(
+  "/:id",
+  authenticate,
+  [ param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer.") ],
+  eventController.getEventById
+);
+
 module.exports = router;

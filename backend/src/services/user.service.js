@@ -45,6 +45,7 @@ async function getUserProfile(userId) {
     `
       SELECT
         r.id, r.rating, r.comment, r.created_at,
+        reviewer.id AS reviewer_id,
         reviewer.full_name AS reviewer_name,
         reviewer.profile_photo_url AS reviewer_profile_photo
       FROM reviews r
@@ -87,4 +88,20 @@ async function updateProfilePhoto(userId, profilePhotoUrl) {
   return rows[0];
 }
 
-module.exports = { getUserProfile, updateProfilePhoto };
+async function updateProfileDetails(userId, { faculty, academicYear, phoneNumber }) {
+  const fields = [];
+  const values = [];
+
+  if (faculty !== undefined)      { fields.push("faculty = ?");       values.push(faculty || null); }
+  if (academicYear !== undefined) { fields.push("academic_year = ?"); values.push(academicYear || null); }
+  if (phoneNumber !== undefined)  { fields.push("phone_number = ?");  values.push(phoneNumber || null); }
+
+  if (fields.length) {
+    values.push(userId);
+    await pool.execute(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`, values);
+  }
+
+  return getUserProfile(userId);
+}
+
+module.exports = { getUserProfile, updateProfilePhoto, updateProfileDetails };

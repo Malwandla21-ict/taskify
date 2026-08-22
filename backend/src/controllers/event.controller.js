@@ -39,6 +39,13 @@ async function getMyEvents(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getEventById(req, res, next) {
+  try {
+    const event = await eventService.getEventByIdForViewing(Number(req.params.id));
+    return res.status(200).json({ success: true, message: "Event fetched successfully.", data: event });
+  } catch (error) { next(error); }
+}
+
 async function rsvpToEvent(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -74,6 +81,7 @@ module.exports = {
   getAllUpcomingEvents,
   getMyRsvpStatus,
   getMyEvents,
+  getEventById,
   rsvpToEvent,
   cancelRsvp,
   deleteEvent

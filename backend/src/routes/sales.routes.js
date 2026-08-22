@@ -45,4 +45,19 @@ router.delete(
   salesController.deleteSalesItem
 );
 
+/*
+  GET /:id — single-item lookup, unfiltered by status. Placed after the
+  literal "/my-listings" route (Express only conflicts on same method +
+  overlapping pattern, and PATCH/DELETE above use different methods, so
+  ordering relative to them doesn't matter — this just needs to come after
+  "/my-listings" since that's also a GET). This lets sale-details.js load
+  an item once it's sold, since GET / only returns Available items.
+*/
+router.get(
+  "/:id",
+  authenticate,
+  [ param("id").isInt({ min: 1 }).withMessage("Sales item ID must be a valid positive integer.") ],
+  salesController.getSalesItemById
+);
+
 module.exports = router;

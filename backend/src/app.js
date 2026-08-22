@@ -14,6 +14,7 @@ const notificationRoutes    = require("./routes/notification.routes");
 const uploadRoutes          = require("./routes/upload.routes");
 const eventRoutes           = require("./routes/event.routes");
 const conversationRoutes    = require("./routes/conversation.routes");
+const adminRoutes           = require("./routes/admin.routes");
 const adminMessagingRoutes  = require("./routes/adminMessaging.routes");
 const adminAllowlistRoutes  = require("./routes/adminAllowlist.routes");
 
@@ -43,6 +44,7 @@ app.use("/api/notifications",   notificationRoutes);
 app.use("/api/upload",          uploadRoutes);
 app.use("/api/events",          eventRoutes);
 app.use("/api/conversations",   conversationRoutes);
+app.use("/api/admin",           adminRoutes);
 app.use("/api/admin/messages",  adminMessagingRoutes);
 app.use("/api/admin/allowlist", adminAllowlistRoutes);
 

@@ -161,6 +161,14 @@ async function getEventById(eventId) {
   return parseImageUrls(rows[0]);
 }
 
+async function getEventByIdForViewing(eventId) {
+  const event = await getEventById(eventId);
+  if (!event) {
+    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+  }
+  return event;
+}
+
 module.exports = {
   createEvent,
   getAllUpcomingEvents,
@@ -168,5 +176,6 @@ module.exports = {
   getMyEvents,
   rsvpToEvent,
   cancelRsvp,
-  deleteEvent
+  deleteEvent,
+  getEventByIdForViewing
 };
