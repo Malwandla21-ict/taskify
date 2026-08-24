@@ -129,6 +129,17 @@ async function getDashboardStats() {
      FROM reports`
   );
 
+  /* Added for the dashboard overhaul — real counts, not placeholders,
+     so "Total Equipment" and "Total Earnings" on the admin dashboard
+     reflect actual platform data rather than fabricated figures. */
+  const [equipmentRows] = await pool.execute(
+    `SELECT COUNT(*) AS total FROM equipment`
+  );
+
+  const [salesRows] = await pool.execute(
+    `SELECT COUNT(*) AS total FROM sales_items`
+  );
+
   const taskStatusCounts = {};
   taskRows.forEach(r => { taskStatusCounts[r.status] = Number(r.count); });
 
@@ -145,6 +156,12 @@ async function getDashboardStats() {
     },
     tasks: taskStatusCounts,
     equipmentBookings: bookingStatusCounts,
+    equipment: {
+      total: Number(equipmentRows[0].total) || 0
+    },
+    sales: {
+      total: Number(salesRows[0].total) || 0
+    },
     payments: {
       held: Number(paymentRows[0].held_total) || 0,
       released: Number(paymentRows[0].released_total) || 0,

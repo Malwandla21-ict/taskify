@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Lecturer Profile</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+  <section class="section" style="padding-bottom:0;">
+    <div id="profileMainCard">
+      <div class="profile-header-card">
+        <div class="profile-avatar-large"><i class="ti ti-user" aria-hidden="true"></i></div>
+        <div class="profile-header-info">
+          <p style="opacity:0.65;font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading profile…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" style="padding-top:0;">
+    <div style="display:grid;grid-template-columns:2.4fr 1fr;gap:18px;align-items:start;">
+      <div>
+        <div class="profile-tabs">
+          <button type="button" class="profile-tab active" data-tab="overview"><i class="ti ti-layout-grid" aria-hidden="true"></i> Overview</button>
+          <button type="button" class="profile-tab" data-tab="endorsements"><i class="ti ti-certificate" aria-hidden="true"></i> My Endorsements</button>
+          <button type="button" class="profile-tab" data-tab="reviews"><i class="ti ti-star" aria-hidden="true"></i> Reviews</button>
+          <button type="button" class="profile-tab" data-tab="activity"><i class="ti ti-activity" aria-hidden="true"></i> Activity</button>
+        </div>
+
+        <!-- Overview -->
+        <div id="overviewTab" class="profile-tab-panel active">
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-user-circle" aria-hidden="true"></i> About Me</h3></div>
+            <p id="aboutMeText" style="font-size:13px;color:var(--muted);line-height:1.7;">—</p>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-bulb" aria-hidden="true"></i> My Expertise</h3></div>
+            <div class="profile-tags-row" id="expertiseTagsRow"></div>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-briefcase" aria-hidden="true"></i> Services Offered</h3></div>
+            <div class="profile-tags-row" id="servicesTagsRow"></div>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-calendar-time" aria-hidden="true"></i> Availability</h3></div>
+            <p id="availabilityText" style="font-size:13px;color:var(--muted);">—</p>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-activity" aria-hidden="true"></i> Recent Activity</h3></div>
+            <div class="profile-activity-list" id="overviewActivityList"></div>
+          </div>
+        </div>
+
+        <!-- My Endorsements -->
+        <div id="endorsementsTab" class="profile-tab-panel">
+          <div class="profile-info-card-header" style="margin-bottom:14px;">
+            <h3 style="font-size:15px;"><i class="ti ti-certificate" aria-hidden="true"></i> Endorsements You've Given</h3>
+            <button type="button" class="primary-button" id="openGiveEndorsementBtn" style="width:auto;padding:9px 16px;">
+              <i class="ti ti-plus" aria-hidden="true"></i> Give Endorsement
+            </button>
+          </div>
+          <div id="myEndorsementsGivenContainer"></div>
+        </div>
+
+        <!-- Reviews -->
+        <div id="reviewsTab" class="profile-tab-panel">
+          <div id="recentReviewsContainer" class="marketplace-grid">
+            <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-star" aria-hidden="true"></i></div><h3>No reviews yet</h3></div>
+          </div>
+        </div>
+
+        <!-- Activity -->
+        <div id="activityTab" class="profile-tab-panel">
+          <div class="profile-info-card">
+            <div class="profile-activity-list" id="fullActivityList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div>
+        <div class="profile-info-card">
+          <div class="profile-info-card-header"><h3><i class="ti ti-bolt" aria-hidden="true"></i> Quick Actions</h3></div>
+          <div class="profile-quick-actions">
+            <button type="button" class="profile-quick-action-btn" id="quickGiveEndorsementBtn">
+              <i class="ti ti-certificate" aria-hidden="true"></i> Give Endorsement
+            </button>
+            <button type="button" class="profile-quick-action-btn has-count" data-goto-tab="endorsements">
+              <span><i class="ti ti-list-check" aria-hidden="true"></i> View My Endorsements</span>
+              <span class="count-pill" id="endorsementCountPill">0</span>
+            </button>
+            <a href="./tutors.html" class="profile-quick-action-btn">
+              <i class="ti ti-school-bell" aria-hidden="true"></i> Browse Verified Tutors
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Give Endorsement modal -->
+<div id="overlay"></div>
+<div id="giveEndorsementModal">
+  <h2 style="font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+    <i class="ti ti-certificate" aria-hidden="true" style="color:var(--ump-green);"></i> Give an Endorsement
+  </h2>
+  <div class="form-group">
+    <label><i class="ti ti-search" aria-hidden="true"></i> Find a student</label>
+    <input type="text" id="studentSearchInput" placeholder="Search by name or email…" />
+    <div class="student-search-results" id="studentSearchResults" style="display:none;"></div>
+    <div id="selectedStudentChip" style="display:none;"></div>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-tag" aria-hidden="true"></i> Endorsement Type</label>
+    <select id="endorsementTypeSelect">
+      <option value="Tutoring">Tutoring</option>
+      <option value="Toolkit">Toolkit / Item</option>
+      <option value="General">General</option>
+    </select>
+  </div>
+  <div class="form-group" id="contextListingGroup" style="display:none;">
+    <label><i class="ti ti-link" aria-hidden="true"></i> Attach to a specific listing (optional)</label>
+    <select id="contextListingSelect">
+      <option value="">No specific listing</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-message" aria-hidden="true"></i> Message (optional)</label>
+    <textarea id="endorsementMessage" placeholder="Why are you endorsing this student?"></textarea>
+  </div>
+  <div class="form-row">
+    <button type="button" class="secondary-button" id="closeGiveEndorsementModal"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+    <button type="button" class="primary-button" id="submitEndorsementBtn"><i class="ti ti-check" aria-hidden="true"></i> Give Endorsement</button>
+  </div>
+</div>
+
+<input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" hidden />
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/lecturer-profile.js"></script>
+</body>
+</html>

@@ -20,7 +20,11 @@ async function register(req, res, next) {
       studentNumber: req.body.studentNumber,
       memberType: req.body.memberType,
       faculty: req.body.faculty,
-      academicYear: req.body.academicYear
+      academicYear: req.body.academicYear,
+      lecturerTitle: req.body.lecturerTitle,
+      yearsExperience: req.body.yearsExperience,
+      officeLocation: req.body.officeLocation,
+      consultationMode: req.body.consultationMode
     });
 
     return res.status(201).json({ success: true, message: "User registered successfully.", data: result });

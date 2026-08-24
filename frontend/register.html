@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Create Account</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
 </head>
 <body>
 <div class="auth-page">
-  <div class="auth-container" style="max-width:660px;grid-template-columns:1fr;">
+  <div class="auth-container" style="max-width:680px;grid-template-columns:1fr;">
     <div class="auth-right">
       <div class="logo-row" style="margin-bottom:26px;">
         <img src="./assets/logo/ump logoT.png" alt="UMP Logo" class="ump-logo" />
@@ -62,9 +63,12 @@
           <p class="auth-subtitle">Tell us who you are at UMP</p>
           <div class="form-group">
             <label><i class="ti ti-user-check" aria-hidden="true"></i> I am a</label>
-            <div class="role-grid">
+            <div class="role-grid three-col">
               <div class="role-option active" data-role="Student">
                 <i class="ti ti-school" aria-hidden="true"></i> Student
+              </div>
+              <div class="role-option" data-role="Lecturer">
+                <i class="ti ti-chalkboard" aria-hidden="true"></i> Lecturer
               </div>
               <div class="role-option" data-role="Staff">
                 <i class="ti ti-building" aria-hidden="true"></i> UMP Staff
@@ -97,6 +101,34 @@
               <option>Honours</option>
               <option>Masters</option>
             </select>
+          </div>
+          <!-- Only shown when Lecturer is selected -->
+          <div id="lecturerFieldsGroup" style="display:none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="lecturerTitle"><i class="ti ti-certificate" aria-hidden="true"></i> Title</label>
+                <select id="lecturerTitle">
+                  <option value="">Select Title</option>
+                  <option>Dr.</option>
+                  <option>Prof.</option>
+                  <option>Mr.</option>
+                  <option>Ms.</option>
+                  <option>Mrs.</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="yearsExperience"><i class="ti ti-briefcase" aria-hidden="true"></i> Years of Experience</label>
+                <input type="number" id="yearsExperience" placeholder="e.g. 12" min="0" max="60" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="officeLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Office Location</label>
+              <input type="text" id="officeLocation" placeholder="e.g. IT Building, Room 204" />
+            </div>
+            <div class="form-group">
+              <label for="consultationMode"><i class="ti ti-messages" aria-hidden="true"></i> Consultation Mode</label>
+              <input type="text" id="consultationMode" placeholder="e.g. On-campus / Online" />
+            </div>
           </div>
           <div class="form-row">
             <button type="button" class="secondary-button" id="backToStep1">

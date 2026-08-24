@@ -7,13 +7,35 @@ async function loadNavbar() {
     const navbarHtml = await response.text();
     navbarContainer.innerHTML = navbarHtml;
 
+    ensureProfileModal();
     highlightActiveLink();
     populateAvatar();
     toggleAdminLink();
     startNotificationPolling();
     setupLogout();
+    attachProfileLinkEvents();
   } catch (error) {
     console.error("Navbar failed to load:", error);
+  }
+}
+
+function ensureProfileModal() {
+  if (!document.getElementById("overlay")) {
+    const overlay = document.createElement("div");
+    overlay.id = "overlay";
+    document.body.appendChild(overlay);
+  }
+
+  if (!document.getElementById("profileModal")) {
+    const modal = document.createElement("div");
+    modal.id = "profileModal";
+    modal.innerHTML = `
+      <h2><i class="ti ti-user" aria-hidden="true"></i> User Trust Profile</h2>
+      <div id="profileContent"><p>Loading profile...</p></div>
+      <button type="button" id="closeProfileModal" class="secondary-button" style="margin-top:14px;">
+        <i class="ti ti-x" aria-hidden="true"></i> Close
+      </button>`;
+    document.body.appendChild(modal);
   }
 }
 
@@ -34,13 +56,16 @@ function populateAvatar() {
     const raw  = localStorage.getItem("taskifyUser");
     const user = raw ? JSON.parse(raw) : null;
     if (!user) return;
-    avatarEl.innerHTML = avatarHtml(user.full_name || user.name || "", user.profilePhoto);
+    avatarEl.innerHTML = avatarHtml(user.full_name || user.name || "", user.profilePhoto, { lightbox: false });
+    /* Route the avatar to the right "my profile" page for this account's
+       identity — students/staff go to profile.html, lecturers go to
+       lecturer-profile.html. */
+    avatarEl.setAttribute("href", myProfileUrl(user));
   } catch (e) {
     console.warn("Could not parse taskifyUser:", e);
   }
 }
 
-/* Show the Admin nav link only for role === 'admin' users. */
 function toggleAdminLink() {
   const adminLink = document.getElementById("navAdminLink");
   if (!adminLink) return;
@@ -86,11 +111,6 @@ function showNotificationModal(notification) {
   overlay.querySelector("[data-dismiss-notification]").focus();
 }
 
-/*
-  Badge shows red if any unread notification is high-priority, green if
-  only normal unread notifications exist, hidden otherwise. Text and size
-  scale down for double-digit counts so it never overflows the circle.
-*/
 function updateNotificationBadge(notifications) {
   const badgeEl = document.getElementById("navNotifCount");
   if (!badgeEl) return;

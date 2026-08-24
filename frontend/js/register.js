@@ -20,6 +20,8 @@ const backToStep2 = document.getElementById("backToStep2");
 const roleOptions        = document.querySelectorAll(".role-option");
 const academicYearGroup  = document.getElementById("academicYearGroup");
 const academicYearSelect = document.getElementById("academicYear");
+const lecturerFieldsGroup = document.getElementById("lecturerFieldsGroup");
+const lecturerTitleSelect = document.getElementById("lecturerTitle");
 
 let selectedRole = "Student";
 const profilePhotoInput   = document.getElementById("profilePhoto");
@@ -62,9 +64,19 @@ function showMessage(msg, color = "red") {
 }
 
 function applyRoleUI() {
-  const isStudent = selectedRole === "Student";
-  academicYearGroup.style.display = isStudent ? "block" : "none";
+  const isStudent  = selectedRole === "Student";
+  const isLecturer = selectedRole === "Lecturer";
+
+  academicYearGroup.style.display   = isStudent ? "block" : "none";
+  lecturerFieldsGroup.style.display = isLecturer ? "block" : "none";
+
   if (!isStudent) academicYearSelect.value = "";
+  if (!isLecturer) {
+    lecturerTitleSelect.value = "";
+    document.getElementById("yearsExperience").value = "";
+    document.getElementById("officeLocation").value = "";
+    document.getElementById("consultationMode").value = "";
+  }
 }
 
 roleOptions.forEach(option => {
@@ -113,6 +125,11 @@ function validateStep2() {
 
   if (selectedRole === "Student" && !academicYear) {
     showMessage("Please select your academic year.");
+    return false;
+  }
+
+  if (selectedRole === "Lecturer" && !lecturerTitleSelect.value) {
+    showMessage("Please select your title.");
     return false;
   }
 
@@ -171,11 +188,24 @@ registerForm.addEventListener("submit", async (e) => {
   registerData.append("studentNumber", document.getElementById("studentNumber").value.trim());
   registerData.append("memberType", selectedRole);
   registerData.append("faculty", document.getElementById("faculty").value);
-  registerData.append("academicYear", academicYearSelect.value);
+  registerData.append("academicYear", selectedRole === "Student" ? academicYearSelect.value : "");
+
+  if (selectedRole === "Lecturer") {
+    registerData.append("lecturerTitle", lecturerTitleSelect.value);
+    const years = document.getElementById("yearsExperience").value.trim();
+    if (years) registerData.append("yearsExperience", years);
+    const office = document.getElementById("officeLocation").value.trim();
+    if (office) registerData.append("officeLocation", office);
+    const mode = document.getElementById("consultationMode").value.trim();
+    if (mode) registerData.append("consultationMode", mode);
+  }
+
   if (profilePhotoInput?.files?.[0]) registerData.append("profilePhoto", profilePhotoInput.files[0]);
 
   const submitBtn = document.getElementById("createAccountButton");
+  const originalHtml = submitBtn.innerHTML;
   submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Creating account…`;
   showMessage("Creating your account…", "#687280");
 
   try {
@@ -196,6 +226,7 @@ registerForm.addEventListener("submit", async (e) => {
   } catch (error) {
     showMessage(error.message || "Something went wrong. Please try again.", "red");
     submitBtn.disabled = false;
+    submitBtn.innerHTML = originalHtml;
   }
 });
 

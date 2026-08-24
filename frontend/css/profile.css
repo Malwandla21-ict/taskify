@@ -1,0 +1,397 @@
+/* ==============================
+   PROFILE OVERHAUL (student + lecturer)
+   Loaded alongside main.css, adds only what's new: 3-column role grid,
+   profile stat rows, tabs, editable tag inputs, endorsement badges,
+   lecturer quick-actions, and the tutor directory.
+============================== */
+
+.role-grid.three-col { grid-template-columns: repeat(3, 1fr); }
+
+/* ── Profile header stat row ── */
+.profile-stats-inline {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.profile-stats-inline .pstat-card {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  text-align: center;
+  color: white;
+}
+
+.profile-stats-inline .pstat-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 6px;
+  font-size: 14px;
+}
+
+.profile-stats-inline .pstat-value { font-size: 18px; font-weight: 800; line-height: 1; }
+.profile-stats-inline .pstat-label { font-size: 10px; opacity: 0.75; margin-top: 3px; }
+
+/* ── Tabs ── */
+.profile-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1.5px solid var(--border);
+  margin: 18px 0 20px;
+  overflow-x: auto;
+}
+
+.profile-tab {
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.profile-tab i { font-size: 14px; }
+.profile-tab:hover { color: var(--ump-navy); }
+.profile-tab.active { color: var(--ump-navy); border-bottom-color: var(--ump-green); }
+
+.profile-tab-panel { display: none; }
+.profile-tab-panel.active { display: block; }
+
+/* ── Info card blocks (About Me, Skills, Statistics etc.) ── */
+.profile-info-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 22px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 18px;
+}
+
+.profile-info-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.profile-info-card-header h3 {
+  font-size: 14px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.profile-info-card-header h3 i { color: var(--ump-green); font-size: 16px; }
+
+.profile-tags-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.profile-tag {
+  background: rgba(0,114,206,0.08);
+  color: var(--ump-blue);
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.profile-tag.editable {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profile-tag.editable button {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 11px;
+  opacity: 0.6;
+  padding: 0;
+  display: flex;
+}
+
+.profile-tag.editable button:hover { opacity: 1; color: var(--ump-red); }
+
+.profile-tag-add-input {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.profile-tag-add-input input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 12px;
+}
+
+.profile-tag-add-input button {
+  background: var(--ump-navy);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-verify-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+
+.profile-verify-row:last-child { border-bottom: none; }
+
+/* ── Statistics grid ── */
+.profile-stats-grid-v2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.profile-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border-radius: var(--radius);
+  background: var(--background);
+}
+
+.profile-stat-item .icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.profile-stat-item .value { font-size: 18px; font-weight: 800; line-height: 1; }
+.profile-stat-item .label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ── Endorsement cards ── */
+.endorsement-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+}
+
+.endorsement-card-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.endorsement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  background: rgba(108,61,255,0.10);
+  color: #6c3dff;
+}
+
+.endorsement-badge.tutoring { background: rgba(0,155,114,0.10); color: var(--ump-green); }
+.endorsement-badge.toolkit { background: rgba(245,180,0,0.14); color: #b38900; }
+
+/* ── Quick actions (lecturer sidebar) ── */
+.profile-quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-quick-action-btn {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: rgba(0,155,114,0.06);
+  border: 1.5px solid rgba(0,155,114,0.18);
+  color: var(--ump-navy);
+  padding: 11px 14px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: all 0.15s;
+  text-decoration: none;
+}
+
+.profile-quick-action-btn:hover { background: var(--ump-green); color: white; border-color: var(--ump-green); }
+.profile-quick-action-btn i { font-size: 15px; }
+
+.profile-quick-action-btn.has-count {
+  display: flex;
+  justify-content: space-between;
+}
+
+.profile-quick-action-btn .count-pill {
+  background: rgba(0,0,0,0.1);
+  border-radius: 999px;
+  font-size: 10px;
+  padding: 1px 7px;
+}
+
+/* ── Recent activity list (reused across student/lecturer) ── */
+.profile-activity-list { display: flex; flex-direction: column; gap: 4px; }
+
+.profile-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-activity-item:last-child { border-bottom: none; }
+
+.profile-activity-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  background: rgba(0,155,114,0.10);
+  color: var(--ump-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.profile-activity-body { flex: 1; min-width: 0; }
+.profile-activity-title { font-size: 13px; font-weight: 700; }
+.profile-activity-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.profile-activity-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* ── Give Endorsement modal ── */
+#giveEndorsementModal {
+  display: none;
+  position: fixed;
+  top: 6%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 26px 28px;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 20px 60px rgba(12,29,74,0.18);
+  z-index: 2700;
+  width: 440px;
+  max-width: 94%;
+  max-height: 86vh;
+  overflow-y: auto;
+}
+
+.student-search-results {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  max-height: 180px;
+  overflow-y: auto;
+  margin-top: 6px;
+}
+
+.student-search-result-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.student-search-result-row:hover { background: var(--background); }
+
+.selected-student-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--background);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-top: 8px;
+}
+
+.selected-student-chip button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* ── Lecturer profile header extras ── */
+.lecturer-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(108,61,255,0.12);
+  color: #6c3dff;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ── Tutor directory ── */
+.tutor-card {
+  background: white;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.tutor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tutor-card-header .market-avatar { width: 46px; height: 46px; }
+
+.tutor-endorsement-quote {
+  background: var(--background);
+  border-left: 3px solid var(--ump-green);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text);
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .profile-stats-grid-v2 { grid-template-columns: 1fr; }
+}

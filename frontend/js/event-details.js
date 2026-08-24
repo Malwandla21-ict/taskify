@@ -13,18 +13,13 @@ function formatEventDate(iso) {
 
 async function loadEventDetails() {
   try {
-    const [eventsRes, rsvpRes] = await Promise.all([
-      apiRequest("/events"),
+    const [eventRes, rsvpRes] = await Promise.all([
+      apiRequest(`/events/${eventId}`),
       apiRequest("/events/rsvp-status")
     ]);
-    const event = eventsRes.data.find(e => Number(e.id) === Number(eventId));
-    if (!event) {
-      eventDetailsContainer.innerHTML = emptyState("ti-calendar-off", "Event not found", "This event may have passed or been removed.");
-      return;
-    }
-    renderEventDetails(event, rsvpRes.data.includes(event.id));
+    renderEventDetails(eventRes.data, rsvpRes.data.includes(eventRes.data.id));
   } catch (err) {
-    eventDetailsContainer.innerHTML = errorState(err.message);
+    eventDetailsContainer.innerHTML = errorState(err.message || "This event may have passed or been removed.");
     showToast(err.message, "error");
   }
 }
@@ -44,6 +39,8 @@ function renderEventDetails(event, hasRsvped) {
     actionArea = `<button class="secondary-button" id="cancelRsvpButton"><i class="ti ti-x" aria-hidden="true"></i> Cancel RSVP</button>`;
   } else if (isFull) {
     actionArea = `<div class="badge red"><i class="ti ti-users" aria-hidden="true"></i> This event is fully booked</div>`;
+  } else if (event.status !== "Upcoming") {
+    actionArea = `<div class="badge"><i class="ti ti-calendar-off" aria-hidden="true"></i> This event is ${event.status.toLowerCase()}</div>`;
   } else {
     actionArea = `<button class="primary-button" id="rsvpButton"><i class="ti ti-calendar-plus" aria-hidden="true"></i> RSVP</button>`;
   }

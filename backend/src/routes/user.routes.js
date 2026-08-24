@@ -20,7 +20,15 @@ router.patch(
     body("faculty").optional({ checkFalsy: true }).trim().isLength({ max: 150 }).withMessage("Faculty/department is too long."),
     body("academicYear").optional({ checkFalsy: true }).trim().isLength({ max: 50 }).withMessage("Academic year is too long."),
     body("phoneNumber").optional({ checkFalsy: true }).trim()
-      .matches(/^(\+27|27|0)[0-9]{9}$/).withMessage("Please enter a valid South African phone number.")
+      .matches(/^(\+27|27|0)[0-9]{9}$/).withMessage("Please enter a valid South African phone number."),
+    body("bio").optional({ checkFalsy: true }).isLength({ max: 1000 }).withMessage("Bio must be under 1000 characters."),
+    body("skills").optional({ nullable: true }).isArray({ max: 12 }).withMessage("Skills must be a list."),
+    body("services").optional({ nullable: true }).isArray({ max: 12 }).withMessage("Services must be a list."),
+    body("lecturerTitle").optional({ checkFalsy: true }).isIn(["Dr.", "Prof.", "Mr.", "Ms.", "Mrs."]),
+    body("yearsExperience").optional({ nullable: true }).isInt({ min: 0, max: 60 }),
+    body("officeLocation").optional({ checkFalsy: true }).isLength({ max: 150 }),
+    body("consultationMode").optional({ checkFalsy: true }).isLength({ max: 150 }),
+    body("availabilityNote").optional({ checkFalsy: true }).isLength({ max: 500 })
   ],
   userController.updateMyProfileDetails
 );

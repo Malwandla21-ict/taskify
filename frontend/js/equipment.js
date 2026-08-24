@@ -17,6 +17,29 @@ const eDot3                     = document.getElementById("eDot3");
 let cachedEquipment  = [];
 let selectedSection  = "All";
 
+const equipmentCreateOverlay    = document.getElementById("equipmentCreateOverlay");
+const equipmentCreateModal      = document.getElementById("equipmentCreateModal");
+const openEquipmentModalButton  = document.getElementById("openEquipmentModalButton");
+const closeEquipmentModalButton = document.getElementById("closeEquipmentModalButton");
+
+function openEquipmentCreateModal() {
+  equipmentForm?.reset();
+  equipmentMessage.textContent = "";
+  showEquipmentStep(1);
+  if (equipmentUploader) equipmentUploader.reset();
+  equipmentCreateOverlay?.classList.add("open");
+  equipmentCreateModal?.classList.add("open");
+}
+
+function closeEquipmentCreateModal() {
+  equipmentCreateOverlay?.classList.remove("open");
+  equipmentCreateModal?.classList.remove("open");
+}
+
+openEquipmentModalButton?.addEventListener("click", openEquipmentCreateModal);
+closeEquipmentModalButton?.addEventListener("click", closeEquipmentCreateModal);
+equipmentCreateOverlay?.addEventListener("click", closeEquipmentCreateModal);
+
 function showEquipmentStep(n) {
   equipmentStep1.style.display = n === 1 ? "block" : "none";
   equipmentStep2.style.display = n === 2 ? "block" : "none";
@@ -107,6 +130,7 @@ function equipmentCard(item) {
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
           <div class="market-tag green"><i class="ti ti-circle-check" aria-hidden="true"></i> Available</div>
+          ${endorsementBadge(item)}
         </div>
         <div class="market-footer">
           <div class="market-price">R${item.daily_price} <span>/day</span></div>
@@ -279,6 +303,7 @@ equipmentForm?.addEventListener("submit", async e => {
     equipmentForm.reset();
     if (equipmentUploader) equipmentUploader.reset();
     showEquipmentStep(1);
+    closeEquipmentCreateModal();
     await loadEquipment();
   } catch (err) {
     equipmentMessage.textContent = err.message;

@@ -38,11 +38,16 @@ function avatarInitials(name = "") {
 /*
   Single source of truth for avatar rendering. If a real photo URL exists,
   returns a clickable <img class="lightbox-img"> so it's viewable in the
-  global lightbox like every other image on the platform. Otherwise
-  returns plain initials text (not clickable, since there's no image).
+  global lightbox — UNLESS options.lightbox is explicitly false (used by
+  the navbar avatar). Otherwise returns plain initials text.
 */
-function avatarHtml(name = "", photoUrl = null) {
+function avatarHtml(name = "", photoUrl = null, options = {}) {
+  const { lightbox = true } = options;
+
   if (photoUrl && typeof photoUrl === "string" && photoUrl.trim()) {
+    if (!lightbox) {
+      return `<img src="${photoUrl}" alt="${name || "User"}" />`;
+    }
     const gallery = `avatar-${Math.random().toString(36).slice(2, 9)}`;
     return `<img src="${photoUrl}" alt="${name || "User"}" class="lightbox-img" data-gallery="${gallery}" data-full="${photoUrl}" />`;
   }
@@ -55,6 +60,13 @@ function requireAuth() {
     return null;
   }
   return JSON.parse(localStorage.getItem("taskifyUser"));
+}
+
+/* Returns the correct "my profile" page for the logged-in account's
+   member_type, used by the navbar avatar link and by profile pages that
+   need to bounce a lecturer/student to the right place. */
+function myProfileUrl(user) {
+  return user?.member_type === "Lecturer" ? "./lecturer-profile.html" : "./profile.html";
 }
 
 function badge(label, variant = "") {
@@ -80,12 +92,33 @@ function statusBadge(status) {
   return `<div class="badge ${map[status] ?? ""}">${status}</div>`;
 }
 
-async function startConversationAndRedirect(contextType, contextId) {
+/* Renders the "Recommended by Dr. X" tag on a sales/equipment listing,
+   fed by the real lecturer_endorsements join done server-side. Returns
+   an empty string (no badge) if the item isn't endorsed. */
+function endorsementBadge(item) {
+  if (!item || !item.endorsed_by_lecturer_name) return "";
+  const title = item.endorsed_by_lecturer_title ? `${item.endorsed_by_lecturer_title} ` : "";
+  return `<div class="market-tag" style="background:rgba(108,61,255,0.10);color:#6c3dff;">
+            <i class="ti ti-certificate" aria-hidden="true"></i> Recommended by ${title}${item.endorsed_by_lecturer_name}
+          </div>`;
+}
+
+async function startConversationAndRedirect(contextType, contextId, triggerBtn = null) {
+  let originalHtml = null;
+  if (triggerBtn) {
+    originalHtml = triggerBtn.innerHTML;
+    triggerBtn.disabled = true;
+    triggerBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Opening chat…`;
+  }
   try {
     const res = await apiRequest("/conversations/start", "POST", { contextType, contextId: Number(contextId) });
     window.location.href = `./conversation.html?id=${res.data.id}`;
   } catch (err) {
     showToast(err.message, "error");
+    if (triggerBtn) {
+      triggerBtn.disabled = false;
+      triggerBtn.innerHTML = originalHtml;
+    }
   }
 }
 
@@ -104,8 +137,8 @@ function closeModal(modal, form, msgEl) {
   if (msgEl) msgEl.textContent = "";
 }
 
-/* ── Shared "view user profile" modal, including registration/academic
-   details, reused identically across every page. ── */
+/* ── Shared "view user profile" modal — now identity-aware. Shows lecturer
+   badge/expertise for lecturers, endorsements-received for students. ── */
 async function loadUserProfile(userId) {
   const profileModal   = document.getElementById("profileModal");
   const profileContent = document.getElementById("profileContent");
@@ -117,8 +150,10 @@ async function loadUserProfile(userId) {
   try {
     const res     = await apiRequest(`/users/${userId}/profile`);
     const profile = res.data;
+    const isLecturer = profile.member_type === "Lecturer";
+
     const reviews = profile.recent_reviews.length
-      ? profile.recent_reviews.map(r => `
+      ? profile.recent_reviews.slice(0, 3).map(r => `
           <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
               <span style="font-size:13px;font-weight:600;">${r.reviewer_name}</span>
@@ -128,14 +163,47 @@ async function loadUserProfile(userId) {
           </div>`).join("")
       : `<p style="color:var(--muted);font-size:13px;">No reviews yet.</p>`;
 
+    const lecturerBlock = isLecturer ? `
+      <div class="market-tags" style="margin-bottom:14px;">
+        <div class="lecturer-title-badge"><i class="ti ti-chalkboard" aria-hidden="true"></i> ${profile.lecturer_title || ""} Verified Lecturer</div>
+      </div>
+      ${profile.skills?.length ? `
+        <div style="margin-bottom:14px;">
+          <h4 style="font-size:12px;font-weight:700;margin-bottom:6px;">Expertise</h4>
+          <div class="market-tags">${profile.skills.map(s => `<div class="market-tag">${s}</div>`).join("")}</div>
+        </div>` : ""}
+      ${profile.lecturer_stats ? `
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">
+          <div style="text-align:center;background:var(--background);border-radius:var(--radius);padding:12px;">
+            <div style="font-size:18px;font-weight:800;">${profile.lecturer_stats.endorsementsGiven}</div>
+            <div style="font-size:11px;color:var(--muted);">Endorsements Given</div>
+          </div>
+          <div style="text-align:center;background:var(--background);border-radius:var(--radius);padding:12px;">
+            <div style="font-size:18px;font-weight:800;">${profile.lecturer_stats.studentsEndorsed}</div>
+            <div style="font-size:11px;color:var(--muted);">Students Endorsed</div>
+          </div>
+        </div>` : ""}
+    ` : "";
+
+    const endorsementsBlock = (!isLecturer && profile.endorsements_received?.length) ? `
+      <div style="margin-bottom:14px;">
+        <h4 style="font-size:12px;font-weight:700;margin-bottom:6px;">Lecturer Endorsements</h4>
+        ${profile.endorsements_received.slice(0, 3).map(e => `
+          <div class="endorsement-badge ${e.endorsement_type.toLowerCase()}" style="margin:0 6px 6px 0;">
+            <i class="ti ti-certificate" aria-hidden="true"></i> ${e.endorsement_type} — ${e.lecturer_title || ""} ${e.lecturer_name}
+          </div>`).join("")}
+      </div>` : "";
+
     profileContent.innerHTML = `
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
         <div class="market-avatar" style="width:48px;height:48px;font-size:16px;">${avatarHtml(profile.full_name, profile.profilePhoto)}</div>
         <div>
-          <div style="font-weight:700;font-size:15px;">${profile.full_name}</div>
+          <div style="font-weight:700;font-size:15px;">${profile.lecturer_title ? profile.lecturer_title + " " : ""}${profile.full_name}</div>
           <div style="font-size:12px;color:var(--muted);">${profile.email}</div>
         </div>
       </div>
+      ${lecturerBlock}
+      ${!isLecturer ? `
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px;">
         <div style="text-align:center;background:var(--background);border-radius:var(--radius);padding:12px;">
           <div style="font-size:18px;font-weight:800;color:var(--ump-green);">${Number(profile.rating_average || 0).toFixed(1)}</div>
@@ -146,10 +214,11 @@ async function loadUserProfile(userId) {
           <div style="font-size:11px;color:var(--muted);">Reviews</div>
         </div>
         <div style="text-align:center;background:var(--background);border-radius:var(--radius);padding:12px;">
-          <div style="font-size:18px;font-weight:800;">${profile.completed_tasks}</div>
-          <div style="font-size:11px;color:var(--muted);">Tasks</div>
+          <div style="font-size:18px;font-weight:800;">${profile.stats?.tasks_posted ?? 0}</div>
+          <div style="font-size:11px;color:var(--muted);">Tasks Posted</div>
         </div>
-      </div>
+      </div>` : ""}
+      ${endorsementsBlock}
       <div class="market-tags" style="margin-bottom:14px;">
         <div class="badge"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified</div>
         <div class="badge blue">${profile.member_type || "Student"}</div>
@@ -158,20 +227,27 @@ async function loadUserProfile(userId) {
       <div style="background:var(--background);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:13px;">
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Student/Staff No.</span><strong>${profile.student_number || "Not provided"}</strong></div>
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Faculty</span><strong>${profile.faculty || "Not provided"}</strong></div>
-        ${profile.member_type !== "Staff" ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Academic Year</span><strong>${profile.academic_year || "Not provided"}</strong></div>` : ""}
+        ${profile.member_type === "Student" ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Academic Year</span><strong>${profile.academic_year || "Not provided"}</strong></div>` : ""}
       </div>
-      <h4 style="font-size:13px;font-weight:700;margin-bottom:6px;">Recent Reviews</h4>
-      ${reviews}`;
+      ${!isLecturer ? `<h4 style="font-size:13px;font-weight:700;margin-bottom:6px;">Recent Reviews</h4>${reviews}` : ""}`;
   } catch (err) {
     profileContent.innerHTML = errorState(err.message);
   }
+}
+
+function openUserProfileModal(userId) {
+  loadUserProfile(userId);
 }
 
 function attachProfileLinkEvents() {
   document.querySelectorAll(".profile-link").forEach(link => {
     if (link.dataset.profileBound) return;
     link.dataset.profileBound = "1";
-    link.addEventListener("click", () => loadUserProfile(link.dataset.userId));
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      loadUserProfile(link.dataset.userId);
+    });
   });
 
   const closeBtn     = document.getElementById("closeProfileModal");
@@ -278,13 +354,26 @@ function initImageUploader(uploadAreaId, previewGridId) {
     const formData = new FormData();
     selectedFiles.forEach(file => formData.append("images", file));
     const token = localStorage.getItem("taskifyToken");
-    const response = await fetch(
-      `http://127.0.0.1:5000/api/upload?folder=${folder}`,
-      { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData }
-    );
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.message || "Image upload failed.");
-    return data.data.urls;
+
+    const overlay = document.createElement("div");
+    overlay.className = "upload-area-loading-overlay";
+    const count = selectedFiles.length;
+    overlay.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i><span>Uploading ${count} image${count > 1 ? "s" : ""}…</span>`;
+    uploadArea.classList.add("uploading");
+    uploadArea.appendChild(overlay);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/upload?folder=${folder}`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData }
+      );
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || "Image upload failed.");
+      return data.data.urls;
+    } finally {
+      uploadArea.classList.remove("uploading");
+      overlay.remove();
+    }
   }
 
   function reset() {
@@ -298,8 +387,7 @@ function initImageUploader(uploadAreaId, previewGridId) {
   return { upload, reset, getFiles };
 }
 
-/* Render image gallery for detail pages — every image is lightbox-enabled
-   and grouped so arrow-key navigation cycles through that listing's photos. */
+/* Render image gallery for detail pages */
 function renderImageGallery(imageUrls = [], fallbackIcon = "ti-image") {
   if (!imageUrls || !imageUrls.length) {
     return `
@@ -341,9 +429,7 @@ function switchGalleryImage(url, thumbEl) {
   thumbEl.classList.add("active");
 }
 
-/* ── Global Image Lightbox — any <img class="lightbox-img"> on any page,
-   including avatars, card thumbnails, and gallery images, becomes clickable
-   with zoom, drag-to-pan, and arrow-key navigation within its group. ── */
+/* ── Global Image Lightbox ── */
 (function setupLightbox() {
   let currentGroup = [];
   let currentIndex = 0;

@@ -31,13 +31,25 @@ router.post(
       .isLength({ max: 50 }).withMessage("Student/staff number must be under 50 characters."),
 
     body("memberType").optional({ checkFalsy: true })
-      .isIn(["Student", "Staff"]).withMessage("Account type must be Student or Staff."),
+      .isIn(["Student", "Lecturer", "Staff"]).withMessage("Account type must be Student, Lecturer or Staff."),
 
     body("faculty").optional({ checkFalsy: true }).trim()
       .isLength({ max: 150 }).withMessage("Faculty must be under 150 characters."),
 
     body("academicYear").optional({ checkFalsy: true }).trim()
-      .isLength({ max: 50 }).withMessage("Academic year must be under 50 characters.")
+      .isLength({ max: 50 }).withMessage("Academic year must be under 50 characters."),
+
+    body("lecturerTitle").optional({ checkFalsy: true })
+      .isIn(["Dr.", "Prof.", "Mr.", "Ms.", "Mrs."]).withMessage("Please select a valid title."),
+
+    body("yearsExperience").optional({ checkFalsy: true })
+      .isInt({ min: 0, max: 60 }).withMessage("Years of experience must be a reasonable number."),
+
+    body("officeLocation").optional({ checkFalsy: true }).trim()
+      .isLength({ max: 150 }).withMessage("Office location must be under 150 characters."),
+
+    body("consultationMode").optional({ checkFalsy: true }).trim()
+      .isLength({ max: 150 }).withMessage("Consultation mode must be under 150 characters.")
   ],
   authController.register
 );

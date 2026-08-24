@@ -34,6 +34,32 @@ let selectedSection = "All";
 closeReviewModalButton?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
 document.getElementById("overlay")?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
 
+/* ── Task creation modal open/close ──
+   The "Create Task" CTA button and the modal markup already existed in
+   tasks.html, but nothing ever opened it — wiring that up here. */
+const taskCreateOverlay     = document.getElementById("taskCreateOverlay");
+const taskCreateModal       = document.getElementById("taskCreateModal");
+const openTaskModalButton   = document.getElementById("openTaskModalButton");
+const closeTaskModalButton  = document.getElementById("closeTaskModalButton");
+
+function openTaskCreateModal() {
+  taskForm?.reset();
+  taskMessage.textContent = "";
+  showTaskStep(1);
+  if (taskUploader) taskUploader.reset();
+  taskCreateOverlay?.classList.add("open");
+  taskCreateModal?.classList.add("open");
+}
+
+function closeTaskCreateModal() {
+  taskCreateOverlay?.classList.remove("open");
+  taskCreateModal?.classList.remove("open");
+}
+
+openTaskModalButton?.addEventListener("click", openTaskCreateModal);
+closeTaskModalButton?.addEventListener("click", closeTaskCreateModal);
+taskCreateOverlay?.addEventListener("click", closeTaskCreateModal);
+
 /* ── Step navigation ── */
 function showTaskStep(n) {
   taskStep1.style.display = n === 1 ? "block" : "none";
@@ -332,6 +358,7 @@ taskForm?.addEventListener("submit", async e => {
     taskForm.reset();
     if (taskUploader) taskUploader.reset();
     showTaskStep(1);
+    closeTaskCreateModal();
     await loadTasks();
     await loadTaskHistory();
   } catch (err) {

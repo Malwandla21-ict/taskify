@@ -6,15 +6,10 @@ const saleId = params.get("id");
 
 async function loadSaleDetails() {
   try {
-    const res  = await apiRequest("/sales");
-    const item = res.data.find(e => Number(e.id) === Number(saleId));
-    if (!item) {
-      saleDetailsContainer.innerHTML = emptyState("ti-shopping-bag-x", "Not found", "This item is no longer available.");
-      return;
-    }
-    renderSaleDetails(item);
+    const res = await apiRequest(`/sales/${saleId}`);
+    renderSaleDetails(res.data);
   } catch (err) {
-    saleDetailsContainer.innerHTML = errorState(err.message);
+    saleDetailsContainer.innerHTML = errorState(err.message || "This item is no longer available.");
     showToast(err.message, "error");
   }
 }
@@ -24,9 +19,11 @@ function renderSaleDetails(item) {
 
   const actionArea = isOwn
     ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>`
-    : `<button class="primary-button" id="messageSellerButton">
-         <i class="ti ti-message-circle" aria-hidden="true"></i> Message Seller
-       </button>`;
+    : item.status !== "Available"
+      ? `<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Already sold</div>`
+      : `<button class="primary-button" id="messageSellerButton">
+           <i class="ti ti-message-circle" aria-hidden="true"></i> Message Seller
+         </button>`;
 
   saleDetailsContainer.innerHTML = `
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
@@ -40,6 +37,7 @@ function renderSaleDetails(item) {
           ${conditionBadge(item.condition_status)}
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${item.location}</div>
           ${statusBadge(item.status)}
+          ${endorsementBadge(item)}
         </div>
       </div>
       <div class="form-panel">
@@ -76,8 +74,8 @@ function renderSaleDetails(item) {
 
   attachProfileLinkEvents();
 
-  document.getElementById("messageSellerButton")?.addEventListener("click", () => {
-    startConversationAndRedirect("sale", saleId);
+  document.getElementById("messageSellerButton")?.addEventListener("click", (e) => {
+    startConversationAndRedirect("sale", saleId, e.currentTarget);
   });
 }
 

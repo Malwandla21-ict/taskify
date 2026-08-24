@@ -56,7 +56,15 @@ async function updateMyProfileDetails(req, res, next) {
     const profile = await userService.updateProfileDetails(req.user.id, {
       faculty: req.body.faculty,
       academicYear: req.body.academicYear,
-      phoneNumber: req.body.phoneNumber
+      phoneNumber: req.body.phoneNumber,
+      bio: req.body.bio,
+      skills: req.body.skills,
+      services: req.body.services,
+      lecturerTitle: req.body.lecturerTitle,
+      yearsExperience: req.body.yearsExperience,
+      officeLocation: req.body.officeLocation,
+      consultationMode: req.body.consultationMode,
+      availabilityNote: req.body.availabilityNote
     });
 
     return res.status(200).json({

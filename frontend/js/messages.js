@@ -10,21 +10,23 @@ function conversationCard(conv) {
   const timeLabel = conv.last_message_at ? new Date(conv.last_message_at).toLocaleDateString() : "";
 
   return `
-    <a href="./conversation.html?id=${conv.id}" class="market-card" style="text-decoration:none;display:block;">
-      <div class="market-content">
-        <div class="market-top">
-          <div class="market-user">
-            <div class="market-avatar">${avatarHtml(conv.other_user_name, conv.other_user_photo)}</div>
-            <div>
-              <div class="market-user-name">${conv.other_user_name}</div>
-              <div class="market-user-meta"><i class="ti ${contextIcon[conv.context_type]}" aria-hidden="true"></i> ${conv.context_title}</div>
+    <div class="market-card">
+      <a href="./conversation.html?id=${conv.id}" style="text-decoration:none;display:block;color:inherit;">
+        <div class="market-content">
+          <div class="market-top">
+            <div class="market-user">
+              <div class="market-avatar">${avatarHtml(conv.other_user_name, conv.other_user_photo)}</div>
+              <div>
+                <div class="market-user-name profile-link" data-user-id="${conv.other_user_id}" style="cursor:pointer;">${conv.other_user_name}</div>
+                <div class="market-user-meta"><i class="ti ${contextIcon[conv.context_type]}" aria-hidden="true"></i> ${conv.context_title}</div>
+              </div>
             </div>
+            <div style="font-size:11px;color:var(--muted);">${timeLabel}</div>
           </div>
-          <div style="font-size:11px;color:var(--muted);">${timeLabel}</div>
+          <p style="color:var(--muted);font-size:13px;">${preview}</p>
         </div>
-        <p style="color:var(--muted);font-size:13px;">${preview}</p>
-      </div>
-    </a>`;
+      </a>
+    </div>`;
 }
 
 async function loadConversations() {
@@ -33,6 +35,7 @@ async function loadConversations() {
     conversationsContainer.innerHTML = res.data.length
       ? res.data.map(conversationCard).join("")
       : emptyState("ti-message-circle", "No conversations yet", "Message a task, rental or sale owner to start one.");
+    attachProfileLinkEvents();
   } catch (err) {
     conversationsContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");

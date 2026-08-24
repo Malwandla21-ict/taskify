@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Profile</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
@@ -19,30 +20,78 @@
       </div>
     </div>
   </section>
-  <section class="section" style="padding-top:16px;padding-bottom:0;">
-    <div id="profileAcademicCard"></div>
-  </section>
-  <section class="section" style="padding-top:16px;padding-bottom:0;">
-    <div class="profile-stats-row">
-      <div class="profile-stat">
-        <div class="profile-stat-value" id="pStatTasks">—</div>
-        <div class="profile-stat-label"><i class="ti ti-clipboard-check" aria-hidden="true"></i> Tasks Completed</div>
+
+  <section class="section" style="padding-top:0;">
+    <div class="profile-tabs">
+      <button type="button" class="profile-tab active" data-tab="overview"><i class="ti ti-layout-grid" aria-hidden="true"></i> Overview</button>
+      <button type="button" class="profile-tab" data-tab="activity"><i class="ti ti-activity" aria-hidden="true"></i> My Activity</button>
+      <button type="button" class="profile-tab" data-tab="reviews"><i class="ti ti-star" aria-hidden="true"></i> Reviews</button>
+      <button type="button" class="profile-tab" data-tab="listings"><i class="ti ti-tag" aria-hidden="true"></i> Listings</button>
+      <button type="button" class="profile-tab" data-tab="endorsements"><i class="ti ti-certificate" aria-hidden="true"></i> Endorsements</button>
+    </div>
+
+    <!-- Overview -->
+    <div id="overviewTab" class="profile-tab-panel active">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+        <div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-user-circle" aria-hidden="true"></i> About Me</h3></div>
+            <p id="aboutMeText" style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">—</p>
+            <div class="profile-info-card-header"><h3 style="font-size:13px;"><i class="ti ti-tags" aria-hidden="true"></i> Skills</h3></div>
+            <div class="profile-tags-row" id="skillsTagsRow"></div>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-shield-check" aria-hidden="true"></i> Verification</h3></div>
+            <div class="profile-verify-row"><span>Email Verified</span><span id="emailVerifiedBadge"></span></div>
+            <div class="profile-verify-row"><span>Account Type</span><span id="accountTypeBadge"></span></div>
+          </div>
+        </div>
+        <div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-chart-bar" aria-hidden="true"></i> Statistics</h3></div>
+            <div class="profile-stats-grid-v2" id="statsGrid"></div>
+          </div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-calendar-time" aria-hidden="true"></i> Availability</h3></div>
+            <p id="availabilityText" style="font-size:13px;color:var(--muted);">—</p>
+          </div>
+        </div>
       </div>
-      <div class="profile-stat">
-        <div class="profile-stat-value" id="pStatRating">—</div>
-        <div class="profile-stat-label"><i class="ti ti-star" aria-hidden="true"></i> Trust Rating</div>
-      </div>
-      <div class="profile-stat">
-        <div class="profile-stat-value" id="pStatRentals">—</div>
-        <div class="profile-stat-label"><i class="ti ti-package" aria-hidden="true"></i> Rentals</div>
-      </div>
-      <div class="profile-stat">
-        <div class="profile-stat-value" id="pStatListings">—</div>
-        <div class="profile-stat-label"><i class="ti ti-tag" aria-hidden="true"></i> Listings</div>
+      <div class="profile-info-card">
+        <div class="profile-info-card-header"><h3><i class="ti ti-activity" aria-hidden="true"></i> Recent Activity</h3></div>
+        <div class="profile-activity-list" id="overviewActivityList"></div>
       </div>
     </div>
+
+    <!-- My Activity -->
+    <div id="activityTab" class="profile-tab-panel">
+      <div class="profile-info-card">
+        <div class="profile-info-card-header"><h3><i class="ti ti-activity" aria-hidden="true"></i> Full Activity History</h3></div>
+        <div class="profile-activity-list" id="fullActivityList"></div>
+      </div>
+    </div>
+
+    <!-- Reviews -->
+    <div id="reviewsTab" class="profile-tab-panel">
+      <div id="recentReviewsContainer" class="marketplace-grid">
+        <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-star" aria-hidden="true"></i></div><h3>No reviews yet</h3></div>
+      </div>
+    </div>
+
+    <!-- Listings -->
+    <div id="listingsTab" class="profile-tab-panel">
+      <div id="myListingsContainer" class="marketplace-grid">
+        <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading listings…</h3></div>
+      </div>
+    </div>
+
+    <!-- Endorsements -->
+    <div id="endorsementsTab" class="profile-tab-panel">
+      <div id="myEndorsementsContainer"></div>
+    </div>
   </section>
-  <section class="section" style="padding-bottom:0;">
+
+  <section class="section" style="padding-top:0;">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-bolt" aria-hidden="true"></i> Quick Actions</h2>
@@ -62,25 +111,10 @@
         <div class="category-icon gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>
         <h3>Sales</h3><p>Buy and sell items</p>
       </a>
-      <a href="./dashboard.html" class="category-card">
-        <div class="category-icon navy"><i class="ti ti-home" aria-hidden="true"></i></div>
-        <h3>Dashboard</h3><p>Return to overview</p>
+      <a href="./tutors.html" class="category-card">
+        <div class="category-icon navy"><i class="ti ti-school-bell" aria-hidden="true"></i></div>
+        <h3>Verified Tutors</h3><p>Browse lecturer-endorsed tutors</p>
       </a>
-    </div>
-  </section>
-  <section class="section">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-star" aria-hidden="true"></i> Recent Reviews</h2>
-        <p>What other students say about you</p>
-      </div>
-    </div>
-    <div id="recentReviewsContainer" class="marketplace-grid">
-      <div class="empty-state">
-        <div class="empty-state-icon"><i class="ti ti-star" aria-hidden="true"></i></div>
-        <h3>No reviews yet</h3>
-        <p>Reviews appear here after completed tasks.</p>
-      </div>
     </div>
   </section>
 </div>

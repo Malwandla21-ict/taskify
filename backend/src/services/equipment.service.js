@@ -12,6 +12,17 @@ function parseImageUrls(row) {
   return row;
 }
 
+const ENDORSEMENT_JOIN = `
+  LEFT JOIN lecturer_endorsements le
+    ON le.context_type = 'equipment' AND le.context_id = e.id
+    AND le.id = (
+      SELECT id FROM lecturer_endorsements le2
+      WHERE le2.context_type = 'equipment' AND le2.context_id = e.id
+      ORDER BY le2.created_at DESC LIMIT 1
+    )
+  LEFT JOIN users lecturer ON le.lecturer_id = lecturer.id
+`;
+
 async function createEquipment({
   ownerId, name, description, category, section, dailyPrice, imageUrls = []
 }) {
@@ -36,9 +47,13 @@ async function getAllAvailableEquipment() {
        e.section, e.daily_price, e.is_available, e.created_at,
        e.image_urls,
        u.full_name AS owner_name,
-       u.profile_photo_url AS owner_profile_photo
+       u.profile_photo_url AS owner_profile_photo,
+       le.endorsement_type AS endorsement_type,
+       lecturer.full_name AS endorsed_by_lecturer_name,
+       lecturer.lecturer_title AS endorsed_by_lecturer_title
      FROM equipment e
      INNER JOIN users u ON e.owner_id = u.id
+     ${ENDORSEMENT_JOIN}
      WHERE e.is_available = 1
      ORDER BY e.created_at DESC`
   );
@@ -225,9 +240,13 @@ async function getEquipmentById(equipmentId) {
        e.image_urls,
        u.full_name AS owner_name,
        u.profile_photo_url AS owner_profile_photo,
-       u.phone_number AS owner_phone_number
+       u.phone_number AS owner_phone_number,
+       le.endorsement_type AS endorsement_type,
+       lecturer.full_name AS endorsed_by_lecturer_name,
+       lecturer.lecturer_title AS endorsed_by_lecturer_title
      FROM equipment e
      INNER JOIN users u ON e.owner_id = u.id
+     ${ENDORSEMENT_JOIN}
      WHERE e.id = ? LIMIT 1`,
     [equipmentId]
   );

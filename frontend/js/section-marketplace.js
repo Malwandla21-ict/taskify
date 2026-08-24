@@ -19,6 +19,7 @@ function renderAll() {
   renderSectionTasks();
   renderSectionEquipment();
   renderSectionSales();
+  attachProfileLinkEvents();
 }
 
 function getSearch() { return sectionSearch?.value.trim().toLowerCase() || ""; }
@@ -64,7 +65,7 @@ function renderSectionTasks() {
             <div class="market-user">
               <div class="market-avatar">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
               <div>
-                <div class="market-user-name">${task.created_by_name}</div>
+                <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${task.created_by_name}</div>
                 <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student</div>
               </div>
             </div>
@@ -109,7 +110,7 @@ function renderSectionEquipment() {
             <div class="market-user">
               <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
               <div>
-                <div class="market-user-name">${item.owner_name}</div>
+                <div class="market-user-name profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;">${item.owner_name}</div>
                 <div class="market-user-meta"><i class="ti ti-package" aria-hidden="true"></i> Equipment Owner</div>
               </div>
             </div>
@@ -154,7 +155,7 @@ function renderSectionSales() {
             <div class="market-user">
               <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
               <div>
-                <div class="market-user-name">${item.seller_name}</div>
+                <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${item.seller_name}</div>
                 <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
               </div>
             </div>

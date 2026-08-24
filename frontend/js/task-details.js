@@ -6,15 +6,10 @@ const taskId = params.get("id");
 
 async function loadTaskDetails() {
   try {
-    const res  = await apiRequest("/tasks");
-    const task = res.data.find(t => Number(t.id) === Number(taskId));
-    if (!task) {
-      taskDetailsContainer.innerHTML = emptyState("ti-clipboard-off", "Task not found", "This task may have been cancelled or removed.");
-      return;
-    }
-    renderTaskDetails(task);
+    const res = await apiRequest(`/tasks/${taskId}`);
+    renderTaskDetails(res.data);
   } catch (err) {
-    taskDetailsContainer.innerHTML = errorState(err.message);
+    taskDetailsContainer.innerHTML = errorState(err.message || "This task may have been cancelled or removed.");
     showToast(err.message, "error");
   }
 }
@@ -36,6 +31,10 @@ function renderTaskDetails(task) {
   } else if (task.status === "In Progress" && isAcceptedByMe) {
     primaryAction = `<button class="primary-button" id="completeTaskButton" data-task-id="${task.id}">
                         <i class="ti ti-circle-check" aria-hidden="true"></i> Mark Complete
+                      </button>`;
+  } else if (task.status === "Awaiting Confirmation" && isOwn) {
+    primaryAction = `<button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" style="background:var(--ump-green);">
+                        <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion
                       </button>`;
   } else {
     primaryAction = statusBadge(task.status);
@@ -93,8 +92,8 @@ function renderTaskDetails(task) {
   attachTaskActionEvents();
   attachProfileLinkEvents();
 
-  document.getElementById("messagePosterButton")?.addEventListener("click", () => {
-    startConversationAndRedirect("task", taskId);
+  document.getElementById("messagePosterButton")?.addEventListener("click", (e) => {
+    startConversationAndRedirect("task", taskId, e.currentTarget);
   });
 }
 
@@ -102,19 +101,29 @@ function attachTaskActionEvents() {
   const accept   = document.getElementById("acceptTaskButton");
   const start    = document.getElementById("startTaskButton");
   const complete = document.getElementById("completeTaskButton");
+  const confirmBtn = document.getElementById("confirmCompletionButton");
 
-  if (accept)   accept.addEventListener("click",   () => updateTask(`/tasks/${accept.dataset.taskId}/accept`,   "PATCH", null,                   "Task accepted!"));
-  if (start)    start.addEventListener("click",    () => updateTask(`/tasks/${start.dataset.taskId}/status`,    "PATCH", { status:"In Progress" }, "Task started!"));
-  if (complete) complete.addEventListener("click", () => updateTask(`/tasks/${complete.dataset.taskId}/status`, "PATCH", { status:"Completed" },   "Task completed!"));
+  if (accept)   accept.addEventListener("click",   () => updateTask(accept,   `/tasks/${accept.dataset.taskId}/accept`,   "PATCH", null,                              "Task accepted!",  "Accepting…"));
+  if (start)    start.addEventListener("click",    () => updateTask(start,    `/tasks/${start.dataset.taskId}/status`,    "PATCH", { status: "In Progress" },         "Task started!",   "Starting…"));
+  if (complete) complete.addEventListener("click", () => updateTask(complete, `/tasks/${complete.dataset.taskId}/status`, "PATCH", { status: "Awaiting Confirmation" },"Marked as done — awaiting confirmation.", "Submitting…"));
+  if (confirmBtn) confirmBtn.addEventListener("click", () => {
+    if (!window.confirm("Confirm this task is complete? This releases payment to the worker.")) return;
+    updateTask(confirmBtn, `/tasks/${confirmBtn.dataset.taskId}/confirm-completion`, "PATCH", null, "Task completed and payment released!", "Confirming…");
+  });
 }
 
-async function updateTask(url, method, body, msg) {
+async function updateTask(btn, url, method, body, msg, loadingLabel) {
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${loadingLabel}`;
   try {
     await apiRequest(url, method, body);
     showToast(msg);
     setTimeout(() => window.location.href = "./tasks.html", 800);
   } catch (err) {
     showToast(err.message, "error");
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
   }
 }
 

@@ -16,15 +16,13 @@ async function authenticate(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     /*
-      Re-check the user's CURRENT role on every request instead of trusting
-      the role baked into the token at login time — this is what makes
-      suspend/ban take effect immediately rather than waiting for the
-      token to expire. Also pull the reason columns so a user whose
-      account changes mid-session (their existing tab is still open) sees
-      why, not just that.
+      Re-check the user's CURRENT role AND member_type on every request
+      instead of trusting the token — this is what makes suspend/ban take
+      effect immediately, and (new) makes lecturer-only routes reflect the
+      account's real identity rather than a possibly-stale token claim.
     */
     const [rows] = await pool.execute(
-      `SELECT role, suspension_reason, ban_reason FROM users WHERE id = ? LIMIT 1`,
+      `SELECT role, member_type, suspension_reason, ban_reason FROM users WHERE id = ? LIMIT 1`,
       [decoded.id]
     );
 
@@ -32,7 +30,7 @@ async function authenticate(req, res, next) {
       return res.status(401).json({ success: false, message: "Unauthorized. Account no longer exists." });
     }
 
-    const { role: currentRole, suspension_reason, ban_reason } = rows[0];
+    const { role: currentRole, member_type: currentMemberType, suspension_reason, ban_reason } = rows[0];
 
     if (currentRole === "suspended") {
       const reasonText = suspension_reason ? ` Reason: ${suspension_reason}` : "";
@@ -43,7 +41,7 @@ async function authenticate(req, res, next) {
       return res.status(403).json({ success: false, message: `Your account has been banned.${reasonText}` });
     }
 
-    req.user = { ...decoded, role: currentRole };
+    req.user = { ...decoded, role: currentRole, memberType: currentMemberType };
     next();
   } catch (error) {
     return res.status(401).json({
@@ -66,7 +64,18 @@ function authorize(...roles) {
   };
 }
 
+/* New: gate lecturer-only endpoints (giving endorsements, searching
+   students, etc.) on the account's member_type rather than role, since
+   lecturers are ordinary 'user' role for moderation purposes. */
+function requireLecturer(req, res, next) {
+  if (req.user.memberType !== "Lecturer") {
+    return res.status(403).json({ success: false, message: "This action is only available to lecturer accounts." });
+  }
+  next();
+}
+
 module.exports = {
   authenticate,
-  authorize
+  authorize,
+  requireLecturer
 };

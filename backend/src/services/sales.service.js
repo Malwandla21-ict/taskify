@@ -1,16 +1,8 @@
 const pool = require("../config/db");
 
-/*
-  Parse image_urls into a plain JS array, regardless of how the DB driver
-  handed it back to us.
-*/
 function parseImageUrls(row) {
   if (!row) return row;
-
-  if (Array.isArray(row.image_urls)) {
-    return row; // already parsed by the driver (JSON column)
-  }
-
+  if (Array.isArray(row.image_urls)) return row;
   try {
     row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
   } catch {
@@ -19,13 +11,30 @@ function parseImageUrls(row) {
   return row;
 }
 
+/* Most-recent endorsement (if any) attached to this specific sales item,
+   surfaced as "Recommended by Dr. X" on cards/detail pages. Real data —
+   pulled via a correlated subquery so at most one row per item. */
 const SELECT_FIELDS = `
   si.id, si.seller_id, si.title, si.description, si.category,
   si.section, si.price, si.condition_status, si.location,
   si.status, si.created_at, si.image_urls,
   u.full_name AS seller_name,
   u.profile_photo_url AS seller_profile_photo,
-  u.phone_number AS seller_phone_number
+  u.phone_number AS seller_phone_number,
+  le.endorsement_type AS endorsement_type,
+  lecturer.full_name AS endorsed_by_lecturer_name,
+  lecturer.lecturer_title AS endorsed_by_lecturer_title
+`;
+
+const ENDORSEMENT_JOIN = `
+  LEFT JOIN lecturer_endorsements le
+    ON le.context_type = 'sales_item' AND le.context_id = si.id
+    AND le.id = (
+      SELECT id FROM lecturer_endorsements le2
+      WHERE le2.context_type = 'sales_item' AND le2.context_id = si.id
+      ORDER BY le2.created_at DESC LIMIT 1
+    )
+  LEFT JOIN users lecturer ON le.lecturer_id = lecturer.id
 `;
 
 async function createSalesItem({
@@ -52,6 +61,7 @@ async function getAllAvailableSalesItems() {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
+     ${ENDORSEMENT_JOIN}
      WHERE si.status = 'Available'
      ORDER BY si.created_at DESC`
   );
@@ -63,6 +73,7 @@ async function getMySalesItems(userId) {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
+     ${ENDORSEMENT_JOIN}
      WHERE si.seller_id = ?
      ORDER BY si.created_at DESC`,
     [userId]
@@ -97,6 +108,7 @@ async function getSalesItemById(itemId) {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
+     ${ENDORSEMENT_JOIN}
      WHERE si.id = ? LIMIT 1`,
     [itemId]
   );

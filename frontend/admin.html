@@ -5,46 +5,291 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Admin Dashboard</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/admin.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
 <div class="dashboard-container">
-  <div class="hero-section-simple">
-    <div class="hero-badge"><i class="ti ti-shield-lock" aria-hidden="true"></i> Admin Dashboard</div>
-    <h1>Reports, users &amp; audit log</h1>
-    <p>Review reports, moderate accounts, and see a full history of admin actions.</p>
-  </div>
 
-  <section class="section">
-    <div id="adminStatsGrid" class="admin-stats-grid">
-      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading stats…</h3></div>
-    </div>
-  </section>
-
-  <section class="section" style="padding-top:0;">
-    <div class="admin-tabs">
-      <button type="button" class="admin-tab active" data-tab="reports"><i class="ti ti-flag" aria-hidden="true"></i> Reports</button>
-      <button type="button" class="admin-tab" data-tab="users"><i class="ti ti-users" aria-hidden="true"></i> Users</button>
-      <button type="button" class="admin-tab" data-tab="audit"><i class="ti ti-history" aria-hidden="true"></i> Audit Log</button>
-    </div>
-
-    <div id="reportsTab" class="admin-tab-panel">
-      <div id="reportsListContainer" class="admin-list"></div>
-    </div>
-
-    <div id="usersTab" class="admin-tab-panel" style="display:none;">
-      <div class="admin-search-row">
-        <input type="text" id="userSearchInput" placeholder="Search by name or email..." />
+  <div class="admin-shell">
+    <!-- ── Sidebar ── -->
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar-brand">
+        <div class="admin-sidebar-brand-icon"><i class="ti ti-shield-lock" aria-hidden="true"></i></div>
+        <div class="admin-sidebar-brand-text">
+          <strong>Taskify</strong>
+          <span>Admin Panel</span>
+        </div>
       </div>
-      <div id="usersListContainer" class="admin-list"></div>
-    </div>
+      <nav class="admin-sidebar-nav">
+        <button type="button" class="admin-sidebar-link active" data-section="dashboard">
+          <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
+        </button>
+        <button type="button" class="admin-sidebar-link" data-section="users">
+          <i class="ti ti-users" aria-hidden="true"></i> Users
+        </button>
+        <button type="button" class="admin-sidebar-link" data-section="reports">
+          <i class="ti ti-flag" aria-hidden="true"></i> Reports
+          <span class="badge-count" id="sidebarPendingReportsCount" style="display:none;">0</span>
+        </button>
+        <button type="button" class="admin-sidebar-link" data-section="messages">
+          <i class="ti ti-messages" aria-hidden="true"></i> Messages
+          <span class="badge-count gold" id="sidebarFlaggedMessagesCount" style="display:none;">0</span>
+        </button>
+        <button type="button" class="admin-sidebar-link" data-section="audit">
+          <i class="ti ti-history" aria-hidden="true"></i> Audit Log
+        </button>
+        <div class="admin-sidebar-divider"></div>
+        <button type="button" class="admin-sidebar-link" data-section="allowlist">
+          <i class="ti ti-mail-forward" aria-hidden="true"></i> Admin Allow-list
+        </button>
+        <a href="./dashboard.html" class="admin-sidebar-link">
+          <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Site
+        </a>
+      </nav>
+    </aside>
 
-    <div id="auditTab" class="admin-tab-panel" style="display:none;">
-      <div id="auditListContainer" class="admin-list"></div>
-    </div>
-  </section>
+    <!-- ── Main content ── -->
+    <main class="admin-main">
+
+      <!-- Dashboard -->
+      <section id="dashboardSection" class="admin-section active">
+        <div class="admin-page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Welcome back, Admin — here's what's happening on Taskify.</p>
+          </div>
+          <div class="admin-page-header-meta">
+            <span class="admin-last-updated" id="dashboardLastUpdated"></span>
+            <button type="button" class="admin-refresh-btn" id="dashboardRefreshBtn">
+              <i class="ti ti-refresh" aria-hidden="true"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="admin-stat-cards-row" id="adminStatCardsRow">
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading stats…</h3></div>
+        </div>
+
+        <div class="admin-quick-actions-row">
+          <button type="button" class="admin-quick-action-btn" data-goto-section="users">
+            <div class="qa-icon"><i class="ti ti-user-search" aria-hidden="true"></i></div>
+            <div>
+              <div class="qa-label">Manage Users</div>
+              <div class="qa-sub">Search, suspend or ban</div>
+            </div>
+          </button>
+          <button type="button" class="admin-quick-action-btn" data-goto-section="reports">
+            <div class="qa-icon" style="background:rgba(224,58,62,0.10);color:var(--ump-red);"><i class="ti ti-flag" aria-hidden="true"></i></div>
+            <div>
+              <div class="qa-label">Review Reports</div>
+              <div class="qa-sub" id="quickActionReportsSub">Check pending reports</div>
+            </div>
+          </button>
+          <button type="button" class="admin-quick-action-btn" data-goto-section="messages">
+            <div class="qa-icon" style="background:rgba(245,180,0,0.14);color:#b38900;"><i class="ti ti-messages" aria-hidden="true"></i></div>
+            <div>
+              <div class="qa-label">Monitor Messages</div>
+              <div class="qa-sub">Every conversation on Taskify</div>
+            </div>
+          </button>
+          <button type="button" class="admin-quick-action-btn" data-goto-section="allowlist">
+            <div class="qa-icon" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);"><i class="ti ti-mail-forward" aria-hidden="true"></i></div>
+            <div>
+              <div class="qa-label">Admin Allow-list</div>
+              <div class="qa-sub">View eligible admin emails</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="admin-panels-grid">
+          <div class="admin-panel">
+            <div class="admin-panel-header">
+              <h3><i class="ti ti-chart-donut" aria-hidden="true"></i> Task Status</h3>
+            </div>
+            <div class="admin-donut-row" id="taskDonutContainer">
+              <p style="color:var(--muted);font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+            </div>
+          </div>
+
+          <div class="admin-panel">
+            <div class="admin-panel-header">
+              <h3><i class="ti ti-flag" aria-hidden="true"></i> Pending Reports</h3>
+              <button type="button" class="view-all-link" data-goto-section="reports" style="border:none;cursor:pointer;">
+                View All <i class="ti ti-arrow-right" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="admin-feed-list" id="pendingReportsPreview">
+              <p style="color:var(--muted);font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-panel">
+          <div class="admin-panel-header">
+            <h3><i class="ti ti-activity" aria-hidden="true"></i> Recent Admin Activity</h3>
+            <button type="button" class="view-all-link" data-goto-section="audit" style="border:none;cursor:pointer;">
+              View All <i class="ti ti-arrow-right" aria-hidden="true"></i>
+            </button>
+          </div>
+          <div class="admin-feed-list" id="recentActivityPreview">
+            <p style="color:var(--muted);font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section id="usersSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Users</h1>
+            <p>Manage and monitor all registered users.</p>
+          </div>
+        </div>
+        <div class="admin-table-card">
+          <div class="admin-table-toolbar">
+            <div class="admin-table-search">
+              <i class="ti ti-search" aria-hidden="true"></i>
+              <input type="text" id="userSearchInput" placeholder="Search users…" />
+            </div>
+            <div class="admin-table-filters">
+              <select id="userRoleFilter">
+                <option value="All">All Roles</option>
+                <option value="user">Student</option>
+                <option value="admin">Admin</option>
+                <option value="suspended">Suspended</option>
+                <option value="banned">Banned</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+          <div class="admin-table-footer">
+            <span class="admin-table-count" id="usersTableCount"></span>
+            <div class="admin-pagination" id="usersPagination"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section id="reportsSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Reports</h1>
+            <p>Review and take action on user reports.</p>
+          </div>
+        </div>
+        <div class="admin-table-card">
+          <div class="admin-table-tabs">
+            <button type="button" class="admin-table-tab active" data-report-tab="All">All Reports</button>
+            <button type="button" class="admin-table-tab" data-report-tab="Pending">Pending</button>
+            <button type="button" class="admin-table-tab" data-report-tab="Resolved">Resolved</button>
+          </div>
+          <div class="admin-table-toolbar" style="border-top:1px solid var(--border);margin-top:14px;">
+            <div class="admin-table-search">
+              <i class="ti ti-search" aria-hidden="true"></i>
+              <input type="text" id="reportSearchInput" placeholder="Search reports…" />
+            </div>
+          </div>
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Reported User</th>
+                  <th>Reason</th>
+                  <th>Status</th>
+                  <th>Reported By</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="reportsTableBody"></tbody>
+            </table>
+          </div>
+          <div class="admin-table-footer">
+            <span class="admin-table-count" id="reportsTableCount"></span>
+            <div class="admin-pagination" id="reportsPagination"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Messages -->
+      <section id="messagesSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Messages</h1>
+            <p>Every conversation on Taskify, so moderation isn't limited to messages a student chooses to flag.</p>
+          </div>
+        </div>
+        <div id="adminConversationsListContainer">
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading conversations…</h3></div>
+        </div>
+      </section>
+
+      <!-- Audit Log -->
+      <section id="auditSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Audit Log</h1>
+            <p>Full history of admin actions taken on the platform.</p>
+          </div>
+        </div>
+        <div class="admin-table-card">
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Admin</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Reason</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody"></tbody>
+            </table>
+          </div>
+          <div class="admin-table-footer">
+            <span class="admin-table-count" id="auditTableCount"></span>
+            <div class="admin-pagination" id="auditPagination"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin Allow-list (now inline, no separate page navigation) -->
+      <section id="allowlistSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Admin Allow-list</h1>
+            <p>Emails currently eligible for automatic admin assignment at registration.</p>
+          </div>
+        </div>
+        <div class="admin-allowlist-note">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          <span>This list is view-only here. Admin eligibility is granted or revoked exclusively through a server-side script run by someone with direct institutional access — never through this interface — so there is one auditable source of truth.</span>
+        </div>
+        <div id="allowlistContainer" class="marketplace-grid">
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading…</h3></div>
+        </div>
+      </section>
+
+    </main>
+  </div>
 </div>
 
+<!-- Generic reason-confirmation modal (suspend/ban/resolve/refund) -->
 <div id="adminOverlay"></div>
 <div id="adminActionModal">
   <h2 id="adminActionModalTitle"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Confirm Action</h2>
@@ -56,6 +301,29 @@
     <button type="button" class="secondary-button" id="adminActionModalCancel"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
     <button type="button" class="primary-button" id="adminActionModalConfirm" style="background:var(--ump-red);">Confirm</button>
   </div>
+</div>
+
+<!-- User moderation detail modal -->
+<div id="adminUserDetailModal">
+  <div class="admin-user-detail-header">
+    <h2><i class="ti ti-user" aria-hidden="true"></i> User Details</h2>
+    <button type="button" class="admin-user-detail-close" id="closeUserDetailModal"><i class="ti ti-x" aria-hidden="true"></i></button>
+  </div>
+  <div class="admin-user-detail-body" id="adminUserDetailBody">
+    <p style="color:var(--muted);font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+  </div>
+</div>
+
+<!-- Message thread modal -->
+<div id="adminMessageThreadModal" style="display:none;position:fixed;top:8%;left:50%;transform:translateX(-50%);background:white;padding:28px 32px;border-radius:var(--radius-xl);border:1.5px solid var(--border);box-shadow:0 20px 60px rgba(12,29,74,0.18);z-index:2700;width:520px;max-width:94%;max-height:80vh;overflow-y:auto;">
+  <h2 style="font-size:18px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:8px;">
+    <i class="ti ti-messages" aria-hidden="true" style="color:var(--ump-green);"></i> Conversation
+  </h2>
+  <p id="adminMessageThreadContext" style="font-size:12px;color:var(--muted);margin-bottom:14px;"></p>
+  <div id="adminMessageThreadContainer" style="display:flex;flex-direction:column;gap:10px;max-height:400px;overflow-y:auto;margin-bottom:14px;"></div>
+  <button type="button" id="closeAdminMessageThreadModal" class="secondary-button">
+    <i class="ti ti-x" aria-hidden="true"></i> Close
+  </button>
 </div>
 
 <div id="toastContainer" class="toast-container"></div>

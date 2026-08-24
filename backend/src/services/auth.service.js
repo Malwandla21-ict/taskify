@@ -20,7 +20,8 @@ function generateToken(user) {
 
 async function registerUser({
   fullName, email, phoneNumber, password, profilePhotoUrl = null,
-  studentNumber = null, memberType = "Student", faculty = null, academicYear = null
+  studentNumber = null, memberType = "Student", faculty = null, academicYear = null,
+  lecturerTitle = null, yearsExperience = null, officeLocation = null, consultationMode = null
 }) {
   const normalizedEmail = email.trim().toLowerCase();
   const normalizedPhone = normalizePhoneNumber(phoneNumber);
@@ -46,25 +47,33 @@ async function registerUser({
   const isAdminEligible = await adminAllowlistService.isEmailAllowlisted(normalizedEmail);
   const assignedRole = isAdminEligible ? "admin" : "user";
 
+  const normalizedMemberType = ["Student", "Lecturer", "Staff"].includes(memberType) ? memberType : "Student";
+  const isLecturer = normalizedMemberType === "Lecturer";
+
   const [result] = await pool.execute(
     `
       INSERT INTO users (
         full_name, student_number, member_type, email, phone_number,
-        faculty, academic_year, password_hash, profile_photo_url, role
+        faculty, academic_year, password_hash, profile_photo_url, role,
+        lecturer_title, years_experience, office_location, consultation_mode
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       fullName.trim(),
       studentNumber ? studentNumber.trim() : null,
-      memberType === "Staff" ? "Staff" : "Student",
+      normalizedMemberType,
       normalizedEmail,
       normalizedPhone,
       faculty ? faculty.trim() : null,
-      academicYear ? academicYear.trim() : null,
+      normalizedMemberType === "Student" ? (academicYear ? academicYear.trim() : null) : null,
       hashedPassword,
       profilePhotoUrl,
-      assignedRole
+      assignedRole,
+      isLecturer ? (lecturerTitle || null) : null,
+      isLecturer && yearsExperience ? Number(yearsExperience) : null,
+      isLecturer ? (officeLocation ? officeLocation.trim() : null) : null,
+      isLecturer ? (consultationMode ? consultationMode.trim() : null) : null
     ]
   );
 
@@ -73,7 +82,8 @@ async function registerUser({
       SELECT
         id, full_name, student_number, member_type, email, phone_number,
         faculty, academic_year, profile_photo_url AS profilePhoto,
-        role, rating_average, total_reviews
+        role, rating_average, total_reviews,
+        lecturer_title, years_experience, office_location, consultation_mode
       FROM users
       WHERE id = ?
       LIMIT 1
@@ -95,7 +105,8 @@ async function loginUser({ email, password }) {
         id, full_name, student_number, member_type, email, phone_number,
         faculty, academic_year, profile_photo_url AS profilePhoto,
         password_hash, role, rating_average, total_reviews,
-        suspension_reason, ban_reason
+        suspension_reason, ban_reason,
+        lecturer_title, years_experience, office_location, consultation_mode
       FROM users
       WHERE email = ?
       LIMIT 1

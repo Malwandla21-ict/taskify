@@ -22,18 +22,43 @@
     <div class="section-header">
       <div>
         <h2><i class="ti ti-plus" aria-hidden="true"></i> Sell an Item</h2>
-        <p>Create a listing for academic or general student items</p>
+        <p>Create a listing in a few guided steps</p>
       </div>
     </div>
-    <div class="form-panel">
-      <form id="salesForm">
+    <div class="create-cta-panel">
+      <div class="create-cta-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>
+      <div class="create-cta-text">
+        <h3>Got something to sell?</h3>
+        <p>List textbooks, uniforms, toolkits or anything else students need.</p>
+      </div>
+      <button type="button" class="primary-button" id="openSalesModalButton" style="width:auto;">
+        <i class="ti ti-plus" aria-hidden="true"></i> Sell an Item
+      </button>
+    </div>
+  </section>
+
+  <!-- Sales creation modal -->
+  <div id="salesCreateOverlay" class="creation-modal-overlay"></div>
+  <div id="salesCreateModal" class="creation-modal">
+    <button type="button" class="creation-modal-close" id="closeSalesModalButton" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <span id="salesStepText" class="step-label">Step 1 of 3</span>
+      <div style="display:flex;gap:5px;">
+        <div class="step-dot active" id="sDot1"></div>
+        <div class="step-dot" id="sDot2"></div>
+        <div class="step-dot" id="sDot3"></div>
+      </div>
+    </div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="salesProgressFill" style="width:33%;"></div>
+    </div>
+    <form id="salesForm">
+      <div class="sales-step" id="salesStep1">
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Item Basics</h2>
+        <p class="auth-subtitle">Start with the main item information</p>
         <div class="form-group">
           <label for="salesTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Item Title</label>
           <input type="text" id="salesTitle" placeholder="e.g. Engineering Toolkit" required />
-        </div>
-        <div class="form-group">
-          <label for="salesDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
-          <textarea id="salesDescription" placeholder="Describe the item condition, usage and what's included..." required></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
@@ -48,11 +73,18 @@
             </select>
           </div>
         </div>
+        <button type="button" class="primary-button" id="nextSalesStep2">
+          Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="sales-step" id="salesStep2" style="display:none;">
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Item Details</h2>
+        <p class="auth-subtitle">Describe condition, usage and location</p>
+        <div class="form-group">
+          <label for="salesDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
+          <textarea id="salesDescription" placeholder="Describe the item condition, usage and what's included..." required></textarea>
+        </div>
         <div class="form-row">
-          <div class="form-group">
-            <label for="salesPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Price (R)</label>
-            <input type="number" id="salesPrice" placeholder="e.g. 450" required />
-          </div>
           <div class="form-group">
             <label for="salesCondition"><i class="ti ti-star" aria-hidden="true"></i> Condition</label>
             <select id="salesCondition">
@@ -63,12 +95,23 @@
               <option value="Used">Used</option>
             </select>
           </div>
+          <div class="form-group">
+            <label for="salesLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
+            <input type="text" id="salesLocation" placeholder="e.g. Mbombela Campus" required />
+          </div>
         </div>
+        <div class="form-row">
+          <button type="button" class="secondary-button" id="backSalesStep1"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+          <button type="button" class="primary-button" id="nextSalesStep3">Continue <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+      <div class="sales-step" id="salesStep3" style="display:none;">
+        <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Pricing &amp; Confirm</h2>
+        <p class="auth-subtitle">Set your price and review before publishing</p>
         <div class="form-group">
-          <label for="salesLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
-          <input type="text" id="salesLocation" placeholder="e.g. Mbombela Campus" required />
+          <label for="salesPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Price (R)</label>
+          <input type="number" id="salesPrice" placeholder="e.g. 450" required />
         </div>
-
         <div class="form-group">
           <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
           <div class="upload-area" id="salesUploadArea">
@@ -79,14 +122,17 @@
           </div>
           <div class="upload-preview-grid" id="salesPreviewGrid"></div>
         </div>
-
-        <button type="submit" class="primary-button">
-          <i class="ti ti-send" aria-hidden="true"></i> Publish Item
-        </button>
-      </form>
-      <p id="salesMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
-    </div>
-  </section>
+        <div id="salesPreview" class="form-panel" style="box-shadow:none;background:var(--background);margin-bottom:18px;">
+          <p style="color:var(--muted);font-size:13px;">Preview will appear here.</p>
+        </div>
+        <div class="form-row">
+          <button type="button" class="secondary-button" id="backSalesStep2"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
+          <button type="submit" class="primary-button"><i class="ti ti-send" aria-hidden="true"></i> Publish Item</button>
+        </div>
+      </div>
+    </form>
+    <p id="salesMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
+  </div>
   <section class="section" style="padding-top:0;">
     <div class="section-header">
       <div>
@@ -103,7 +149,7 @@
       </select>
     </div>
     <div id="salesContainer" class="marketplace-grid">
-      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
     </div>
   </section>
   <section class="section" style="padding-top:0;">

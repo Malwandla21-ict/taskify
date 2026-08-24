@@ -12,6 +12,98 @@ let cachedSalesItems  = [];
 let selectedSection   = "All";
 let selectedCategory  = "All";
 
+const salesCreateOverlay    = document.getElementById("salesCreateOverlay");
+const salesCreateModal      = document.getElementById("salesCreateModal");
+const openSalesModalButton  = document.getElementById("openSalesModalButton");
+const closeSalesModalButton = document.getElementById("closeSalesModalButton");
+
+const salesStep1        = document.getElementById("salesStep1");
+const salesStep2        = document.getElementById("salesStep2");
+const salesStep3        = document.getElementById("salesStep3");
+const salesStepText     = document.getElementById("salesStepText");
+const salesProgressFill = document.getElementById("salesProgressFill");
+const salesPreview      = document.getElementById("salesPreview");
+const sDot1 = document.getElementById("sDot1");
+const sDot2 = document.getElementById("sDot2");
+const sDot3 = document.getElementById("sDot3");
+
+function showSalesStep(n) {
+  salesStep1.style.display = n === 1 ? "block" : "none";
+  salesStep2.style.display = n === 2 ? "block" : "none";
+  salesStep3.style.display = n === 3 ? "block" : "none";
+  salesStepText.textContent = `Step ${n} of 3`;
+  salesProgressFill.style.width = n === 1 ? "33%" : n === 2 ? "66%" : "100%";
+  [sDot1, sDot2, sDot3].forEach((dot, i) => {
+    if (!dot) return;
+    dot.classList.remove("active", "done");
+    if (i + 1 < n)  dot.classList.add("done");
+    if (i + 1 === n) dot.classList.add("active");
+  });
+}
+
+function updateSalesPreview() {
+  const title     = document.getElementById("salesTitle").value.trim();
+  const category  = document.getElementById("salesCategory").value.trim();
+  const section   = document.getElementById("salesSection").value;
+  const desc      = document.getElementById("salesDescription").value.trim();
+  const condition = document.getElementById("salesCondition").value;
+  const location  = document.getElementById("salesLocation").value.trim();
+  const price     = document.getElementById("salesPrice").value.trim();
+
+  salesPreview.innerHTML = `
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${title || "Item title"}</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">${desc || "Item description will appear here."}</p>
+    <div class="market-tags">
+      ${sectionBadge(section)}
+      <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${category || "Category"}</div>
+      ${conditionBadge(condition)}
+      <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${location || "Location"}</div>
+    </div>
+    <div style="margin-top:14px;font-size:13px;color:var(--muted);">
+      Price: <strong style="color:var(--ump-green);font-size:16px;">R${price || "0"}</strong>
+    </div>`;
+}
+
+function validateSalesStep1() {
+  if (!document.getElementById("salesTitle").value.trim() || !document.getElementById("salesCategory").value.trim()) {
+    showToast("Please complete the item title and category.", "error");
+    return false;
+  }
+  return true;
+}
+
+function validateSalesStep2() {
+  if (!document.getElementById("salesDescription").value.trim() || !document.getElementById("salesLocation").value.trim()) {
+    showToast("Please complete the description and location.", "error");
+    return false;
+  }
+  return true;
+}
+
+document.getElementById("nextSalesStep2")?.addEventListener("click", () => { if (validateSalesStep1()) showSalesStep(2); });
+document.getElementById("nextSalesStep3")?.addEventListener("click", () => { if (validateSalesStep2()) { updateSalesPreview(); showSalesStep(3); } });
+document.getElementById("backSalesStep1")?.addEventListener("click", () => showSalesStep(1));
+document.getElementById("backSalesStep2")?.addEventListener("click", () => showSalesStep(2));
+document.getElementById("salesPrice")?.addEventListener("input", updateSalesPreview);
+
+function openSalesCreateModal() {
+  salesForm?.reset();
+  salesMessage.textContent = "";
+  showSalesStep(1);
+  if (salesUploader) salesUploader.reset();
+  salesCreateOverlay?.classList.add("open");
+  salesCreateModal?.classList.add("open");
+}
+
+function closeSalesCreateModal() {
+  salesCreateOverlay?.classList.remove("open");
+  salesCreateModal?.classList.remove("open");
+}
+
+openSalesModalButton?.addEventListener("click", openSalesCreateModal);
+closeSalesModalButton?.addEventListener("click", closeSalesCreateModal);
+salesCreateOverlay?.addEventListener("click", closeSalesCreateModal);
+
 document.querySelectorAll(".filter-pill").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
@@ -63,6 +155,7 @@ function saleCard(item) {
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
           ${conditionBadge(item.condition_status)}
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${item.location}</div>
+          ${endorsementBadge(item)}
         </div>
         <div class="market-footer">
           <div class="market-price">R${item.price}</div>
@@ -96,6 +189,7 @@ function myListingCard(item) {
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
           ${conditionBadge(item.condition_status)}
+          ${endorsementBadge(item)}
           <div class="market-price" style="font-size:16px;">R${item.price}</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px;">
@@ -229,6 +323,8 @@ salesForm?.addEventListener("submit", async e => {
     showToast("Item listed successfully!");
     salesForm.reset();
     if (salesUploader) salesUploader.reset();
+    showSalesStep(1);
+    closeSalesCreateModal();
     await loadSalesItems();
     await loadMySalesItems();
   } catch (err) {
