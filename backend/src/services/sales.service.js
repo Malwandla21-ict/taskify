@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -11,9 +12,6 @@ function parseImageUrls(row) {
   return row;
 }
 
-/* Most-recent endorsement (if any) attached to this specific sales item,
-   surfaced as "Recommended by Dr. X" on cards/detail pages. Real data —
-   pulled via a correlated subquery so at most one row per item. */
 const SELECT_FIELDS = `
   si.id, si.seller_id, si.title, si.description, si.category,
   si.section, si.price, si.condition_status, si.location,
@@ -21,20 +19,8 @@ const SELECT_FIELDS = `
   u.full_name AS seller_name,
   u.profile_photo_url AS seller_profile_photo,
   u.phone_number AS seller_phone_number,
-  le.endorsement_type AS endorsement_type,
-  lecturer.full_name AS endorsed_by_lecturer_name,
-  lecturer.lecturer_title AS endorsed_by_lecturer_title
-`;
-
-const ENDORSEMENT_JOIN = `
-  LEFT JOIN lecturer_endorsements le
-    ON le.context_type = 'sales_item' AND le.context_id = si.id
-    AND le.id = (
-      SELECT id FROM lecturer_endorsements le2
-      WHERE le2.context_type = 'sales_item' AND le2.context_id = si.id
-      ORDER BY le2.created_at DESC LIMIT 1
-    )
-  LEFT JOIN users lecturer ON le.lecturer_id = lecturer.id
+  u.member_type AS seller_member_type,
+  u.lecturer_title AS seller_lecturer_title
 `;
 
 async function createSalesItem({
@@ -61,11 +47,11 @@ async function getAllAvailableSalesItems() {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
-     ${ENDORSEMENT_JOIN}
      WHERE si.status = 'Available'
      ORDER BY si.created_at DESC`
   );
-  return rows.map(parseImageUrls);
+  const parsed = rows.map(parseImageUrls);
+  return attachLatestEndorsements(parsed, "sales_item");
 }
 
 async function getMySalesItems(userId) {
@@ -73,12 +59,12 @@ async function getMySalesItems(userId) {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
-     ${ENDORSEMENT_JOIN}
      WHERE si.seller_id = ?
      ORDER BY si.created_at DESC`,
     [userId]
   );
-  return rows.map(parseImageUrls);
+  const parsed = rows.map(parseImageUrls);
+  return attachLatestEndorsements(parsed, "sales_item");
 }
 
 async function markSalesItemAsSold(itemId, userId) {
@@ -108,11 +94,11 @@ async function getSalesItemById(itemId) {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
-     ${ENDORSEMENT_JOIN}
      WHERE si.id = ? LIMIT 1`,
     [itemId]
   );
-  return parseImageUrls(rows[0]);
+  const parsed = parseImageUrls(rows[0]);
+  return attachLatestEndorsement(parsed, "sales_item");
 }
 
 async function deleteSalesItem(itemId, userId) {

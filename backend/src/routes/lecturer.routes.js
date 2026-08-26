@@ -5,9 +5,6 @@ const { authenticate, requireLecturer } = require("../middleware/auth.middleware
 
 const router = express.Router();
 
-/* Public-ish (any authenticated user) — needed so a student viewing their
-   own or someone else's profile can see endorsements, and so the tutor
-   directory works for everyone, not just lecturers. */
 router.get("/tutors", authenticate, lecturerController.getVerifiedTutors);
 router.get(
   "/endorsements/received/:userId",
@@ -16,7 +13,6 @@ router.get(
   lecturerController.getEndorsementsReceived
 );
 
-/* Lecturer-only */
 router.get("/search-students", authenticate, requireLecturer, lecturerController.searchStudents);
 router.get(
   "/students/:userId/listings",
@@ -33,7 +29,7 @@ router.post(
   [
     body("endorsedUserId").isInt({ min: 1 }).withMessage("A student must be selected."),
     body("endorsementType").isIn(["Tutoring", "Toolkit", "General"]).withMessage("Invalid endorsement type."),
-    body("contextType").optional({ nullable: true }).isIn(["sales_item", "equipment"]),
+    body("contextType").optional({ nullable: true }).isIn(["sales_item", "equipment", "task", "event"]),
     body("contextId").optional({ nullable: true }).isInt({ min: 1 }),
     body("message").optional({ checkFalsy: true }).isLength({ max: 500 }).withMessage("Message must be under 500 characters.")
   ],

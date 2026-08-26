@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
+const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -18,6 +19,8 @@ const SELECT_FIELDS = `
   e.created_at, e.image_urls,
   u.full_name AS organizer_name,
   u.profile_photo_url AS organizer_profile_photo,
+  u.member_type AS organizer_member_type,
+  u.lecturer_title AS organizer_lecturer_title,
   (SELECT COUNT(*) FROM event_rsvps er WHERE er.event_id = e.id) AS rsvp_count
 `;
 
@@ -48,7 +51,8 @@ async function getAllUpcomingEvents() {
      WHERE e.status = 'Upcoming' AND e.event_date >= NOW()
      ORDER BY e.event_date ASC`
   );
-  return rows.map(parseImageUrls);
+  const parsed = rows.map(parseImageUrls);
+  return attachLatestEndorsements(parsed, "event");
 }
 
 async function getMyRsvpEventIds(userId) {
@@ -69,7 +73,8 @@ async function getMyEvents(userId) {
      ORDER BY e.event_date DESC`,
     [userId, userId, userId]
   );
-  return rows.map(parseImageUrls);
+  const parsed = rows.map(parseImageUrls);
+  return attachLatestEndorsements(parsed, "event");
 }
 
 async function rsvpToEvent(eventId, userId) {
@@ -158,7 +163,8 @@ async function getEventById(eventId) {
      WHERE e.id = ? LIMIT 1`,
     [eventId]
   );
-  return parseImageUrls(rows[0]);
+  const parsed = parseImageUrls(rows[0]);
+  return attachLatestEndorsement(parsed, "event");
 }
 
 async function getEventByIdForViewing(eventId) {

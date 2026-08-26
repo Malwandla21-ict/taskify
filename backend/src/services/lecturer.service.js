@@ -15,8 +15,8 @@ async function searchStudents(query) {
   return rows;
 }
 
-/* ── A student's listings, so a lecturer can optionally attach an
-   endorsement to a specific sales item or equipment listing ── */
+/* ── A student's listings across every endorsable type, so a lecturer can
+   optionally attach an endorsement to a specific task, rental, or item. ── */
 async function getStudentListings(userId) {
   const [sales] = await pool.execute(
     `SELECT id, title, status FROM sales_items WHERE seller_id = ? ORDER BY created_at DESC`,
@@ -26,7 +26,15 @@ async function getStudentListings(userId) {
     `SELECT id, name FROM equipment WHERE owner_id = ? ORDER BY created_at DESC`,
     [userId]
   );
-  return { sales, equipment };
+  const [tasks] = await pool.execute(
+    `SELECT id, title, status FROM tasks WHERE created_by = ? ORDER BY created_at DESC`,
+    [userId]
+  );
+  const [events] = await pool.execute(
+    `SELECT id, title, status FROM events WHERE organizer_id = ? ORDER BY created_at DESC`,
+    [userId]
+  );
+  return { sales, equipment, tasks, events };
 }
 
 /* ── Endorsements ── */
@@ -137,8 +145,6 @@ async function getLecturerStats(lecturerId) {
   };
 }
 
-/* ── Verified Tutors directory: any student with at least one Tutoring
-   endorsement, grouped with the lecturers who vouched for them. ── */
 async function getVerifiedTutors() {
   const [rows] = await pool.execute(
     `SELECT

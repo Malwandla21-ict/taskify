@@ -1,6 +1,58 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
 
+/* Derived-table pattern (subquery in FROM, not in ON) for "latest
+   endorsement per context" — safe and fast, unlike a correlated subquery
+   inside a JOIN's ON clause which can be catastrophically slow or hang
+   depending on the engine/index setup. */
+const TASK_ENDORSEMENT_JOIN = `
+  LEFT JOIN (
+    SELECT le1.context_id, le1.endorsement_type, le1.message, le1.lecturer_id
+    FROM lecturer_endorsements le1
+    INNER JOIN (
+      SELECT context_id, MAX(created_at) AS max_created
+      FROM lecturer_endorsements WHERE context_type = 'task' GROUP BY context_id
+    ) latest ON le1.context_id = latest.context_id AND le1.created_at = latest.max_created
+    WHERE le1.context_type = 'task'
+  ) tle ON tle.context_id = t.id
+  LEFT JOIN users endlect ON tle.lecturer_id = endlect.id
+`;
+
+const TASK_SELECT_FIELDS = `
+  t.id, t.title, t.description, t.category, t.section,
+  t.price, t.location, t.status, t.urgent,
+  t.created_by, t.accepted_by, t.created_at,
+  t.image_urls,
+  u.full_name AS created_by_name,
+  u.profile_photo_url AS created_by_profile_photo,
+  u.phone_number AS created_by_phone_number,
+  u.member_type AS created_by_member_type,
+  u.lecturer_title AS created_by_lecturer_title,
+  w.full_name AS accepted_by_name,
+  w.profile_photo_url AS accepted_by_profile_photo,
+  w.phone_number AS accepted_by_phone_number,
+  w.member_type AS accepted_by_member_type,
+  w.lecturer_title AS accepted_by_lecturer_title,
+  p.status AS payment_status,
+  tle.endorsement_type,
+  tle.message AS endorsement_message,
+  endlect.id AS endorsed_by_lecturer_id,
+  endlect.full_name AS endorsed_by_lecturer_name,
+  endlect.lecturer_title AS endorsed_by_lecturer_title,
+  endlect.profile_photo_url AS endorsed_by_lecturer_photo
+`;
+
+function parseImageUrls(row) {
+  if (!row) return row;
+  if (Array.isArray(row.image_urls)) return row;
+  try {
+    row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
+  } catch {
+    row.image_urls = [];
+  }
+  return row;
+}
+
 async function createTask({
   title, description, category, section,
   price, location, urgent, createdBy, imageUrls = []
@@ -22,22 +74,12 @@ async function createTask({
 
 async function getAllTasks() {
   const [rows] = await pool.execute(
-    `SELECT
-       t.id, t.title, t.description, t.category, t.section,
-       t.price, t.location, t.status, t.urgent,
-       t.created_by, t.accepted_by, t.created_at,
-       t.image_urls,
-       u.full_name AS created_by_name,
-       u.profile_photo_url AS created_by_profile_photo,
-       u.phone_number AS created_by_phone_number,
-       w.full_name AS accepted_by_name,
-       w.profile_photo_url AS accepted_by_profile_photo,
-       w.phone_number AS accepted_by_phone_number,
-       p.status AS payment_status
+    `SELECT ${TASK_SELECT_FIELDS}
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
      LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
+     ${TASK_ENDORSEMENT_JOIN}
      WHERE t.status = 'Posted'
      ORDER BY t.urgent DESC, t.created_at DESC`
   );
@@ -317,22 +359,12 @@ async function cancelTask(taskId, userId) {
 
 async function getUserTaskHistory(userId) {
   const [rows] = await pool.execute(
-    `SELECT
-       t.id, t.title, t.description, t.category, t.section,
-       t.price, t.location, t.status, t.urgent,
-       t.created_by, t.accepted_by, t.created_at,
-       t.image_urls,
-       u.full_name AS created_by_name,
-       u.profile_photo_url AS created_by_profile_photo,
-       u.phone_number AS created_by_phone_number,
-       w.full_name AS accepted_by_name,
-       w.profile_photo_url AS accepted_by_profile_photo,
-       w.phone_number AS accepted_by_phone_number,
-       p.status AS payment_status
+    `SELECT ${TASK_SELECT_FIELDS}
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
      LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
+     ${TASK_ENDORSEMENT_JOIN}
      WHERE t.created_by = ? OR t.accepted_by = ?
      ORDER BY t.created_at DESC`,
     [userId, userId]
@@ -350,22 +382,12 @@ async function getTaskByIdForViewing(taskId) {
 
 async function getTaskById(taskId) {
   const [rows] = await pool.execute(
-    `SELECT
-       t.id, t.title, t.description, t.category, t.section,
-       t.price, t.location, t.status, t.urgent,
-       t.created_by, t.accepted_by, t.created_at,
-       t.image_urls,
-       u.full_name AS created_by_name,
-       u.profile_photo_url AS created_by_profile_photo,
-       u.phone_number AS created_by_phone_number,
-       w.full_name AS accepted_by_name,
-       w.profile_photo_url AS accepted_by_profile_photo,
-       w.phone_number AS accepted_by_phone_number,
-       p.status AS payment_status
+    `SELECT ${TASK_SELECT_FIELDS}
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
      LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
+     ${TASK_ENDORSEMENT_JOIN}
      WHERE t.id = ? LIMIT 1`,
     [taskId]
   );
@@ -401,17 +423,6 @@ async function deleteTask(taskId, userId) {
       contextId: taskId
     });
   }
-}
-
-function parseImageUrls(row) {
-  if (!row) return row;
-  if (Array.isArray(row.image_urls)) return row;
-  try {
-    row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
-  } catch {
-    row.image_urls = [];
-  }
-  return row;
 }
 
 module.exports = {
