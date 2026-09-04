@@ -25,6 +25,13 @@ async function getAllUpcomingEvents(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getPastEvents(req, res, next) {
+  try {
+    const events = await eventService.getPastEvents();
+    return res.status(200).json({ success: true, message: "Past events fetched successfully.", data: events });
+  } catch (error) { next(error); }
+}
+
 async function getMyRsvpStatus(req, res, next) {
   try {
     const ids = await eventService.getMyRsvpEventIds(req.user.id);
@@ -79,6 +86,7 @@ async function deleteEvent(req, res, next) {
 module.exports = {
   createEvent,
   getAllUpcomingEvents,
+  getPastEvents,
   getMyRsvpStatus,
   getMyEvents,
   getEventById,

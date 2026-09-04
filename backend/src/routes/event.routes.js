@@ -6,6 +6,7 @@ const { authenticate } = require("../middleware/auth.middleware");
 const router = express.Router();
 
 router.get("/",            eventController.getAllUpcomingEvents);
+router.get("/past",        eventController.getPastEvents);
 router.get("/my",          authenticate, eventController.getMyEvents);
 router.get("/rsvp-status", authenticate, eventController.getMyRsvpStatus);
 
@@ -54,10 +55,11 @@ router.delete(
 
 /*
   GET /:id — single-event lookup, unfiltered by status/date. Placed after
-  the literal "/my" and "/rsvp-status" routes so it never swallows them
-  (Express matches literal path segments before the ":id" wildcard only if
-  ordered correctly). This is what lets event-details.js load an event
-  once it has passed or been cancelled — GET / only returns upcoming ones.
+  the literal "/my", "/rsvp-status" and "/past" routes so it never
+  swallows them (Express matches literal path segments before the ":id"
+  wildcard only if ordered correctly). This is what lets event-details.js
+  load an event once it has passed or been cancelled — GET / only returns
+  upcoming ones.
 */
 router.get(
   "/:id",

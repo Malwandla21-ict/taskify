@@ -45,7 +45,7 @@ async function getAllAvailableEquipment() {
   const [rows] = await pool.execute(
     `SELECT ${EQUIPMENT_SELECT_FIELDS}
      FROM equipment e
-     INNER JOIN users u ON e.owner_id = u.id
+     LEFT JOIN users u ON e.owner_id = u.id
      WHERE e.is_available = 1
      ORDER BY e.created_at DESC`
   );
@@ -229,7 +229,7 @@ async function getEquipmentById(equipmentId) {
   const [rows] = await pool.execute(
     `SELECT ${EQUIPMENT_SELECT_FIELDS}
      FROM equipment e
-     INNER JOIN users u ON e.owner_id = u.id
+     LEFT JOIN users u ON e.owner_id = u.id
      WHERE e.id = ? LIMIT 1`,
     [equipmentId]
   );

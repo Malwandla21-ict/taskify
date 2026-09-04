@@ -55,6 +55,26 @@ async function getAllUpcomingEvents() {
   return attachLatestEndorsements(parsed, "event");
 }
 
+/*
+  Events whose date/time has already passed — surfaced as their own
+  section on events.html so a poster whose event just ended (or a
+  student who missed something the same day) can still see it instead
+  of it silently vanishing from the "Upcoming" list the moment the
+  clock ticks past event_date. Capped at 20, most recent first.
+*/
+async function getPastEvents() {
+  const [rows] = await pool.execute(
+    `SELECT ${SELECT_FIELDS}
+     FROM events e
+     INNER JOIN users u ON e.organizer_id = u.id
+     WHERE e.event_date < NOW()
+     ORDER BY e.event_date DESC
+     LIMIT 20`
+  );
+  const parsed = rows.map(parseImageUrls);
+  return attachLatestEndorsements(parsed, "event");
+}
+
 async function getMyRsvpEventIds(userId) {
   const [rows] = await pool.execute(
     `SELECT event_id FROM event_rsvps WHERE user_id = ?`,
@@ -178,6 +198,7 @@ async function getEventByIdForViewing(eventId) {
 module.exports = {
   createEvent,
   getAllUpcomingEvents,
+  getPastEvents,
   getMyRsvpEventIds,
   getMyEvents,
   rsvpToEvent,
