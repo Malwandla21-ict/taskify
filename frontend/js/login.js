@@ -40,6 +40,19 @@ if (loginForm) {
     try {
       const response = await apiRequest("/auth/login", "POST", { email, password });
 
+      /* Password was correct but this account has 2FA enabled — hand off
+         to the two-factor step instead of logging in directly. The temp
+         token is short-lived and only good for completing this one login,
+         so sessionStorage (cleared when the tab closes) is enough. */
+      if (response.data.requires2FA) {
+        sessionStorage.setItem("taskify2FATempToken", response.data.tempToken);
+        showMessage("Enter your two-factor code…", "var(--ump-green)");
+        setTimeout(() => {
+          window.location.href = "./two-factor.html";
+        }, 400);
+        return;
+      }
+
       localStorage.setItem("taskifyToken", response.data.token);
       localStorage.setItem("taskifyUser", JSON.stringify(response.data.user));
 

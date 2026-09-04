@@ -5,61 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Academic Marketplace</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body" data-section="Academic">
 <div id="navbarContainer"></div>
 <div class="dashboard-container">
-  <div class="hero-section-simple">
-    <div class="hero-badge"><i class="ti ti-school" aria-hidden="true"></i> Academic Marketplace</div>
-    <h1>Academic help, tools &amp;<br>study essentials</h1>
-    <p>Find tutoring, programming help, textbooks, toolkits, uniforms, safety boots and other academic resources.</p>
-    <div class="hero-search">
-      <input type="text" id="sectionSearch" placeholder="Search academic tasks, rentals or items..." />
-      <button type="button" id="sectionSearchButton">
-        <i class="ti ti-search" aria-hidden="true"></i> Search
-      </button>
+
+  <section class="hero-section-v2">
+    <div class="hero-v2-text">
+      <h1>Academic help, tools &amp; study essentials</h1>
+      <p>Find tutoring, programming help, textbooks, toolkits, uniforms, safety boots and other academic resources — all in one place.</p>
+      <div class="hero-v2-actions">
+        <a href="./tasks.html" class="hero-btn-primary"><i class="ti ti-plus" aria-hidden="true"></i> Post Academic Task</a>
+        <a href="./sales.html" class="hero-btn-outline"><i class="ti ti-tag" aria-hidden="true"></i> Sell Material</a>
+      </div>
     </div>
-    <div class="hero-tags">
-      <a href="./tasks.html"     class="hero-tag"><i class="ti ti-plus" aria-hidden="true"></i> Post Academic Task</a>
-      <a href="./equipment.html" class="hero-tag"><i class="ti ti-package" aria-hidden="true"></i> List Equipment</a>
-      <a href="./sales.html"     class="hero-tag"><i class="ti ti-tag" aria-hidden="true"></i> Sell Material</a>
+    <div class="hero-v2-media">
+      <div class="media-placeholder"><img src="./assets/images/UMP-Buildings-20.jpg" alt="UMP Campus" /></div>
     </div>
-  </div>
-  <section class="section">
+  </section>
+
+  <section class="section-block">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-layout-grid" aria-hidden="true"></i> Academic Categories</h2>
-        <p>Quick access to common academic needs</p>
+        <p>Tap a category to filter everything below</p>
       </div>
     </div>
-    <div class="categories-grid">
-      <div class="category-card">
+    <div class="categories-grid" id="categoryShortcuts">
+      <div class="category-card" data-category="Textbook">
         <div class="category-icon blue"><i class="ti ti-book" aria-hidden="true"></i></div>
         <h3>Textbooks</h3><p>Buy or sell books</p>
       </div>
-      <div class="category-card">
+      <div class="category-card" data-category="Toolkit">
         <div class="category-icon gold"><i class="ti ti-tool" aria-hidden="true"></i></div>
         <h3>Toolkits</h3><p>Practical tools</p>
       </div>
-      <div class="category-card">
+      <div class="category-card" data-category="Tutoring">
         <div class="category-icon green"><i class="ti ti-school" aria-hidden="true"></i></div>
         <h3>Tutoring</h3><p>Academic support</p>
       </div>
-      <div class="category-card">
+      <div class="category-card" data-category="Programming">
         <div class="category-icon navy"><i class="ti ti-code" aria-hidden="true"></i></div>
         <h3>Programming</h3><p>Coding help</p>
       </div>
-      <div class="category-card">
+      <div class="category-card" data-category="Uniform">
         <div class="category-icon red"><i class="ti ti-shirt" aria-hidden="true"></i></div>
         <h3>Uniforms</h3><p>Campus attire</p>
       </div>
-      <div class="category-card">
+      <div class="category-card" data-category="Safety Boots">
         <div class="category-icon default"><i class="ti ti-boot" aria-hidden="true"></i></div>
         <h3>Safety Boots</h3><p>Practical workwear</p>
       </div>
     </div>
   </section>
-  <section class="section" style="padding-top:0;">
+
+  <div class="tasks-toolbar" style="margin: 4px 0 24px;">
+    <div class="toolbar-search-box">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" id="sectionSearchInput" placeholder="Search academic tasks, rentals or items..." />
+    </div>
+  </div>
+
+  <div class="filters-row">
+    <button class="filter-pill active" data-type="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+    <button class="filter-pill" data-type="Tasks"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Tasks</button>
+    <button class="filter-pill" data-type="Rentals"><i class="ti ti-package" aria-hidden="true"></i> Rentals</button>
+    <button class="filter-pill" data-type="Sales"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Sales</button>
+  </div>
+
+  <section class="section-block" id="sectionTasksBlock">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-clipboard-list" aria-hidden="true"></i> Academic Tasks</h2>
@@ -71,7 +87,8 @@
       <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading tasks…</h3></div>
     </div>
   </section>
-  <section class="section" style="padding-top:0;">
+
+  <section class="section-block" id="sectionEquipmentBlock">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-package" aria-hidden="true"></i> Academic Rentals</h2>
@@ -83,7 +100,8 @@
       <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div>
     </div>
   </section>
-  <section class="section" style="padding-top:0;">
+
+  <section class="section-block" id="sectionSalesBlock">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-shopping-bag" aria-hidden="true"></i> Academic Materials for Sale</h2>
@@ -95,7 +113,9 @@
       <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
     </div>
   </section>
+
 </div>
+<div id="overlay"></div>
 <div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>

@@ -5,60 +5,116 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Tasks</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
 <div class="dashboard-container">
-  <div class="hero-section-simple">
-    <div class="hero-badge"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Task Marketplace</div>
-    <h1>Post or accept student tasks</h1>
-    <p>Create tasks step-by-step and connect with verified UMP students.</p>
-    <div class="hero-tags">
-      <a href="./academic.html" class="hero-tag"><i class="ti ti-school" aria-hidden="true"></i> Academic Tasks</a>
-      <a href="./general.html"  class="hero-tag"><i class="ti ti-building-store" aria-hidden="true"></i> General Tasks</a>
+
+  <section class="hero-section-v2">
+    <div class="hero-v2-text">
+      <h1>Need help with something?</h1>
+      <p>Post a task and connect with verified UMP students ready to help.</p>
+      <div class="hero-v2-actions">
+        <button type="button" class="hero-btn-primary" id="heroCreateTaskButton">
+          <i class="ti ti-plus" aria-hidden="true"></i> Create Task
+        </button>
+      </div>
     </div>
+    <div class="hero-v2-media">
+      <div class="media-placeholder"><img src="./assets/images/UMP-Buildings-4.jpg" alt="UMP Campus" /></div>
+    </div>
+  </section>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
+
+      <section class="section-block">
+        <div class="section-header">
+          <div>
+            <h2><i class="ti ti-list-search" aria-hidden="true"></i> Available Tasks</h2>
+            <p>Browse tasks posted by students</p>
+          </div>
+        </div>
+
+        <div class="tasks-toolbar">
+          <div class="toolbar-search-box">
+            <i class="ti ti-search" aria-hidden="true"></i>
+            <input type="text" id="taskSearchInput" placeholder="Search tasks..." />
+          </div>
+          <select id="taskCategoryFilter" class="toolbar-select">
+            <option value="All">All Categories</option>
+          </select>
+          <select id="taskPriceFilter" class="toolbar-select">
+            <option value="All">Any Price</option>
+            <option value="under100">Under R100</option>
+            <option value="100to300">R100 – R300</option>
+            <option value="over300">Over R300</option>
+          </select>
+          <select id="taskSortSelect" class="toolbar-select">
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+          </select>
+        </div>
+
+        <div class="filters-row">
+          <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+          <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
+          <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
+        </div>
+
+        <div id="tasksContainer" class="marketplace-grid">
+          <div class="empty-state">
+            <div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div>
+            <h3>Loading tasks…</h3>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="dashboard-rail">
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-clipboard-plus" aria-hidden="true"></i> Post a Task</h3>
+        </div>
+        <p class="rail-card-sub">Create a task in a few guided steps</p>
+        <div class="rail-art"><div class="media-placeholder light green"><i class="ti ti-clipboard-plus" aria-hidden="true"></i></div></div>
+        <button type="button" class="primary-button" id="openTaskModalButton" style="margin-top:14px;">
+          <i class="ti ti-plus" aria-hidden="true"></i> Create Task
+        </button>
+      </div>
+
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-building-store" aria-hidden="true"></i> Task Marketplace</h3>
+        </div>
+        <p class="rail-card-sub">Post or accept student tasks. Create tasks step-by-step and connect with verified UMP students.</p>
+        <div class="rail-art small"><div class="media-placeholder light blue"><i class="ti ti-users-group" aria-hidden="true"></i></div></div>
+        <div class="rail-tag-links" style="margin-top:14px;">
+          <a href="./academic.html" class="rail-tag-link green"><i class="ti ti-school" aria-hidden="true"></i> Academic Tasks</a>
+          <a href="./general.html" class="rail-tag-link gold"><i class="ti ti-building-store" aria-hidden="true"></i> General Tasks</a>
+        </div>
+      </div>
+
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-history" aria-hidden="true"></i> My Task History</h3>
+        </div>
+        <p class="rail-card-sub">Everything you've posted or accepted, with full details</p>
+        <div id="taskHistoryMiniContainer" class="mini-history-list">
+          <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+        </div>
+        <a href="#fullHistorySection" id="viewAllHistoryLink" class="view-all-link small" style="margin-top:12px;display:inline-flex;">
+          View all history <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </a>
+      </div>
+    </aside>
   </div>
 
-  <section class="section">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-plus" aria-hidden="true"></i> Post a Task</h2>
-        <p>Create a task in a few guided steps</p>
-      </div>
-    </div>
-    <div class="create-cta-panel">
-      <div class="create-cta-icon"><i class="ti ti-clipboard-plus" aria-hidden="true"></i></div>
-      <div class="create-cta-text">
-        <h3>Need help with something?</h3>
-        <p>Post a task and connect with verified UMP students ready to help.</p>
-      </div>
-      <button type="button" class="primary-button" id="openTaskModalButton" style="width:auto;">
-        <i class="ti ti-plus" aria-hidden="true"></i> Create Task
-      </button>
-    </div>
-  </section>
-
-  <section class="section" style="padding-top:0;">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-list-search" aria-hidden="true"></i> Available Tasks</h2>
-        <p>Browse tasks posted by students</p>
-      </div>
-    </div>
-    <div class="filters-row">
-      <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
-      <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
-      <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
-    </div>
-    <div id="tasksContainer" class="marketplace-grid">
-      <div class="empty-state">
-        <div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div>
-        <h3>Loading tasks…</h3>
-      </div>
-    </div>
-  </section>
-
-  <section class="section" style="padding-top:0;">
+  <section class="section-block" id="fullHistorySection" style="display:none;">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-history" aria-hidden="true"></i> My Task History</h2>
@@ -75,7 +131,6 @@
   </section>
 </div>
 
-<!-- Task creation modal -->
 <div id="taskCreateOverlay" class="creation-modal-overlay"></div>
 <div id="taskCreateModal" class="creation-modal">
   <button type="button" class="creation-modal-close" id="closeTaskModalButton" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>

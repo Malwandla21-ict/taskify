@@ -20,15 +20,22 @@ const adminAllowlistRoutes  = require("./routes/adminAllowlist.routes");
 const lecturerRoutes        = require("./routes/lecturer.routes");
 
 const { errorHandler }   = require("./middleware/error.middleware");
+const { apiLimiter }     = require("./middleware/rateLimit.middleware");
 
 dotenv.config();
 
 const app = express();
 
+/* Trust the first hop proxy (Render/Railway/Nginx/etc. in production) so
+   express-rate-limit and our own IP-based lockout logging see the real
+   client IP from X-Forwarded-For instead of the proxy's own address. */
+app.set("trust proxy", 1);
+
 app.use(cors({ origin: process.env.CLIENT_URL || "*" }));
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("/api", apiLimiter);
 
 app.get("/", (req, res) => {
   res.json({ success: true, message: "Taskify backend is running" });

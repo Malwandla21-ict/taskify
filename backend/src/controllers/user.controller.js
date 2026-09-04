@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const userService = require("../services/user.service");
+const authService = require("../services/auth.service");
 const { uploadProfilePhoto } = require("./upload.controller");
 
 async function getUserProfile(req, res, next) {
@@ -77,8 +78,23 @@ async function updateMyProfileDetails(req, res, next) {
   }
 }
 
+async function changeMyPassword(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    }
+
+    const result = await authService.changePassword(req.user.id, req.body.currentPassword, req.body.newPassword);
+    return res.status(200).json({ success: true, message: result.message });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getUserProfile,
   updateMyProfilePhoto,
-  updateMyProfileDetails
+  updateMyProfileDetails,
+  changeMyPassword
 };

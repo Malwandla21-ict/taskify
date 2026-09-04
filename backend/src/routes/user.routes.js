@@ -33,6 +33,18 @@ router.patch(
   userController.updateMyProfileDetails
 );
 
+router.patch(
+  "/me/password",
+  authenticate,
+  [
+    body("currentPassword").notEmpty().withMessage("Your current password is required."),
+    body("newPassword").isLength({ min: 8 }).withMessage("New password must be at least 8 characters long.")
+      .matches(/[A-Za-z]/).withMessage("New password must contain at least one letter.")
+      .matches(/[0-9]/).withMessage("New password must contain at least one number.")
+  ],
+  userController.changeMyPassword
+);
+
 router.get(
   "/:id/profile",
   [

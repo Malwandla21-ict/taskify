@@ -6,6 +6,7 @@
   <title>Taskify — Lecturer Profile</title>
   <link rel="stylesheet" href="./css/main.css" />
   <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
@@ -31,7 +32,6 @@
           <button type="button" class="profile-tab" data-tab="activity"><i class="ti ti-activity" aria-hidden="true"></i> Activity</button>
         </div>
 
-        <!-- Overview -->
         <div id="overviewTab" class="profile-tab-panel active">
           <div class="profile-info-card">
             <div class="profile-info-card-header"><h3><i class="ti ti-user-circle" aria-hidden="true"></i> About Me</h3></div>
@@ -55,7 +55,6 @@
           </div>
         </div>
 
-        <!-- My Endorsements -->
         <div id="endorsementsTab" class="profile-tab-panel">
           <div class="profile-info-card-header" style="margin-bottom:14px;">
             <h3 style="font-size:15px;"><i class="ti ti-certificate" aria-hidden="true"></i> Endorsements You've Given</h3>
@@ -66,14 +65,12 @@
           <div id="myEndorsementsGivenContainer"></div>
         </div>
 
-        <!-- Reviews -->
         <div id="reviewsTab" class="profile-tab-panel">
           <div id="recentReviewsContainer" class="marketplace-grid">
             <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-star" aria-hidden="true"></i></div><h3>No reviews yet</h3></div>
           </div>
         </div>
 
-        <!-- Activity -->
         <div id="activityTab" class="profile-tab-panel">
           <div class="profile-info-card">
             <div class="profile-activity-list" id="fullActivityList"></div>
@@ -81,11 +78,13 @@
         </div>
       </div>
 
-      <!-- Sidebar -->
       <div>
         <div class="profile-info-card">
           <div class="profile-info-card-header"><h3><i class="ti ti-bolt" aria-hidden="true"></i> Quick Actions</h3></div>
           <div class="profile-quick-actions">
+            <button type="button" class="profile-quick-action-btn" id="quickEditProfileBtn">
+              <i class="ti ti-pencil" aria-hidden="true"></i> Edit Profile
+            </button>
             <button type="button" class="profile-quick-action-btn" id="quickGiveEndorsementBtn">
               <i class="ti ti-certificate" aria-hidden="true"></i> Give Endorsement
             </button>
@@ -103,7 +102,6 @@
   </section>
 </div>
 
-<!-- Give Endorsement modal -->
 <div id="overlay"></div>
 <div id="giveEndorsementModal">
   <h2 style="font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
@@ -139,11 +137,90 @@
   </div>
 </div>
 
+<div id="editProfileModal">
+  <h2 style="font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+    <i class="ti ti-pencil" aria-hidden="true" style="color:var(--ump-green);"></i> Edit Profile
+  </h2>
+  <div class="form-group">
+    <label><i class="ti ti-align-left" aria-hidden="true"></i> Bio</label>
+    <textarea id="editBio" placeholder="Introduce yourself to students..." maxlength="1000"></textarea>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label><i class="ti ti-certificate" aria-hidden="true"></i> Title</label>
+      <select id="editLecturerTitle">
+        <option value="">Select Title</option>
+        <option>Dr.</option>
+        <option>Prof.</option>
+        <option>Mr.</option>
+        <option>Ms.</option>
+        <option>Mrs.</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label><i class="ti ti-briefcase" aria-hidden="true"></i> Years of Experience</label>
+      <input type="number" id="editYearsExperience" min="0" max="60" />
+    </div>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-brand-whatsapp" aria-hidden="true"></i> Phone Number</label>
+    <input type="tel" id="editPhoneNumber" placeholder="0821234567" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-building" aria-hidden="true"></i> Faculty / Department</label>
+    <select id="editFaculty">
+      <option value="">Select Faculty / Department</option>
+      <option>Agriculture &amp; Environmental Sciences</option>
+      <option>Economics, Development &amp; Business Sciences</option>
+      <option>Hospitality &amp; Tourism</option>
+      <option>Education</option>
+      <option>ICT</option>
+      <option>Administration</option>
+      <option>Finance</option>
+      <option>Student Affairs</option>
+      <option>Other</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-map-pin" aria-hidden="true"></i> Office Location</label>
+    <input type="text" id="editOfficeLocation" placeholder="e.g. IT Building, Room 204" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-messages" aria-hidden="true"></i> Consultation Mode</label>
+    <input type="text" id="editConsultationMode" placeholder="e.g. On-campus / Online" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-bulb" aria-hidden="true"></i> Expertise</label>
+    <div class="profile-tags-row" id="editSkillsTagsRow"></div>
+    <div class="profile-tag-add-input">
+      <input type="text" id="editSkillInput" placeholder="e.g. Database Systems" maxlength="40" />
+      <button type="button" id="addSkillBtn">Add</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-briefcase" aria-hidden="true"></i> Services Offered</label>
+    <div class="profile-tags-row" id="editServicesTagsRow"></div>
+    <div class="profile-tag-add-input">
+      <input type="text" id="editServiceInput" placeholder="e.g. Project Supervision" maxlength="60" />
+      <button type="button" id="addServiceBtn">Add</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-calendar-time" aria-hidden="true"></i> Availability Note</label>
+    <textarea id="editAvailabilityNote" placeholder="e.g. Available for consultations Mon–Fri, 08:00–16:30." maxlength="500"></textarea>
+  </div>
+  <div class="form-row">
+    <button type="button" class="secondary-button" id="closeEditProfileModal"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+    <button type="button" class="primary-button" id="saveEditProfileBtn"><i class="ti ti-check" aria-hidden="true"></i> Save Changes</button>
+  </div>
+</div>
+
 <input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" hidden />
 <div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>
 <script src="./js/navbar.js"></script>
+<script src="./js/cropper.js"></script>
 <script src="./js/lecturer-profile.js"></script>
 </body>
 </html>

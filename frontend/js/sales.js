@@ -1,20 +1,23 @@
 const currentUser = requireAuth();
 
-const salesForm      = document.getElementById("salesForm");
-const salesMessage   = document.getElementById("salesMessage");
-const salesContainer = document.getElementById("salesContainer");
-const mySalesContainer = document.getElementById("mySalesContainer");
-const salesSearch    = document.getElementById("salesSearch");
-const salesSearchButton = document.getElementById("salesSearchButton");
-const categoryFilter = document.getElementById("categoryFilter");
+const salesForm         = document.getElementById("salesForm");
+const salesMessage      = document.getElementById("salesMessage");
+const salesContainer    = document.getElementById("salesContainer");
+const mySalesContainer  = document.getElementById("mySalesContainer");
+const mySalesMiniContainer = document.getElementById("mySalesMiniContainer");
+
+const salesSearchInput   = document.getElementById("salesSearchInput");
+const salesCategoryFilter = document.getElementById("salesCategoryFilter");
+const salesPriceFilter    = document.getElementById("salesPriceFilter");
+const salesSortSelect     = document.getElementById("salesSortSelect");
 
 let cachedSalesItems  = [];
 let selectedSection   = "All";
-let selectedCategory  = "All";
 
 const salesCreateOverlay    = document.getElementById("salesCreateOverlay");
 const salesCreateModal      = document.getElementById("salesCreateModal");
 const openSalesModalButton  = document.getElementById("openSalesModalButton");
+const heroSellItemButton    = document.getElementById("heroSellItemButton");
 const closeSalesModalButton = document.getElementById("closeSalesModalButton");
 
 const salesStep1        = document.getElementById("salesStep1");
@@ -101,6 +104,7 @@ function closeSalesCreateModal() {
 }
 
 openSalesModalButton?.addEventListener("click", openSalesCreateModal);
+heroSellItemButton?.addEventListener("click", openSalesCreateModal);
 closeSalesModalButton?.addEventListener("click", closeSalesCreateModal);
 salesCreateOverlay?.addEventListener("click", closeSalesCreateModal);
 
@@ -109,13 +113,48 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
     document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     selectedSection = btn.dataset.section;
-    renderSalesItems(cachedSalesItems);
+    renderSalesItems();
   });
 });
 
-categoryFilter?.addEventListener("change", () => { selectedCategory = categoryFilter.value; renderSalesItems(cachedSalesItems); });
-salesSearch?.addEventListener("input", () => renderSalesItems(cachedSalesItems));
-salesSearchButton?.addEventListener("click", () => renderSalesItems(cachedSalesItems));
+salesSearchInput?.addEventListener("input", renderSalesItems);
+salesCategoryFilter?.addEventListener("change", renderSalesItems);
+salesPriceFilter?.addEventListener("change", renderSalesItems);
+salesSortSelect?.addEventListener("change", renderSalesItems);
+
+function populateCategoryFilter(items) {
+  const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
+  salesCategoryFilter.innerHTML = `<option value="All">All Categories</option>` +
+    cats.map(c => `<option value="${c}">${c}</option>`).join("");
+}
+
+/* ── Client-side-only "saved" heart toggle ── local per browser only;
+   there is no saved-listings table/endpoint in the backend yet. */
+function getSavedIds() {
+  try { return JSON.parse(localStorage.getItem("taskifySavedSales") || "[]"); }
+  catch { return []; }
+}
+function toggleSavedId(id) {
+  const saved = getSavedIds();
+  const idx = saved.indexOf(id);
+  if (idx >= 0) saved.splice(idx, 1); else saved.push(id);
+  localStorage.setItem("taskifySavedSales", JSON.stringify(saved));
+  return saved.includes(id);
+}
+function attachSaveHeartEvents() {
+  document.querySelectorAll(".save-heart-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = Number(btn.dataset.saveId);
+      const nowSaved = toggleSavedId(id);
+      btn.classList.toggle("saved", nowSaved);
+      btn.querySelector("i").className = `ti ${nowSaved ? "ti-heart-filled" : "ti-heart"}`;
+    });
+  });
+}
 
 function safeMap(items, builder, label) {
   return items.map(item => {
@@ -131,20 +170,26 @@ function safeMap(items, builder, label) {
 function saleCard(item) {
   const isOwn = Number(item.seller_id) === Number(currentUser.id);
   const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
+  const isSaved = getSavedIds().includes(item.id);
 
   return `
     <div class="market-card">
-      <div class="market-image" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">
+      <div class="market-image" style="position:relative;">
         ${imageUrl
           ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="sale-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="market-image-placeholder" style="color:#c99200;"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
+          : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
+        ${endorsementCornerBadge(item)}
+        ${lecturerPostedCornerBadge(item.seller_member_type)}
+        <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${item.id}" aria-label="Save item">
+          <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
+        </button>
       </div>
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
             <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${item.seller_name}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${posterName(item.seller_name, item.seller_lecturer_title)}</div>
               <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
             </div>
           </div>
@@ -174,10 +219,11 @@ function myListingCard(item) {
   const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
   return `
     <div class="market-card">
-      <div class="market-image" style="background:linear-gradient(135deg,#FAEEDA,#FAC775);">
+      <div class="market-image" style="position:relative;">
         ${imageUrl
           ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="mylisting-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="market-image-placeholder" style="color:#c99200;"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
+          : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
+        ${endorsementCornerBadge(item)}
       </div>
       <div class="market-content">
         <div class="market-top">
@@ -205,18 +251,57 @@ function myListingCard(item) {
     </div>`;
 }
 
-function renderSalesItems(items) {
-  const q = salesSearch?.value.trim().toLowerCase() || "";
-  const filtered = items.filter(item =>
-    (selectedSection === "All" || item.section === selectedSection) &&
-    (selectedCategory === "All" || item.category === selectedCategory) &&
-    [item.title, item.description, item.category, item.location, item.condition_status]
-      .some(f => f?.toLowerCase().includes(q))
-  );
+function myListingMiniCard(item) {
+  return `
+    <a href="./sale-details.html?id=${item.id}" class="mini-history-item">
+      <div class="mini-history-thumb"><div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div></div>
+      <div class="mini-history-info">
+        <div class="mini-history-top">
+          ${sectionBadge(item.section)}
+          ${statusBadge(item.status)}
+        </div>
+        <div class="mini-history-title">${item.title}</div>
+        <div class="mini-history-meta">R${item.price} &middot; ${item.condition_status}</div>
+      </div>
+    </a>`;
+}
+
+function getFilteredSortedItems() {
+  const q = salesSearchInput?.value.trim().toLowerCase() || "";
+  const category = salesCategoryFilter?.value || "All";
+  const priceBucket = salesPriceFilter?.value || "All";
+
+  let filtered = cachedSalesItems.filter(item => {
+    const matchesSection  = selectedSection === "All" || item.section === selectedSection;
+    const matchesCategory = category === "All" || item.category === category;
+    const matchesSearch = !q || [item.title, item.description, item.category, item.location, item.condition_status]
+      .some(f => f?.toLowerCase().includes(q));
+    const price = Number(item.price);
+    const matchesPrice =
+      priceBucket === "All" ? true :
+      priceBucket === "under100" ? price < 100 :
+      priceBucket === "100to300" ? price >= 100 && price <= 300 :
+      price > 300;
+    return matchesSection && matchesCategory && matchesSearch && matchesPrice;
+  });
+
+  const sort = salesSortSelect?.value || "newest";
+  filtered = [...filtered].sort((a, b) => {
+    if (sort === "price_asc")  return Number(a.price) - Number(b.price);
+    if (sort === "price_desc") return Number(b.price) - Number(a.price);
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  return filtered;
+}
+
+function renderSalesItems() {
+  const filtered = getFilteredSortedItems();
   salesContainer.innerHTML = filtered.length
     ? safeMap(filtered, saleCard, "sale")
     : emptyState("ti-shopping-bag", "No items found", "Try a different filter or list your own.");
   attachProfileLinkEvents();
+  attachSaveHeartEvents();
 }
 
 function renderMySalesItems(items) {
@@ -225,13 +310,10 @@ function renderMySalesItems(items) {
     : emptyState("ti-tag", "No listings yet", "Items you list for sale appear here.");
   attachMarkSoldEvents();
   attachDeleteSaleEvents();
-}
 
-function populateCategoryFilter(items) {
-  const cats = [...new Set(items.map(i => i.category))];
-  if (!categoryFilter) return;
-  categoryFilter.innerHTML = `<option value="All">All Categories</option>` +
-    cats.map(c => `<option value="${c}">${c}</option>`).join("");
+  mySalesMiniContainer.innerHTML = items.length
+    ? items.slice(0, 4).map(myListingMiniCard).join("")
+    : `<p class="rail-loading">No listings yet.</p>`;
 }
 
 function attachDeleteSaleEvents() {
@@ -278,7 +360,7 @@ async function loadSalesItems() {
     const res = await apiRequest("/sales");
     cachedSalesItems = Array.isArray(res.data) ? res.data : [];
     populateCategoryFilter(cachedSalesItems);
-    renderSalesItems(cachedSalesItems);
+    renderSalesItems();
   } catch (err) {
     console.error("loadSalesItems failed:", err);
     salesContainer.innerHTML = errorState(err.message);
@@ -293,9 +375,16 @@ async function loadMySalesItems() {
   } catch (err) {
     console.error("loadMySalesItems failed:", err);
     mySalesContainer.innerHTML = errorState(err.message);
-    showToast(err.message, "error");
+    mySalesMiniContainer.innerHTML = `<p class="rail-loading">Couldn't load listings.</p>`;
   }
 }
+
+document.getElementById("viewAllListingsLink")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  const section = document.getElementById("fullListingsSection");
+  section.style.display = "block";
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+});
 
 salesForm?.addEventListener("submit", async e => {
   e.preventDefault();

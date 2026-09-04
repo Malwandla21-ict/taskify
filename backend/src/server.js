@@ -1,8 +1,11 @@
-const app = require("./app");
 const dotenv = require("dotenv");
-const pool = require("./config/db");
-
 dotenv.config();
+
+const { validateEnv } = require("./config/env");
+validateEnv();
+
+const app = require("./app");
+const pool = require("./config/db");
 
 const PORT = process.env.PORT || 5000;
 

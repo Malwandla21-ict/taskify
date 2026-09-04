@@ -5,21 +5,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Messages</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
-<div class="dashboard-container">
-  <div class="hero-section-simple">
-    <div class="hero-badge"><i class="ti ti-message-circle" aria-hidden="true"></i> Messages</div>
-    <h1>Your conversations</h1>
-    <p>Every conversation is tied to a task, rental or sale — and stays on Taskify so it's covered by our reporting and moderation.</p>
-  </div>
-  <section class="section">
-    <div id="conversationsContainer" class="marketplace-grid">
-      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading conversations…</h3></div>
+<div class="dashboard-container" style="padding-bottom:0;">
+
+  <div class="messages-shell">
+
+    <div class="messages-list-pane">
+      <div class="messages-list-header">
+        <h2><i class="ti ti-message-circle" aria-hidden="true"></i> Messages</h2>
+        <div class="toolbar-search-box">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <input type="text" id="conversationSearchInput" placeholder="Search conversations..." />
+        </div>
+        <div class="filters-row">
+          <button class="filter-pill active" data-context="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+          <button class="filter-pill" data-context="task"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Tasks</button>
+          <button class="filter-pill" data-context="equipment"><i class="ti ti-package" aria-hidden="true"></i> Rentals</button>
+          <button class="filter-pill" data-context="sale"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Sales</button>
+        </div>
+      </div>
+      <div class="messages-list-scroll" id="conversationsListContainer">
+        <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading…</h3></div>
+      </div>
     </div>
-  </section>
+
+    <div class="messages-thread-pane" id="threadPane">
+      <div class="thread-empty-state" id="threadEmptyState">
+        <i class="ti ti-message-circle" aria-hidden="true"></i>
+        <h3 style="font-size:15px;font-weight:700;color:var(--text);">Select a conversation</h3>
+        <p style="font-size:13px;max-width:280px;">Every conversation is tied to a task, rental or sale, and stays on Taskify so it's covered by reporting and moderation.</p>
+      </div>
+
+      <div id="threadContent" style="display:none;flex:1;min-height:0;flex-direction:column;">
+        <div class="thread-header">
+          <button type="button" class="thread-back-link" id="threadBackButton">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Messages
+          </button>
+          <div class="conversation-item-avatar thread-header-avatar" id="threadAvatar"></div>
+          <div class="thread-header-info">
+            <div class="thread-header-name profile-link" id="threadUserName"></div>
+          </div>
+          <button type="button" class="secondary-button profile-link" id="threadViewProfileButton" style="width:auto;padding:9px 18px;">
+            <i class="ti ti-user" aria-hidden="true"></i> View Profile
+          </button>
+        </div>
+
+        <a href="#" id="threadContextCard" class="thread-context-card" style="display:none;">
+          <div class="thread-context-thumb"><div class="media-placeholder light" id="threadContextThumb"><i class="ti ti-package" aria-hidden="true"></i></div></div>
+          <div class="thread-context-info">
+            <div class="thread-context-title" id="threadContextTitle"></div>
+            <div class="thread-context-meta" id="threadContextMeta"></div>
+          </div>
+          <div id="threadContextStatus"></div>
+        </a>
+
+        <div class="thread-messages-scroll" id="messagesThread"></div>
+
+        <form class="thread-input-row" id="messageForm">
+          <input type="text" id="messageBody" placeholder="Type a message..." maxlength="2000" autocomplete="off" required />
+          <button type="submit" class="thread-send-btn" aria-label="Send">
+            <i class="ti ti-send" aria-hidden="true"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+
+  </div>
 </div>
+<div id="overlay"></div>
 <div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>

@@ -1,70 +1,93 @@
-<nav class="navbar">
-
-  <div class="nav-left">
-    <a href="./dashboard.html" class="brand-block">
-      <img src="./assets/logo/umo-logo.png" alt="UMP Logo" class="ump-logo" />
-      <div class="brand-divider"></div>
-      <span class="brand-taskify">Taskify</span>
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a href="./dashboard.html" class="sidebar-brand">
+      <img src="./assets/logo/UMPLogoWhite.png" alt="UMP Logo" class="sidebar-brand-logo" />
+      <div class="sidebar-brand-text">
+        <strong>Taskify</strong>
+        <span>UMP Marketplace</span>
+      </div>
     </a>
-
-    <div class="nav-icons">
-      <a href="./dashboard.html" class="nav-link">
-        <i class="ti ti-home" aria-hidden="true"></i>
-        <span>Home</span>
-      </a>
-      <a href="./tasks.html" class="nav-link">
-        <i class="ti ti-clipboard-list" aria-hidden="true"></i>
-        <span>Tasks</span>
-      </a>
-      <a href="./equipment.html" class="nav-link">
-        <i class="ti ti-package" aria-hidden="true"></i>
-        <span>Rentals</span>
-      </a>
-      <a href="./sales.html" class="nav-link">
-        <i class="ti ti-shopping-bag" aria-hidden="true"></i>
-        <span>Sales</span>
-      </a>
-      <a href="./events.html" class="nav-link">
-        <i class="ti ti-calendar-event" aria-hidden="true"></i>
-        <span>Events</span>
-      </a>
-      <a href="./tutors.html" class="nav-link">
-        <i class="ti ti-school-bell" aria-hidden="true"></i>
-        <span>Tutors</span>
-      </a>
-      <a href="./messages.html" class="nav-link">
-        <i class="ti ti-message-circle" aria-hidden="true"></i>
-        <span>Messages</span>
-      </a>
-      <a href="./academic.html" class="nav-link">
-        <i class="ti ti-school" aria-hidden="true"></i>
-        <span>Academic</span>
-      </a>
-      <a href="./general.html" class="nav-link">
-        <i class="ti ti-building-store" aria-hidden="true"></i>
-        <span>General</span>
-      </a>
-      <a href="./admin.html" class="nav-link" id="navAdminLink" style="display:none;">
-        <i class="ti ti-shield-lock" aria-hidden="true"></i>
-        <span>Admin</span>
-      </a>
-    </div>
   </div>
 
-  <div class="nav-right">
-    <a href="./notifications.html" class="nav-icon-btn notification-link" aria-label="Notifications">
+  <nav class="sidebar-nav">
+    <div class="sidebar-group-label">Discover</div>
+    <a href="./dashboard.html" class="nav-link"><i class="ti ti-home" aria-hidden="true"></i><span>Dashboard</span></a>
+    <a href="./tasks.html" class="nav-link"><i class="ti ti-clipboard-list" aria-hidden="true"></i><span>Tasks</span></a>
+    <a href="./sales.html" class="nav-link"><i class="ti ti-shopping-cart" aria-hidden="true"></i><span>Sales</span></a>
+    <a href="./equipment.html" class="nav-link"><i class="ti ti-building-store" aria-hidden="true"></i><span>Rentals</span></a>
+    <a href="./events.html" class="nav-link"><i class="ti ti-calendar-event" aria-hidden="true"></i><span>Events</span></a>
+    <a href="./tutors.html" class="nav-link"><i class="ti ti-school-bell" aria-hidden="true"></i><span>Tutors</span></a>
+    <a href="./messages.html" class="nav-link">
+      <i class="ti ti-message-circle" aria-hidden="true"></i><span>Messages</span>
+      <span class="nav-badge" id="navMessagesCount" style="display:none;">0</span>
+    </a>
+    <a href="./academic.html" class="nav-link"><i class="ti ti-school" aria-hidden="true"></i><span>Academic</span></a>
+    <a href="./general.html" class="nav-link"><i class="ti ti-world" aria-hidden="true"></i><span>General</span></a>
+    <a href="./admin.html" class="nav-link" id="navAdminLink" style="display:none;">
+      <i class="ti ti-shield-lock" aria-hidden="true"></i><span>Admin</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-group-label">Quick Actions</div>
+    <a href="./tasks.html" class="qa-link">
+      <span class="qa-dot green"><i class="ti ti-plus" aria-hidden="true"></i></span><span>Post a Task</span>
+    </a>
+    <a href="./sales.html" class="qa-link">
+      <span class="qa-dot blue"><i class="ti ti-tag" aria-hidden="true"></i></span><span>Sell an Item</span>
+    </a>
+    <a href="./equipment.html" class="qa-link">
+      <span class="qa-dot gold"><i class="ti ti-package" aria-hidden="true"></i></span><span>Rent Equipment</span>
+    </a>
+    <a href="./events.html" class="qa-link">
+      <span class="qa-dot red"><i class="ti ti-calendar-plus" aria-hidden="true"></i></span><span>Create Event</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-promo">
+    <h4>Grow your campus.</h4>
+    <p>Connect. Help. Earn. Grow together.</p>
+    <a href="./dashboard.html" class="sidebar-promo-btn">
+      <i class="ti ti-arrow-right" aria-hidden="true"></i> Explore Marketplace
+    </a>
+    <i class="ti ti-users-group sidebar-promo-art" aria-hidden="true"></i>
+  </div>
+
+  <div class="sidebar-footer" id="sidebarFooter">
+    <div class="sidebar-user" id="sidebarUserToggle">
+      <div class="sidebar-user-avatar nav-avatar-target" id="navAvatar"></div>
+      <div class="sidebar-user-info">
+        <strong id="sidebarUserName">Student</strong>
+        <span id="sidebarUserRole">Student</span>
+      </div>
+      <i class="ti ti-chevron-down" aria-hidden="true"></i>
+    </div>
+    <div class="sidebar-user-menu" id="sidebarUserMenu">
+      <a href="./profile.html" id="sidebarProfileLink"><i class="ti ti-user" aria-hidden="true"></i> My Profile</a>
+      <a href="./notifications.html"><i class="ti ti-bell" aria-hidden="true"></i> Notifications</a>
+      <button type="button" class="danger" id="logoutButton"><i class="ti ti-logout" aria-hidden="true"></i> Logout</button>
+    </div>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<header class="app-topbar">
+  <button type="button" class="topbar-hamburger" id="sidebarToggle" aria-label="Toggle menu">
+    <i class="ti ti-menu-2" aria-hidden="true"></i>
+  </button>
+  <div class="topbar-search">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <input type="text" id="topbarSearchInput" placeholder="Search tasks, equipment, services..." />
+  </div>
+  <div class="topbar-actions">
+    <a href="./notifications.html" class="topbar-icon-btn notification-link" aria-label="Notifications">
       <i class="ti ti-bell" aria-hidden="true"></i>
       <span class="notification-count" id="navNotifCount" style="display:none;">0</span>
     </a>
-
-    <a href="./profile.html" class="nav-avatar" id="navAvatar" aria-label="My Profile"></a>
-
-    <div class="nav-divider"></div>
-
-    <button id="logoutButton" class="nav-logout" aria-label="Logout">
-      <i class="ti ti-logout" aria-hidden="true"></i>
-      <span>Logout</span>
-    </button>
+    <a href="./messages.html" class="topbar-icon-btn" aria-label="Messages">
+      <i class="ti ti-message-circle" aria-hidden="true"></i>
+      <span class="notification-count blue" id="navMessagesTopCount" style="display:none;">0</span>
+    </a>
+    <a href="./profile.html" class="topbar-avatar nav-avatar-target" id="navAvatarTop" aria-label="My Profile"></a>
   </div>
-
-</nav>
+</header>

@@ -1,13 +1,11 @@
 /* ==============================
    PROFILE OVERHAUL (student + lecturer)
-   Loaded alongside main.css, adds only what's new: 3-column role grid,
-   profile stat rows, tabs, editable tag inputs, endorsement badges,
-   lecturer quick-actions, and the tutor directory.
+   Plus: corner badges, endorsement detail blocks, and the Edit Profile
+   modal — loaded on every marketplace + profile page.
 ============================== */
 
 .role-grid.three-col { grid-template-columns: repeat(3, 1fr); }
 
-/* ── Profile header stat row ── */
 .profile-stats-inline {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -38,7 +36,6 @@
 .profile-stats-inline .pstat-value { font-size: 18px; font-weight: 800; line-height: 1; }
 .profile-stats-inline .pstat-label { font-size: 10px; opacity: 0.75; margin-top: 3px; }
 
-/* ── Tabs ── */
 .profile-tabs {
   display: flex;
   gap: 4px;
@@ -70,7 +67,6 @@
 .profile-tab-panel { display: none; }
 .profile-tab-panel.active { display: block; }
 
-/* ── Info card blocks (About Me, Skills, Statistics etc.) ── */
 .profile-info-card {
   background: white;
   border: 1.5px solid var(--border);
@@ -161,7 +157,6 @@
 
 .profile-verify-row:last-child { border-bottom: none; }
 
-/* ── Statistics grid ── */
 .profile-stats-grid-v2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -191,7 +186,6 @@
 .profile-stat-item .value { font-size: 18px; font-weight: 800; line-height: 1; }
 .profile-stat-item .label { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-/* ── Endorsement cards ── */
 .endorsement-card {
   background: white;
   border: 1.5px solid var(--border);
@@ -223,7 +217,69 @@
 .endorsement-badge.tutoring { background: rgba(0,155,114,0.10); color: var(--ump-green); }
 .endorsement-badge.toolkit { background: rgba(245,180,0,0.14); color: #b38900; }
 
-/* ── Quick actions (lecturer sidebar) ── */
+.endorsement-detail-block {
+  background: linear-gradient(135deg, rgba(108,61,255,0.06), rgba(0,155,114,0.05));
+  border: 1.5px solid rgba(108,61,255,0.18);
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+
+.endorsement-detail-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+
+.endorsement-detail-quote {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+  font-style: italic;
+  border-left: 3px solid #6c3dff;
+  padding-left: 12px;
+  margin: 0;
+}
+
+/* ── Corner badges on card images ──
+   Deliberately compact: small font, tight padding, and a hard max-width
+   so a long name/title can never visually dominate a 160px-tall card
+   image — it truncates with an ellipsis instead. */
+.corner-badge {
+  position: absolute;
+  top: 8px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 800;
+  color: white;
+  background: #6c3dff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  white-space: nowrap;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.5;
+}
+
+.corner-badge-left { left: 8px; }
+.corner-badge-left.shift-down { top: 32px; }
+.corner-badge-right { right: 8px; }
+.corner-badge.lecturer { background: var(--ump-navy); }
+.corner-badge i { font-size: 10px; flex-shrink: 0; }
+
+.lecturer-title-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(108,61,255,0.12);
+  color: #6c3dff;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
 .profile-quick-actions {
   display: flex;
   flex-direction: column;
@@ -251,10 +307,7 @@
 .profile-quick-action-btn:hover { background: var(--ump-green); color: white; border-color: var(--ump-green); }
 .profile-quick-action-btn i { font-size: 15px; }
 
-.profile-quick-action-btn.has-count {
-  display: flex;
-  justify-content: space-between;
-}
+.profile-quick-action-btn.has-count { display: flex; justify-content: space-between; }
 
 .profile-quick-action-btn .count-pill {
   background: rgba(0,0,0,0.1);
@@ -263,7 +316,6 @@
   padding: 1px 7px;
 }
 
-/* ── Recent activity list (reused across student/lecturer) ── */
 .profile-activity-list { display: flex; flex-direction: column; gap: 4px; }
 
 .profile-activity-item {
@@ -294,7 +346,6 @@
 .profile-activity-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .profile-activity-time { font-size: 11px; color: var(--muted); white-space: nowrap; }
 
-/* ── Give Endorsement modal ── */
 #giveEndorsementModal {
   display: none;
   position: fixed;
@@ -351,20 +402,55 @@
   font-size: 14px;
 }
 
-/* ── Lecturer profile header extras ── */
-.lecturer-title-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: rgba(108,61,255,0.12);
-  color: #6c3dff;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 700;
+#editProfileModal {
+  display: none;
+  position: fixed;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 26px 28px;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 20px 60px rgba(12,29,74,0.18);
+  z-index: 2700;
+  width: 500px;
+  max-width: 94%;
+  max-height: 88vh;
+  overflow-y: auto;
 }
 
-/* ── Tutor directory ── */
+.profile-header-card { position: relative; }
+
+.edit-profile-header-btn {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  background: rgba(255,255,255,0.14);
+  border: 1px solid rgba(255,255,255,0.24);
+  color: white;
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.edit-profile-header-btn:hover { background: rgba(255,255,255,0.24); }
+
+button.back-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 .tutor-card {
   background: white;
   border: 1.5px solid var(--border);
@@ -373,13 +459,7 @@
   box-shadow: var(--shadow-sm);
 }
 
-.tutor-card-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-
+.tutor-card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .tutor-card-header .market-avatar { width: 46px; height: 46px; }
 
 .tutor-endorsement-quote {
@@ -394,4 +474,77 @@
 
 @media (max-width: 900px) {
   .profile-stats-grid-v2 { grid-template-columns: 1fr; }
+}
+
+/* ==============================
+   SECURITY (2FA / change password) MODALS
+   Same visual treatment as #editProfileModal, reused via a shared class
+   so both modals can exist alongside it without id collisions.
+============================== */
+
+.security-modal {
+  display: none;
+  position: fixed;
+  top: 5%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 26px 28px;
+  border-radius: var(--radius-xl);
+  border: 1.5px solid var(--border);
+  box-shadow: 0 20px 60px rgba(12,29,74,0.18);
+  z-index: 2700;
+  width: 460px;
+  max-width: 94%;
+  max-height: 88vh;
+  overflow-y: auto;
+}
+
+.security-modal h2 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.security-modal h2 i { color: var(--ump-green); }
+
+.qr-code-box {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+  background: var(--background);
+  border-radius: var(--radius);
+  margin: 14px 0;
+}
+
+.qr-code-box img { width: 200px; height: 200px; }
+
+.manual-key-box {
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-family: monospace;
+  font-size: 13px;
+  word-break: break-all;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.backup-codes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.backup-code-chip {
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  font-family: monospace;
+  font-size: 13px;
+  text-align: center;
 }

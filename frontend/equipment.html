@@ -5,53 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Equipment Rentals</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
 <div class="dashboard-container">
-  <div class="hero-section-simple">
-    <div class="hero-badge"><i class="ti ti-package" aria-hidden="true"></i> Equipment Rentals</div>
-    <h1>Rent or list student equipment</h1>
-    <p>List laptops, calculators, toolkits, cameras and more using the guided setup flow.</p>
+
+  <section class="hero-section-v2">
+    <div class="hero-v2-text">
+      <h1>Rent or list student equipment</h1>
+      <p>List laptops, calculators, toolkits, cameras and more using the guided setup flow.</p>
+      <div class="hero-v2-actions">
+        <button type="button" class="hero-btn-primary" id="heroListEquipmentButton">
+          <i class="ti ti-plus" aria-hidden="true"></i> List Equipment
+        </button>
+      </div>
+    </div>
+    <div class="hero-v2-media">
+      <div class="media-placeholder"><img src="./assets/images/UMP-Buildings-62.jpg" alt="UMP Campus" /></div>
+    </div>
+  </section>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
+
+      <section class="section-block">
+        <div class="section-header">
+          <div>
+            <h2><i class="ti ti-list-search" aria-hidden="true"></i> Available Equipment</h2>
+            <p>Browse campus rentals</p>
+          </div>
+        </div>
+
+        <div class="tasks-toolbar">
+          <div class="toolbar-search-box">
+            <i class="ti ti-search" aria-hidden="true"></i>
+            <input type="text" id="equipmentSearchInput" placeholder="Search laptops, calculators, toolkits..." />
+          </div>
+          <select id="equipmentCategoryFilter" class="toolbar-select">
+            <option value="All">All Categories</option>
+          </select>
+          <select id="equipmentPriceFilter" class="toolbar-select">
+            <option value="All">Any Price</option>
+            <option value="under50">Under R50/day</option>
+            <option value="50to150">R50 – R150/day</option>
+            <option value="over150">Over R150/day</option>
+          </select>
+          <select id="equipmentSortSelect" class="toolbar-select">
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+          </select>
+        </div>
+
+        <div class="filters-row">
+          <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+          <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
+          <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
+        </div>
+
+        <div id="equipmentContainer" class="marketplace-grid">
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="dashboard-rail">
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-package" aria-hidden="true"></i> List Equipment</h3>
+        </div>
+        <p class="rail-card-sub">Got equipment to rent out? List it and start earning.</p>
+        <div class="rail-art"><div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div></div>
+        <button type="button" class="primary-button" id="openEquipmentModalButton" style="margin-top:14px;">
+          <i class="ti ti-plus" aria-hidden="true"></i> List Equipment
+        </button>
+      </div>
+
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-building-store" aria-hidden="true"></i> Equipment Marketplace</h3>
+        </div>
+        <p class="rail-card-sub">Rent laptops, calculators, toolkits, cameras and more from fellow students.</p>
+        <div class="rail-art small"><div class="media-placeholder light navy"><i class="ti ti-camera" aria-hidden="true"></i></div></div>
+        <div class="rail-tag-links" style="margin-top:14px;">
+          <a href="./academic.html" class="rail-tag-link green"><i class="ti ti-school" aria-hidden="true"></i> Academic Rentals</a>
+          <a href="./general.html" class="rail-tag-link gold"><i class="ti ti-building-store" aria-hidden="true"></i> General Rentals</a>
+        </div>
+      </div>
+
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-history" aria-hidden="true"></i> My Equipment History</h3>
+        </div>
+        <p class="rail-card-sub">Every rental you've booked or listed, with full details</p>
+        <div id="equipmentHistoryMiniContainer" class="mini-history-list">
+          <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+        </div>
+        <a href="#fullEquipmentHistorySection" id="viewAllEquipmentHistoryLink" class="view-all-link small" style="margin-top:12px;display:inline-flex;">
+          View all history <i class="ti ti-arrow-right" aria-hidden="true"></i>
+        </a>
+      </div>
+    </aside>
   </div>
 
-  <section class="section">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-plus" aria-hidden="true"></i> List Equipment</h2>
-        <p>Create a rental listing in a few guided steps</p>
-      </div>
-    </div>
-    <div class="create-cta-panel">
-      <div class="create-cta-icon"><i class="ti ti-package" aria-hidden="true"></i></div>
-      <div class="create-cta-text">
-        <h3>Got equipment to rent out?</h3>
-        <p>List it and start earning from students who need it.</p>
-      </div>
-      <button type="button" class="primary-button" id="openEquipmentModalButton" style="width:auto;">
-        <i class="ti ti-plus" aria-hidden="true"></i> List Equipment
-      </button>
-    </div>
-  </section>
-
-  <section class="section" style="padding-top:0;">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-list-search" aria-hidden="true"></i> Available Equipment</h2>
-        <p>Browse campus rentals</p>
-      </div>
-    </div>
-    <div class="filters-row">
-      <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
-      <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
-      <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
-    </div>
-    <div id="equipmentContainer" class="marketplace-grid">
-      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div>
-    </div>
-  </section>
-
-  <section class="section" style="padding-top:0;">
+  <section class="section-block" id="fullEquipmentHistorySection" style="display:none;">
     <div class="section-header">
       <div>
         <h2><i class="ti ti-history" aria-hidden="true"></i> My Equipment History</h2>
@@ -64,7 +124,6 @@
   </section>
 </div>
 
-<!-- Equipment creation modal -->
 <div id="equipmentCreateOverlay" class="creation-modal-overlay"></div>
 <div id="equipmentCreateModal" class="creation-modal">
   <button type="button" class="creation-modal-close" id="closeEquipmentModalButton" aria-label="Close"><i class="ti ti-x" aria-hidden="true"></i></button>
@@ -153,6 +212,7 @@
   <p id="equipmentMessage" style="margin-top:14px;font-size:13px;font-weight:600;"></p>
 </div>
 
+<div id="overlay"></div>
 <div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>

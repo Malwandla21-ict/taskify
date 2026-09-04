@@ -35,12 +35,6 @@ function avatarInitials(name = "") {
   return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
 }
 
-/*
-  Single source of truth for avatar rendering. If a real photo URL exists,
-  returns a clickable <img class="lightbox-img"> so it's viewable in the
-  global lightbox — UNLESS options.lightbox is explicitly false (used by
-  the navbar avatar). Otherwise returns plain initials text.
-*/
 function avatarHtml(name = "", photoUrl = null, options = {}) {
   const { lightbox = true } = options;
 
@@ -62,11 +56,15 @@ function requireAuth() {
   return JSON.parse(localStorage.getItem("taskifyUser"));
 }
 
-/* Returns the correct "my profile" page for the logged-in account's
-   member_type, used by the navbar avatar link and by profile pages that
-   need to bounce a lecturer/student to the right place. */
 function myProfileUrl(user) {
   return user?.member_type === "Lecturer" ? "./lecturer-profile.html" : "./profile.html";
+}
+
+/* Prefixes a lecturer's title onto their name ("Dr. Lerato Maseko"). Used
+   anywhere a poster/organizer/reviewer/sender name is shown, so lecturer
+   identity is consistent everywhere without each caller reimplementing it. */
+function posterName(name, lecturerTitle) {
+  return lecturerTitle ? `${lecturerTitle} ${name}` : (name || "");
 }
 
 function badge(label, variant = "") {
@@ -92,15 +90,72 @@ function statusBadge(status) {
   return `<div class="badge ${map[status] ?? ""}">${status}</div>`;
 }
 
-/* Renders the "Recommended by Dr. X" tag on a sales/equipment listing,
-   fed by the real lecturer_endorsements join done server-side. Returns
-   an empty string (no badge) if the item isn't endorsed. */
+/* ── Endorsement / lecturer UI helpers ──
+   These read the endorsed_by_lecturer_* and *_member_type / *_lecturer_title
+   fields the backend now attaches to tasks, equipment, sales, and events. */
+
 function endorsementBadge(item) {
   if (!item || !item.endorsed_by_lecturer_name) return "";
   const title = item.endorsed_by_lecturer_title ? `${item.endorsed_by_lecturer_title} ` : "";
   return `<div class="market-tag" style="background:rgba(108,61,255,0.10);color:#6c3dff;">
             <i class="ti ti-certificate" aria-hidden="true"></i> Recommended by ${title}${item.endorsed_by_lecturer_name}
           </div>`;
+}
+
+/* Small ribbon shown on the card image itself (top-left). shiftDown lets
+   task cards avoid colliding with the existing urgent-badge, which also
+   sits top-left. */
+function endorsementCornerBadge(item, { shiftDown = false } = {}) {
+  if (!item || !item.endorsed_by_lecturer_name) return "";
+  const title = item.endorsed_by_lecturer_title ? `${item.endorsed_by_lecturer_title} ` : "";
+  return `<div class="corner-badge corner-badge-left${shiftDown ? " shift-down" : ""}" title="Recommended by ${title}${item.endorsed_by_lecturer_name}">
+            <i class="ti ti-certificate" aria-hidden="true"></i> Recommended
+          </div>`;
+}
+
+/* Small ribbon (top-right) shown when the poster/organizer/owner/seller
+   themselves is a verified lecturer account. */
+function lecturerPostedCornerBadge(memberType) {
+  if (memberType !== "Lecturer") return "";
+  return `<div class="corner-badge corner-badge-right lecturer" title="Posted by a verified lecturer">
+            <i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Lecturer
+          </div>`;
+}
+
+/* Larger, quote-styled block for detail pages — this is where the
+   lecturer's actual endorsement message becomes visible and readable,
+   rather than just a name in a small pill. */
+function endorsementDetailBlock(item) {
+  if (!item || !item.endorsed_by_lecturer_name) return "";
+  const title = item.endorsed_by_lecturer_title ? `${item.endorsed_by_lecturer_title} ` : "";
+  return `
+    <div class="endorsement-detail-block">
+      <div class="endorsement-detail-header">
+        <div class="market-avatar" style="width:36px;height:36px;">${avatarHtml(item.endorsed_by_lecturer_name, item.endorsed_by_lecturer_photo)}</div>
+        <div>
+          <div class="profile-link" data-user-id="${item.endorsed_by_lecturer_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${title}${item.endorsed_by_lecturer_name}</div>
+          <div class="endorsement-badge ${(item.endorsement_type || "General").toLowerCase()}" style="margin-top:3px;">
+            <i class="ti ti-certificate" aria-hidden="true"></i> ${item.endorsement_type || "General"} Endorsement
+          </div>
+        </div>
+      </div>
+      ${item.endorsement_message
+        ? `<p class="endorsement-detail-quote">"${item.endorsement_message}"</p>`
+        : `<p class="endorsement-detail-quote" style="font-style:italic;opacity:0.8;">Personally recommended by this lecturer.</p>`}
+    </div>`;
+}
+
+/* Navigates back using real browser history when the visit came from
+   within Taskify (so back returns to whatever filtered/search state the
+   person was actually on); falls back to a fixed URL otherwise (e.g. the
+   page was opened directly, in a new tab, or via a shared link). */
+function goBack(fallbackUrl) {
+  const cameFromSameSite = document.referrer && document.referrer.startsWith(window.location.origin);
+  if (cameFromSameSite && window.history.length > 1) {
+    window.history.back();
+  } else {
+    window.location.href = fallbackUrl;
+  }
 }
 
 async function startConversationAndRedirect(contextType, contextId, triggerBtn = null) {
@@ -137,8 +192,6 @@ function closeModal(modal, form, msgEl) {
   if (msgEl) msgEl.textContent = "";
 }
 
-/* ── Shared "view user profile" modal — now identity-aware. Shows lecturer
-   badge/expertise for lecturers, endorsements-received for students. ── */
 async function loadUserProfile(userId) {
   const profileModal   = document.getElementById("profileModal");
   const profileContent = document.getElementById("profileContent");
@@ -198,7 +251,7 @@ async function loadUserProfile(userId) {
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
         <div class="market-avatar" style="width:48px;height:48px;font-size:16px;">${avatarHtml(profile.full_name, profile.profilePhoto)}</div>
         <div>
-          <div style="font-weight:700;font-size:15px;">${profile.lecturer_title ? profile.lecturer_title + " " : ""}${profile.full_name}</div>
+          <div style="font-weight:700;font-size:15px;">${posterName(profile.full_name, profile.lecturer_title)}</div>
           <div style="font-size:12px;color:var(--muted);">${profile.email}</div>
         </div>
       </div>
@@ -264,9 +317,6 @@ function attachProfileLinkEvents() {
   }
 }
 
-/* ─────────────────────────────────────────
-   IMAGE UPLOADER
-───────────────────────────────────────── */
 function initImageUploader(uploadAreaId, previewGridId) {
   const uploadArea  = document.getElementById(uploadAreaId);
   const previewGrid = document.getElementById(previewGridId);
@@ -387,7 +437,6 @@ function initImageUploader(uploadAreaId, previewGridId) {
   return { upload, reset, getFiles };
 }
 
-/* Render image gallery for detail pages */
 function renderImageGallery(imageUrls = [], fallbackIcon = "ti-image") {
   if (!imageUrls || !imageUrls.length) {
     return `
@@ -429,7 +478,6 @@ function switchGalleryImage(url, thumbEl) {
   thumbEl.classList.add("active");
 }
 
-/* ── Global Image Lightbox ── */
 (function setupLightbox() {
   let currentGroup = [];
   let currentIndex = 0;

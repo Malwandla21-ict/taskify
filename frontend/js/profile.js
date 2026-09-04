@@ -1,7 +1,5 @@
 const currentUser = requireAuth();
 
-/* Lecturers get their own dashboard — bounce them there if they land here
-   directly (e.g. a stale bookmark). */
 if (currentUser?.member_type === "Lecturer") {
   window.location.href = "./lecturer-profile.html";
 }
@@ -11,8 +9,8 @@ const recentReviewsContainer = document.getElementById("recentReviewsContainer")
 const profilePhotoInput      = document.getElementById("profilePhotoInput");
 
 let latestProfile = null;
+let editSkills = [];
 
-/* ── Tabs ── */
 document.querySelectorAll(".profile-tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".profile-tab").forEach(t => t.classList.remove("active"));
@@ -65,6 +63,9 @@ async function loadProfile() {
 
     profileMainCard.innerHTML = `
       <div class="profile-header-card">
+        <button type="button" class="edit-profile-header-btn" id="openEditProfileBtn">
+          <i class="ti ti-pencil" aria-hidden="true"></i> Edit Profile
+        </button>
         <div class="profile-avatar-large-wrap">
           <div class="profile-avatar-large" style="overflow:hidden;">
             ${avatarHtml(profile.full_name, profile.profilePhoto)}
@@ -92,6 +93,8 @@ async function loadProfile() {
       </div>
     `;
 
+    document.getElementById("openEditProfileBtn")?.addEventListener("click", openEditProfileModal);
+
     document.getElementById("aboutMeText").textContent = profile.bio || "No bio added yet. Click Edit Profile to introduce yourself.";
     document.getElementById("skillsTagsRow").innerHTML = profile.skills.length
       ? profile.skills.map(s => `<div class="profile-tag">${s}</div>`).join("")
@@ -99,6 +102,8 @@ async function loadProfile() {
 
     document.getElementById("emailVerifiedBadge").innerHTML = profile.is_verified ? badge("Verified", "") : badge("Pending", "gold");
     document.getElementById("accountTypeBadge").innerHTML = badge(profile.member_type, "blue");
+    const resendBtn = document.getElementById("resendVerificationBtn");
+    if (resendBtn) resendBtn.style.display = profile.is_verified ? "none" : "block";
 
     document.getElementById("availabilityText").textContent = profile.availability_note || "No availability set yet.";
 
@@ -164,7 +169,7 @@ function renderEndorsements(endorsements) {
       <div class="endorsement-card-top">
         <div class="market-avatar" style="width:38px;height:38px;">${avatarHtml(e.lecturer_name, e.lecturer_photo)}</div>
         <div>
-          <div class="profile-link" data-user-id="${e.lecturer_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${e.lecturer_title || ""} ${e.lecturer_name}</div>
+          <div class="profile-link" data-user-id="${e.lecturer_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${posterName(e.lecturer_name, e.lecturer_title)}</div>
           <div style="font-size:11px;color:var(--muted);">${new Date(e.created_at).toLocaleDateString()}</div>
         </div>
         <div class="endorsement-badge ${e.endorsement_type.toLowerCase()}" style="margin-left:auto;">
@@ -214,39 +219,395 @@ async function loadMyListings() {
   }
 }
 
-profilePhotoInput?.addEventListener("change", async () => {
+const editProfileModal   = document.getElementById("editProfileModal");
+const editAcademicYearGroup = document.getElementById("editAcademicYearGroup");
+const editSkillsTagsRow  = document.getElementById("editSkillsTagsRow");
+const editSkillInput     = document.getElementById("editSkillInput");
+
+function renderEditSkillsTags() {
+  editSkillsTagsRow.innerHTML = editSkills.length
+    ? editSkills.map((s, i) => `
+        <div class="profile-tag editable">
+          ${s}
+          <button type="button" data-index="${i}" aria-label="Remove ${s}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>`).join("")
+    : `<p style="color:var(--muted);font-size:12px;">No skills added yet.</p>`;
+
+  editSkillsTagsRow.querySelectorAll("button[data-index]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      editSkills.splice(Number(btn.dataset.index), 1);
+      renderEditSkillsTags();
+    });
+  });
+}
+
+document.getElementById("addSkillBtn")?.addEventListener("click", () => {
+  const val = editSkillInput.value.trim();
+  if (!val) return;
+  if (editSkills.length >= 12) { showToast("You can add up to 12 skills.", "error"); return; }
+  if (editSkills.some(s => s.toLowerCase() === val.toLowerCase())) { editSkillInput.value = ""; return; }
+  editSkills.push(val);
+  editSkillInput.value = "";
+  renderEditSkillsTags();
+});
+
+editSkillInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") { e.preventDefault(); document.getElementById("addSkillBtn").click(); }
+});
+
+function openEditProfileModal() {
+  if (!latestProfile) return;
+
+  document.getElementById("editBio").value = latestProfile.bio || "";
+  document.getElementById("editPhoneNumber").value = latestProfile.phone_number || "";
+  document.getElementById("editFaculty").value = latestProfile.faculty || "";
+  document.getElementById("editAcademicYear").value = latestProfile.academic_year || "";
+  document.getElementById("editAvailabilityNote").value = latestProfile.availability_note || "";
+  editSkills = [...(latestProfile.skills || [])];
+  renderEditSkillsTags();
+
+  editAcademicYearGroup.style.display = latestProfile.member_type === "Student" ? "block" : "none";
+
+  editProfileModal.style.display = "block";
+  document.getElementById("overlay").style.display = "block";
+}
+
+function closeEditProfileModal() {
+  editProfileModal.style.display = "none";
+  document.getElementById("overlay").style.display = "none";
+}
+
+document.getElementById("closeEditProfileModal")?.addEventListener("click", closeEditProfileModal);
+document.getElementById("overlay")?.addEventListener("click", closeEditProfileModal);
+
+document.getElementById("saveEditProfileBtn")?.addEventListener("click", async () => {
+  const phoneNumber = document.getElementById("editPhoneNumber").value.trim();
+  if (phoneNumber && !/^(\+27|27|0)[0-9]{9}$/.test(phoneNumber)) {
+    showToast("Please enter a valid South African phone number.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("saveEditProfileBtn");
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
+
+  try {
+    await apiRequest("/users/me", "PATCH", {
+      bio: document.getElementById("editBio").value.trim(),
+      phoneNumber: phoneNumber || undefined,
+      faculty: document.getElementById("editFaculty").value,
+      academicYear: latestProfile.member_type === "Student" ? document.getElementById("editAcademicYear").value : undefined,
+      skills: editSkills,
+      availabilityNote: document.getElementById("editAvailabilityNote").value.trim()
+    });
+    showToast("Profile updated.");
+    closeEditProfileModal();
+    await loadProfile();
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+});
+
+/* Now opens the cropper before uploading, instead of uploading the raw
+   selected file — restores the cropping step that existed before the
+   profile overhaul. */
+profilePhotoInput?.addEventListener("change", () => {
   const file = profilePhotoInput.files?.[0];
-  if (!file) return;
+  if (!file) { profilePhotoInput.value = ""; return; }
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
     showToast("Choose a JPEG, PNG or WebP image smaller than 5 MB.", "error");
     profilePhotoInput.value = "";
     return;
   }
 
-  const editBtn = document.getElementById("changeProfilePhoto");
-  const originalHtml = editBtn ? editBtn.innerHTML : null;
-  if (editBtn) { editBtn.disabled = true; editBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`; }
-  showToast("Uploading photo…", "warning");
+  openImageCropper(file, async (croppedFile) => {
+    const editBtn = document.getElementById("changeProfilePhoto");
+    const originalHtml = editBtn ? editBtn.innerHTML : null;
+    if (editBtn) { editBtn.disabled = true; editBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`; }
+    showToast("Uploading photo…", "warning");
 
-  const formData = new FormData();
-  formData.append("profilePhoto", file);
-  try {
-    const response = await apiMultipartRequest("/users/me/profile-photo", "PATCH", formData);
-    const user = { ...currentUser, ...response.data };
-    localStorage.setItem("taskifyUser", JSON.stringify(user));
-    showToast("Profile photo updated.");
-    await loadProfile();
-    populateAvatar();
-  } catch (error) {
-    showToast(error.message, "error");
-    if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = originalHtml; }
-  } finally {
-    profilePhotoInput.value = "";
-  }
+    const formData = new FormData();
+    formData.append("profilePhoto", croppedFile);
+    try {
+      const response = await apiMultipartRequest("/users/me/profile-photo", "PATCH", formData);
+      const user = { ...currentUser, ...response.data };
+      localStorage.setItem("taskifyUser", JSON.stringify(user));
+      showToast("Profile photo updated.");
+      await loadProfile();
+      populateAvatar();
+    } catch (error) {
+      showToast(error.message, "error");
+      if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = originalHtml; }
+    } finally {
+      profilePhotoInput.value = "";
+    }
+  });
 });
 
 document.addEventListener("click", (event) => {
   if (event.target.closest("#changeProfilePhoto")) profilePhotoInput?.click();
 });
 
+/* ══════════════════════ Security: resend verification ══════════════════════ */
+
+document.getElementById("resendVerificationBtn")?.addEventListener("click", async (event) => {
+  const btn = event.currentTarget;
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Sending…`;
+  try {
+    const res = await apiRequest("/auth/resend-verification", "POST", { email: currentUser.email });
+    showToast(res.message || "Verification email sent.");
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+});
+
+/* ══════════════════════ Security: two-factor authentication ══════════════════════ */
+
+const twoFactorModal      = document.getElementById("twoFactorModal");
+const twoFactorModalBody  = document.getElementById("twoFactorModalBody");
+const twoFactorStatusBadge = document.getElementById("twoFactorStatusBadge");
+
+function openSecurityModal(modal) {
+  modal.style.display = "block";
+  document.getElementById("overlay").style.display = "block";
+}
+
+function closeSecurityModal(modal) {
+  modal.style.display = "none";
+  document.getElementById("overlay").style.display = "none";
+}
+
+function closeTwoFactorModal() { closeSecurityModal(twoFactorModal); }
+function closeChangePasswordModal() { closeSecurityModal(document.getElementById("changePasswordModal")); }
+
+document.getElementById("closeTwoFactorModal")?.addEventListener("click", closeTwoFactorModal);
+document.getElementById("overlay")?.addEventListener("click", closeTwoFactorModal);
+document.getElementById("overlay")?.addEventListener("click", closeChangePasswordModal);
+
+async function refreshTwoFactorStatus() {
+  try {
+    const res = await apiRequest("/auth/2fa/status");
+    const enabled = res.data.enabled;
+    twoFactorStatusBadge.innerHTML = enabled ? badge("Enabled", "") : badge("Disabled", "gold");
+    document.getElementById("manageTwoFactorBtn").innerHTML = enabled
+      ? `<i class="ti ti-shield-lock" aria-hidden="true"></i> Manage / Disable`
+      : `<i class="ti ti-shield-lock" aria-hidden="true"></i> Enable two-factor authentication`;
+    return enabled;
+  } catch (err) {
+    twoFactorStatusBadge.textContent = "—";
+    return false;
+  }
+}
+
+function renderTwoFactorStart() {
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      Add an extra layer of protection to your account. Once enabled, you'll need a code
+      from an authenticator app (Google Authenticator, Authy, 1Password, etc.) every time you log in.
+    </p>
+    <button type="button" class="primary-button" id="startTwoFactorSetupBtn" style="width:100%;">
+      <i class="ti ti-qrcode" aria-hidden="true"></i> Start setup
+    </button>`;
+
+  document.getElementById("startTwoFactorSetupBtn").addEventListener("click", startTwoFactorSetup);
+}
+
+async function startTwoFactorSetup() {
+  twoFactorModalBody.innerHTML = `<p style="font-size:13px;color:var(--muted);"><i class="ti ti-loader" aria-hidden="true"></i> Generating your setup code…</p>`;
+  try {
+    const res = await apiRequest("/auth/2fa/setup", "POST");
+    renderTwoFactorSetupStep(res.data.qrCodeDataUrl, res.data.manualEntryKey);
+  } catch (err) {
+    twoFactorModalBody.innerHTML = errorState(err.message);
+  }
+}
+
+function renderTwoFactorSetupStep(qrCodeDataUrl, manualEntryKey) {
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">1. Scan this QR code with your authenticator app.</p>
+    <div class="qr-code-box"><img src="${qrCodeDataUrl}" alt="Two-factor QR code" /></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">Can't scan it? Enter this key manually:</p>
+    <div class="manual-key-box">${manualEntryKey}</div>
+    <p style="font-size:13px;color:var(--muted);margin:14px 0 6px;">2. Enter the 6-digit code your app shows:</p>
+    <div class="form-group">
+      <input type="text" id="twoFactorEnableCode" inputmode="numeric" maxlength="6" placeholder="123456" />
+    </div>
+    <p id="twoFactorSetupMessage" style="font-size:12px;font-weight:600;color:var(--ump-red);"></p>
+    <button type="button" class="primary-button" id="confirmTwoFactorEnableBtn" style="width:100%;">
+      <i class="ti ti-check" aria-hidden="true"></i> Confirm &amp; enable
+    </button>`;
+
+  document.getElementById("confirmTwoFactorEnableBtn").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    const code = document.getElementById("twoFactorEnableCode").value.trim();
+    const msgEl = document.getElementById("twoFactorSetupMessage");
+
+    if (!/^\d{6}$/.test(code)) {
+      msgEl.textContent = "Enter the 6-digit code from your app.";
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Verifying…`;
+
+    try {
+      const res = await apiRequest("/auth/2fa/enable", "POST", { code });
+      renderTwoFactorBackupCodes(res.data.backupCodes);
+      await refreshTwoFactorStatus();
+    } catch (err) {
+      msgEl.textContent = err.message;
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+}
+
+function renderTwoFactorBackupCodes(codes) {
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;font-weight:700;color:var(--ump-green);margin-bottom:8px;">
+      <i class="ti ti-circle-check" aria-hidden="true"></i> Two-factor authentication is enabled.
+    </p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+      Save these one-time backup codes somewhere safe. Each works once if you lose access to your authenticator app —
+      they will not be shown again.
+    </p>
+    <div class="backup-codes-grid">
+      ${codes.map(c => `<div class="backup-code-chip">${c}</div>`).join("")}
+    </div>
+    <button type="button" class="secondary-button" id="copyBackupCodesBtn" style="width:100%;margin-top:12px;">
+      <i class="ti ti-copy" aria-hidden="true"></i> Copy codes
+    </button>`;
+
+  document.getElementById("copyBackupCodesBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(codes.join("\n"));
+      showToast("Backup codes copied.");
+    } catch {
+      showToast("Couldn't copy automatically — please copy them manually.", "warning");
+    }
+  });
+}
+
+function renderTwoFactorManage() {
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      Two-factor authentication is currently enabled. To disable it, confirm your password and a current code.
+    </p>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="twoFactorDisablePassword" autocomplete="current-password" />
+    </div>
+    <div class="form-group">
+      <label>6-digit code or backup code</label>
+      <input type="text" id="twoFactorDisableCode" placeholder="123456 or XXXXX-XXXXX" />
+    </div>
+    <p id="twoFactorDisableMessage" style="font-size:12px;font-weight:600;color:var(--ump-red);"></p>
+    <button type="button" class="secondary-button" id="confirmTwoFactorDisableBtn" style="width:100%;">
+      <i class="ti ti-shield-x" aria-hidden="true"></i> Disable two-factor authentication
+    </button>`;
+
+  document.getElementById("confirmTwoFactorDisableBtn").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    const password = document.getElementById("twoFactorDisablePassword").value;
+    const code = document.getElementById("twoFactorDisableCode").value.trim();
+    const msgEl = document.getElementById("twoFactorDisableMessage");
+
+    if (!password || !code) {
+      msgEl.textContent = "Both fields are required.";
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Disabling…`;
+
+    try {
+      await apiRequest("/auth/2fa/disable", "POST", { password, code });
+      showToast("Two-factor authentication disabled.");
+      await refreshTwoFactorStatus();
+      closeTwoFactorModal();
+    } catch (err) {
+      msgEl.textContent = err.message;
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+}
+
+document.getElementById("manageTwoFactorBtn")?.addEventListener("click", async () => {
+  openSecurityModal(twoFactorModal);
+  twoFactorModalBody.innerHTML = `<p style="font-size:13px;color:var(--muted);"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>`;
+  const enabled = await refreshTwoFactorStatus();
+  if (enabled) renderTwoFactorManage();
+  else renderTwoFactorStart();
+});
+
+/* ══════════════════════ Security: change password ══════════════════════ */
+
+const changePasswordModal = document.getElementById("changePasswordModal");
+
+document.getElementById("openChangePasswordBtn")?.addEventListener("click", () => {
+  document.getElementById("currentPasswordInput").value = "";
+  document.getElementById("newPasswordInput").value = "";
+  document.getElementById("confirmNewPasswordInput").value = "";
+  document.getElementById("changePasswordMessage").textContent = "";
+  openSecurityModal(changePasswordModal);
+});
+
+document.getElementById("closeChangePasswordModal")?.addEventListener("click", closeChangePasswordModal);
+
+document.getElementById("submitChangePasswordBtn")?.addEventListener("click", async (event) => {
+  const btn = event.currentTarget;
+  const currentPassword = document.getElementById("currentPasswordInput").value;
+  const newPassword     = document.getElementById("newPasswordInput").value;
+  const confirmPassword = document.getElementById("confirmNewPasswordInput").value;
+  const msgEl = document.getElementById("changePasswordMessage");
+  msgEl.style.color = "var(--ump-red)";
+
+  if (!currentPassword || !newPassword) {
+    msgEl.textContent = "Both fields are required.";
+    return;
+  }
+  if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    msgEl.textContent = "New password must be at least 8 characters and include a letter and a number.";
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    msgEl.textContent = "New passwords do not match.";
+    return;
+  }
+
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Changing…`;
+
+  try {
+    const res = await apiRequest("/users/me/password", "PATCH", { currentPassword, newPassword });
+    msgEl.style.color = "var(--ump-green)";
+    msgEl.textContent = res.message || "Password changed.";
+    /* Server bumped token_version, so THIS token is now invalid too —
+       send them to log back in rather than leaving a dead session active. */
+    setTimeout(() => {
+      localStorage.removeItem("taskifyToken");
+      localStorage.removeItem("taskifyUser");
+      window.location.href = "./login.html";
+    }, 1800);
+  } catch (err) {
+    msgEl.textContent = err.message;
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+});
+
 loadProfile();
+refreshTwoFactorStatus();

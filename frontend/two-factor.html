@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Two-Factor Verification</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-container" style="max-width:460px;grid-template-columns:1fr;">
+    <div class="auth-right">
+      <div class="logo-row" style="margin-bottom:26px;">
+        <img src="./assets/logo/ump logoT.png" alt="UMP Logo" class="ump-logo" />
+        <div class="logo-text" style="font-size:24px;">Taskify</div>
+      </div>
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:4px;">
+        <i class="ti ti-shield-lock" aria-hidden="true"></i> Two-factor verification
+      </h1>
+      <p class="auth-subtitle" id="twoFactorSubtitle">Enter the 6-digit code from your authenticator app.</p>
+      <form id="twoFactorForm">
+        <div class="form-group">
+          <label for="code" id="codeLabel"><i class="ti ti-key" aria-hidden="true"></i> Authentication code</label>
+          <input type="text" id="code" inputmode="numeric" placeholder="123456" maxlength="6" autocomplete="one-time-code" required autofocus />
+        </div>
+        <button type="submit" class="primary-button" id="verifyButton">
+          <i class="ti ti-check" aria-hidden="true"></i> Verify &amp; sign in
+        </button>
+      </form>
+      <p style="margin-top:14px;text-align:center;font-size:12px;">
+        <a href="#" id="toggleBackupCode">Use a backup code instead</a>
+      </p>
+      <div class="auth-footer">
+        <a href="./login.html">Back to login</a>
+      </div>
+      <p id="twoFactorMessage" style="margin-top:14px;text-align:center;font-weight:600;font-size:13px;"></p>
+    </div>
+  </div>
+</div>
+<script src="./js/api.js"></script>
+<script src="./js/two-factor.js"></script>
+</body>
+</html>

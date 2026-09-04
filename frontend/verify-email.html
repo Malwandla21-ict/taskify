@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Verify Email</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-container" style="max-width:460px;grid-template-columns:1fr;">
+    <div class="auth-right" style="text-align:center;">
+      <div class="logo-row" style="margin-bottom:26px;justify-content:center;">
+        <img src="./assets/logo/ump logoT.png" alt="UMP Logo" class="ump-logo" />
+        <div class="logo-text" style="font-size:24px;">Taskify</div>
+      </div>
+      <div id="statusIcon" style="font-size:42px;color:var(--ump-green);margin-bottom:10px;">
+        <i class="ti ti-loader" aria-hidden="true"></i>
+      </div>
+      <h1 id="statusTitle" style="font-size:22px;font-weight:800;margin-bottom:8px;">Verifying your email…</h1>
+      <p id="statusMessage" class="auth-subtitle">Please wait a moment.</p>
+      <div class="auth-footer">
+        <a href="./login.html">Back to login</a>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="./js/api.js"></script>
+<script>
+  const statusIcon    = document.getElementById("statusIcon");
+  const statusTitle   = document.getElementById("statusTitle");
+  const statusMessage = document.getElementById("statusMessage");
+
+  const params = new URLSearchParams(window.location.search);
+  const token  = params.get("token");
+
+  async function run() {
+    if (!token) {
+      statusIcon.innerHTML = `<i class="ti ti-alert-circle" aria-hidden="true"></i>`;
+      statusIcon.style.color = "#e5484d";
+      statusTitle.textContent = "Missing verification token";
+      statusMessage.textContent = "This link looks incomplete. Please use the link from your email exactly as sent.";
+      return;
+    }
+
+    try {
+      const response = await apiRequest(`/auth/verify-email?token=${encodeURIComponent(token)}`, "GET");
+
+      localStorage.setItem("taskifyToken", response.data.token);
+      localStorage.setItem("taskifyUser", JSON.stringify(response.data.user));
+
+      statusIcon.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i>`;
+      statusTitle.textContent = "Email verified!";
+      statusMessage.textContent = "You're now logged in. Redirecting to your profile…";
+      setTimeout(() => { window.location.href = "./profile.html"; }, 1500);
+    } catch (error) {
+      statusIcon.innerHTML = `<i class="ti ti-alert-circle" aria-hidden="true"></i>`;
+      statusIcon.style.color = "#e5484d";
+      statusTitle.textContent = "Verification failed";
+      statusMessage.textContent = error.message || "This link is invalid or has expired.";
+    }
+  }
+
+  run();
+</script>
+</body>
+</html>

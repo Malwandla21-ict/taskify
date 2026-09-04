@@ -5,29 +5,120 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — Notifications</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
 <div class="dashboard-container">
-  <div class="hero-section-simple">
-    <div class="hero-badge"><i class="ti ti-bell" aria-hidden="true"></i> Notifications</div>
-    <h1>Your Taskify updates</h1>
-    <p>Track task, rental, sales and review activity in one place.</p>
+
+  <div class="section-header" style="margin-bottom:18px;">
+    <div>
+      <h2><i class="ti ti-bell" aria-hidden="true"></i> Notifications</h2>
+      <p>Your Taskify updates</p>
+    </div>
   </div>
-  <section class="section">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-bell" aria-hidden="true"></i> Recent Notifications</h2>
-        <p>Unread notifications appear first</p>
+
+  <div class="notif-toolbar-row">
+    <div class="filters-row" id="notifTabsRow">
+      <button class="filter-pill active" data-filter="all"><i class="ti ti-layout-grid" aria-hidden="true"></i> All <span class="pill-count" id="countAll">0</span></button>
+      <button class="filter-pill" data-filter="unread"><i class="ti ti-circle-filled" aria-hidden="true"></i> Unread <span class="pill-count" id="countUnread">0</span></button>
+      <button class="filter-pill" data-filter="tasks"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Tasks</button>
+      <button class="filter-pill" data-filter="rentals"><i class="ti ti-package" aria-hidden="true"></i> Rentals</button>
+      <button class="filter-pill" data-filter="sales"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Sales</button>
+      <button class="filter-pill" data-filter="reviews"><i class="ti ti-star" aria-hidden="true"></i> Reviews</button>
+      <button class="filter-pill" data-filter="system"><i class="ti ti-shield-check" aria-hidden="true"></i> System</button>
+    </div>
+    <button type="button" class="notif-mark-all-btn" id="markAllReadButton">
+      <i class="ti ti-checks" aria-hidden="true"></i> Mark all as read
+    </button>
+    <button type="button" class="topbar-icon-btn" id="openPrefsButton" aria-label="Notification preferences">
+      <i class="ti ti-settings" aria-hidden="true"></i>
+    </button>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
+      <div id="notificationsListContainer">
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div>
+          <h3>Loading notifications…</h3>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:8px;">
+        <button type="button" class="secondary-button" id="loadOlderButton" style="width:auto;padding:10px 22px;display:none;">
+          Load older notifications <i class="ti ti-chevron-down" aria-hidden="true"></i>
+        </button>
       </div>
     </div>
-    <div id="notificationsContainer" style="display:flex;flex-direction:column;gap:10px;">
-      <div class="empty-state">
-        <div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div>
-        <h3>Loading notifications…</h3>
+
+    <aside class="dashboard-rail">
+      <div class="rail-card" id="notifPrefsCard">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-adjustments" aria-hidden="true"></i> Notification Preferences</h3>
+        </div>
+        <p class="rail-card-sub">Choose which updates pop up an alert while you're using Taskify.</p>
+
+        <div class="pref-row">
+          <div class="pref-icon" style="background:rgba(0,155,114,0.10);color:var(--ump-green);"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+          <div class="pref-text"><strong>Task updates</strong><span>New tasks, updates, acceptances</span></div>
+          <label class="toggle-switch"><input type="checkbox" id="prefTasks" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="pref-row">
+          <div class="pref-icon" style="background:rgba(0,114,206,0.10);color:var(--ump-blue);"><i class="ti ti-package" aria-hidden="true"></i></div>
+          <div class="pref-text"><strong>Rental updates</strong><span>Bookings, returns, availability</span></div>
+          <label class="toggle-switch"><input type="checkbox" id="prefRentals" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="pref-row">
+          <div class="pref-icon" style="background:rgba(224,58,62,0.10);color:var(--ump-red);"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>
+          <div class="pref-text"><strong>Sales updates</strong><span>New sales, messages, offers</span></div>
+          <label class="toggle-switch"><input type="checkbox" id="prefSales" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="pref-row">
+          <div class="pref-icon" style="background:rgba(108,61,255,0.10);color:#6c3dff;"><i class="ti ti-message-circle" aria-hidden="true"></i></div>
+          <div class="pref-text"><strong>Messages</strong><span>New messages and chats</span></div>
+          <label class="toggle-switch"><input type="checkbox" id="prefMessages" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="pref-row">
+          <div class="pref-icon" style="background:rgba(245,180,0,0.14);color:#b38900;"><i class="ti ti-star" aria-hidden="true"></i></div>
+          <div class="pref-text"><strong>Reviews</strong><span>New reviews and ratings</span></div>
+          <label class="toggle-switch"><input type="checkbox" id="prefReviews" /><span class="toggle-slider"></span></label>
+        </div>
+        <div class="pref-row">
+          <div class="pref-icon" style="background:rgba(12,29,74,0.08);color:var(--ump-navy);"><i class="ti ti-shield-check" aria-hidden="true"></i></div>
+          <div class="pref-text"><strong>System updates</strong><span>Important announcements</span></div>
+          <label class="toggle-switch"><input type="checkbox" id="prefSystem" /><span class="toggle-slider"></span></label>
+        </div>
+
+        <p class="pref-note"><i class="ti ti-device-floppy" aria-hidden="true"></i> Saved automatically on this device — these control pop-up alerts only, not what's stored on your account.</p>
       </div>
-    </div>
-  </section>
+
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-chart-bar" aria-hidden="true"></i> Notification Summary</h3>
+        </div>
+        <p class="rail-card-sub">Your activity at a glance</p>
+        <div class="mini-stat-grid">
+          <div class="profile-stat-item">
+            <div class="icon" style="background:rgba(0,155,114,0.10);color:var(--ump-green);"><i class="ti ti-bell" aria-hidden="true"></i></div>
+            <div><div class="value" id="summaryTotal">—</div><div class="label">Total</div></div>
+          </div>
+          <div class="profile-stat-item">
+            <div class="icon" style="background:rgba(0,114,206,0.10);color:var(--ump-blue);"><i class="ti ti-mail" aria-hidden="true"></i></div>
+            <div><div class="value" id="summaryUnread">—</div><div class="label">Unread</div></div>
+          </div>
+          <div class="profile-stat-item">
+            <div class="icon" style="background:rgba(108,61,255,0.10);color:#6c3dff;"><i class="ti ti-message-circle" aria-hidden="true"></i></div>
+            <div><div class="value" id="summaryMessages">—</div><div class="label">Messages</div></div>
+          </div>
+          <div class="profile-stat-item">
+            <div class="icon" style="background:rgba(245,180,0,0.14);color:#b38900;"><i class="ti ti-star" aria-hidden="true"></i></div>
+            <div><div class="value" id="summaryReviews">—</div><div class="label">Reviews</div></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
 </div>
 <div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>

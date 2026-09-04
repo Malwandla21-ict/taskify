@@ -5,64 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Taskify — General Marketplace</title>
   <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body" data-section="General">
 <div id="navbarContainer"></div>
 <div class="dashboard-container">
-  <div class="hero-section-simple">
-    <div class="hero-badge"><i class="ti ti-building-store" aria-hidden="true"></i> General Marketplace</div>
-    <h1>Campus services, rentals &amp; items</h1>
-    <p>Browse general campus tasks, rental items and student sales that are not strictly academic.</p>
-    <div class="hero-search">
-      <input type="text" id="generalSearch" placeholder="Search delivery, electronics, services..." />
-      <button type="button" id="generalSearchButton">
-        <i class="ti ti-search" aria-hidden="true"></i> Search
-      </button>
-    </div>
-    <div class="hero-tags">
-      <a href="./tasks.html"     class="hero-tag"><i class="ti ti-plus" aria-hidden="true"></i> Post General Task</a>
-      <a href="./equipment.html" class="hero-tag"><i class="ti ti-package" aria-hidden="true"></i> List Rental</a>
-      <a href="./sales.html"     class="hero-tag"><i class="ti ti-tag" aria-hidden="true"></i> Sell Item</a>
-    </div>
-  </div>
-  <section class="section">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-layout-grid" aria-hidden="true"></i> Popular Categories</h2>
-        <p>Quick access to common marketplace needs</p>
+
+  <section class="hero-section-v2">
+    <div class="hero-v2-text">
+      <h1>Everyday campus help &amp; essentials</h1>
+      <p>Errands, cleaning, moving, deliveries, repairs and everyday items — find help or list what you have to offer.</p>
+      <div class="hero-v2-actions">
+        <a href="./tasks.html" class="hero-btn-primary"><i class="ti ti-plus" aria-hidden="true"></i> Post General Task</a>
+        <a href="./sales.html" class="hero-btn-outline"><i class="ti ti-tag" aria-hidden="true"></i> Sell Item</a>
       </div>
     </div>
-    <div class="categories-grid">
-      <div class="category-card"><div class="category-icon blue"><i class="ti ti-device-mobile" aria-hidden="true"></i></div><h3>Electronics</h3><p>Phones, chargers, gadgets</p></div>
-      <div class="category-card"><div class="category-icon green"><i class="ti ti-bike" aria-hidden="true"></i></div><h3>Delivery</h3><p>Campus errands</p></div>
-      <div class="category-card"><div class="category-icon navy"><i class="ti ti-printer" aria-hidden="true"></i></div><h3>Printing</h3><p>Print and copy help</p></div>
-      <div class="category-card"><div class="category-icon gold"><i class="ti ti-bed" aria-hidden="true"></i></div><h3>Room Essentials</h3><p>Student living items</p></div>
-      <div class="category-card"><div class="category-icon red"><i class="ti ti-camera" aria-hidden="true"></i></div><h3>Camera Rentals</h3><p>Photos and events</p></div>
-      <div class="category-card"><div class="category-icon default"><i class="ti ti-handshake" aria-hidden="true"></i></div><h3>General Services</h3><p>Student-to-student help</p></div>
+    <div class="hero-v2-media">
+      <div class="media-placeholder"><img src="./assets/images/IMG_0632.jpg" alt="UMP Campus" /></div>
     </div>
   </section>
-  <section class="section" style="padding-top:0;">
+
+  <section class="section-block">
     <div class="section-header">
-      <div><h2><i class="ti ti-clipboard-list" aria-hidden="true"></i> General Tasks</h2><p>Campus services requested by students</p></div>
-      <a href="./tasks.html" class="view-all-link">View all <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+      <div>
+        <h2><i class="ti ti-layout-grid" aria-hidden="true"></i> General Categories</h2>
+        <p>Tap a category to filter everything below</p>
+      </div>
     </div>
-    <div id="generalTasksContainer" class="marketplace-grid"><div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading tasks…</h3></div></div>
+    <div class="categories-grid" id="categoryShortcuts">
+      <div class="category-card" data-category="Errands">
+        <div class="category-icon blue"><i class="ti ti-walk" aria-hidden="true"></i></div>
+        <h3>Errands</h3><p>Quick campus runs</p>
+      </div>
+      <div class="category-card" data-category="Cleaning">
+        <div class="category-icon gold"><i class="ti ti-spray" aria-hidden="true"></i></div>
+        <h3>Cleaning</h3><p>Room &amp; laundry help</p>
+      </div>
+      <div class="category-card" data-category="Transport">
+        <div class="category-icon green"><i class="ti ti-car" aria-hidden="true"></i></div>
+        <h3>Transport</h3><p>Rides &amp; deliveries</p>
+      </div>
+      <div class="category-card" data-category="Moving">
+        <div class="category-icon navy"><i class="ti ti-truck" aria-hidden="true"></i></div>
+        <h3>Moving</h3><p>Res-to-res moves</p>
+      </div>
+      <div class="category-card" data-category="Repairs">
+        <div class="category-icon red"><i class="ti ti-tool" aria-hidden="true"></i></div>
+        <h3>Repairs</h3><p>Fix-it help</p>
+      </div>
+      <div class="category-card" data-category="Electronics">
+        <div class="category-icon default"><i class="ti ti-device-laptop" aria-hidden="true"></i></div>
+        <h3>Electronics</h3><p>Gadgets &amp; gear</p>
+      </div>
+    </div>
   </section>
-  <section class="section" style="padding-top:0;">
+
+  <div class="tasks-toolbar" style="margin: 4px 0 24px;">
+    <div class="toolbar-search-box">
+      <i class="ti ti-search" aria-hidden="true"></i>
+      <input type="text" id="sectionSearchInput" placeholder="Search errands, transport, items..." />
+    </div>
+  </div>
+
+  <div class="filters-row">
+    <button class="filter-pill active" data-type="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
+    <button class="filter-pill" data-type="Tasks"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Tasks</button>
+    <button class="filter-pill" data-type="Rentals"><i class="ti ti-package" aria-hidden="true"></i> Rentals</button>
+    <button class="filter-pill" data-type="Sales"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Sales</button>
+  </div>
+
+  <section class="section-block" id="sectionTasksBlock">
     <div class="section-header">
-      <div><h2><i class="ti ti-package" aria-hidden="true"></i> General Rentals</h2><p>Equipment and items available for rent</p></div>
+      <div>
+        <h2><i class="ti ti-clipboard-list" aria-hidden="true"></i> General Tasks</h2>
+        <p>Everyday help requested by students</p>
+      </div>
+      <a href="./tasks.html" class="view-all-link">View all tasks <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+    </div>
+    <div id="sectionTasksContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading tasks…</h3></div>
+    </div>
+  </section>
+
+  <section class="section-block" id="sectionEquipmentBlock">
+    <div class="section-header">
+      <div>
+        <h2><i class="ti ti-package" aria-hidden="true"></i> General Rentals</h2>
+        <p>Everyday equipment available to rent</p>
+      </div>
       <a href="./equipment.html" class="view-all-link">View rentals <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
     </div>
-    <div id="generalEquipmentContainer" class="marketplace-grid"><div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div></div>
+    <div id="sectionEquipmentContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div>
+    </div>
   </section>
-  <section class="section" style="padding-top:0;">
+
+  <section class="section-block" id="sectionSalesBlock">
     <div class="section-header">
-      <div><h2><i class="ti ti-shopping-bag" aria-hidden="true"></i> Items for Sale</h2><p>Browse items sold by students</p></div>
+      <div>
+        <h2><i class="ti ti-shopping-bag" aria-hidden="true"></i> General Items for Sale</h2>
+        <p>Everyday items students are selling</p>
+      </div>
       <a href="./sales.html" class="view-all-link">View sales <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
     </div>
-    <div id="generalSalesContainer" class="marketplace-grid"><div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading items…</h3></div></div>
+    <div id="sectionSalesContainer" class="marketplace-grid">
+      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
+    </div>
   </section>
+
 </div>
+<div id="overlay"></div>
 <div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>

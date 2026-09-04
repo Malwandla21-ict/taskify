@@ -1,12 +1,16 @@
 const express = require("express");
 const { body, param, query } = require("express-validator");
 const adminController = require("../controllers/admin.controller");
-const { authenticate, authorize } = require("../middleware/auth.middleware");
+const { authenticate, authorize, requireTwoFactor } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
-/* Every route below requires a logged-in admin. */
-router.use(authenticate, authorize("admin"));
+/* Every route below requires a logged-in admin with two-factor authentication
+   enabled — admin actions (ban, suspend, refund, promote) are the highest-value
+   target in the app, so a stolen password alone must not be enough to use them.
+   An admin without 2FA yet can still log in and enable it from their profile;
+   see requireTwoFactor in auth.middleware.js. */
+router.use(authenticate, authorize("admin"), requireTwoFactor);
 
 router.get("/stats", adminController.getDashboardStats);
 

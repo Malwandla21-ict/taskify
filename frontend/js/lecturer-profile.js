@@ -9,8 +9,9 @@ const profilePhotoInput = document.getElementById("profilePhotoInput");
 
 let latestProfile = null;
 let selectedStudent = null;
+let editSkills = [];
+let editServices = [];
 
-/* ── Tabs ── */
 document.querySelectorAll(".profile-tab, [data-goto-tab]").forEach(el => {
   const key = el.dataset.tab || el.dataset.gotoTab;
   if (!key) return;
@@ -59,6 +60,9 @@ async function loadProfile() {
 
     profileMainCard.innerHTML = `
       <div class="profile-header-card">
+        <button type="button" class="edit-profile-header-btn" id="openEditProfileBtn">
+          <i class="ti ti-pencil" aria-hidden="true"></i> Edit Profile
+        </button>
         <div class="profile-avatar-large-wrap">
           <div class="profile-avatar-large" style="overflow:hidden;">
             ${avatarHtml(profile.full_name, profile.profilePhoto)}
@@ -69,7 +73,7 @@ async function loadProfile() {
           </button>
         </div>
         <div class="profile-header-info">
-          <h2>${profile.lecturer_title ? profile.lecturer_title + " " : ""}${profile.full_name} <span class="lecturer-title-badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified Lecturer</span></h2>
+          <h2>${posterName(profile.full_name, profile.lecturer_title)} <span class="lecturer-title-badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified Lecturer</span></h2>
           <p><i class="ti ti-mail" aria-hidden="true"></i> ${profile.email}${profile.office_location ? ` &nbsp;·&nbsp; <i class="ti ti-map-pin" aria-hidden="true"></i> ${profile.office_location}` : ""}</p>
           <p style="margin-top:2px;"><i class="ti ti-building" aria-hidden="true"></i> ${profile.faculty || "Faculty not set"}${profile.years_experience ? ` &nbsp;·&nbsp; ${profile.years_experience}+ years experience` : ""}</p>
         </div>
@@ -81,6 +85,8 @@ async function loadProfile() {
         <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-message-star" aria-hidden="true"></i></div><div class="pstat-value">${profile.total_reviews}</div><div class="pstat-label">Reviews</div></div>
       </div>
     `;
+
+    document.getElementById("openEditProfileBtn")?.addEventListener("click", openEditProfileModal);
 
     document.getElementById("aboutMeText").textContent = profile.bio || "No bio added yet. Click Edit Profile to introduce yourself.";
     document.getElementById("expertiseTagsRow").innerHTML = profile.skills.length
@@ -177,7 +183,6 @@ function attachRevokeEvents() {
   });
 }
 
-/* ── Give Endorsement modal ── */
 const giveEndorsementModal    = document.getElementById("giveEndorsementModal");
 const studentSearchInput      = document.getElementById("studentSearchInput");
 const studentSearchResults    = document.getElementById("studentSearchResults");
@@ -208,7 +213,6 @@ function closeGiveEndorsementModal() {
 document.getElementById("openGiveEndorsementBtn")?.addEventListener("click", openGiveEndorsementModal);
 document.getElementById("quickGiveEndorsementBtn")?.addEventListener("click", openGiveEndorsementModal);
 document.getElementById("closeGiveEndorsementModal")?.addEventListener("click", closeGiveEndorsementModal);
-document.getElementById("overlay")?.addEventListener("click", closeGiveEndorsementModal);
 
 let searchDebounce = null;
 studentSearchInput?.addEventListener("input", () => {
@@ -258,11 +262,14 @@ async function selectStudent(student) {
 
   try {
     const res = await apiRequest(`/lecturer/students/${student.id}/listings`);
-    const { sales, equipment } = res.data;
-    if (sales.length || equipment.length) {
+    const { sales, equipment, tasks, events } = res.data;
+    const hasAny = sales.length || equipment.length || (tasks?.length) || (events?.length);
+    if (hasAny) {
       contextListingSelect.innerHTML = `<option value="">No specific listing</option>` +
+        (tasks?.length ? `<optgroup label="Tasks">${tasks.map(t => `<option value="task:${t.id}">${t.title} (${t.status})</option>`).join("")}</optgroup>` : "") +
         (sales.length ? `<optgroup label="Sales Items">${sales.map(s => `<option value="sales_item:${s.id}">${s.title} (${s.status})</option>`).join("")}</optgroup>` : "") +
-        (equipment.length ? `<optgroup label="Equipment">${equipment.map(e => `<option value="equipment:${e.id}">${e.name}</option>`).join("")}</optgroup>` : "");
+        (equipment.length ? `<optgroup label="Equipment">${equipment.map(e => `<option value="equipment:${e.id}">${e.name}</option>`).join("")}</optgroup>` : "") +
+        (events?.length ? `<optgroup label="Events">${events.map(ev => `<option value="event:${ev.id}">${ev.title} (${ev.status})</option>`).join("")}</optgroup>` : "");
       contextListingGroup.style.display = "block";
     } else {
       contextListingGroup.style.display = "none";
@@ -308,36 +315,172 @@ document.getElementById("submitEndorsementBtn")?.addEventListener("click", async
   }
 });
 
-/* ── Profile photo ── */
-profilePhotoInput?.addEventListener("change", async () => {
+const editProfileModal   = document.getElementById("editProfileModal");
+const editSkillsTagsRow  = document.getElementById("editSkillsTagsRow");
+const editServicesTagsRow = document.getElementById("editServicesTagsRow");
+const editSkillInput     = document.getElementById("editSkillInput");
+const editServiceInput   = document.getElementById("editServiceInput");
+
+function renderEditSkillsTags() {
+  editSkillsTagsRow.innerHTML = editSkills.length
+    ? editSkills.map((s, i) => `
+        <div class="profile-tag editable">
+          ${s}
+          <button type="button" data-index="${i}" aria-label="Remove ${s}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>`).join("")
+    : `<p style="color:var(--muted);font-size:12px;">No expertise tags added yet.</p>`;
+
+  editSkillsTagsRow.querySelectorAll("button[data-index]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      editSkills.splice(Number(btn.dataset.index), 1);
+      renderEditSkillsTags();
+    });
+  });
+}
+
+function renderEditServicesTags() {
+  editServicesTagsRow.innerHTML = editServices.length
+    ? editServices.map((s, i) => `
+        <div class="profile-tag editable" style="background:rgba(0,155,114,0.10);color:var(--ump-green);">
+          ${s}
+          <button type="button" data-index="${i}" aria-label="Remove ${s}"><i class="ti ti-x" aria-hidden="true"></i></button>
+        </div>`).join("")
+    : `<p style="color:var(--muted);font-size:12px;">No services listed yet.</p>`;
+
+  editServicesTagsRow.querySelectorAll("button[data-index]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      editServices.splice(Number(btn.dataset.index), 1);
+      renderEditServicesTags();
+    });
+  });
+}
+
+document.getElementById("addSkillBtn")?.addEventListener("click", () => {
+  const val = editSkillInput.value.trim();
+  if (!val) return;
+  if (editSkills.length >= 12) { showToast("You can add up to 12 expertise tags.", "error"); return; }
+  if (editSkills.some(s => s.toLowerCase() === val.toLowerCase())) { editSkillInput.value = ""; return; }
+  editSkills.push(val);
+  editSkillInput.value = "";
+  renderEditSkillsTags();
+});
+
+document.getElementById("addServiceBtn")?.addEventListener("click", () => {
+  const val = editServiceInput.value.trim();
+  if (!val) return;
+  if (editServices.length >= 12) { showToast("You can add up to 12 services.", "error"); return; }
+  if (editServices.some(s => s.toLowerCase() === val.toLowerCase())) { editServiceInput.value = ""; return; }
+  editServices.push(val);
+  editServiceInput.value = "";
+  renderEditServicesTags();
+});
+
+editSkillInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("addSkillBtn").click(); } });
+editServiceInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("addServiceBtn").click(); } });
+
+function openEditProfileModal() {
+  if (!latestProfile) return;
+
+  document.getElementById("editBio").value = latestProfile.bio || "";
+  document.getElementById("editLecturerTitle").value = latestProfile.lecturer_title || "";
+  document.getElementById("editYearsExperience").value = latestProfile.years_experience ?? "";
+  document.getElementById("editPhoneNumber").value = latestProfile.phone_number || "";
+  document.getElementById("editFaculty").value = latestProfile.faculty || "";
+  document.getElementById("editOfficeLocation").value = latestProfile.office_location || "";
+  document.getElementById("editConsultationMode").value = latestProfile.consultation_mode || "";
+  document.getElementById("editAvailabilityNote").value = latestProfile.availability_note || "";
+  editSkills = [...(latestProfile.skills || [])];
+  editServices = [...(latestProfile.services || [])];
+  renderEditSkillsTags();
+  renderEditServicesTags();
+
+  editProfileModal.style.display = "block";
+  document.getElementById("overlay").style.display = "block";
+}
+
+function closeEditProfileModal() {
+  editProfileModal.style.display = "none";
+  document.getElementById("overlay").style.display = "none";
+}
+
+document.getElementById("quickEditProfileBtn")?.addEventListener("click", openEditProfileModal);
+document.getElementById("closeEditProfileModal")?.addEventListener("click", closeEditProfileModal);
+
+document.getElementById("overlay")?.addEventListener("click", () => {
+  closeGiveEndorsementModal();
+  closeEditProfileModal();
+});
+
+document.getElementById("saveEditProfileBtn")?.addEventListener("click", async () => {
+  const phoneNumber = document.getElementById("editPhoneNumber").value.trim();
+  if (phoneNumber && !/^(\+27|27|0)[0-9]{9}$/.test(phoneNumber)) {
+    showToast("Please enter a valid South African phone number.", "error");
+    return;
+  }
+
+  const btn = document.getElementById("saveEditProfileBtn");
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
+
+  const yearsValue = document.getElementById("editYearsExperience").value.trim();
+
+  try {
+    await apiRequest("/users/me", "PATCH", {
+      bio: document.getElementById("editBio").value.trim(),
+      phoneNumber: phoneNumber || undefined,
+      faculty: document.getElementById("editFaculty").value,
+      lecturerTitle: document.getElementById("editLecturerTitle").value || undefined,
+      yearsExperience: yearsValue ? Number(yearsValue) : null,
+      officeLocation: document.getElementById("editOfficeLocation").value.trim(),
+      consultationMode: document.getElementById("editConsultationMode").value.trim(),
+      skills: editSkills,
+      services: editServices,
+      availabilityNote: document.getElementById("editAvailabilityNote").value.trim()
+    });
+    showToast("Profile updated.");
+    closeEditProfileModal();
+    await loadProfile();
+  } catch (err) {
+    showToast(err.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+});
+
+/* Opens the cropper before uploading, restoring the pre-overhaul flow. */
+profilePhotoInput?.addEventListener("change", () => {
   const file = profilePhotoInput.files?.[0];
-  if (!file) return;
+  if (!file) { profilePhotoInput.value = ""; return; }
   if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
     showToast("Choose a JPEG, PNG or WebP image smaller than 5 MB.", "error");
     profilePhotoInput.value = "";
     return;
   }
 
-  const editBtn = document.getElementById("changeProfilePhoto");
-  const originalHtml = editBtn ? editBtn.innerHTML : null;
-  if (editBtn) { editBtn.disabled = true; editBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`; }
-  showToast("Uploading photo…", "warning");
+  openImageCropper(file, async (croppedFile) => {
+    const editBtn = document.getElementById("changeProfilePhoto");
+    const originalHtml = editBtn ? editBtn.innerHTML : null;
+    if (editBtn) { editBtn.disabled = true; editBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`; }
+    showToast("Uploading photo…", "warning");
 
-  const formData = new FormData();
-  formData.append("profilePhoto", file);
-  try {
-    const response = await apiMultipartRequest("/users/me/profile-photo", "PATCH", formData);
-    const user = { ...currentUser, ...response.data };
-    localStorage.setItem("taskifyUser", JSON.stringify(user));
-    showToast("Profile photo updated.");
-    await loadProfile();
-    populateAvatar();
-  } catch (error) {
-    showToast(error.message, "error");
-    if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = originalHtml; }
-  } finally {
-    profilePhotoInput.value = "";
-  }
+    const formData = new FormData();
+    formData.append("profilePhoto", croppedFile);
+    try {
+      const response = await apiMultipartRequest("/users/me/profile-photo", "PATCH", formData);
+      const user = { ...currentUser, ...response.data };
+      localStorage.setItem("taskifyUser", JSON.stringify(user));
+      showToast("Profile photo updated.");
+      await loadProfile();
+      populateAvatar();
+    } catch (error) {
+      showToast(error.message, "error");
+      if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = originalHtml; }
+    } finally {
+      profilePhotoInput.value = "";
+    }
+  });
 });
 
 document.addEventListener("click", (event) => {

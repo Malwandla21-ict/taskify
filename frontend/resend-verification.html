@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Resend Verification Email</title>
+  <link rel="stylesheet" href="./css/main.css" />
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-container" style="max-width:460px;grid-template-columns:1fr;">
+    <div class="auth-right">
+      <div class="logo-row" style="margin-bottom:26px;">
+        <img src="./assets/logo/ump logoT.png" alt="UMP Logo" class="ump-logo" />
+        <div class="logo-text" style="font-size:24px;">Taskify</div>
+      </div>
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:4px;">Resend verification email</h1>
+      <p class="auth-subtitle">Enter your UMP email and we'll resend the verification link, if your account still needs one.</p>
+      <form id="resendForm">
+        <div class="form-group">
+          <label for="email"><i class="ti ti-mail" aria-hidden="true"></i> UMP Email</label>
+          <input type="email" id="email" placeholder="s202312345@ump.ac.za" required />
+        </div>
+        <button type="submit" class="primary-button" id="submitButton">
+          <i class="ti ti-send" aria-hidden="true"></i> Resend email
+        </button>
+      </form>
+      <div class="auth-footer">
+        <a href="./login.html">Back to login</a>
+      </div>
+      <p id="formMessage" style="margin-top:14px;text-align:center;font-weight:600;font-size:13px;"></p>
+    </div>
+  </div>
+</div>
+<script src="./js/api.js"></script>
+<script>
+  const resendForm   = document.getElementById("resendForm");
+  const submitButton = document.getElementById("submitButton");
+  const formMessage  = document.getElementById("formMessage");
+
+  function showMessage(msg, color = "red") {
+    formMessage.textContent = msg;
+    formMessage.style.color = color;
+  }
+
+  resendForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const email = document.getElementById("email").value.trim();
+
+    const originalHtml = submitButton.innerHTML;
+    submitButton.disabled = true;
+    submitButton.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Sending…`;
+    showMessage("Sending…", "#687280");
+
+    try {
+      const response = await apiRequest("/auth/resend-verification", "POST", { email });
+      showMessage(response.message || "If that email needs verifying, a new link has been sent.", "var(--ump-green)");
+      resendForm.reset();
+    } catch (error) {
+      showMessage(error.message || "Something went wrong. Please try again.", "red");
+    } finally {
+      submitButton.disabled = false;
+      submitButton.innerHTML = originalHtml;
+    }
+  });
+</script>
+</body>
+</html>

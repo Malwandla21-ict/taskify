@@ -27,7 +27,6 @@
         <div class="progress-fill" id="progressFill" style="width:33%;"></div>
       </div>
       <form id="registerForm">
-        <!-- STEP 1: Personal Details -->
         <div class="register-step" id="step1">
           <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Create your account</h1>
           <p class="auth-subtitle">Enter your UMP details to get started</p>
@@ -57,7 +56,6 @@
             Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
           </button>
         </div>
-        <!-- STEP 2: Account Type & Academic Details -->
         <div class="register-step" id="step2" style="display:none;">
           <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Account type</h1>
           <p class="auth-subtitle">Tell us who you are at UMP</p>
@@ -90,7 +88,6 @@
               <option>Other</option>
             </select>
           </div>
-          <!-- Only shown when Student is selected -->
           <div class="form-group" id="academicYearGroup">
             <label for="academicYear"><i class="ti ti-calendar" aria-hidden="true"></i> Academic Year</label>
             <select id="academicYear">
@@ -102,7 +99,6 @@
               <option>Masters</option>
             </select>
           </div>
-          <!-- Only shown when Lecturer is selected -->
           <div id="lecturerFieldsGroup" style="display:none;">
             <div class="form-row">
               <div class="form-group">
@@ -139,7 +135,6 @@
             </button>
           </div>
         </div>
-        <!-- STEP 3: Security -->
         <div class="register-step" id="step3" style="display:none;">
           <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Set your password</h1>
           <p class="auth-subtitle">Almost done — secure your account</p>
@@ -152,7 +147,7 @@
           <div class="form-group">
             <label for="password"><i class="ti ti-lock" aria-hidden="true"></i> Password</label>
             <div class="password-input-wrap">
-              <input type="password" id="password" placeholder="Min 6 characters" required />
+              <input type="password" id="password" placeholder="At least 8 characters, with a letter and a number" required />
               <button type="button" class="password-toggle" data-target="password" aria-label="Show password">
                 <i class="ti ti-eye" aria-hidden="true"></i>
               </button>
@@ -190,6 +185,7 @@
 </div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>
+<script src="./js/cropper.js"></script>
 <script src="./js/register.js"></script>
 </body>
 </html>

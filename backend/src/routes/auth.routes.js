@@ -1,12 +1,16 @@
 const express = require("express");
-const { body } = require("express-validator");
+const { body, query } = require("express-validator");
 const authController = require("../controllers/auth.controller");
+const twoFactorController = require("../controllers/twoFactor.controller");
 const upload = require("../middleware/upload.middleware");
+const { authenticate } = require("../middleware/auth.middleware");
+const { loginLimiter, registerLimiter, emailActionLimiter, twoFactorLimiter } = require("../middleware/rateLimit.middleware");
 
 const router = express.Router();
 
 router.post(
   "/register",
+  registerLimiter,
   upload.single("profilePhoto"),
   [
     body("fullName").trim().notEmpty().withMessage("Full name is required.")
@@ -15,8 +19,11 @@ router.post(
     body("email").trim().notEmpty().withMessage("Email is required.")
       .isEmail().withMessage("Email must be valid.")
       .custom((value) => {
-        if (!value.toLowerCase().endsWith("@ump.ac.za")) {
-          throw new Error("Only UMP student emails are allowed.");
+        const allowedDomains = (process.env.UNIVERSITY_EMAIL_DOMAIN || "ump.ac.za")
+          .split(",").map((d) => d.trim().toLowerCase()).filter(Boolean);
+        const normalized = value.toLowerCase();
+        if (!allowedDomains.some((domain) => normalized.endsWith(`@${domain}`))) {
+          throw new Error("Only UMP student/staff emails are allowed.");
         }
         return true;
       }),
@@ -25,7 +32,9 @@ router.post(
       .matches(/^(\+27|27|0)[0-9]{9}$/).withMessage("Phone number must be a valid South African number."),
 
     body("password").notEmpty().withMessage("Password is required.")
-      .isLength({ min: 6 }).withMessage("Password must be at least 6 characters long."),
+      .isLength({ min: 8 }).withMessage("Password must be at least 8 characters long.")
+      .matches(/[A-Za-z]/).withMessage("Password must contain at least one letter.")
+      .matches(/[0-9]/).withMessage("Password must contain at least one number."),
 
     body("studentNumber").optional({ checkFalsy: true }).trim()
       .isLength({ max: 50 }).withMessage("Student/staff number must be under 50 characters."),
@@ -56,12 +65,76 @@ router.post(
 
 router.post(
   "/login",
+  loginLimiter,
   [
     body("email").trim().notEmpty().withMessage("Email is required.")
       .isEmail().withMessage("Email must be valid."),
     body("password").notEmpty().withMessage("Password is required.")
   ],
   authController.login
+);
+
+router.get(
+  "/verify-email",
+  [ query("token").trim().notEmpty().withMessage("Verification token is required.") ],
+  authController.verifyEmail
+);
+
+router.post(
+  "/resend-verification",
+  emailActionLimiter,
+  [ body("email").trim().notEmpty().isEmail().withMessage("A valid email is required.") ],
+  authController.resendVerification
+);
+
+router.post(
+  "/forgot-password",
+  emailActionLimiter,
+  [ body("email").trim().notEmpty().isEmail().withMessage("A valid email is required.") ],
+  authController.forgotPassword
+);
+
+router.post(
+  "/reset-password",
+  emailActionLimiter,
+  [
+    body("token").trim().notEmpty().withMessage("Reset token is required."),
+    body("newPassword").isLength({ min: 8 }).withMessage("Password must be at least 8 characters long.")
+      .matches(/[A-Za-z]/).withMessage("Password must contain at least one letter.")
+      .matches(/[0-9]/).withMessage("Password must contain at least one number.")
+  ],
+  authController.resetPassword
+);
+
+router.post(
+  "/2fa/verify-login",
+  twoFactorLimiter,
+  [
+    body("tempToken").trim().notEmpty().withMessage("Missing session token."),
+    body("code").trim().notEmpty().withMessage("Enter your 6-digit code or a backup code.")
+  ],
+  authController.verifyTwoFactorLogin
+);
+
+/* ── 2FA management (authenticated) ── */
+router.get("/2fa/status", authenticate, twoFactorController.status);
+router.post("/2fa/setup", authenticate, twoFactorLimiter, twoFactorController.setup);
+router.post(
+  "/2fa/enable",
+  authenticate,
+  twoFactorLimiter,
+  [ body("code").trim().matches(/^\d{6}$/).withMessage("Enter the 6-digit code from your authenticator app.") ],
+  twoFactorController.enable
+);
+router.post(
+  "/2fa/disable",
+  authenticate,
+  twoFactorLimiter,
+  [
+    body("password").notEmpty().withMessage("Password is required."),
+    body("code").trim().notEmpty().withMessage("Enter a 6-digit code or a backup code.")
+  ],
+  twoFactorController.disable
 );
 
 module.exports = router;

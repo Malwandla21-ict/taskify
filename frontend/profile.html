@@ -6,6 +6,7 @@
   <title>Taskify — Profile</title>
   <link rel="stylesheet" href="./css/main.css" />
   <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
@@ -30,7 +31,6 @@
       <button type="button" class="profile-tab" data-tab="endorsements"><i class="ti ti-certificate" aria-hidden="true"></i> Endorsements</button>
     </div>
 
-    <!-- Overview -->
     <div id="overviewTab" class="profile-tab-panel active">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
         <div>
@@ -44,6 +44,9 @@
             <div class="profile-info-card-header"><h3><i class="ti ti-shield-check" aria-hidden="true"></i> Verification</h3></div>
             <div class="profile-verify-row"><span>Email Verified</span><span id="emailVerifiedBadge"></span></div>
             <div class="profile-verify-row"><span>Account Type</span><span id="accountTypeBadge"></span></div>
+            <button type="button" id="resendVerificationBtn" class="secondary-button" style="display:none;margin-top:10px;width:100%;">
+              <i class="ti ti-mail" aria-hidden="true"></i> Resend verification email
+            </button>
           </div>
         </div>
         <div>
@@ -58,12 +61,26 @@
         </div>
       </div>
       <div class="profile-info-card">
+        <div class="profile-info-card-header"><h3><i class="ti ti-lock" aria-hidden="true"></i> Security</h3></div>
+        <div class="profile-verify-row">
+          <span><i class="ti ti-shield-lock" aria-hidden="true"></i> Two-Factor Authentication</span>
+          <span id="twoFactorStatusBadge">—</span>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+          <button type="button" id="manageTwoFactorBtn" class="secondary-button">
+            <i class="ti ti-shield-lock" aria-hidden="true"></i> Manage two-factor authentication
+          </button>
+          <button type="button" id="openChangePasswordBtn" class="secondary-button">
+            <i class="ti ti-key" aria-hidden="true"></i> Change password
+          </button>
+        </div>
+      </div>
+      <div class="profile-info-card">
         <div class="profile-info-card-header"><h3><i class="ti ti-activity" aria-hidden="true"></i> Recent Activity</h3></div>
         <div class="profile-activity-list" id="overviewActivityList"></div>
       </div>
     </div>
 
-    <!-- My Activity -->
     <div id="activityTab" class="profile-tab-panel">
       <div class="profile-info-card">
         <div class="profile-info-card-header"><h3><i class="ti ti-activity" aria-hidden="true"></i> Full Activity History</h3></div>
@@ -71,21 +88,18 @@
       </div>
     </div>
 
-    <!-- Reviews -->
     <div id="reviewsTab" class="profile-tab-panel">
       <div id="recentReviewsContainer" class="marketplace-grid">
         <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-star" aria-hidden="true"></i></div><h3>No reviews yet</h3></div>
       </div>
     </div>
 
-    <!-- Listings -->
     <div id="listingsTab" class="profile-tab-panel">
       <div id="myListingsContainer" class="marketplace-grid">
         <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading listings…</h3></div>
       </div>
     </div>
 
-    <!-- Endorsements -->
     <div id="endorsementsTab" class="profile-tab-panel">
       <div id="myEndorsementsContainer"></div>
     </div>
@@ -118,11 +132,100 @@
     </div>
   </section>
 </div>
+
+<div id="overlay"></div>
+<div id="editProfileModal">
+  <h2 style="font-size:17px;font-weight:800;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+    <i class="ti ti-pencil" aria-hidden="true" style="color:var(--ump-green);"></i> Edit Profile
+  </h2>
+  <div class="form-group">
+    <label><i class="ti ti-align-left" aria-hidden="true"></i> Bio</label>
+    <textarea id="editBio" placeholder="Tell others a bit about yourself..." maxlength="1000"></textarea>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-brand-whatsapp" aria-hidden="true"></i> Phone Number</label>
+    <input type="tel" id="editPhoneNumber" placeholder="0821234567" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-building" aria-hidden="true"></i> Faculty / Department</label>
+    <select id="editFaculty">
+      <option value="">Select Faculty / Department</option>
+      <option>Agriculture &amp; Environmental Sciences</option>
+      <option>Economics, Development &amp; Business Sciences</option>
+      <option>Hospitality &amp; Tourism</option>
+      <option>Education</option>
+      <option>ICT</option>
+      <option>Administration</option>
+      <option>Finance</option>
+      <option>Student Affairs</option>
+      <option>Other</option>
+    </select>
+  </div>
+  <div class="form-group" id="editAcademicYearGroup">
+    <label><i class="ti ti-calendar" aria-hidden="true"></i> Academic Year</label>
+    <select id="editAcademicYear">
+      <option value="">Select Year</option>
+      <option>1st Year</option>
+      <option>2nd Year</option>
+      <option>3rd Year</option>
+      <option>Honours</option>
+      <option>Masters</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-tags" aria-hidden="true"></i> Skills</label>
+    <div class="profile-tags-row" id="editSkillsTagsRow"></div>
+    <div class="profile-tag-add-input">
+      <input type="text" id="editSkillInput" placeholder="e.g. Programming" maxlength="40" />
+      <button type="button" id="addSkillBtn">Add</button>
+    </div>
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-calendar-time" aria-hidden="true"></i> Availability Note</label>
+    <textarea id="editAvailabilityNote" placeholder="e.g. I'm generally available on weekends and weekday evenings." maxlength="500"></textarea>
+  </div>
+  <div class="form-row">
+    <button type="button" class="secondary-button" id="closeEditProfileModal"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+    <button type="button" class="primary-button" id="saveEditProfileBtn"><i class="ti ti-check" aria-hidden="true"></i> Save Changes</button>
+  </div>
+</div>
+
+<div id="twoFactorModal" class="security-modal">
+  <h2><i class="ti ti-shield-lock" aria-hidden="true"></i> Two-Factor Authentication</h2>
+  <div id="twoFactorModalBody"><!-- populated by profile.js --></div>
+  <div class="form-row" style="margin-top:16px;">
+    <button type="button" class="secondary-button" id="closeTwoFactorModal"><i class="ti ti-x" aria-hidden="true"></i> Close</button>
+  </div>
+</div>
+
+<div id="changePasswordModal" class="security-modal">
+  <h2><i class="ti ti-key" aria-hidden="true"></i> Change Password</h2>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Changing your password signs you out everywhere else.</p>
+  <div class="form-group">
+    <label><i class="ti ti-lock" aria-hidden="true"></i> Current Password</label>
+    <input type="password" id="currentPasswordInput" autocomplete="current-password" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-lock" aria-hidden="true"></i> New Password</label>
+    <input type="password" id="newPasswordInput" placeholder="At least 8 characters, with a letter and a number" autocomplete="new-password" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-lock-check" aria-hidden="true"></i> Confirm New Password</label>
+    <input type="password" id="confirmNewPasswordInput" autocomplete="new-password" />
+  </div>
+  <p id="changePasswordMessage" style="font-size:12px;font-weight:600;margin-bottom:8px;"></p>
+  <div class="form-row">
+    <button type="button" class="secondary-button" id="closeChangePasswordModal"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+    <button type="button" class="primary-button" id="submitChangePasswordBtn"><i class="ti ti-check" aria-hidden="true"></i> Change Password</button>
+  </div>
+</div>
+
 <input type="file" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp" hidden />
 <div id="toastContainer" class="toast-container"></div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>
 <script src="./js/navbar.js"></script>
+<script src="./js/cropper.js"></script>
 <script src="./js/profile.js"></script>
 </body>
 </html>

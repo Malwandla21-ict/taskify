@@ -24,10 +24,15 @@ const lecturerFieldsGroup = document.getElementById("lecturerFieldsGroup");
 const lecturerTitleSelect = document.getElementById("lecturerTitle");
 
 let selectedRole = "Student";
+let croppedProfilePhoto = null;
+
 const profilePhotoInput   = document.getElementById("profilePhoto");
 const profilePhotoPreview = document.getElementById("profilePhotoPreview");
 const profilePhotoLabel   = document.getElementById("profilePhotoLabel");
 
+/* Opens the cropper immediately after a file is chosen, instead of
+   previewing the raw file — this is the step that was previously
+   missing after the profile overhaul. */
 profilePhotoInput?.addEventListener("change", () => {
   const file = profilePhotoInput.files?.[0];
   if (!file) return;
@@ -36,9 +41,13 @@ profilePhotoInput?.addEventListener("change", () => {
     profilePhotoInput.value = "";
     return;
   }
-  profilePhotoPreview.src = URL.createObjectURL(file);
-  profilePhotoPreview.style.display = "block";
-  profilePhotoLabel.textContent = "Change photo";
+
+  openImageCropper(file, (croppedFile) => {
+    croppedProfilePhoto = croppedFile;
+    profilePhotoPreview.src = URL.createObjectURL(croppedFile);
+    profilePhotoPreview.style.display = "block";
+    profilePhotoLabel.textContent = "Change photo";
+  });
 });
 
 function showStep(n) {
@@ -141,8 +150,8 @@ function validateStep3() {
   const confirmPassword = document.getElementById("confirmPassword").value;
   const termsAccepted   = document.getElementById("termsCheckbox").checked;
 
-  if (!password || password.length < 6) {
-    showMessage("Password must be at least 6 characters long.");
+  if (!password || password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    showMessage("Password must be at least 8 characters long and include a letter and a number.");
     return false;
   }
 
@@ -200,7 +209,7 @@ registerForm.addEventListener("submit", async (e) => {
     if (mode) registerData.append("consultationMode", mode);
   }
 
-  if (profilePhotoInput?.files?.[0]) registerData.append("profilePhoto", profilePhotoInput.files[0]);
+  if (croppedProfilePhoto) registerData.append("profilePhoto", croppedProfilePhoto);
 
   const submitBtn = document.getElementById("createAccountButton");
   const originalHtml = submitBtn.innerHTML;
@@ -211,17 +220,18 @@ registerForm.addEventListener("submit", async (e) => {
   try {
     const response = await apiMultipartRequest("/auth/register", "POST", registerData);
 
-    const token = response.data.token;
-    const user  = response.data.user;
-
-    localStorage.setItem("taskifyToken", token);
-    localStorage.setItem("taskifyUser", JSON.stringify(user));
-
-    showMessage("Account created! Redirecting you now…", "var(--ump-green)");
+    /* Registration no longer logs you in automatically — the account isn't
+       usable until the email address is confirmed, so there's no token to
+       store here. Send them to check their inbox instead. */
+    showMessage(
+      response.message || "Account created! Please check your email to verify your account before logging in.",
+      "var(--ump-green)"
+    );
+    submitBtn.innerHTML = `<i class="ti ti-mail-check" aria-hidden="true"></i> Check your email`;
 
     setTimeout(() => {
-      window.location.href = "./dashboard.html";
-    }, 900);
+      window.location.href = "./login.html";
+    }, 3500);
 
   } catch (error) {
     showMessage(error.message || "Something went wrong. Please try again.", "red");

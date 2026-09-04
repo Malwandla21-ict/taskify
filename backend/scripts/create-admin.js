@@ -84,6 +84,7 @@ async function promoteExistingUser(pool, email) {
 
   await pool.execute(`UPDATE users SET role = 'admin' WHERE id = ?`, [user.id]);
   console.log(`${user.full_name} (${normalizedEmail}) is now an admin.`);
+  console.log("Note: admin routes now require two-factor authentication. Log in and enable it under Profile > Security before using admin actions.");
 }
 
 async function createNewAdmin(pool, fullName, email, password, phoneNumber) {
@@ -118,6 +119,7 @@ async function createNewAdmin(pool, fullName, email, password, phoneNumber) {
       [fullName.trim(), normalizedEmail, phoneNumber, hashedPassword]
     );
     console.log(`Admin account created: ${fullName} (${normalizedEmail}), id ${result.insertId}.`);
+    console.log("Note: admin routes now require two-factor authentication. Log in and enable it under Profile > Security before using admin actions.");
   } catch (error) {
     if (error.code === "ER_NO_DEFAULT_FOR_FIELD" || error.code === "ER_BAD_NULL_ERROR") {
       console.error(

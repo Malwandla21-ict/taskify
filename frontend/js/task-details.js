@@ -4,6 +4,8 @@ const taskDetailsContainer = document.getElementById("taskDetailsContainer");
 const params = new URLSearchParams(window.location.search);
 const taskId = params.get("id");
 
+document.getElementById("backButton")?.addEventListener("click", () => goBack("./tasks.html"));
+
 async function loadTaskDetails() {
   try {
     const res = await apiRequest(`/tasks/${taskId}`);
@@ -49,7 +51,11 @@ function renderTaskDetails(task) {
   taskDetailsContainer.innerHTML = `
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
       <div>
-        ${renderImageGallery(task.image_urls, "ti-clipboard-list")}
+        <div style="position:relative;">
+          ${renderImageGallery(task.image_urls, "ti-clipboard-list")}
+          ${endorsementCornerBadge(task)}
+          ${lecturerPostedCornerBadge(task.created_by_member_type)}
+        </div>
         ${task.urgent ? `<div class="urgent-badge" style="display:inline-flex;margin-bottom:12px;"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${sectionBadge(task.section || "General")}
         <h1 style="font-size:32px;font-weight:800;margin:16px 0 10px;letter-spacing:-0.5px;">${task.title}</h1>
@@ -59,6 +65,7 @@ function renderTaskDetails(task) {
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
           ${statusBadge(task.status)}
         </div>
+        ${endorsementDetailBlock(task)}
       </div>
       <div class="form-panel">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
@@ -67,9 +74,9 @@ function renderTaskDetails(task) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
           <div>
-            <div class="profile-link" data-user-id="${task.created_by}" style="cursor:pointer;font-weight:600;font-size:13px;">${task.created_by_name}</div>
+            <div class="profile-link" data-user-id="${task.created_by}" style="cursor:pointer;font-weight:600;font-size:13px;">${posterName(task.created_by_name, task.created_by_lecturer_title)}</div>
             <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px;">
-              <i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student
+              <i class="ti ti-shield-check" aria-hidden="true"></i> ${task.created_by_member_type === "Lecturer" ? "Verified Lecturer" : "Verified Student"}
             </div>
           </div>
         </div>
@@ -83,11 +90,13 @@ function renderTaskDetails(task) {
         </div>
         ${primaryAction}
         ${messageButton}
-        <a href="./tasks.html" class="secondary-button" style="margin-top:10px;display:flex;">
+        <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Tasks
-        </a>
+        </button>
       </div>
     </div>`;
+
+  document.getElementById("backButtonBottom")?.addEventListener("click", () => goBack("./tasks.html"));
 
   attachTaskActionEvents();
   attachProfileLinkEvents();

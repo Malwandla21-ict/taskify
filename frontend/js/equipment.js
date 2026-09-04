@@ -2,6 +2,7 @@ const currentUser = requireAuth();
 
 const equipmentContainer        = document.getElementById("equipmentContainer");
 const equipmentHistoryContainer = document.getElementById("equipmentHistoryContainer");
+const equipmentHistoryMiniContainer = document.getElementById("equipmentHistoryMiniContainer");
 const equipmentForm             = document.getElementById("equipmentForm");
 const equipmentMessage          = document.getElementById("equipmentMessage");
 const equipmentStep1            = document.getElementById("equipmentStep1");
@@ -14,13 +15,19 @@ const eDot1                     = document.getElementById("eDot1");
 const eDot2                     = document.getElementById("eDot2");
 const eDot3                     = document.getElementById("eDot3");
 
+const equipmentSearchInput   = document.getElementById("equipmentSearchInput");
+const equipmentCategoryFilter = document.getElementById("equipmentCategoryFilter");
+const equipmentPriceFilter    = document.getElementById("equipmentPriceFilter");
+const equipmentSortSelect     = document.getElementById("equipmentSortSelect");
+
 let cachedEquipment  = [];
 let selectedSection  = "All";
 
-const equipmentCreateOverlay    = document.getElementById("equipmentCreateOverlay");
-const equipmentCreateModal      = document.getElementById("equipmentCreateModal");
-const openEquipmentModalButton  = document.getElementById("openEquipmentModalButton");
-const closeEquipmentModalButton = document.getElementById("closeEquipmentModalButton");
+const equipmentCreateOverlay     = document.getElementById("equipmentCreateOverlay");
+const equipmentCreateModal       = document.getElementById("equipmentCreateModal");
+const openEquipmentModalButton   = document.getElementById("openEquipmentModalButton");
+const heroListEquipmentButton    = document.getElementById("heroListEquipmentButton");
+const closeEquipmentModalButton  = document.getElementById("closeEquipmentModalButton");
 
 function openEquipmentCreateModal() {
   equipmentForm?.reset();
@@ -37,6 +44,7 @@ function closeEquipmentCreateModal() {
 }
 
 openEquipmentModalButton?.addEventListener("click", openEquipmentCreateModal);
+heroListEquipmentButton?.addEventListener("click", openEquipmentCreateModal);
 closeEquipmentModalButton?.addEventListener("click", closeEquipmentCreateModal);
 equipmentCreateOverlay?.addEventListener("click", closeEquipmentCreateModal);
 
@@ -101,26 +109,72 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
     document.querySelectorAll(".filter-pill").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     selectedSection = btn.dataset.section;
-    renderEquipment(cachedEquipment);
+    renderEquipment();
   });
 });
+
+equipmentSearchInput?.addEventListener("input", renderEquipment);
+equipmentCategoryFilter?.addEventListener("change", renderEquipment);
+equipmentPriceFilter?.addEventListener("change", renderEquipment);
+equipmentSortSelect?.addEventListener("change", renderEquipment);
+
+function populateCategoryFilter(items) {
+  const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
+  equipmentCategoryFilter.innerHTML = `<option value="All">All Categories</option>` +
+    cats.map(c => `<option value="${c}">${c}</option>`).join("");
+}
+
+/* ── Client-side-only "saved" heart toggle ── local per browser only;
+   there is no saved-listings table/endpoint in the backend yet. */
+function getSavedIds() {
+  try { return JSON.parse(localStorage.getItem("taskifySavedEquipment") || "[]"); }
+  catch { return []; }
+}
+function toggleSavedId(id) {
+  const saved = getSavedIds();
+  const idx = saved.indexOf(id);
+  if (idx >= 0) saved.splice(idx, 1); else saved.push(id);
+  localStorage.setItem("taskifySavedEquipment", JSON.stringify(saved));
+  return saved.includes(id);
+}
+function attachSaveHeartEvents() {
+  document.querySelectorAll(".save-heart-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = Number(btn.dataset.saveId);
+      const nowSaved = toggleSavedId(id);
+      btn.classList.toggle("saved", nowSaved);
+      btn.querySelector("i").className = `ti ${nowSaved ? "ti-heart-filled" : "ti-heart"}`;
+    });
+  });
+}
 
 function equipmentCard(item) {
   const isOwn = Number(item.owner_id) === Number(currentUser.id);
   const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
+  const isSaved = getSavedIds().includes(item.id);
+
   return `
     <div class="market-card">
-      <div class="market-image" style="background:linear-gradient(135deg,#E6F1FB,#B5D4F4);">
+      <div class="market-image" style="position:relative;">
         ${imageUrl
           ? `<img src="${imageUrl}" alt="${item.name}" class="lightbox-img" data-gallery="equip-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="market-image-placeholder" style="color:var(--ump-blue);"><i class="ti ti-package" aria-hidden="true"></i></div>`}
+          : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
+        ${endorsementCornerBadge(item)}
+        ${lecturerPostedCornerBadge(item.owner_member_type)}
+        <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${item.id}" aria-label="Save equipment">
+          <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
+        </button>
       </div>
       <div class="market-content">
         <div class="market-top">
           <div class="market-user">
             <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;">${item.owner_name}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;">${posterName(item.owner_name, item.owner_lecturer_title)}</div>
               <div class="market-user-meta"><i class="ti ti-package" aria-hidden="true"></i> Equipment Owner</div>
             </div>
           </div>
@@ -160,13 +214,42 @@ function safeMap(items, builder, label) {
   }).join("");
 }
 
-function renderEquipment(items) {
-  const filtered = items.filter(i => selectedSection === "All" || i.section === selectedSection);
+function getFilteredSortedEquipment() {
+  const q = equipmentSearchInput?.value.trim().toLowerCase() || "";
+  const category = equipmentCategoryFilter?.value || "All";
+  const priceBucket = equipmentPriceFilter?.value || "All";
+
+  let filtered = cachedEquipment.filter(i => {
+    const matchesSection  = selectedSection === "All" || i.section === selectedSection;
+    const matchesCategory = category === "All" || i.category === category;
+    const matchesSearch   = !q || [i.name, i.description, i.category].some(f => f?.toLowerCase().includes(q));
+    const price = Number(i.daily_price);
+    const matchesPrice =
+      priceBucket === "All" ? true :
+      priceBucket === "under50" ? price < 50 :
+      priceBucket === "50to150" ? price >= 50 && price <= 150 :
+      price > 150;
+    return matchesSection && matchesCategory && matchesSearch && matchesPrice;
+  });
+
+  const sort = equipmentSortSelect?.value || "newest";
+  filtered = [...filtered].sort((a, b) => {
+    if (sort === "price_asc")  return Number(a.daily_price) - Number(b.daily_price);
+    if (sort === "price_desc") return Number(b.daily_price) - Number(a.daily_price);
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
+  return filtered;
+}
+
+function renderEquipment() {
+  const filtered = getFilteredSortedEquipment();
   equipmentContainer.innerHTML = filtered.length
     ? safeMap(filtered, equipmentCard, "equipment")
     : emptyState("ti-package", "No equipment found", "Try a different filter or list your own.");
   attachDeleteEquipmentEvents();
   attachProfileLinkEvents();
+  attachSaveHeartEvents();
 }
 
 function historyCard(booking) {
@@ -178,10 +261,10 @@ function historyCard(booking) {
 
   return `
     <div class="market-card">
-      <div class="market-image" style="background:linear-gradient(135deg,#E6F1FB,#B5D4F4);">
+      <div class="market-image" style="position:relative;">
         ${imageUrl
           ? `<img src="${imageUrl}" alt="${booking.equipment_name}" class="lightbox-img" data-gallery="equip-history-${booking.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="market-image-placeholder" style="color:var(--ump-blue);"><i class="ti ti-package" aria-hidden="true"></i></div>`}
+          : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
       </div>
       <div class="market-content">
         <div class="market-top">
@@ -208,6 +291,22 @@ function historyCard(booking) {
     </div>`;
 }
 
+function historyMiniCard(booking) {
+  const isOwner = Number(booking.owner_id) === Number(currentUser.id);
+  return `
+    <a href="./equipment-details.html?id=${booking.equipment_id}" class="mini-history-item">
+      <div class="mini-history-thumb"><div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div></div>
+      <div class="mini-history-info">
+        <div class="mini-history-top">
+          ${sectionBadge(booking.section || "General")}
+          ${statusBadge(booking.status)}
+        </div>
+        <div class="mini-history-title">${booking.equipment_name}</div>
+        <div class="mini-history-meta">${isOwner ? "You own this" : "You rented this"} &middot; R${booking.daily_price}/day</div>
+      </div>
+    </a>`;
+}
+
 function attachDeleteEquipmentEvents() {
   document.querySelectorAll(".delete-equipment-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -227,8 +326,8 @@ function attachDeleteEquipmentEvents() {
   });
 }
 
-function attachReturnEquipmentButtonEvents() {
-  document.querySelectorAll(".return-equipment-btn").forEach(btn => {
+function attachReturnEquipmentButtonEvents(scope = document) {
+  scope.querySelectorAll(".return-equipment-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       if (!confirm("Confirm equipment return?")) return;
       btn.disabled = true;
@@ -251,7 +350,8 @@ async function loadEquipment() {
   try {
     const res = await apiRequest("/equipment");
     cachedEquipment = Array.isArray(res.data) ? res.data : [];
-    renderEquipment(cachedEquipment);
+    populateCategoryFilter(cachedEquipment);
+    renderEquipment();
   } catch (err) {
     console.error("loadEquipment failed:", err);
     equipmentContainer.innerHTML = errorState(err.message);
@@ -263,16 +363,29 @@ async function loadEquipmentHistory() {
   try {
     const res   = await apiRequest("/equipment/history");
     const items = Array.isArray(res.data) ? res.data : [];
+
     equipmentHistoryContainer.innerHTML = items.length
       ? safeMap(items, historyCard, "equipment history")
       : emptyState("ti-clock", "No history yet", "Your bookings and listings appear here.");
-    attachReturnEquipmentButtonEvents();
+    attachReturnEquipmentButtonEvents(equipmentHistoryContainer);
+
+    equipmentHistoryMiniContainer.innerHTML = items.length
+      ? items.slice(0, 4).map(historyMiniCard).join("")
+      : `<p class="rail-loading">No history yet.</p>`;
   } catch (err) {
     console.error("loadEquipmentHistory failed:", err);
     equipmentHistoryContainer.innerHTML = errorState(err.message);
+    equipmentHistoryMiniContainer.innerHTML = `<p class="rail-loading">Couldn't load history.</p>`;
     showToast(err.message, "error");
   }
 }
+
+document.getElementById("viewAllEquipmentHistoryLink")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  const section = document.getElementById("fullEquipmentHistorySection");
+  section.style.display = "block";
+  section.scrollIntoView({ behavior: "smooth", block: "start" });
+});
 
 equipmentForm?.addEventListener("submit", async e => {
   e.preventDefault();
@@ -305,6 +418,7 @@ equipmentForm?.addEventListener("submit", async e => {
     showEquipmentStep(1);
     closeEquipmentCreateModal();
     await loadEquipment();
+    await loadEquipmentHistory();
   } catch (err) {
     equipmentMessage.textContent = err.message;
     equipmentMessage.style.color = "red";

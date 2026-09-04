@@ -4,6 +4,8 @@ const saleDetailsContainer = document.getElementById("saleDetailsContainer");
 const params = new URLSearchParams(window.location.search);
 const saleId = params.get("id");
 
+document.getElementById("backButton")?.addEventListener("click", () => goBack("./sales.html"));
+
 async function loadSaleDetails() {
   try {
     const res = await apiRequest(`/sales/${saleId}`);
@@ -28,7 +30,11 @@ function renderSaleDetails(item) {
   saleDetailsContainer.innerHTML = `
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
       <div>
-        ${renderImageGallery(item.image_urls, "ti-shopping-bag")}
+        <div style="position:relative;">
+          ${renderImageGallery(item.image_urls, "ti-shopping-bag")}
+          ${endorsementCornerBadge(item)}
+          ${lecturerPostedCornerBadge(item.seller_member_type)}
+        </div>
         ${sectionBadge(item.section || "General")}
         <h1 style="font-size:32px;font-weight:800;margin:16px 0 10px;letter-spacing:-0.5px;">${item.title}</h1>
         <p style="color:var(--muted);line-height:1.75;font-size:15px;">${item.description}</p>
@@ -37,8 +43,8 @@ function renderSaleDetails(item) {
           ${conditionBadge(item.condition_status)}
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${item.location}</div>
           ${statusBadge(item.status)}
-          ${endorsementBadge(item)}
         </div>
+        ${endorsementDetailBlock(item)}
       </div>
       <div class="form-panel">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
@@ -47,7 +53,7 @@ function renderSaleDetails(item) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
           <div>
-            <div class="profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${item.seller_name}</div>
+            <div class="profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${posterName(item.seller_name, item.seller_lecturer_title)}</div>
             <div style="font-size:11px;color:var(--muted);">Student Seller</div>
           </div>
         </div>
@@ -66,11 +72,13 @@ function renderSaleDetails(item) {
           <div class="market-price">R${item.price}</div>
         </div>
         ${actionArea}
-        <a href="./sales.html" class="secondary-button" style="margin-top:10px;display:flex;">
+        <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Sales
-        </a>
+        </button>
       </div>
     </div>`;
+
+  document.getElementById("backButtonBottom")?.addEventListener("click", () => goBack("./sales.html"));
 
   attachProfileLinkEvents();
 
