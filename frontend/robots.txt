@@ -18,5 +18,11 @@ Allow: /login.html
 Allow: /register.html
 Allow: /forgot-password.html
 Allow: /resend-verification.html
+# The sitemap itself (and robots.txt, which crawlers always fetch directly
+# regardless of its own rules) must stay reachable, or Search Console's
+# sitemap fetch fails with "Couldn't fetch" even though the Sitemap: line
+# below points right at it.
+Allow: /sitemap.xml
+Allow: /robots.txt
 
 Sitemap: https://taskify-frontend-ol07.onrender.com/sitemap.xml

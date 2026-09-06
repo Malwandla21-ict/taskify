@@ -53,11 +53,23 @@ function getTransporter() {
 
 /* "Taskify <no-reply@taskify.local>" → { name: "Taskify", email: "no-reply@taskify.local" }.
    Brevo's API wants sender name/email as separate fields rather than one
-   RFC 5322 string the way nodemailer/SMTP accepts it. */
+   RFC 5322 string the way nodemailer/SMTP accepts it.
+
+   Defensive trim + quote-stripping up front: unlike a local .env file (where
+   the dotenv package strips surrounding quotes automatically), a value typed
+   directly into Render's (or any host's) dashboard is used completely
+   literally. If someone copies the quoted example from .env.example
+   ("Taskify <...>") into a dashboard field, or leaves a trailing space/
+   newline after the closing ">", the regex below would otherwise fail to
+   match at all — silently falling through to sending the ENTIRE raw string
+   (quotes included) as the email address, which Brevo then rejects with a
+   generic "valid sender email required" that gives no hint the real problem
+   was stray formatting rather than the address itself. */
 function parseFromAddress(fromString) {
-  const match = /^(.*)<(.+)>$/.exec(fromString || "");
+  const cleaned = (fromString || "").trim().replace(/^["']|["']$/g, "").trim();
+  const match = /^(.*)<(.+)>$/.exec(cleaned);
   if (match) return { name: match[1].trim() || undefined, email: match[2].trim() };
-  return { email: (fromString || "").trim() };
+  return { email: cleaned };
 }
 
 async function sendViaBrevoApi({ to, subject, html, text }) {
