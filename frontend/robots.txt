@@ -19,4 +19,4 @@ Allow: /register.html
 Allow: /forgot-password.html
 Allow: /resend-verification.html
 
-Sitemap: https://taskify-frontend.onrender.com/sitemap.xml
+Sitemap: https://taskify-frontend-ol07.onrender.com/sitemap.xml
