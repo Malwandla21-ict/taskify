@@ -38,8 +38,10 @@ services:
       # Aiven (or any hosted) MySQL connection details.
       - key: DB_HOST
         sync: false
+      # Hosted providers (Aiven included) assign a custom port per service —
+      # don't assume 3306, check your provider's connection details.
       - key: DB_PORT
-        value: "3306"
+        sync: false
       - key: DB_NAME
         sync: false
       - key: DB_USER
