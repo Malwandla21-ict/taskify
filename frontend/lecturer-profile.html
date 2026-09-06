@@ -23,7 +23,7 @@
   </section>
 
   <section class="section" style="padding-top:0;">
-    <div style="display:grid;grid-template-columns:2.4fr 1fr;gap:18px;align-items:start;">
+    <div class="lecturer-overview-grid">
       <div>
         <div class="profile-tabs">
           <button type="button" class="profile-tab active" data-tab="overview"><i class="ti ti-layout-grid" aria-hidden="true"></i> Overview</button>
@@ -95,6 +95,21 @@
             <a href="./tutors.html" class="profile-quick-action-btn">
               <i class="ti ti-school-bell" aria-hidden="true"></i> Browse Verified Tutors
             </a>
+          </div>
+        </div>
+        <div class="profile-info-card">
+          <div class="profile-info-card-header"><h3><i class="ti ti-lock" aria-hidden="true"></i> Security</h3></div>
+          <div class="profile-verify-row">
+            <span><i class="ti ti-shield-lock" aria-hidden="true"></i> Two-Factor Authentication</span>
+            <span id="twoFactorStatusBadge">—</span>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;">
+            <button type="button" id="manageTwoFactorBtn" class="secondary-button">
+              <i class="ti ti-shield-lock" aria-hidden="true"></i> Manage two-factor authentication
+            </button>
+            <button type="button" id="openChangePasswordBtn" class="secondary-button">
+              <i class="ti ti-key" aria-hidden="true"></i> Change password
+            </button>
           </div>
         </div>
       </div>
@@ -212,6 +227,36 @@
   <div class="form-row">
     <button type="button" class="secondary-button" id="closeEditProfileModal"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
     <button type="button" class="primary-button" id="saveEditProfileBtn"><i class="ti ti-check" aria-hidden="true"></i> Save Changes</button>
+  </div>
+</div>
+
+<div id="twoFactorModal" class="security-modal">
+  <h2><i class="ti ti-shield-lock" aria-hidden="true"></i> Two-Factor Authentication</h2>
+  <div id="twoFactorModalBody"><!-- populated by lecturer-profile.js --></div>
+  <div class="form-row" style="margin-top:16px;">
+    <button type="button" class="secondary-button" id="closeTwoFactorModal"><i class="ti ti-x" aria-hidden="true"></i> Close</button>
+  </div>
+</div>
+
+<div id="changePasswordModal" class="security-modal">
+  <h2><i class="ti ti-key" aria-hidden="true"></i> Change Password</h2>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Changing your password signs you out everywhere else.</p>
+  <div class="form-group">
+    <label><i class="ti ti-lock" aria-hidden="true"></i> Current Password</label>
+    <input type="password" id="currentPasswordInput" autocomplete="current-password" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-lock" aria-hidden="true"></i> New Password</label>
+    <input type="password" id="newPasswordInput" placeholder="At least 8 characters, with a letter and a number" autocomplete="new-password" />
+  </div>
+  <div class="form-group">
+    <label><i class="ti ti-lock-check" aria-hidden="true"></i> Confirm New Password</label>
+    <input type="password" id="confirmNewPasswordInput" autocomplete="new-password" />
+  </div>
+  <p id="changePasswordMessage" style="font-size:12px;font-weight:600;margin-bottom:8px;"></p>
+  <div class="form-row">
+    <button type="button" class="secondary-button" id="closeChangePasswordModal"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+    <button type="button" class="primary-button" id="submitChangePasswordBtn"><i class="ti ti-check" aria-hidden="true"></i> Change Password</button>
   </div>
 </div>
 

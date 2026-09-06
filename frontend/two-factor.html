@@ -23,12 +23,20 @@
           <label for="code" id="codeLabel"><i class="ti ti-key" aria-hidden="true"></i> Authentication code</label>
           <input type="text" id="code" inputmode="numeric" placeholder="123456" maxlength="6" autocomplete="one-time-code" required autofocus />
         </div>
+        <label id="rememberDeviceWrap" hidden style="align-items:center;gap:8px;font-size:12px;margin-bottom:14px;font-weight:400;cursor:pointer;">
+          <input type="checkbox" id="rememberDevice" style="width:auto;margin:0;" />
+          Remember this device for 30 days
+        </label>
         <button type="submit" class="primary-button" id="verifyButton">
           <i class="ti ti-check" aria-hidden="true"></i> Verify &amp; sign in
         </button>
       </form>
       <p style="margin-top:14px;text-align:center;font-size:12px;">
         <a href="#" id="toggleBackupCode">Use a backup code instead</a>
+        <span id="toggleEmailOtpWrap">&nbsp;·&nbsp;<a href="#" id="toggleEmailOtp">Email me a code instead</a></span>
+      </p>
+      <p style="margin-top:6px;text-align:center;font-size:12px;" id="resendEmailOtpWrap" hidden>
+        <a href="#" id="resendEmailOtp">Resend code</a>
       </p>
       <div class="auth-footer">
         <a href="./login.html">Back to login</a>

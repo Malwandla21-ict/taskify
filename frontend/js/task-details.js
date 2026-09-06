@@ -23,7 +23,7 @@ function renderTaskDetails(task) {
 
   let primaryAction;
   if (!isOwn && task.status === "Posted") {
-    primaryAction = `<button class="primary-button" id="acceptTaskButton" data-task-id="${task.id}">
+    primaryAction = `<button class="primary-button" id="acceptTaskButton" data-task-id="${task.id}" data-task-price="${task.price}">
                         <i class="ti ti-check" aria-hidden="true"></i> Accept Task
                       </button>`;
   } else if (task.status === "Accepted" && isAcceptedByMe) {
@@ -47,6 +47,18 @@ function renderTaskDetails(task) {
          <i class="ti ti-message-circle" aria-hidden="true"></i> Message Poster
        </button>`
     : "";
+
+  const canCancel = isOwn && ["Posted", "Accepted"].includes(task.status);
+  const canDelete = isOwn && task.status === "Posted";
+  const ownerActions = `
+    ${canCancel ? `
+      <button class="secondary-button cancel-task-btn" data-task-id="${task.id}" style="margin-top:10px;">
+        <i class="ti ti-x" aria-hidden="true"></i> Cancel Task
+      </button>` : ""}
+    ${canDelete ? `
+      <button class="secondary-button delete-task-btn" data-task-id="${task.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+        <i class="ti ti-trash" aria-hidden="true"></i> Delete Task
+      </button>` : ""}`;
 
   taskDetailsContainer.innerHTML = `
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
@@ -90,6 +102,7 @@ function renderTaskDetails(task) {
         </div>
         ${primaryAction}
         ${messageButton}
+        ${ownerActions}
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Tasks
         </button>
@@ -99,6 +112,7 @@ function renderTaskDetails(task) {
   document.getElementById("backButtonBottom")?.addEventListener("click", () => goBack("./tasks.html"));
 
   attachTaskActionEvents();
+  attachOwnerActionEvents();
   attachProfileLinkEvents();
 
   document.getElementById("messagePosterButton")?.addEventListener("click", (e) => {
@@ -112,12 +126,83 @@ function attachTaskActionEvents() {
   const complete = document.getElementById("completeTaskButton");
   const confirmBtn = document.getElementById("confirmCompletionButton");
 
-  if (accept)   accept.addEventListener("click",   () => updateTask(accept,   `/tasks/${accept.dataset.taskId}/accept`,   "PATCH", null,                              "Task accepted!",  "Accepting…"));
+  if (accept)   accept.addEventListener("click",   () => openPaymentSimulationModal(accept));
   if (start)    start.addEventListener("click",    () => updateTask(start,    `/tasks/${start.dataset.taskId}/status`,    "PATCH", { status: "In Progress" },         "Task started!",   "Starting…"));
   if (complete) complete.addEventListener("click", () => updateTask(complete, `/tasks/${complete.dataset.taskId}/status`, "PATCH", { status: "Awaiting Confirmation" },"Marked as done — awaiting confirmation.", "Submitting…"));
   if (confirmBtn) confirmBtn.addEventListener("click", () => {
     if (!window.confirm("Confirm this task is complete? This releases payment to the worker.")) return;
     updateTask(confirmBtn, `/tasks/${confirmBtn.dataset.taskId}/confirm-completion`, "PATCH", null, "Task completed and payment released!", "Confirming…");
+  });
+}
+
+/* ── Demo payment simulation ──
+   There's no real payment gateway wired up yet, so accepting a task (which
+   the backend already marks as "payment held") is fronted by a clearly
+   labeled demo step rather than silently flipping the payment status with
+   no visible moment for it. Deliberately no card-entry fields — this can
+   be publicly reachable, and a form that invites someone to type a real
+   card number for a payment that doesn't exist is the wrong shape even as
+   a demo. */
+const paymentModal          = document.getElementById("paymentModal");
+const paymentModalAmount    = document.getElementById("paymentModalAmount");
+const cancelPaymentModalBtn = document.getElementById("cancelPaymentModal");
+const simulatePaymentButton = document.getElementById("simulatePaymentButton");
+
+cancelPaymentModalBtn?.addEventListener("click", () => closeModal(paymentModal));
+document.getElementById("overlay")?.addEventListener("click", () => closeModal(paymentModal));
+
+function openPaymentSimulationModal(acceptBtn) {
+  if (paymentModalAmount) paymentModalAmount.textContent = `R${acceptBtn.dataset.taskPrice}`;
+  openModal(paymentModal);
+
+  if (simulatePaymentButton) {
+    simulatePaymentButton.onclick = () => {
+      closeModal(paymentModal);
+      updateTask(
+        acceptBtn,
+        `/tasks/${acceptBtn.dataset.taskId}/accept`,
+        "PATCH",
+        null,
+        "Task accepted! Payment held in escrow (demo).",
+        "Accepting…"
+      );
+    };
+  }
+}
+
+function attachOwnerActionEvents() {
+  document.querySelectorAll(".cancel-task-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Cancel this task?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Cancelling…`;
+      try {
+        await apiRequest(`/tasks/${btn.dataset.taskId}/cancel`, "PATCH");
+        showToast("Task cancelled.");
+        setTimeout(() => window.location.href = "./tasks.html", 800);
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-x" aria-hidden="true"></i> Cancel Task`;
+      }
+    });
+  });
+
+  document.querySelectorAll(".delete-task-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Permanently delete this task?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Deleting…`;
+      try {
+        await apiRequest(`/tasks/${btn.dataset.taskId}`, "DELETE");
+        showToast("Task deleted.");
+        setTimeout(() => window.location.href = "./tasks.html", 800);
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i> Delete Task`;
+      }
+    });
   });
 }
 

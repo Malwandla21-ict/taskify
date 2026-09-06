@@ -183,7 +183,9 @@ function myEventMiniCard(event) {
   const isOwn = Number(event.organizer_id) === Number(currentUser.id);
   return `
     <div class="mini-history-item">
-      <div class="mini-history-thumb"><div class="media-placeholder light green"><i class="ti ti-calendar-event" aria-hidden="true"></i></div></div>
+      <div class="mini-history-thumb">${event.image_urls?.length
+        ? `<img src="${event.image_urls[0]}" alt="${event.title}" style="width:100%;height:100%;object-fit:cover;" />`
+        : `<div class="media-placeholder light green"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
           ${sectionBadge(event.section || "General")}
@@ -318,6 +320,11 @@ async function loadEvents() {
     ]);
     cachedEvents = eventsRes.data;
     myRsvpIds    = rsvpRes.data;
+
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get("search");
+    if (searchParam && eventSearch) eventSearch.value = searchParam;
+
     renderEvents();
     renderPopularCategories();
   } catch (err) {

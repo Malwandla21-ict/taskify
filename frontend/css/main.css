@@ -1296,7 +1296,7 @@ textarea { min-height: 110px; resize: vertical; }
    MODALS
 ============================== */
 
-#reviewModal, #bookingModal, #profileModal {
+#reviewModal, #bookingModal, #profileModal, #paymentModal {
   display: none;
   position: fixed;
   top: 10%;
@@ -1314,7 +1314,7 @@ textarea { min-height: 110px; resize: vertical; }
   overflow-y: auto;
 }
 
-#reviewModal h2, #bookingModal h2, #profileModal h2 {
+#reviewModal h2, #bookingModal h2, #profileModal h2, #paymentModal h2 {
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 18px;
@@ -1324,7 +1324,7 @@ textarea { min-height: 110px; resize: vertical; }
   gap: 8px;
 }
 
-#reviewModal h2 i, #bookingModal h2 i, #profileModal h2 i { font-size: 20px; color: var(--ump-green); }
+#reviewModal h2 i, #bookingModal h2 i, #profileModal h2 i, #paymentModal h2 i { font-size: 20px; color: var(--ump-green); }
 
 #overlay {
   display: none;
@@ -2651,6 +2651,36 @@ textarea { min-height: 110px; resize: vertical; }
   box-shadow: var(--shadow-sm);
 }
 .profile-photo-edit-btn:hover { background: #007a5a; }
+
+/* Desktop keeps the small circular pencil overlay; the label only shows
+   once the mobile breakpoint below turns this into a standalone button —
+   a 30-40px circle sitting on the edge of the avatar is too small a touch
+   target and too easy to miss on a phone. */
+.profile-photo-edit-btn .profile-photo-edit-label { display: none; }
+
+@media (max-width: 700px) {
+  .profile-avatar-large-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .profile-photo-edit-btn {
+    position: static;
+    width: auto;
+    height: auto;
+    min-height: 44px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    gap: 8px;
+  }
+
+  .profile-photo-edit-btn .profile-photo-edit-label { display: inline; }
+}
 
 /* ==============================
    CREATE-VIA-MODAL: CTA panel + modal shell

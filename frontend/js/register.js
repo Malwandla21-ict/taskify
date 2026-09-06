@@ -219,19 +219,23 @@ registerForm.addEventListener("submit", async (e) => {
 
   try {
     const response = await apiMultipartRequest("/auth/register", "POST", registerData);
+    const registeredEmail = document.getElementById("email").value.trim();
 
     /* Registration no longer logs you in automatically — the account isn't
-       usable until the email address is confirmed, so there's no token to
-       store here. Send them to check their inbox instead. */
+       usable until the email address is confirmed via the code we just
+       emailed. Stash the email for verify-email.html (it only ever asks
+       for the code, never the address) and send them straight there. */
+    sessionStorage.setItem("taskifyPendingVerifyEmail", registeredEmail);
+
     showMessage(
-      response.message || "Account created! Please check your email to verify your account before logging in.",
+      response.message || "Account created! Please check your email for a 6-digit verification code.",
       "var(--ump-green)"
     );
     submitBtn.innerHTML = `<i class="ti ti-mail-check" aria-hidden="true"></i> Check your email`;
 
     setTimeout(() => {
-      window.location.href = "./login.html";
-    }, 3500);
+      window.location.href = "./verify-email.html";
+    }, 1500);
 
   } catch (error) {
     showMessage(error.message || "Something went wrong. Please try again.", "red");

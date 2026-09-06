@@ -60,29 +60,32 @@ async function loadProfile() {
 
     profileMainCard.innerHTML = `
       <div class="profile-header-card">
+        <div class="profile-cover-photo" style="background-image:url('./assets/images/UMP-Buildings-62.jpg');"></div>
         <button type="button" class="edit-profile-header-btn" id="openEditProfileBtn">
           <i class="ti ti-pencil" aria-hidden="true"></i> Edit Profile
         </button>
-        <div class="profile-avatar-large-wrap">
-          <div class="profile-avatar-large" style="overflow:hidden;">
-            ${avatarHtml(profile.full_name, profile.profilePhoto)}
+        <div class="profile-header-body">
+          <div class="profile-avatar-large-wrap">
+            <div class="profile-avatar-large" style="overflow:hidden;">
+              ${avatarHtml(profile.full_name, profile.profilePhoto)}
+            </div>
+            <button type="button" id="changeProfilePhoto" class="profile-photo-edit-btn"
+                    aria-label="Change profile photo" title="Change profile photo">
+              <i class="ti ti-pencil" aria-hidden="true"></i>
+            </button>
           </div>
-          <button type="button" id="changeProfilePhoto" class="profile-photo-edit-btn"
-                  aria-label="Change profile photo" title="Change profile photo">
-            <i class="ti ti-pencil" aria-hidden="true"></i>
-          </button>
+          <div class="profile-header-info">
+            <h2>${posterName(profile.full_name, profile.lecturer_title)} <span class="lecturer-title-badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified Lecturer</span></h2>
+            <p><i class="ti ti-mail" aria-hidden="true"></i> ${profile.email}${profile.office_location ? ` &nbsp;·&nbsp; <i class="ti ti-map-pin" aria-hidden="true"></i> ${profile.office_location}` : ""}</p>
+            <p style="margin-top:2px;"><i class="ti ti-building" aria-hidden="true"></i> ${profile.faculty || "Faculty not set"}${profile.years_experience ? ` &nbsp;·&nbsp; ${profile.years_experience}+ years experience` : ""}</p>
+          </div>
         </div>
-        <div class="profile-header-info">
-          <h2>${posterName(profile.full_name, profile.lecturer_title)} <span class="lecturer-title-badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified Lecturer</span></h2>
-          <p><i class="ti ti-mail" aria-hidden="true"></i> ${profile.email}${profile.office_location ? ` &nbsp;·&nbsp; <i class="ti ti-map-pin" aria-hidden="true"></i> ${profile.office_location}` : ""}</p>
-          <p style="margin-top:2px;"><i class="ti ti-building" aria-hidden="true"></i> ${profile.faculty || "Faculty not set"}${profile.years_experience ? ` &nbsp;·&nbsp; ${profile.years_experience}+ years experience` : ""}</p>
+        <div class="profile-stats-inline">
+          <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-certificate" aria-hidden="true"></i></div><div class="pstat-value">${profile.lecturer_stats?.endorsementsGiven ?? 0}</div><div class="pstat-label">Endorsements Given</div></div>
+          <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-users" aria-hidden="true"></i></div><div class="pstat-value">${profile.lecturer_stats?.studentsEndorsed ?? 0}</div><div class="pstat-label">Students Endorsed</div></div>
+          <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-star" aria-hidden="true"></i></div><div class="pstat-value">${Number(profile.rating_average || 0).toFixed(1)}</div><div class="pstat-label">Avg Rating</div></div>
+          <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-message-star" aria-hidden="true"></i></div><div class="pstat-value">${profile.total_reviews}</div><div class="pstat-label">Reviews</div></div>
         </div>
-      </div>
-      <div class="profile-stats-inline" style="margin-top:14px;">
-        <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-certificate" aria-hidden="true"></i></div><div class="pstat-value">${profile.lecturer_stats?.endorsementsGiven ?? 0}</div><div class="pstat-label">Endorsements Given</div></div>
-        <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-users" aria-hidden="true"></i></div><div class="pstat-value">${profile.lecturer_stats?.studentsEndorsed ?? 0}</div><div class="pstat-label">Students Endorsed</div></div>
-        <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-star" aria-hidden="true"></i></div><div class="pstat-value">${Number(profile.rating_average || 0).toFixed(1)}</div><div class="pstat-label">Avg Rating</div></div>
-        <div class="pstat-card"><div class="pstat-icon"><i class="ti ti-message-star" aria-hidden="true"></i></div><div class="pstat-value">${profile.total_reviews}</div><div class="pstat-label">Reviews</div></div>
       </div>
     `;
 
@@ -489,3 +492,533 @@ document.addEventListener("click", (event) => {
 
 loadProfile();
 loadEndorsementsGiven();
+
+/* ══════════════════════ Security: two-factor authentication ══════════════════════
+   Ported from profile.js — same markup (twoFactorModal/changePasswordModal),
+   same IDs, same backend endpoints. Lecturers previously had no Security
+   card at all on this page. */
+
+const twoFactorModal      = document.getElementById("twoFactorModal");
+const twoFactorModalBody  = document.getElementById("twoFactorModalBody");
+const twoFactorStatusBadge = document.getElementById("twoFactorStatusBadge");
+
+function openSecurityModal(modal) {
+  modal.style.display = "block";
+  document.getElementById("overlay").style.display = "block";
+}
+
+function closeSecurityModal(modal) {
+  modal.style.display = "none";
+  document.getElementById("overlay").style.display = "none";
+}
+
+function closeTwoFactorModal() { closeSecurityModal(twoFactorModal); }
+function closeChangePasswordModal() { closeSecurityModal(document.getElementById("changePasswordModal")); }
+
+document.getElementById("closeTwoFactorModal")?.addEventListener("click", closeTwoFactorModal);
+document.getElementById("overlay")?.addEventListener("click", closeTwoFactorModal);
+document.getElementById("overlay")?.addEventListener("click", closeChangePasswordModal);
+
+/* Keeps the cached taskifyUser (and the in-memory currentUser) in sync
+   with the server's real 2FA state every time this is called — which
+   already happens right after enable/disable and on every page load.
+   Without this, admin.js's Stage 4 redirect guard would keep acting on a
+   stale "not enabled" reading from localStorage until the next full
+   login, even right after an admin finishes setting 2FA up here. */
+function syncStoredTotpEnabled(enabled) {
+  if (!currentUser) return;
+  currentUser.totp_enabled = enabled;
+  try {
+    const stored = JSON.parse(localStorage.getItem("taskifyUser") || "{}");
+    stored.totp_enabled = enabled;
+    localStorage.setItem("taskifyUser", JSON.stringify(stored));
+  } catch {
+    /* Non-fatal — worst case the admin redirect guard re-checks on next login. */
+  }
+}
+
+async function refreshTwoFactorStatus() {
+  try {
+    const res = await apiRequest("/auth/2fa/status");
+    const { enabled, method, backupCodesRemaining } = res.data;
+    const methodLabel = method === "email" ? "Enabled · Email" : "Enabled · App";
+    twoFactorStatusBadge.innerHTML = enabled ? badge(methodLabel, "") : badge("Disabled", "gold");
+    document.getElementById("manageTwoFactorBtn").innerHTML = enabled
+      ? `<i class="ti ti-shield-lock" aria-hidden="true"></i> Manage / Disable`
+      : `<i class="ti ti-shield-lock" aria-hidden="true"></i> Enable two-factor authentication`;
+    syncStoredTotpEnabled(enabled);
+    return { enabled, method, backupCodesRemaining };
+  } catch (err) {
+    twoFactorStatusBadge.textContent = "—";
+    return { enabled: false, method: null, backupCodesRemaining: null };
+  }
+}
+
+/* First screen when 2FA is off: pick a method before anything else
+   happens. The authenticator-app path is unchanged from before; the email
+   path is new (see requestEmailTwoFactorSetupCode/enableEmailTwoFactor on
+   the backend) and reuses the same "prove you can receive the code, then
+   you're enrolled, here are your backup codes" shape as the app path. */
+function renderTwoFactorMethodChoice() {
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      Add an extra layer of protection to your account. Choose how you'd like to receive your
+      sign-in codes.
+    </p>
+    <button type="button" class="primary-button" id="startTwoFactorSetupBtn" style="width:100%;margin-bottom:10px;">
+      <i class="ti ti-qrcode" aria-hidden="true"></i> Authenticator app
+    </button>
+    <button type="button" class="secondary-button" id="startEmailTwoFactorSetupBtn" style="width:100%;">
+      <i class="ti ti-mail" aria-hidden="true"></i> Email
+    </button>
+    <p style="font-size:11px;color:var(--muted);margin-top:12px;">
+      Authenticator app: works offline, needs an app like Google Authenticator, Authy or 1Password.<br>
+      Email: no app needed — codes are sent to your account email at sign-in.
+    </p>`;
+
+  document.getElementById("startTwoFactorSetupBtn").addEventListener("click", startTwoFactorSetup);
+  document.getElementById("startEmailTwoFactorSetupBtn").addEventListener("click", startEmailTwoFactorSetup);
+}
+
+async function startTwoFactorSetup() {
+  twoFactorModalBody.innerHTML = `<p style="font-size:13px;color:var(--muted);"><i class="ti ti-loader" aria-hidden="true"></i> Generating your setup code…</p>`;
+  try {
+    const res = await apiRequest("/auth/2fa/setup", "POST");
+    renderTwoFactorSetupStep(res.data.qrCodeDataUrl, res.data.manualEntryKey);
+  } catch (err) {
+    twoFactorModalBody.innerHTML = errorState(err.message);
+  }
+}
+
+function renderTwoFactorSetupStep(qrCodeDataUrl, manualEntryKey) {
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">1. Scan this QR code with your authenticator app.</p>
+    <div class="qr-code-box"><img src="${qrCodeDataUrl}" alt="Two-factor QR code" /></div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">Can't scan it? Enter this key manually:</p>
+    <div class="manual-key-box">${manualEntryKey}</div>
+    <p style="font-size:13px;color:var(--muted);margin:14px 0 6px;">2. Enter the 6-digit code your app shows:</p>
+    <div class="form-group">
+      <input type="text" id="twoFactorEnableCode" inputmode="numeric" maxlength="6" placeholder="123456" />
+    </div>
+    <p id="twoFactorSetupMessage" style="font-size:12px;font-weight:600;color:var(--ump-red);"></p>
+    <button type="button" class="primary-button" id="confirmTwoFactorEnableBtn" style="width:100%;">
+      <i class="ti ti-check" aria-hidden="true"></i> Confirm &amp; enable
+    </button>`;
+
+  document.getElementById("confirmTwoFactorEnableBtn").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    const code = document.getElementById("twoFactorEnableCode").value.trim();
+    const msgEl = document.getElementById("twoFactorSetupMessage");
+
+    if (!/^\d{6}$/.test(code)) {
+      msgEl.textContent = "Enter the 6-digit code from your app.";
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Verifying…`;
+
+    try {
+      const res = await apiRequest("/auth/2fa/enable", "POST", { code });
+      renderTwoFactorBackupCodes(res.data.backupCodes);
+      await refreshTwoFactorStatus();
+    } catch (err) {
+      msgEl.textContent = err.message;
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+}
+
+async function startEmailTwoFactorSetup() {
+  twoFactorModalBody.innerHTML = `<p style="font-size:13px;color:var(--muted);"><i class="ti ti-loader" aria-hidden="true"></i> Sending a code to your email…</p>`;
+  try {
+    const res = await apiRequest("/auth/2fa/setup-email", "POST");
+    renderEmailTwoFactorSetupStep(res.message);
+  } catch (err) {
+    twoFactorModalBody.innerHTML = errorState(err.message);
+  }
+}
+
+function renderEmailTwoFactorSetupStep(sentMessage) {
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      ${sentMessage || "We've sent a 6-digit code to your email."}
+    </p>
+    <div class="form-group">
+      <label>6-digit code</label>
+      <input type="text" id="twoFactorEnableEmailCode" inputmode="numeric" maxlength="6" placeholder="123456" />
+    </div>
+    <p id="twoFactorEmailSetupMessage" style="font-size:12px;font-weight:600;color:var(--ump-red);"></p>
+    <button type="button" class="primary-button" id="confirmTwoFactorEnableEmailBtn" style="width:100%;margin-bottom:8px;">
+      <i class="ti ti-check" aria-hidden="true"></i> Confirm &amp; enable
+    </button>
+    <button type="button" class="secondary-button" id="resendTwoFactorEmailCodeBtn" style="width:100%;">
+      <i class="ti ti-refresh" aria-hidden="true"></i> Resend code
+    </button>`;
+
+  document.getElementById("confirmTwoFactorEnableEmailBtn").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    const code = document.getElementById("twoFactorEnableEmailCode").value.trim();
+    const msgEl = document.getElementById("twoFactorEmailSetupMessage");
+
+    if (!/^\d{6}$/.test(code)) {
+      msgEl.textContent = "Enter the 6-digit code from your email.";
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Verifying…`;
+
+    try {
+      const res = await apiRequest("/auth/2fa/enable-email", "POST", { code });
+      renderTwoFactorBackupCodes(res.data.backupCodes);
+      await refreshTwoFactorStatus();
+    } catch (err) {
+      msgEl.textContent = err.message;
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+
+  document.getElementById("resendTwoFactorEmailCodeBtn").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    const msgEl = document.getElementById("twoFactorEmailSetupMessage");
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Sending…`;
+
+    try {
+      const res = await apiRequest("/auth/2fa/setup-email", "POST");
+      msgEl.style.color = "var(--ump-green)";
+      msgEl.textContent = res.message || "A new code is on its way.";
+    } catch (err) {
+      msgEl.style.color = "var(--ump-red)";
+      msgEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+}
+
+function renderTwoFactorBackupCodes(codes, opts = {}) {
+  const heading = opts.heading || `<i class="ti ti-circle-check" aria-hidden="true"></i> Two-factor authentication is enabled.`;
+  const subtext = opts.subtext || `Save these one-time backup codes somewhere safe. Each works once if you lose access to your authenticator app — they will not be shown again.`;
+
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;font-weight:700;color:var(--ump-green);margin-bottom:8px;">
+      ${heading}
+    </p>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">
+      ${subtext}
+    </p>
+    <div class="backup-codes-grid">
+      ${codes.map(c => `<div class="backup-code-chip">${c}</div>`).join("")}
+    </div>
+    <button type="button" class="secondary-button" id="copyBackupCodesBtn" style="width:100%;margin-top:12px;">
+      <i class="ti ti-copy" aria-hidden="true"></i> Copy codes
+    </button>`;
+
+  document.getElementById("copyBackupCodesBtn").addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(codes.join("\n"));
+      showToast("Backup codes copied.");
+    } catch {
+      showToast("Couldn't copy automatically — please copy them manually.", "warning");
+    }
+  });
+}
+
+function formatDeviceDate(iso) {
+  if (!iso) return "Never";
+  return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
+/* Trusted-devices list inside the 2FA "Manage" screen — never shown to
+   admin accounts (2FA stays mandatory for them regardless of device
+   history, so there's nothing here to manage). Loads on its own once the
+   Manage screen renders, independent of the disable/regenerate flows
+   above it. */
+async function renderTrustedDevicesSection() {
+  const container = document.getElementById("trustedDevicesSection");
+  if (!container) return;
+
+  try {
+    const res = await apiRequest("/auth/2fa/trusted-devices");
+    const devices = res.data || [];
+
+    if (devices.length === 0) {
+      container.innerHTML = `<p style="font-size:12px;color:var(--muted);">No remembered devices right now.</p>`;
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;">
+        ${devices.map(d => `
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
+            <div>
+              <div style="font-size:12.5px;font-weight:600;">${d.device_label || "Unknown device"}</div>
+              <div style="font-size:11px;color:var(--muted);">Last used ${formatDeviceDate(d.last_used_at)} · Expires ${formatDeviceDate(d.expires_at)}</div>
+            </div>
+            <button type="button" class="secondary-button" data-device-id="${d.id}" style="padding:4px 10px;font-size:11px;flex-shrink:0;">Forget</button>
+          </div>`).join("")}
+      </div>
+      ${devices.length > 1 ? `<button type="button" class="secondary-button" id="forgetAllDevicesBtn" style="width:100%;font-size:12px;">Forget all devices</button>` : ""}`;
+
+    container.querySelectorAll("button[data-device-id]").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+        try {
+          await apiRequest(`/auth/2fa/trusted-devices/${btn.dataset.deviceId}`, "DELETE");
+          await renderTrustedDevicesSection();
+        } catch (err) {
+          showToast(err.message || "Couldn't forget that device.", "warning");
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      });
+    });
+
+    document.getElementById("forgetAllDevicesBtn")?.addEventListener("click", async (event) => {
+      const btn = event.currentTarget;
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Forgetting…`;
+      try {
+        await apiRequest("/auth/2fa/trusted-devices/revoke-all", "POST");
+        await renderTrustedDevicesSection();
+      } catch (err) {
+        showToast(err.message || "Couldn't forget devices.", "warning");
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
+      }
+    });
+  } catch (err) {
+    container.innerHTML = `<p style="font-size:12px;color:var(--ump-red);">Couldn't load remembered devices.</p>`;
+  }
+}
+
+function renderTwoFactorManage(method, backupCodesRemaining = null) {
+  /* An email-method account has no authenticator app to pull a code from —
+     a backup code still works (generated for both methods), but they also
+     need a way to get a fresh email code without leaving this screen. */
+  const codeHint = method === "email"
+    ? `6-digit code (emailed) or backup code`
+    : `6-digit code or backup code`;
+
+  /* The password + code fields below are shared by both actions this
+     screen offers (disable, regenerate) — no need to ask twice for the
+     same proof of identity. */
+  const lowOnCodes = typeof backupCodesRemaining === "number" && backupCodesRemaining <= 2;
+  const lowCodesWarning = lowOnCodes
+    ? `<p style="font-size:12px;font-weight:600;color:var(--ump-gold, #b8860b);margin-bottom:12px;">
+         <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+         ${backupCodesRemaining === 0
+           ? "You have no backup codes left."
+           : `Only ${backupCodesRemaining} backup code${backupCodesRemaining === 1 ? "" : "s"} left.`}
+         Regenerate below to get a fresh set.
+       </p>`
+    : "";
+
+  twoFactorModalBody.innerHTML = `
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
+      Two-factor authentication is currently enabled${method === "email" ? " via email" : " via authenticator app"}.
+      Confirm your password and a current code to manage it.
+    </p>
+    ${lowCodesWarning}
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="twoFactorDisablePassword" autocomplete="current-password" />
+    </div>
+    <div class="form-group">
+      <label>${codeHint}</label>
+      <input type="text" id="twoFactorDisableCode" placeholder="123456 or XXXXX-XXXXX" />
+    </div>
+    ${method === "email" ? `<p style="margin-bottom:10px;"><a href="#" id="resendTwoFactorDisableEmailCode" style="font-size:12px;">Email me a code</a></p>` : ""}
+    <p id="twoFactorDisableMessage" style="font-size:12px;font-weight:600;color:var(--ump-red);"></p>
+    <button type="button" class="secondary-button" id="regenerateBackupCodesBtn" style="width:100%;margin-bottom:8px;">
+      <i class="ti ti-refresh" aria-hidden="true"></i> Regenerate backup codes
+    </button>
+    <button type="button" class="secondary-button" id="confirmTwoFactorDisableBtn" style="width:100%;">
+      <i class="ti ti-shield-x" aria-hidden="true"></i> Disable two-factor authentication
+    </button>
+    ${currentUser?.role !== "admin" ? `
+      <div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border, #e5e7eb);">
+        <p style="font-size:12px;font-weight:700;margin-bottom:8px;">Remembered devices</p>
+        <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">
+          Devices you chose to remember skip the two-factor prompt for 30 days.
+        </p>
+        <div id="trustedDevicesSection"><p style="font-size:12px;color:var(--muted);"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p></div>
+      </div>
+    ` : ""}`;
+
+  if (currentUser?.role !== "admin") renderTrustedDevicesSection();
+
+  document.getElementById("resendTwoFactorDisableEmailCode")?.addEventListener("click", async (event) => {
+    event.preventDefault();
+    const link = event.currentTarget;
+    const msgEl = document.getElementById("twoFactorDisableMessage");
+    const originalText = link.textContent;
+    link.textContent = "Sending…";
+
+    try {
+      const res = await apiRequest("/auth/2fa/setup-email", "POST");
+      msgEl.style.color = "var(--ump-green)";
+      msgEl.textContent = res.message || "A code is on its way.";
+    } catch (err) {
+      msgEl.style.color = "var(--ump-red)";
+      msgEl.textContent = err.message;
+    } finally {
+      link.textContent = originalText;
+    }
+  });
+
+  document.getElementById("regenerateBackupCodesBtn").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    const password = document.getElementById("twoFactorDisablePassword").value;
+    const code = document.getElementById("twoFactorDisableCode").value.trim();
+    const msgEl = document.getElementById("twoFactorDisableMessage");
+
+    if (!password || !code) {
+      msgEl.textContent = "Both fields are required.";
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Regenerating…`;
+
+    try {
+      const res = await apiRequest("/auth/2fa/backup-codes/regenerate", "POST", { password, code });
+      renderTwoFactorBackupCodes(res.data.backupCodes, {
+        heading: `<i class="ti ti-refresh" aria-hidden="true"></i> Backup codes regenerated.`,
+        subtext: "Save these new codes somewhere safe — your old backup codes no longer work."
+      });
+    } catch (err) {
+      msgEl.textContent = err.message;
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+
+  document.getElementById("confirmTwoFactorDisableBtn").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    const password = document.getElementById("twoFactorDisablePassword").value;
+    const code = document.getElementById("twoFactorDisableCode").value.trim();
+    const msgEl = document.getElementById("twoFactorDisableMessage");
+
+    if (!password || !code) {
+      msgEl.textContent = "Both fields are required.";
+      return;
+    }
+
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Disabling…`;
+
+    try {
+      await apiRequest("/auth/2fa/disable", "POST", { password, code });
+      showToast("Two-factor authentication disabled.");
+      await refreshTwoFactorStatus();
+      closeTwoFactorModal();
+    } catch (err) {
+      msgEl.textContent = err.message;
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  });
+}
+
+document.getElementById("manageTwoFactorBtn")?.addEventListener("click", async () => {
+  openSecurityModal(twoFactorModal);
+  twoFactorModalBody.innerHTML = `<p style="font-size:13px;color:var(--muted);"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>`;
+  const { enabled, method, backupCodesRemaining } = await refreshTwoFactorStatus();
+  if (enabled) renderTwoFactorManage(method, backupCodesRemaining);
+  else renderTwoFactorMethodChoice();
+});
+
+/* ══════════════════════ Security: change password ══════════════════════ */
+
+const changePasswordModal = document.getElementById("changePasswordModal");
+
+document.getElementById("openChangePasswordBtn")?.addEventListener("click", () => {
+  document.getElementById("currentPasswordInput").value = "";
+  document.getElementById("newPasswordInput").value = "";
+  document.getElementById("confirmNewPasswordInput").value = "";
+  document.getElementById("changePasswordMessage").textContent = "";
+  openSecurityModal(changePasswordModal);
+});
+
+document.getElementById("closeChangePasswordModal")?.addEventListener("click", closeChangePasswordModal);
+
+document.getElementById("submitChangePasswordBtn")?.addEventListener("click", async (event) => {
+  const btn = event.currentTarget;
+  const currentPassword = document.getElementById("currentPasswordInput").value;
+  const newPassword     = document.getElementById("newPasswordInput").value;
+  const confirmPassword = document.getElementById("confirmNewPasswordInput").value;
+  const msgEl = document.getElementById("changePasswordMessage");
+  msgEl.style.color = "var(--ump-red)";
+
+  if (!currentPassword || !newPassword) {
+    msgEl.textContent = "Both fields are required.";
+    return;
+  }
+  if (newPassword.length < 8 || !/[A-Za-z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+    msgEl.textContent = "New password must be at least 8 characters and include a letter and a number.";
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    msgEl.textContent = "New passwords do not match.";
+    return;
+  }
+
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Changing…`;
+
+  try {
+    const res = await apiRequest("/users/me/password", "PATCH", { currentPassword, newPassword });
+    msgEl.style.color = "var(--ump-green)";
+    msgEl.textContent = res.message || "Password changed.";
+    /* Server bumped token_version, so THIS token is now invalid too —
+       send them to log back in rather than leaving a dead session active. */
+    setTimeout(() => {
+      localStorage.removeItem("taskifyToken");
+      localStorage.removeItem("taskifyUser");
+      window.location.href = "./login.html";
+    }, 1800);
+  } catch (err) {
+    msgEl.textContent = err.message;
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+});
+
+/* Stage 4 lockdown — an admin account without 2FA gets walked straight
+   into setup the moment they land here, whether that's right after login
+   (a lecturer account lands on this page instead of profile.html) or via
+   admin.js bouncing them back from the admin panel. The actual
+   enforcement is server-side (requireTwoFactor, auth.middleware.js) —
+   this is the proactive nudge so they don't have to go hunting for the
+   Security card themselves. */
+function showAdminTwoFactorBanner() {
+  if (document.getElementById("adminTwoFactorBanner")) return;
+  const banner = document.createElement("div");
+  banner.id = "adminTwoFactorBanner";
+  banner.style.cssText = "background:rgba(224,58,62,0.08);border:1px solid rgba(224,58,62,0.3);color:var(--ump-red);padding:12px 16px;border-radius:10px;margin:16px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;";
+  banner.innerHTML = `<i class="ti ti-shield-exclamation" aria-hidden="true"></i> Two-factor authentication is required for admin accounts. Set it up below to access the admin panel.`;
+  profileMainCard?.insertAdjacentElement("beforebegin", banner);
+}
+
+refreshTwoFactorStatus().then(({ enabled }) => {
+  if (currentUser?.role === "admin" && !enabled) {
+    showAdminTwoFactorBanner();
+    openSecurityModal(twoFactorModal);
+    renderTwoFactorMethodChoice();
+  }
+});

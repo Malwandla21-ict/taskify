@@ -9,59 +9,126 @@
 <body>
 <div class="auth-page">
   <div class="auth-container" style="max-width:460px;grid-template-columns:1fr;">
-    <div class="auth-right" style="text-align:center;">
-      <div class="logo-row" style="margin-bottom:26px;justify-content:center;">
+    <div class="auth-right">
+      <div class="logo-row" style="margin-bottom:26px;">
         <img src="./assets/logo/ump logoT.png" alt="UMP Logo" class="ump-logo" />
         <div class="logo-text" style="font-size:24px;">Taskify</div>
       </div>
-      <div id="statusIcon" style="font-size:42px;color:var(--ump-green);margin-bottom:10px;">
-        <i class="ti ti-loader" aria-hidden="true"></i>
-      </div>
-      <h1 id="statusTitle" style="font-size:22px;font-weight:800;margin-bottom:8px;">Verifying your email…</h1>
-      <p id="statusMessage" class="auth-subtitle">Please wait a moment.</p>
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:4px;">
+        <i class="ti ti-mail-check" aria-hidden="true"></i> Verify your email
+      </h1>
+      <p class="auth-subtitle" id="verifySubtitle">Enter the 6-digit code we sent to your email.</p>
+      <form id="verifyForm">
+        <div class="form-group">
+          <label for="code"><i class="ti ti-key" aria-hidden="true"></i> Verification code</label>
+          <input type="text" id="code" inputmode="numeric" placeholder="123456" maxlength="6" autocomplete="one-time-code" required autofocus />
+        </div>
+        <button type="submit" class="primary-button" id="verifyButton">
+          <i class="ti ti-check" aria-hidden="true"></i> Verify &amp; continue
+        </button>
+      </form>
+      <p style="margin-top:14px;text-align:center;font-size:12px;">
+        <a href="#" id="resendCode">Resend code</a>
+      </p>
       <div class="auth-footer">
         <a href="./login.html">Back to login</a>
       </div>
+      <p id="verifyMessage" style="margin-top:14px;text-align:center;font-weight:600;font-size:13px;"></p>
     </div>
   </div>
 </div>
 <script src="./js/api.js"></script>
 <script>
-  const statusIcon    = document.getElementById("statusIcon");
-  const statusTitle   = document.getElementById("statusTitle");
-  const statusMessage = document.getElementById("statusMessage");
+  const verifyForm     = document.getElementById("verifyForm");
+  const verifyMessage  = document.getElementById("verifyMessage");
+  const verifySubtitle = document.getElementById("verifySubtitle");
+  const codeInput      = document.getElementById("code");
+  const verifyButton   = document.getElementById("verifyButton");
+  const resendCode     = document.getElementById("resendCode");
 
-  const params = new URLSearchParams(window.location.search);
-  const token  = params.get("token");
+  /* Set by register.js right after account creation, or by
+     resend-verification.html after someone re-requests a code — either
+     way, this page never asks for the email itself, only the code. */
+  const email = sessionStorage.getItem("taskifyPendingVerifyEmail");
 
-  async function run() {
-    if (!token) {
-      statusIcon.innerHTML = `<i class="ti ti-alert-circle" aria-hidden="true"></i>`;
-      statusIcon.style.color = "#e5484d";
-      statusTitle.textContent = "Missing verification token";
-      statusMessage.textContent = "This link looks incomplete. Please use the link from your email exactly as sent.";
+  if (!email) {
+    window.location.href = "./resend-verification.html";
+  } else {
+    verifySubtitle.textContent = `Enter the 6-digit code we sent to ${email}.`;
+  }
+
+  let resendCooldownTimer = null;
+
+  function showMessage(msg, color = "red") {
+    verifyMessage.textContent = msg;
+    verifyMessage.style.color = color;
+  }
+
+  /* Purely cosmetic — the real abuse guard is the server's IP-based
+     emailActionLimiter on /auth/resend-verification. This just stops an
+     accidental double-click from firing two emails. */
+  function startResendCooldown(seconds = 30) {
+    clearInterval(resendCooldownTimer);
+    let remaining = seconds;
+    resendCode.style.pointerEvents = "none";
+    resendCode.style.opacity = "0.5";
+    resendCode.textContent = `Resend code (${remaining}s)`;
+
+    resendCooldownTimer = setInterval(() => {
+      remaining -= 1;
+      if (remaining <= 0) {
+        clearInterval(resendCooldownTimer);
+        resendCode.style.pointerEvents = "";
+        resendCode.style.opacity = "";
+        resendCode.textContent = "Resend code";
+        return;
+      }
+      resendCode.textContent = `Resend code (${remaining}s)`;
+    }, 1000);
+  }
+
+  resendCode.addEventListener("click", async (event) => {
+    event.preventDefault();
+    if (resendCode.style.pointerEvents === "none") return;
+
+    try {
+      const response = await apiRequest("/auth/resend-verification", "POST", { email });
+      showMessage(response.message || "If that email needs verifying, a new code has been sent.", "var(--ump-green)");
+      startResendCooldown(30);
+    } catch (error) {
+      showMessage(error.message || "Something went wrong. Please try again.", "red");
+    }
+  });
+
+  verifyForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const code = codeInput.value.trim();
+    if (!code) {
+      showMessage("Enter the code.");
       return;
     }
 
+    const originalHtml = verifyButton.innerHTML;
+    verifyButton.disabled = true;
+    verifyButton.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Verifying…`;
+    showMessage("Verifying…", "#687280");
+
     try {
-      const response = await apiRequest(`/auth/verify-email?token=${encodeURIComponent(token)}`, "GET");
+      const response = await apiRequest("/auth/verify-email", "POST", { email, code });
 
       localStorage.setItem("taskifyToken", response.data.token);
       localStorage.setItem("taskifyUser", JSON.stringify(response.data.user));
+      sessionStorage.removeItem("taskifyPendingVerifyEmail");
 
-      statusIcon.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i>`;
-      statusTitle.textContent = "Email verified!";
-      statusMessage.textContent = "You're now logged in. Redirecting to your profile…";
-      setTimeout(() => { window.location.href = "./profile.html"; }, 1500);
+      showMessage("Email verified! Redirecting…", "var(--ump-green)");
+      setTimeout(() => { window.location.href = "./profile.html"; }, 1000);
     } catch (error) {
-      statusIcon.innerHTML = `<i class="ti ti-alert-circle" aria-hidden="true"></i>`;
-      statusIcon.style.color = "#e5484d";
-      statusTitle.textContent = "Verification failed";
-      statusMessage.textContent = error.message || "This link is invalid or has expired.";
+      showMessage(error.message || "This code is invalid or has expired.", "red");
+      verifyButton.disabled = false;
+      verifyButton.innerHTML = originalHtml;
     }
-  }
-
-  run();
+  });
 </script>
 </body>
 </html>

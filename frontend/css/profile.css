@@ -472,8 +472,29 @@ button.back-link {
   margin-top: 6px;
 }
 
+/* Two-column overview layout for profile.html (About/Skills/Verification
+   next to Statistics/Availability) and lecturer-profile.html (main tabs
+   next to a narrower side column). Was inline `style="display:grid;..."`
+   on the page with no way to override it for mobile — moved to classes
+   here so it can collapse to one column below 900px like everything
+   else on these pages already does. */
+.profile-overview-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.lecturer-overview-grid {
+  display: grid;
+  grid-template-columns: 2.4fr 1fr;
+  gap: 18px;
+  align-items: start;
+}
+
 @media (max-width: 900px) {
   .profile-stats-grid-v2 { grid-template-columns: 1fr; }
+  .profile-overview-grid { grid-template-columns: 1fr; }
+  .lecturer-overview-grid { grid-template-columns: 1fr; }
 }
 
 /* ==============================
@@ -548,3 +569,196 @@ button.back-link {
   font-size: 13px;
   text-align: center;
 }
+
+/* ==============================
+   PROFILE HEADER — COVER PHOTO + OVERLAPPING AVATAR
+   Replaces the old flat-navy header card with a photo banner + avatar
+   that overlaps its bottom edge, sitting above a white info panel — the
+   layout requested to match the reference mockups. Overrides main.css's
+   original solid-navy `.profile-header-card` (that class is only ever
+   used on these two profile pages, so it's safe to fully restyle here
+   rather than introduce a parallel set of class names). No JS changes
+   needed beyond adding the .profile-cover-photo / .profile-header-body
+   wrapper elements — every existing data binding (name, badges, stats,
+   edit button, photo-change button) keeps its original id/class.
+============================== */
+.profile-header-card {
+  background: white;
+  color: var(--text);
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  position: relative;
+}
+
+/* Kill the navy card's decorative corner circle — it was drawn for a
+   solid-color background and shows as a stray green blob on white. */
+.profile-header-card::after { display: none; }
+
+.profile-cover-photo {
+  height: 150px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--ump-navy);
+  position: relative;
+}
+
+.profile-cover-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(12,29,74,0.05) 0%, rgba(12,29,74,0.35) 100%);
+}
+
+.profile-header-card .edit-profile-header-btn {
+  position: absolute;
+  top: 14px;
+  right: 20px;
+  z-index: 3;
+  background: rgba(12,29,74,0.55);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.profile-header-card .edit-profile-header-btn:hover { background: rgba(12,29,74,0.75); }
+
+/* The avatar is taken out of flow and pinned to the top-left of this
+   block so it can overlap the cover photo above without dragging the
+   name/badges text up with it (a flex align-items:flex-end approach
+   was tried first, but it pulls every child to the row's shared
+   baseline, so the text also crept up into the photo — this keeps the
+   text's own top edge anchored to right after the photo, unaffected
+   by however far the avatar reaches upward). */
+.profile-header-body {
+  position: relative;
+  padding: 62px 28px 20px;
+  padding-left: calc(28px + clamp(88px, 12vw, 108px) + 20px);
+  z-index: 2;
+}
+
+.profile-header-card .profile-avatar-large-wrap {
+  position: absolute;
+  left: 28px;
+  top: -54px;
+  z-index: 3;
+}
+
+.profile-header-card .profile-avatar-large {
+  width: clamp(88px, 12vw, 108px);
+  height: clamp(88px, 12vw, 108px);
+  border: 4px solid white;
+  background: var(--background);
+  box-shadow: var(--shadow-md);
+}
+
+.profile-header-card .profile-avatar-large i { color: var(--muted); font-size: 34px; }
+
+.profile-header-card .profile-header-info {
+  padding-bottom: 4px;
+  min-width: 0;
+}
+
+.profile-header-card .profile-header-info h2 { color: var(--text); display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.profile-header-card .profile-header-info p { color: var(--muted); opacity: 1; }
+
+.profile-header-card .profile-badge {
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.profile-header-card .profile-badge.verified {
+  background: rgba(0,155,114,0.08);
+  border-color: rgba(0,155,114,0.25);
+  color: var(--ump-green);
+}
+
+.profile-header-card .lecturer-title-badge { background: rgba(108,61,255,0.10); }
+
+/* ── Header stat row ──
+   Sits under the name/badges, separated by a hairline. Plain icon +
+   value + label groups on white rather than the old boxed pstat-cards
+   on navy, matching the reference mockups' inline stat readout. */
+.profile-stats-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 26px;
+  padding: 16px 28px 22px;
+  border-top: 1px solid var(--border);
+  margin-top: 0 !important;
+}
+
+.profile-stats-inline .pstat-card {
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  color: var(--text);
+  width: auto;
+}
+
+.profile-stats-inline .pstat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius);
+  background: rgba(0,155,114,0.10);
+  color: var(--ump-green);
+  margin: 0;
+  font-size: 15px;
+}
+
+.profile-stats-inline .pstat-value { font-size: 17px; font-weight: 800; color: var(--text); }
+.profile-stats-inline .pstat-label { font-size: 11px; color: var(--muted); opacity: 1; margin-top: 1px; }
+
+@media (max-width: 700px) {
+  /* Below 700px, main.css already turns .profile-avatar-large-wrap into a
+     centered flex column (avatar above the "Change Photo" button) — keep
+     that same stacked treatment here instead of the absolute overlap,
+     which doesn't suit a narrow single-column layout. */
+  .profile-header-body { padding: 0 18px 18px; padding-left: 18px; }
+  .profile-header-card .profile-avatar-large-wrap { position: static; margin-top: -46px; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .profile-stats-inline { padding: 14px 18px 18px; gap: 18px; }
+  .profile-header-card .edit-profile-header-btn { top: 10px; right: 12px; }
+}
+
+/* ── Quick Actions — right-column list (student + lecturer profile) ──
+   The lecturer page already used .profile-quick-action-btn for its
+   right-column actions; extended here with a subtitle + trailing
+   chevron so both profile pages share one compact list style instead
+   of the large `categories-grid` tiles used elsewhere in the app. */
+.profile-quick-action-btn {
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.profile-quick-action-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex-shrink: 0;
+  color: white;
+}
+
+.profile-quick-action-icon.green { background: var(--ump-green); }
+.profile-quick-action-icon.blue  { background: var(--ump-blue); }
+.profile-quick-action-icon.gold  { background: var(--ump-gold); color: var(--ump-navy); }
+.profile-quick-action-icon.navy  { background: var(--ump-navy); }
+.profile-quick-action-icon i { font-size: 17px; }
+
+.profile-quick-action-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.profile-quick-action-title { font-size: 13px; font-weight: 700; color: var(--ump-navy); }
+.profile-quick-action-sub { font-size: 11px; font-weight: 500; color: var(--muted); }
+
+.profile-quick-action-btn:hover .profile-quick-action-title,
+.profile-quick-action-btn:hover .profile-quick-action-sub { color: white; }
+
+.profile-quick-action-chevron { color: var(--muted); font-size: 15px; flex-shrink: 0; }
+.profile-quick-action-btn:hover .profile-quick-action-chevron { color: white; }

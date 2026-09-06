@@ -22,8 +22,10 @@ const backTaskStep1    = document.getElementById("backTaskStep1");
 const backTaskStep2    = document.getElementById("backTaskStep2");
 
 const reviewModal            = document.getElementById("reviewModal");
+const reviewModalTitle       = document.getElementById("reviewModalTitle");
 const reviewForm             = document.getElementById("reviewForm");
 const reviewTaskIdInput      = document.getElementById("reviewTaskId");
+const reviewIdInput          = document.getElementById("reviewId");
 const ratingInput            = document.getElementById("rating");
 const commentInput           = document.getElementById("comment");
 const closeReviewModalButton = document.getElementById("closeReviewModal");
@@ -320,11 +322,20 @@ function historyCard(task) {
         </div>
         <div class="market-footer">
           <div class="market-price">R${task.price} <span>/task</span></div>
-          ${task.status === "Completed"
-            ? `<button class="market-action-btn review-task-btn" data-task-id="${task.id}">
-                 <i class="ti ti-star" aria-hidden="true"></i> Leave Review
-               </button>`
-            : `<a href="./task-details.html?id=${task.id}" class="market-action-btn outline"><i class="ti ti-eye" aria-hidden="true"></i> View</a>`}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            ${task.status !== "Completed"
+              ? `<a href="./task-details.html?id=${task.id}" class="market-action-btn outline"><i class="ti ti-eye" aria-hidden="true"></i> View</a>`
+              : task.my_review_id
+                ? `<button class="market-action-btn outline edit-review-btn" data-review-id="${task.my_review_id}" data-rating="${task.my_review_rating ?? ""}" data-comment="${(task.my_review_comment ?? "").replace(/"/g, "&quot;")}">
+                     <i class="ti ti-edit" aria-hidden="true"></i> Edit Review
+                   </button>
+                   <button class="market-action-btn outline delete-review-btn" data-review-id="${task.my_review_id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+                     <i class="ti ti-trash" aria-hidden="true"></i>
+                   </button>`
+                : `<button class="market-action-btn review-task-btn" data-task-id="${task.id}">
+                     <i class="ti ti-star" aria-hidden="true"></i> Leave Review
+                   </button>`}
+          </div>
         </div>
       </div>
     </div>`;
@@ -333,7 +344,9 @@ function historyCard(task) {
 function historyMiniCard(task) {
   return `
     <a href="./task-details.html?id=${task.id}" class="mini-history-item">
-      <div class="mini-history-thumb"><div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div></div>
+      <div class="mini-history-thumb">${task.image_urls?.length
+        ? `<img src="${task.image_urls[0]}" alt="${task.title}" style="width:100%;height:100%;object-fit:cover;" />`
+        : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
           ${sectionBadge(task.section || "General")}
@@ -370,8 +383,44 @@ function attachReviewButtonEvents(scope = document) {
     btn.addEventListener("click", () => {
       reviewForm.reset();
       reviewTaskIdInput.value = btn.dataset.taskId;
+      reviewIdInput.value = "";
+      if (reviewModalTitle) reviewModalTitle.innerHTML = `<i class="ti ti-star" aria-hidden="true"></i> Leave a Review`;
       reviewMessage.textContent = "";
       openModal(reviewModal);
+    });
+  });
+
+  scope.querySelectorAll(".edit-review-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => {
+      reviewForm.reset();
+      reviewTaskIdInput.value = "";
+      reviewIdInput.value = btn.dataset.reviewId;
+      ratingInput.value = btn.dataset.rating || "";
+      commentInput.value = btn.dataset.comment || "";
+      if (reviewModalTitle) reviewModalTitle.innerHTML = `<i class="ti ti-edit" aria-hidden="true"></i> Edit Review`;
+      reviewMessage.textContent = "";
+      openModal(reviewModal);
+    });
+  });
+
+  scope.querySelectorAll(".delete-review-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", async () => {
+      if (!confirm("Delete this review?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/reviews/${btn.dataset.reviewId}`, "DELETE");
+        showToast("Review deleted.");
+        await loadTaskHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i>`;
+      }
     });
   });
 }
@@ -379,11 +428,19 @@ function attachReviewButtonEvents(scope = document) {
 reviewForm?.addEventListener("submit", async e => {
   e.preventDefault();
   try {
-    await apiRequest(`/reviews/tasks/${reviewTaskIdInput.value}`, "POST", {
-      rating: Number(ratingInput.value),
-      comment: commentInput.value.trim()
-    });
-    showToast("Review submitted!");
+    if (reviewIdInput.value) {
+      await apiRequest(`/reviews/${reviewIdInput.value}`, "PATCH", {
+        rating: Number(ratingInput.value),
+        comment: commentInput.value.trim()
+      });
+      showToast("Review updated!");
+    } else {
+      await apiRequest(`/reviews/tasks/${reviewTaskIdInput.value}`, "POST", {
+        rating: Number(ratingInput.value),
+        comment: commentInput.value.trim()
+      });
+      showToast("Review submitted!");
+    }
     closeModal(reviewModal, reviewForm, reviewMessage);
     await loadTaskHistory();
   } catch (err) {

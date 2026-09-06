@@ -129,13 +129,24 @@ function setupUserMenuToggle() {
   });
 }
 
-/* ── Topbar search — same behaviour as the old dashboard hero search:
-   sends the person to the task list pre-filtered by their query. ── */
+/* ── Topbar search — stays on whatever marketplace page you're already on
+   and pre-filters that page's own listings. e.g. searching from Rentals
+   jumps to (or reloads) equipment.html?search=... rather than always
+   dropping you into Tasks. Pages without their own listing search (the
+   dashboard, profile, messages, etc.) fall back to Tasks, matching the
+   original behaviour. ── */
+const TOPBAR_SEARCH_PAGES = new Set([
+  "tasks.html", "equipment.html", "sales.html", "events.html", "tutors.html",
+  "academic.html", "general.html"
+]);
+
 function setupTopbarSearch() {
   const input = document.getElementById("topbarSearchInput");
   input?.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && input.value.trim()) {
-      window.location.href = `./tasks.html?search=${encodeURIComponent(input.value.trim())}`;
+      const currentPage = window.location.pathname.split("/").pop();
+      const targetPage = TOPBAR_SEARCH_PAGES.has(currentPage) ? currentPage : "tasks.html";
+      window.location.href = `./${targetPage}?search=${encodeURIComponent(input.value.trim())}`;
     }
   });
 }

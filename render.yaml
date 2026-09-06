@@ -1,0 +1,115 @@
+# Render Blueprint for Taskify.
+#
+# This deploys two services from one repo:
+#   1. taskify-backend  — the Node/Express API (paid-free "web" service, sleeps
+#      after 15 min idle on the free plan; first request after that takes
+#      ~30-60s to wake up).
+#   2. taskify-frontend — the plain HTML/CSS/JS frontend, served as a static
+#      site (no build step needed).
+#
+# How to use this file: in the Render dashboard, "New +" → "Blueprint", point
+# it at this repo, and Render reads this file to create both services in one
+# go. Env vars marked `sync: false` are NOT stored in this file (so no
+# secrets end up in git) — Render will prompt you to type each one in during
+# setup, or you can add/edit them later under each service's "Environment"
+# tab. See DEPLOYMENT.md in this repo for the full step-by-step walkthrough,
+# including where to get each of these values.
+
+services:
+  - type: web
+    name: taskify-backend
+    runtime: node
+    plan: free
+    region: oregon
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # Filled in once the frontend's Render URL is known (after its first
+      # deploy) — see DEPLOYMENT.md. Used for CORS and for links in emails.
+      - key: CLIENT_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+
+      # Aiven (or any hosted) MySQL connection details.
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "3306"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL
+        value: "true"
+      - key: DB_SSL_CA
+        sync: false
+
+      # Generate with: node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRES_IN
+        value: 1d
+
+      - key: UNIVERSITY_EMAIL_DOMAIN
+        value: ump.ac.za,student.ump.ac.za
+
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # Leave SMTP_HOST empty in the Render dashboard to run in dev mode
+      # (emails logged instead of sent) until real SMTP creds are set up.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_SECURE
+        value: "false"
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: EMAIL_FROM
+        value: "Taskify <no-reply@taskify.local>"
+
+      - key: TOTP_ISSUER
+        value: Taskify
+      # Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      - key: TOTP_ENCRYPTION_KEY
+        sync: false
+
+      - key: LOGIN_MAX_ATTEMPTS
+        value: "5"
+      - key: LOGIN_LOCKOUT_MINUTES
+        value: "15"
+
+      - key: EMAIL_VERIFICATION_EXPIRY_HOURS
+        value: "24"
+      - key: PASSWORD_RESET_EXPIRY_MINUTES
+        value: "30"
+      - key: TWOFA_PENDING_EXPIRY_MINUTES
+        value: "5"
+
+      # Optional — leave blank in the dashboard to run without content
+      # moderation (content publishes unchecked; a warning is logged once).
+      - key: AZURE_CONTENT_SAFETY_ENDPOINT
+        sync: false
+      - key: AZURE_CONTENT_SAFETY_KEY
+        sync: false
+
+  - type: web
+    name: taskify-frontend
+    runtime: static
+    rootDir: frontend
+    staticPublishPath: .
+    envVars: []

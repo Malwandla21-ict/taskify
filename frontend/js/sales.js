@@ -204,11 +204,19 @@ function saleCard(item) {
         </div>
         <div class="market-footer">
           <div class="market-price">R${item.price}</div>
-          ${isOwn
-            ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your Item</div>`
-            : `<a href="./sale-details.html?id=${item.id}" class="market-action-btn">
-                 <i class="ti ti-eye" aria-hidden="true"></i> View
-               </a>`}
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <a href="./sale-details.html?id=${item.id}" class="market-action-btn">
+              <i class="ti ti-eye" aria-hidden="true"></i> View
+            </a>
+            ${isOwn ? `
+              <div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your Item</div>
+              <button class="market-action-btn outline mark-sold-btn" data-item-id="${item.id}">
+                <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
+              </button>
+              <button class="market-action-btn outline delete-sale-btn" data-item-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+                <i class="ti ti-trash" aria-hidden="true"></i> Delete
+              </button>` : ""}
+          </div>
         </div>
       </div>
     </div>`;
@@ -254,7 +262,9 @@ function myListingCard(item) {
 function myListingMiniCard(item) {
   return `
     <a href="./sale-details.html?id=${item.id}" class="mini-history-item">
-      <div class="mini-history-thumb"><div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div></div>
+      <div class="mini-history-thumb">${Array.isArray(item.image_urls) && item.image_urls.length
+        ? `<img src="${item.image_urls[0]}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;" />`
+        : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
           ${sectionBadge(item.section)}
@@ -302,6 +312,8 @@ function renderSalesItems() {
     : emptyState("ti-shopping-bag", "No items found", "Try a different filter or list your own.");
   attachProfileLinkEvents();
   attachSaveHeartEvents();
+  attachMarkSoldEvents();
+  attachDeleteSaleEvents();
 }
 
 function renderMySalesItems(items) {
@@ -318,6 +330,8 @@ function renderMySalesItems(items) {
 
 function attachDeleteSaleEvents() {
   document.querySelectorAll(".delete-sale-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
     btn.addEventListener("click", async () => {
       if (!confirm("Permanently delete this listing?")) return;
       btn.disabled = true;
@@ -338,6 +352,8 @@ function attachDeleteSaleEvents() {
 
 function attachMarkSoldEvents() {
   document.querySelectorAll(".mark-sold-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
     btn.addEventListener("click", async () => {
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Updating…`;
@@ -360,6 +376,11 @@ async function loadSalesItems() {
     const res = await apiRequest("/sales");
     cachedSalesItems = Array.isArray(res.data) ? res.data : [];
     populateCategoryFilter(cachedSalesItems);
+
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get("search");
+    if (searchParam && salesSearchInput) salesSearchInput.value = searchParam;
+
     renderSalesItems();
   } catch (err) {
     console.error("loadSalesItems failed:", err);

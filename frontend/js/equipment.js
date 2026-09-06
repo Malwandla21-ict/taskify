@@ -29,6 +29,19 @@ const openEquipmentModalButton   = document.getElementById("openEquipmentModalBu
 const heroListEquipmentButton    = document.getElementById("heroListEquipmentButton");
 const closeEquipmentModalButton  = document.getElementById("closeEquipmentModalButton");
 
+const reviewModal            = document.getElementById("reviewModal");
+const reviewModalTitle       = document.getElementById("reviewModalTitle");
+const reviewForm             = document.getElementById("reviewForm");
+const reviewBookingIdInput   = document.getElementById("reviewBookingId");
+const reviewIdInput          = document.getElementById("reviewId");
+const ratingInput            = document.getElementById("rating");
+const commentInput           = document.getElementById("comment");
+const closeReviewModalButton = document.getElementById("closeReviewModal");
+const reviewMessage          = document.getElementById("reviewMessage");
+
+closeReviewModalButton?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
+document.getElementById("overlay")?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
+
 function openEquipmentCreateModal() {
   equipmentForm?.reset();
   equipmentMessage.textContent = "";
@@ -255,9 +268,36 @@ function renderEquipment() {
 function historyCard(booking) {
   const isOwner   = Number(booking.owner_id)  === Number(currentUser.id);
   const isRenter  = Number(booking.renter_id) === Number(currentUser.id);
-  const canReturn = booking.status === "Booked" && (isOwner || isRenter);
+  const canReturn = booking.status === "Confirmed" && (isOwner || isRenter);
+  const canReview = booking.status === "Returned" && (isOwner || isRenter);
   const roleLabel = isOwner ? "You own this" : "You rented this";
   const imageUrl  = Array.isArray(booking.image_urls) && booking.image_urls.length ? booking.image_urls[0] : null;
+
+  let footerAction;
+  if (canReturn) {
+    footerAction = `
+      <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;">
+        <i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment
+      </button>`;
+  } else if (canReview) {
+    footerAction = booking.my_review_id
+      ? `<div style="display:flex;gap:8px;margin-top:14px;">
+           <button class="market-action-btn outline edit-review-btn" data-review-id="${booking.my_review_id}" data-rating="${booking.my_review_rating ?? ""}" data-comment="${(booking.my_review_comment ?? "").replace(/"/g, "&quot;")}" style="flex:1;justify-content:center;">
+             <i class="ti ti-edit" aria-hidden="true"></i> Edit Review
+           </button>
+           <button class="market-action-btn outline delete-review-btn" data-review-id="${booking.my_review_id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+             <i class="ti ti-trash" aria-hidden="true"></i>
+           </button>
+         </div>`
+      : `<button class="market-action-btn review-booking-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;justify-content:center;">
+           <i class="ti ti-star" aria-hidden="true"></i> Leave Review
+         </button>`;
+  } else {
+    footerAction = `
+      <a href="./equipment-details.html?id=${booking.equipment_id}" class="market-action-btn outline" style="margin-top:14px;width:100%;justify-content:center;">
+        <i class="ti ti-eye" aria-hidden="true"></i> View Equipment
+      </a>`;
+  }
 
   return `
     <div class="market-card">
@@ -280,13 +320,7 @@ function historyCard(booking) {
           <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${booking.start_date}</div>
           <div class="market-tag"><i class="ti ti-calendar-off" aria-hidden="true"></i> ${booking.end_date}</div>
         </div>
-        ${canReturn ? `
-          <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;">
-            <i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment
-          </button>` : `
-          <a href="./equipment-details.html?id=${booking.equipment_id}" class="market-action-btn outline" style="margin-top:14px;width:100%;justify-content:center;">
-            <i class="ti ti-eye" aria-hidden="true"></i> View Equipment
-          </a>`}
+        ${footerAction}
       </div>
     </div>`;
 }
@@ -295,7 +329,9 @@ function historyMiniCard(booking) {
   const isOwner = Number(booking.owner_id) === Number(currentUser.id);
   return `
     <a href="./equipment-details.html?id=${booking.equipment_id}" class="mini-history-item">
-      <div class="mini-history-thumb"><div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div></div>
+      <div class="mini-history-thumb">${Array.isArray(booking.image_urls) && booking.image_urls.length
+        ? `<img src="${booking.image_urls[0]}" alt="${booking.equipment_name}" style="width:100%;height:100%;object-fit:cover;" />`
+        : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
           ${sectionBadge(booking.section || "General")}
@@ -346,11 +382,88 @@ function attachReturnEquipmentButtonEvents(scope = document) {
   });
 }
 
+function attachReviewButtonEvents(scope = document) {
+  scope.querySelectorAll(".review-booking-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      reviewForm.reset();
+      reviewBookingIdInput.value = btn.dataset.bookingId;
+      reviewIdInput.value = "";
+      if (reviewModalTitle) reviewModalTitle.innerHTML = `<i class="ti ti-star" aria-hidden="true"></i> Leave a Review`;
+      reviewMessage.textContent = "";
+      openModal(reviewModal);
+    });
+  });
+
+  scope.querySelectorAll(".edit-review-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => {
+      reviewForm.reset();
+      reviewBookingIdInput.value = "";
+      reviewIdInput.value = btn.dataset.reviewId;
+      ratingInput.value = btn.dataset.rating || "";
+      commentInput.value = btn.dataset.comment || "";
+      if (reviewModalTitle) reviewModalTitle.innerHTML = `<i class="ti ti-edit" aria-hidden="true"></i> Edit Review`;
+      reviewMessage.textContent = "";
+      openModal(reviewModal);
+    });
+  });
+
+  scope.querySelectorAll(".delete-review-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", async () => {
+      if (!confirm("Delete this review?")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+      try {
+        await apiRequest(`/reviews/${btn.dataset.reviewId}`, "DELETE");
+        showToast("Review deleted.");
+        await loadEquipmentHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i>`;
+      }
+    });
+  });
+}
+
+reviewForm?.addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    if (reviewIdInput.value) {
+      await apiRequest(`/reviews/${reviewIdInput.value}`, "PATCH", {
+        rating: Number(ratingInput.value),
+        comment: commentInput.value.trim()
+      });
+      showToast("Review updated!");
+    } else {
+      await apiRequest(`/reviews/bookings/${reviewBookingIdInput.value}`, "POST", {
+        rating: Number(ratingInput.value),
+        comment: commentInput.value.trim()
+      });
+      showToast("Review submitted!");
+    }
+    closeModal(reviewModal, reviewForm, reviewMessage);
+    await loadEquipmentHistory();
+  } catch (err) {
+    reviewMessage.textContent = err.message;
+    reviewMessage.style.color = "red";
+    showToast(err.message, "error");
+  }
+});
+
 async function loadEquipment() {
   try {
     const res = await apiRequest("/equipment");
     cachedEquipment = Array.isArray(res.data) ? res.data : [];
     populateCategoryFilter(cachedEquipment);
+
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get("search");
+    if (searchParam && equipmentSearchInput) equipmentSearchInput.value = searchParam;
+
     renderEquipment();
   } catch (err) {
     console.error("loadEquipment failed:", err);
@@ -368,6 +481,7 @@ async function loadEquipmentHistory() {
       ? safeMap(items, historyCard, "equipment history")
       : emptyState("ti-clock", "No history yet", "Your bookings and listings appear here.");
     attachReturnEquipmentButtonEvents(equipmentHistoryContainer);
+    attachReviewButtonEvents(equipmentHistoryContainer);
 
     equipmentHistoryMiniContainer.innerHTML = items.length
       ? items.slice(0, 4).map(historyMiniCard).join("")

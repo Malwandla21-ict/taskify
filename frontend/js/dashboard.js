@@ -124,7 +124,9 @@ function spotlightItem(ev) {
   return `
     <a href="./event-details.html?id=${ev.id}" class="spotlight-item">
       <div class="spotlight-thumb">
-        <div class="media-placeholder light navy"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+        ${ev.image_urls?.length
+          ? `<img src="${ev.image_urls[0]}" alt="${ev.title}" style="width:100%;height:100%;object-fit:cover;" />`
+          : `<div class="media-placeholder light navy"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}
         <div class="spotlight-date-badge"><span>${month}</span><strong>${day}</strong></div>
       </div>
       <div class="spotlight-info">

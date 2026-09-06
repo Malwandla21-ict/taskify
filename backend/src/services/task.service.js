@@ -384,15 +384,19 @@ async function cancelTask(taskId, userId) {
 
 async function getUserTaskHistory(userId) {
   const [rows] = await pool.execute(
-    `SELECT ${TASK_SELECT_FIELDS}
+    `SELECT ${TASK_SELECT_FIELDS},
+       my_review.id AS my_review_id,
+       my_review.rating AS my_review_rating,
+       my_review.comment AS my_review_comment
      FROM tasks t
      INNER JOIN users u ON t.created_by = u.id
      LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
+     LEFT JOIN reviews my_review ON my_review.task_id = t.id AND my_review.reviewer_id = ?
      ${TASK_ENDORSEMENT_JOIN}
      WHERE t.created_by = ? OR t.accepted_by = ?
      ORDER BY t.created_at DESC`,
-    [userId, userId]
+    [userId, userId, userId]
   );
   return rows.map(parseImageUrls);
 }

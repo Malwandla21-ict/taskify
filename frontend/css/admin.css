@@ -11,6 +11,36 @@
   gap: 22px;
 }
 
+/* ── Mobile sidebar toggle + scrim (hidden on desktop; see the
+   max-width: 900px block below for the off-canvas behavior) ── */
+.admin-sidebar-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  background: var(--ump-navy);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.admin-sidebar-toggle i { font-size: 16px; }
+
+.admin-sidebar-scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(6,19,51,0.5);
+  z-index: 2490;
+}
+
 /* ── Sidebar ── */
 .admin-sidebar {
   width: 232px;
@@ -784,3 +814,39 @@ table.admin-table tbody tr:hover { background: var(--background); }
 }
 
 .admin-user-detail-actions button { flex: 1; }
+
+/* ==============================
+   RESPONSIVE — admin sidebar goes off-canvas below 900px
+   The sidebar's fixed 232px + gap was leaving as little as ~140px for
+   .admin-main on a phone, which is why headings wrapped mid-word and
+   tables looked cut off rather than usably scrollable — the content
+   was there, there just wasn't room to show it. Below 900px the sidebar
+   becomes a full-height slide-in panel (toggled by .admin-sidebar-toggle
+   above), and .admin-main gets the full viewport width.
+============================== */
+@media (max-width: 900px) {
+  .admin-shell { display: block; }
+
+  .admin-sidebar-toggle { display: flex; }
+
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: min(82vw, 280px);
+    max-width: 280px;
+    border-radius: 0;
+    z-index: 2500;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    overflow-y: auto;
+  }
+
+  body.admin-sidebar-open .admin-sidebar { transform: translateX(0); }
+  body.admin-sidebar-open .admin-sidebar-scrim { display: block; }
+
+  .admin-main { width: 100%; }
+
+  .admin-page-header h1 { font-size: 20px; }
+}

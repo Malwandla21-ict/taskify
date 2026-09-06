@@ -1,0 +1,22 @@
+# Taskify is a logged-in student marketplace — almost every page requires
+# authentication and redirects an anonymous visitor (and a crawler) straight
+# to the login page. So rather than let Google crawl dozens of pages that all
+# resolve to the same login redirect, only the genuinely public entry points
+# are opened up for indexing; everything else is disallowed.
+#
+# NOTE: replace the Sitemap URL below with your actual deployed frontend
+# domain once it's known (see render.yaml / DEPLOYMENT.md) — Google needs
+# the absolute URL, a relative path won't work here.
+
+# (Rule order doesn't matter to Google — the most specific path always wins
+# — but Disallow-then-Allow reads more clearly.)
+User-agent: *
+Disallow: /
+Allow: /$
+Allow: /index.html
+Allow: /login.html
+Allow: /register.html
+Allow: /forgot-password.html
+Allow: /resend-verification.html
+
+Sitemap: https://taskify-frontend.onrender.com/sitemap.xml

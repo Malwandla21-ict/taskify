@@ -186,7 +186,9 @@ async function loadContextCard(conv) {
 
     threadContextTitle.textContent = title;
     threadContextMeta.textContent = categoryLabel ? `${categoryLabel} · ${priceLabel}` : priceLabel;
-    threadContextThumb.innerHTML = `<i class="ti ${meta.icon}" aria-hidden="true"></i>`;
+    threadContextThumb.innerHTML = item.image_urls?.length
+      ? `<img src="${item.image_urls[0]}" alt="${title}" style="width:100%;height:100%;object-fit:cover;" />`
+      : `<i class="ti ${meta.icon}" aria-hidden="true"></i>`;
     threadContextStatus.innerHTML = `<div class="badge ${statusColor}">${statusLabel}</div>`;
     threadContextCard.style.display = "flex";
   } catch (err) {

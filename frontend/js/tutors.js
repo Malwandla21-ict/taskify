@@ -47,14 +47,17 @@ function populateFacultyFilter(tutors) {
 }
 
 function tutorCard(tutor) {
-  const latestEndorsement = tutor.endorsements[0];
+  const endorsements = tutor.endorsements || [];
+  const latestEndorsement = endorsements[0];
   const isSaved = getSavedTutorIds().includes(tutor.student_id);
-  const endorsementCount = tutor.endorsements.length;
+  const endorsementCount = endorsements.length;
 
   return `
     <div class="tutor-card-v2">
       <div class="tutor-card-v2-media">
-        <div class="media-placeholder light green"><i class="ti ti-user" aria-hidden="true"></i></div>
+        ${tutor.student_photo
+          ? `<img src="${tutor.student_photo}" alt="${tutor.student_name}" style="width:100%;height:100%;object-fit:cover;" />`
+          : `<div class="media-placeholder light green"><i class="ti ti-user" aria-hidden="true"></i></div>`}
         <div class="corner-badge corner-badge-left tutor-endorsed"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Endorsed</div>
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${tutor.student_id}" aria-label="Save tutor">
           <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
@@ -68,8 +71,8 @@ function tutorCard(tutor) {
           <span class="rating"><i class="ti ti-star" aria-hidden="true"></i> ${Number(tutor.rating_average || 0).toFixed(1)} (${tutor.total_reviews} review${tutor.total_reviews === 1 ? "" : "s"})</span>
         </div>
         ${latestEndorsement?.message
-          ? `<div class="tutor-card-v2-quote">"${latestEndorsement.message}"<strong>— ${latestEndorsement.lecturer_title || ""} ${latestEndorsement.lecturer_name}</strong></div>`
-          : `<div class="tutor-card-v2-quote">Endorsed by ${latestEndorsement.lecturer_title || ""} ${latestEndorsement.lecturer_name}<strong>&nbsp;</strong></div>`}
+          ? `<div class="tutor-card-v2-quote">"${latestEndorsement.message}"<strong>— ${latestEndorsement.lecturer_title || ""} ${latestEndorsement.lecturer_name || ""}</strong></div>`
+          : `<div class="tutor-card-v2-quote">Endorsed by ${latestEndorsement?.lecturer_title || ""} ${latestEndorsement?.lecturer_name || ""}<strong>&nbsp;</strong></div>`}
         <button type="button" class="primary-button profile-link" data-user-id="${tutor.student_id}">
           <i class="ti ti-user" aria-hidden="true"></i> View Profile
         </button>
@@ -100,9 +103,9 @@ function renderTutors() {
   let filtered = cachedTutors.filter(t => {
     const matchesFaculty = faculty === "All" || t.faculty === faculty;
     const matchesSearch = !q ||
-      t.student_name.toLowerCase().includes(q) ||
+      (t.student_name || "").toLowerCase().includes(q) ||
       (t.faculty || "").toLowerCase().includes(q) ||
-      t.endorsements.some(e => (e.message || "").toLowerCase().includes(q));
+      (t.endorsements || []).some(e => (e.message || "").toLowerCase().includes(q));
     return matchesFaculty && matchesSearch;
   });
 
@@ -135,6 +138,11 @@ async function loadTutors() {
     cachedTutors = res.data;
     populateFacultyFilter(cachedTutors);
     renderStats(cachedTutors);
+
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get("search");
+    if (searchParam && tutorSearchInput) tutorSearchInput.value = searchParam;
+
     renderTutors();
   } catch (err) {
     tutorsContainer.innerHTML = errorState(err.message);

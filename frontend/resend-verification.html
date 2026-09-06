@@ -14,8 +14,8 @@
         <img src="./assets/logo/ump logoT.png" alt="UMP Logo" class="ump-logo" />
         <div class="logo-text" style="font-size:24px;">Taskify</div>
       </div>
-      <h1 style="font-size:24px;font-weight:800;margin-bottom:4px;">Resend verification email</h1>
-      <p class="auth-subtitle">Enter your UMP email and we'll resend the verification link, if your account still needs one.</p>
+      <h1 style="font-size:24px;font-weight:800;margin-bottom:4px;">Resend verification code</h1>
+      <p class="auth-subtitle">Enter your UMP email and we'll resend the verification code, if your account still needs one.</p>
       <form id="resendForm">
         <div class="form-group">
           <label for="email"><i class="ti ti-mail" aria-hidden="true"></i> UMP Email</label>
@@ -54,11 +54,11 @@
 
     try {
       const response = await apiRequest("/auth/resend-verification", "POST", { email });
-      showMessage(response.message || "If that email needs verifying, a new link has been sent.", "var(--ump-green)");
-      resendForm.reset();
+      sessionStorage.setItem("taskifyPendingVerifyEmail", email);
+      showMessage(response.message || "If that email needs verifying, a new code has been sent.", "var(--ump-green)");
+      setTimeout(() => { window.location.href = "./verify-email.html"; }, 1200);
     } catch (error) {
       showMessage(error.message || "Something went wrong. Please try again.", "red");
-    } finally {
       submitButton.disabled = false;
       submitButton.innerHTML = originalHtml;
     }

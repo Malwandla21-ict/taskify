@@ -32,7 +32,10 @@ function renderEquipmentDetails(item) {
 
   let actionArea;
   if (isOwn) {
-    actionArea = `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your listing</div>`;
+    actionArea = `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your listing</div>
+                  <button class="secondary-button delete-equipment-btn" data-equipment-id="${item.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+                    <i class="ti ti-trash" aria-hidden="true"></i> Delete Listing
+                  </button>`;
   } else if (!item.is_available) {
     actionArea = `<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Currently booked</div>
                   <button class="secondary-button" id="messageOwnerButton" style="margin-top:10px;">
@@ -108,6 +111,22 @@ function renderEquipmentDetails(item) {
 
   document.getElementById("messageOwnerButton")?.addEventListener("click", (e) => {
     startConversationAndRedirect("equipment", equipmentId, e.currentTarget);
+  });
+
+  document.querySelector(".delete-equipment-btn")?.addEventListener("click", async (e) => {
+    if (!confirm("Permanently delete this equipment listing?")) return;
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Deleting…`;
+    try {
+      await apiRequest(`/equipment/${equipmentId}`, "DELETE");
+      showToast("Equipment listing deleted.");
+      setTimeout(() => window.location.href = "./equipment.html", 800);
+    } catch (err) {
+      showToast(err.message, "error");
+      btn.disabled = false;
+      btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i> Delete Listing`;
+    }
   });
 }
 

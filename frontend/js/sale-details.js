@@ -20,7 +20,14 @@ function renderSaleDetails(item) {
   const isOwn = Number(item.seller_id) === Number(currentUser.id);
 
   const actionArea = isOwn
-    ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>`
+    ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>
+       ${item.status === "Available" ? `
+         <button class="secondary-button mark-sold-btn" data-item-id="${item.id}" style="margin-top:10px;">
+           <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
+         </button>` : ""}
+       <button class="secondary-button delete-sale-btn" data-item-id="${item.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+         <i class="ti ti-trash" aria-hidden="true"></i> Delete Listing
+       </button>`
     : item.status !== "Available"
       ? `<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Already sold</div>`
       : `<button class="primary-button" id="messageSellerButton">
@@ -84,6 +91,37 @@ function renderSaleDetails(item) {
 
   document.getElementById("messageSellerButton")?.addEventListener("click", (e) => {
     startConversationAndRedirect("sale", saleId, e.currentTarget);
+  });
+
+  document.querySelector(".mark-sold-btn")?.addEventListener("click", async (e) => {
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Updating…`;
+    try {
+      await apiRequest(`/sales/${saleId}/sold`, "PATCH");
+      showToast("Item marked as sold!");
+      await loadSaleDetails();
+    } catch (err) {
+      showToast(err.message, "error");
+      btn.disabled = false;
+      btn.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold`;
+    }
+  });
+
+  document.querySelector(".delete-sale-btn")?.addEventListener("click", async (e) => {
+    if (!confirm("Permanently delete this listing?")) return;
+    const btn = e.currentTarget;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Deleting…`;
+    try {
+      await apiRequest(`/sales/${saleId}`, "DELETE");
+      showToast("Listing deleted.");
+      setTimeout(() => window.location.href = "./sales.html", 800);
+    } catch (err) {
+      showToast(err.message, "error");
+      btn.disabled = false;
+      btn.innerHTML = `<i class="ti ti-trash" aria-hidden="true"></i> Delete Listing`;
+    }
   });
 }
 

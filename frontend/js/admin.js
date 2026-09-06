@@ -4,6 +4,16 @@ if (currentUser && currentUser.role !== "admin") {
   window.location.href = "./dashboard.html";
 }
 
+/* Stage 4 lockdown: an admin who hasn't enabled 2FA yet no longer gets a
+   half-working panel where every section quietly 403s (the old behavior —
+   see requireTwoFactor in auth.middleware.js, which still enforces this
+   server-side regardless of what happens here). They're bounced straight
+   to their own profile page, where profile.js/lecturer-profile.js detects
+   the same condition and forces the setup flow open immediately. */
+if (currentUser && currentUser.role === "admin" && !currentUser.totp_enabled) {
+  window.location.href = myProfileUrl(currentUser);
+}
+
 /* ── Sidebar / quick-action navigation ── */
 document.querySelectorAll("[data-section], [data-goto-section]").forEach(el => {
   const key = el.dataset.section || el.dataset.gotoSection;
@@ -20,7 +30,35 @@ function switchSection(sectionKey) {
   /* Lazy-load section data the first time it's opened, so the initial
      page load doesn't have to fetch everything up front. */
   if (sectionKey === "allowlist" && !allowlistLoaded) loadAllowlist();
+
+  /* On mobile the sidebar is a slide-in panel — picking a section should
+     close it, same as any mobile nav drawer. No-op on desktop since it's
+     never open there. */
+  closeAdminSidebar();
 }
+
+/* ── Mobile admin sidebar (off-canvas below 900px, see admin.css) ──
+   Separate from the site's own hamburger/drawer: that one opens the
+   generic site nav, this one opens the admin-only section list, so they
+   use their own toggle button and body class rather than sharing state. */
+const adminSidebarToggle = document.getElementById("adminSidebarToggle");
+const adminSidebarScrim  = document.getElementById("adminSidebarScrim");
+
+function openAdminSidebar() {
+  document.body.classList.add("admin-sidebar-open");
+  adminSidebarToggle?.setAttribute("aria-expanded", "true");
+}
+
+function closeAdminSidebar() {
+  document.body.classList.remove("admin-sidebar-open");
+  adminSidebarToggle?.setAttribute("aria-expanded", "false");
+}
+
+adminSidebarToggle?.addEventListener("click", openAdminSidebar);
+adminSidebarScrim?.addEventListener("click", closeAdminSidebar);
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeAdminSidebar();
+});
 
 /* ── Shared modal elements ── */
 const adminOverlay       = document.getElementById("adminOverlay");
@@ -44,15 +82,38 @@ let cachedUsers       = [];
 let cachedReports     = [];
 let cachedAudit       = [];
 let cachedConversations = [];
+let cachedModeration  = [];
 let allowlistLoaded   = false;
 
-let usersPage   = 1;
-let reportsPage = 1;
-let auditPage   = 1;
+let usersPage      = 1;
+let reportsPage    = 1;
+let auditPage      = 1;
+let moderationPage = 1;
 const PAGE_SIZE = 8;
 
-let userRoleFilterValue = "All";
-let reportTabValue      = "All";
+let userRoleFilterValue       = "All";
+let reportTabValue            = "All";
+let moderationTypeFilterValue = "All";
+
+/* Mirrors CONTENT_TABLES/CONTENT_LABELS in admin.service.js — every
+   content type the AI moderation pipeline can flag and this panel can
+   clear/remove. */
+const CONTENT_TYPE_LABELS = {
+  task: "Task",
+  sales_item: "Sales Listing",
+  equipment: "Equipment",
+  event: "Event"
+};
+
+function moderationDetailUrl(contentType, id) {
+  const map = {
+    task: `./task-details.html?id=${id}`,
+    sales_item: `./sale-details.html?id=${id}`,
+    equipment: `./equipment-details.html?id=${id}`,
+    event: `./event-details.html?id=${id}`
+  };
+  return map[contentType] || null;
+}
 
 /* ── Modal open/close plumbing ── */
 function closeAllAdminModals() {
@@ -135,6 +196,7 @@ async function loadStats() {
       statCardV2("ti-package", "c-green", s.equipment.total, "Total Equipment"),
       statCardV2("ti-currency-dollar", "c-gold", `R${Number(s.payments.released).toFixed(2)}`, "Total Earnings (Released)"),
       statCardV2("ti-flag", "c-red", s.reports.pending, "Pending Reports"),
+      statCardV2("ti-shield-exclamation", "c-gold", s.moderation?.pendingReview ?? 0, "Flagged Content"),
       statCardV2("ti-user-x", "c-navy", `${s.users.suspended} / ${s.users.banned}`, "Suspended / Banned")
     ].join("");
 
@@ -146,11 +208,29 @@ async function loadStats() {
       pendingBadge.style.display = "none";
     }
 
+    const moderationBadge = document.getElementById("sidebarModerationCount");
+    const pendingModeration = s.moderation?.pendingReview ?? 0;
+    if (moderationBadge) {
+      if (pendingModeration > 0) {
+        moderationBadge.textContent = pendingModeration > 99 ? "99+" : pendingModeration;
+        moderationBadge.style.display = "flex";
+      } else {
+        moderationBadge.style.display = "none";
+      }
+    }
+
     const quickActionSub = document.getElementById("quickActionReportsSub");
     if (quickActionSub) {
       quickActionSub.textContent = s.reports.pending > 0
         ? `${s.reports.pending} pending report${s.reports.pending === 1 ? "" : "s"}`
         : "All caught up";
+    }
+
+    const quickActionModerationSub = document.getElementById("quickActionModerationSub");
+    if (quickActionModerationSub) {
+      quickActionModerationSub.textContent = pendingModeration > 0
+        ? `${pendingModeration} flagged item${pendingModeration === 1 ? "" : "s"}`
+        : "Nothing flagged";
     }
 
     renderTaskDonut(s.tasks, totalTasks);
@@ -169,7 +249,7 @@ document.getElementById("dashboardRefreshBtn")?.addEventListener("click", async 
   const btn = e.currentTarget;
   btn.classList.add("spinning");
   btn.disabled = true;
-  await Promise.all([loadStats(), loadPendingReportsPreview(), loadRecentActivityPreview()]);
+  await Promise.all([loadStats(), loadPendingReportsPreview(), loadRecentActivityPreview(), loadModerationQueue()]);
   btn.classList.remove("spinning");
   btn.disabled = false;
   showToast("Dashboard refreshed.");
@@ -303,6 +383,8 @@ function auditIconFor(action) {
   if (action.includes("ban")) return { icon: "ti-ban", cls: "red" };
   if (action.includes("suspend")) return { icon: "ti-player-pause", cls: "gold" };
   if (action.includes("refund")) return { icon: "ti-receipt-refund", cls: "gold" };
+  if (action === "content.remove") return { icon: "ti-trash", cls: "red" };
+  if (action === "content.clear_flag") return { icon: "ti-shield-check", cls: "" };
   if (action.includes("resolve")) return { icon: "ti-circle-check", cls: "" };
   return { icon: "ti-shield-lock", cls: "" };
 }
@@ -339,6 +421,17 @@ function roleBadge(role) {
   return map[role] || badge(role, "");
 }
 
+/* Compliance visibility (Stage 4) — an admin without 2FA reads as an
+   urgent red "Off" (they're the highest-value target and it's supposed to
+   be mandatory for them); a student/lecturer without it is just gold
+   "Off" since it's opt-in for those accounts. */
+function twoFactorBadge(user) {
+  if (user.totp_enabled) {
+    return badge(user.totp_method === "email" ? "On · Email" : "On · App", "");
+  }
+  return badge("Off", user.role === "admin" ? "red" : "gold");
+}
+
 async function loadUsers() {
   try {
     const res = await apiRequest("/admin/users?limit=200");
@@ -346,7 +439,7 @@ async function loadUsers() {
     usersPage = 1;
     renderUsersTable();
   } catch (err) {
-    document.getElementById("usersTableBody").innerHTML = `<tr><td colspan="5">${errorState(err.message)}</td></tr>`;
+    document.getElementById("usersTableBody").innerHTML = `<tr><td colspan="6">${errorState(err.message)}</td></tr>`;
   }
 }
 
@@ -408,6 +501,7 @@ function renderUsersTable() {
           </td>
           <td class="admin-table-muted">${u.email}</td>
           <td>${roleBadge(u.role)}</td>
+          <td>${twoFactorBadge(u)}</td>
           <td class="admin-table-muted">${new Date(u.created_at).toLocaleDateString()}</td>
           <td>
             <div class="admin-table-actions">
@@ -418,7 +512,7 @@ function renderUsersTable() {
             </div>
           </td>
         </tr>`).join("")
-    : `<tr><td colspan="5">${emptyState("ti-users", "No users found")}</td></tr>`;
+    : `<tr><td colspan="6">${emptyState("ti-users", "No users found")}</td></tr>`;
 
   document.getElementById("usersTableCount").textContent =
     filtered.length ? `Showing ${(usersPage - 1) * PAGE_SIZE + 1} to ${Math.min(usersPage * PAGE_SIZE, filtered.length)} of ${filtered.length} users` : "";
@@ -527,6 +621,7 @@ async function openUserDetailModal(userId) {
         <div class="admin-user-detail-row"><span>User ID</span><span>USR-${String(profile.id).padStart(4, "0")}</span></div>
         <div class="admin-user-detail-row"><span>Phone</span><span>${profile.phone_number || "Not provided"}</span></div>
         <div class="admin-user-detail-row"><span>Role</span><span>${listUser.role === "user" ? "Student" : (listUser.role || "—")}</span></div>
+        <div class="admin-user-detail-row"><span>Two-Factor Auth</span><span>${twoFactorBadge(listUser)}</span></div>
         <div class="admin-user-detail-row"><span>Joined On</span><span>${new Date(profile.created_at).toLocaleDateString()}</span></div>
         <div class="admin-user-detail-row"><span>Total Tasks Completed</span><span>${profile.completed_tasks}</span></div>
         <div class="admin-user-detail-row"><span>Total Listings</span><span>${profile.total_listings}</span></div>
@@ -627,7 +722,8 @@ function contextDetailUrl(report) {
   const map = {
     task: `./task-details.html?id=${report.context_link_id}`,
     equipment_booking: `./equipment-details.html?id=${report.context_link_id}`,
-    sales_item: `./sale-details.html?id=${report.context_link_id}`
+    sales_item: `./sale-details.html?id=${report.context_link_id}`,
+    event: `./event-details.html?id=${report.context_link_id}`
   };
   return map[report.context_type] || null;
 }
@@ -758,6 +854,116 @@ function attachReportRowEvents() {
           await apiRequest(`/admin/tasks/${btn.dataset.taskId}/refund`, "PATCH", { reason });
           showToast("Payment refunded.");
           await loadStats();
+        }
+      });
+    });
+  });
+}
+
+/* ═══════════════════════════════════════════
+   MODERATION (AI-flagged tasks/sales/equipment/events)
+═══════════════════════════════════════════ */
+document.getElementById("moderationSearchInput")?.addEventListener("input", () => { moderationPage = 1; renderModerationTable(); });
+document.getElementById("moderationTypeFilter")?.addEventListener("change", (e) => {
+  moderationTypeFilterValue = e.target.value;
+  moderationPage = 1;
+  renderModerationTable();
+});
+
+async function loadModerationQueue() {
+  try {
+    const res = await apiRequest("/admin/moderation");
+    cachedModeration = res.data;
+    moderationPage = 1;
+    renderModerationTable();
+  } catch (err) {
+    document.getElementById("moderationTableBody").innerHTML = `<tr><td colspan="6">${errorState(err.message)}</td></tr>`;
+  }
+}
+
+function getFilteredModeration() {
+  const q = document.getElementById("moderationSearchInput").value.trim().toLowerCase();
+  return cachedModeration.filter(item => {
+    const matchesType = moderationTypeFilterValue === "All" || item.contentType === moderationTypeFilterValue;
+    const matchesSearch = !q ||
+      (item.title || "").toLowerCase().includes(q) ||
+      (item.ownerName || "").toLowerCase().includes(q);
+    return matchesType && matchesSearch;
+  });
+}
+
+function flaggedCategoriesCell(categories) {
+  if (!categories || !categories.length) return `<span class="admin-table-muted">—</span>`;
+  const shown = categories.slice(0, 3).map(c => `<div class="badge gold" style="margin:0 4px 4px 0;">${c}</div>`).join("");
+  const rest = categories.length > 3 ? `<span class="admin-table-muted">+${categories.length - 3} more</span>` : "";
+  return `<div style="display:flex;flex-wrap:wrap;align-items:center;">${shown}${rest}</div>`;
+}
+
+function renderModerationTable() {
+  const filtered = getFilteredModeration();
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  moderationPage = Math.min(moderationPage, totalPages);
+  const pageItems = filtered.slice((moderationPage - 1) * PAGE_SIZE, moderationPage * PAGE_SIZE);
+
+  const tbody = document.getElementById("moderationTableBody");
+  tbody.innerHTML = pageItems.length
+    ? pageItems.map(item => {
+        const detailUrl = moderationDetailUrl(item.contentType, item.id);
+        const title = item.title || "Untitled";
+        return `
+        <tr>
+          <td class="admin-table-name" style="max-width:220px;">${title}</td>
+          <td><div class="badge blue">${CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</div></td>
+          <td>${item.ownerId
+              ? `<span class="admin-table-name profile-link" data-user-id="${item.ownerId}">${item.ownerName || "Unknown"}</span>`
+              : `<span class="admin-table-muted">—</span>`}</td>
+          <td>${flaggedCategoriesCell(item.flaggedCategories)}</td>
+          <td class="admin-table-muted">${new Date(item.createdAt).toLocaleDateString()}</td>
+          <td>
+            <div class="admin-table-actions">
+              ${detailUrl ? `<a href="${detailUrl}" class="table-icon-btn" title="View listing" target="_blank" rel="noopener"><i class="ti ti-external-link" aria-hidden="true"></i></a>` : ""}
+              <button type="button" class="table-icon-btn success clear-moderation-btn" data-content-type="${item.contentType}" data-content-id="${item.id}" data-title="${title}" title="Clear flag — keep published">
+                <i class="ti ti-circle-check" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="table-icon-btn danger remove-moderation-btn" data-content-type="${item.contentType}" data-content-id="${item.id}" data-title="${title}" title="Remove content">
+                <i class="ti ti-trash" aria-hidden="true"></i>
+              </button>
+            </div>
+          </td>
+        </tr>`;
+      }).join("")
+    : `<tr><td colspan="6">${emptyState("ti-shield-check", "Nothing flagged", "AI-flagged tasks, sales listings, equipment and events will appear here for review.")}</td></tr>`;
+
+  document.getElementById("moderationTableCount").textContent =
+    filtered.length ? `Showing ${(moderationPage - 1) * PAGE_SIZE + 1} to ${Math.min(moderationPage * PAGE_SIZE, filtered.length)} of ${filtered.length} flagged item${filtered.length === 1 ? "" : "s"}` : "";
+
+  renderPagination("moderationPagination", moderationPage, totalPages, (p) => { moderationPage = p; renderModerationTable(); });
+
+  attachProfileLinkEvents();
+  attachModerationRowEvents();
+}
+
+function attachModerationRowEvents() {
+  document.querySelectorAll(".clear-moderation-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm(`Clear the AI flag on "${btn.dataset.title}"? It stays published as-is.`)) return;
+      try {
+        await apiRequest(`/admin/moderation/${btn.dataset.contentType}/${btn.dataset.contentId}/clear`, "PATCH");
+        showToast("Flag cleared.");
+        await Promise.all([loadModerationQueue(), loadStats(), loadAuditLogs()]);
+      } catch (err) { showToast(err.message, "error"); }
+    });
+  });
+
+  document.querySelectorAll(".remove-moderation-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      openActionModal({
+        title: `Remove "${btn.dataset.title}"?`,
+        confirmLabel: "Remove",
+        onConfirm: async (reason) => {
+          await apiRequest(`/admin/moderation/${btn.dataset.contentType}/${btn.dataset.contentId}/remove`, "PATCH", { reason });
+          showToast("Content removed.");
+          await Promise.all([loadModerationQueue(), loadStats(), loadAuditLogs()]);
         }
       });
     });
@@ -958,5 +1164,6 @@ loadPendingReportsPreview();
 loadRecentActivityPreview();
 loadUsers();
 loadReports();
+loadModerationQueue();
 loadAdminConversations();
 loadAuditLogs();

@@ -116,8 +116,28 @@ body.dashboard-body {
   transition: background 0.15s, color 0.15s;
 }
 
-.app-sidebar .nav-link i,
-.app-sidebar .qa-link i { font-size: 17px; flex-shrink: 0; width: 18px; text-align: center; }
+.app-sidebar .nav-link i { font-size: 17px; flex-shrink: 0; width: 18px; text-align: center; }
+
+/* Quick Actions icons live inside .qa-dot, a purpose-built 26px circle
+   that already sets its own font-size (13px) and centers its icon with
+   flex align-items/justify-content: center. They used to also match the
+   rule above (shared selector), which forced them to 17px with an 18px
+   fixed width meant for the plain, uncircled Discover icons — oversizing
+   the glyph and knocking it off-center inside the circle. Scoping the
+   rule above to .nav-link only lets .qa-dot fully own its icon's size
+   and centering instead. */
+
+/* main.css has a leftover `@media (max-width: 1100px) { .nav-link span {
+   display: none; } }` rule from the old horizontal top navbar (it hid
+   labels there to go icon-only before collapsing into a hamburger at
+   700px). This sidebar reuses the plain `.nav-link` class name, so that
+   old rule was also hiding every label here below 1100px — which is
+   effectively "always" on mobile, since the sidebar itself only opens
+   below 1080px. `.qa-link` never had that old rule, which is why Quick
+   Actions kept their labels while Discover links didn't. Restored here
+   with higher specificity so it wins regardless of viewport width. */
+.app-sidebar .nav-link span,
+.app-sidebar .qa-link span { display: inline; }
 
 .app-sidebar .nav-link:hover { background: rgba(255,255,255,0.07); color: white; }
 .app-sidebar .nav-link.active { background: var(--ump-green); color: white; }

@@ -246,6 +246,10 @@ async function loadSectionData() {
     cachedEquipment = (equipmentRes.data || []).filter(i => i.section === pageSection);
     cachedSales     = (salesRes.data || []).filter(i => i.section === pageSection);
 
+    const params = new URLSearchParams(window.location.search);
+    const searchParam = params.get("search");
+    if (searchParam && sectionSearchInput) sectionSearchInput.value = searchParam;
+
     renderAll();
   } catch (err) {
     console.error("loadSectionData failed:", err);

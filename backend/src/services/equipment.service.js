@@ -226,6 +226,19 @@ async function returnEquipment(bookingId, userId) {
   return getBookingById(bookingId);
 }
 
+async function getMyEquipment(ownerId) {
+  const [rows] = await pool.execute(
+    `SELECT ${EQUIPMENT_SELECT_FIELDS}
+     FROM equipment e
+     LEFT JOIN users u ON e.owner_id = u.id
+     WHERE e.owner_id = ?
+     ORDER BY e.created_at DESC`,
+    [ownerId]
+  );
+  const parsed = rows.map(parseImageUrls);
+  return attachLatestEndorsements(parsed, "equipment");
+}
+
 async function getEquipmentHistory(userId) {
   const [rows] = await pool.execute(
     `SELECT
@@ -238,14 +251,18 @@ async function getEquipmentHistory(userId) {
        owner.phone_number AS owner_phone_number,
        renter.full_name AS renter_name,
        renter.profile_photo_url AS renter_profile_photo,
-       renter.phone_number AS renter_phone_number
+       renter.phone_number AS renter_phone_number,
+       my_review.id AS my_review_id,
+       my_review.rating AS my_review_rating,
+       my_review.comment AS my_review_comment
      FROM equipment_bookings eb
      INNER JOIN equipment e ON eb.equipment_id = e.id
      INNER JOIN users owner ON e.owner_id = owner.id
      INNER JOIN users renter ON eb.renter_id = renter.id
+     LEFT JOIN reviews my_review ON my_review.booking_id = eb.id AND my_review.reviewer_id = ?
      WHERE e.owner_id = ? OR eb.renter_id = ?
      ORDER BY eb.created_at DESC`,
-    [userId, userId]
+    [userId, userId, userId]
   );
   return rows.map(parseImageUrls);
 }
@@ -348,6 +365,7 @@ module.exports = {
   cancelBookingByRenter,
   returnEquipment,
   getEquipmentHistory,
+  getMyEquipment,
   getEquipmentByIdForViewing,
   deleteEquipment
 };

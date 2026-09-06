@@ -13,8 +13,15 @@
 <div class="dashboard-container">
 
   <div class="admin-shell">
+    <!-- Mobile-only: opens the admin sidebar below; the site's own hamburger
+         opens the separate generic site-nav drawer, not this one. -->
+    <button type="button" class="admin-sidebar-toggle" id="adminSidebarToggle" aria-label="Open admin menu" aria-expanded="false" aria-controls="adminSidebar">
+      <i class="ti ti-menu-2" aria-hidden="true"></i> Admin Menu
+    </button>
+    <div class="admin-sidebar-scrim" id="adminSidebarScrim"></div>
+
     <!-- ── Sidebar ── -->
-    <aside class="admin-sidebar">
+    <aside class="admin-sidebar" id="adminSidebar">
       <div class="admin-sidebar-brand">
         <div class="admin-sidebar-brand-icon"><i class="ti ti-shield-lock" aria-hidden="true"></i></div>
         <div class="admin-sidebar-brand-text">
@@ -32,6 +39,10 @@
         <button type="button" class="admin-sidebar-link" data-section="reports">
           <i class="ti ti-flag" aria-hidden="true"></i> Reports
           <span class="badge-count" id="sidebarPendingReportsCount" style="display:none;">0</span>
+        </button>
+        <button type="button" class="admin-sidebar-link" data-section="moderation">
+          <i class="ti ti-shield-exclamation" aria-hidden="true"></i> Moderation
+          <span class="badge-count gold" id="sidebarModerationCount" style="display:none;">0</span>
         </button>
         <button type="button" class="admin-sidebar-link" data-section="messages">
           <i class="ti ti-messages" aria-hidden="true"></i> Messages
@@ -85,6 +96,13 @@
             <div>
               <div class="qa-label">Review Reports</div>
               <div class="qa-sub" id="quickActionReportsSub">Check pending reports</div>
+            </div>
+          </button>
+          <button type="button" class="admin-quick-action-btn" data-goto-section="moderation">
+            <div class="qa-icon" style="background:rgba(245,180,0,0.14);color:#b38900;"><i class="ti ti-shield-exclamation" aria-hidden="true"></i></div>
+            <div>
+              <div class="qa-label">Review Flagged Content</div>
+              <div class="qa-sub" id="quickActionModerationSub">Check AI-flagged listings</div>
             </div>
           </button>
           <button type="button" class="admin-quick-action-btn" data-goto-section="messages">
@@ -170,6 +188,7 @@
                   <th>User</th>
                   <th>Email</th>
                   <th>Role</th>
+                  <th>2FA</th>
                   <th>Joined</th>
                   <th>Actions</th>
                 </tr>
@@ -222,6 +241,52 @@
           <div class="admin-table-footer">
             <span class="admin-table-count" id="reportsTableCount"></span>
             <div class="admin-pagination" id="reportsPagination"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Moderation -->
+      <section id="moderationSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Content Moderation</h1>
+            <p>Tasks, sales listings, equipment listings and events flagged by AI moderation, awaiting your review.</p>
+          </div>
+        </div>
+        <div class="admin-table-card">
+          <div class="admin-table-toolbar">
+            <div class="admin-table-search">
+              <i class="ti ti-search" aria-hidden="true"></i>
+              <input type="text" id="moderationSearchInput" placeholder="Search flagged content…" />
+            </div>
+            <div class="admin-table-filters">
+              <select id="moderationTypeFilter">
+                <option value="All">All Types</option>
+                <option value="task">Tasks</option>
+                <option value="sales_item">Sales Listings</option>
+                <option value="equipment">Equipment</option>
+                <option value="event">Events</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Content</th>
+                  <th>Type</th>
+                  <th>Owner</th>
+                  <th>Flagged For</th>
+                  <th>Posted</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="moderationTableBody"></tbody>
+            </table>
+          </div>
+          <div class="admin-table-footer">
+            <span class="admin-table-count" id="moderationTableCount"></span>
+            <div class="admin-pagination" id="moderationPagination"></div>
           </div>
         </div>
       </section>

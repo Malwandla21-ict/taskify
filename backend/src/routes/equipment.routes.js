@@ -7,6 +7,7 @@ const router = express.Router();
 
 router.get("/",       equipmentController.getAllAvailableEquipment);
 router.get("/history", authenticate, equipmentController.getEquipmentHistory);
+router.get("/my-listings", authenticate, equipmentController.getMyEquipment);
 
 router.post(
   "/",

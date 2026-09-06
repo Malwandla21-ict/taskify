@@ -1,4 +1,11 @@
-const API_BASE_URL = "http://127.0.0.1:5000/api";
+/* ── API base URL ──
+   Auto-detects local dev vs a deployed environment so the exact same
+   files work unmodified in both places — no build step, no bundler here.
+   Once the backend is deployed (see DEPLOYMENT.md), replace
+   PRODUCTION_API_URL below with its real URL. */
+const PRODUCTION_API_URL = "https://taskify-backend.onrender.com/api";
+const IS_LOCAL = ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const API_BASE_URL = IS_LOCAL ? "http://127.0.0.1:5000/api" : PRODUCTION_API_URL;
 
 /* ── Global top loading bar ──
    Automatically shown for the duration of ANY apiRequest/apiMultipartRequest

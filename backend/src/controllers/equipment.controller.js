@@ -95,6 +95,13 @@ async function getEquipmentHistory(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getMyEquipment(req, res, next) {
+  try {
+    const equipment = await equipmentService.getMyEquipment(req.user.id);
+    return res.status(200).json({ success: true, message: "My equipment fetched successfully.", data: equipment });
+  } catch (error) { next(error); }
+}
+
 async function deleteEquipment(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -115,5 +122,6 @@ module.exports = {
   cancelBooking,
   returnEquipment,
   getEquipmentHistory,
+  getMyEquipment,
   deleteEquipment
 };

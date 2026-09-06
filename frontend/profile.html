@@ -32,7 +32,7 @@
     </div>
 
     <div id="overviewTab" class="profile-tab-panel active">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;">
+      <div class="profile-overview-grid">
         <div>
           <div class="profile-info-card">
             <div class="profile-info-card-header"><h3><i class="ti ti-user-circle" aria-hidden="true"></i> About Me</h3></div>
@@ -50,6 +50,44 @@
           </div>
         </div>
         <div>
+          <div class="profile-info-card">
+            <div class="profile-info-card-header"><h3><i class="ti ti-bolt" aria-hidden="true"></i> Quick Actions</h3></div>
+            <p style="font-size:12px;color:var(--muted);margin:-8px 0 12px;">Manage your Taskify activity</p>
+            <div class="profile-quick-actions">
+              <a href="./tasks.html" class="profile-quick-action-btn">
+                <span class="profile-quick-action-icon green"><i class="ti ti-clipboard-list" aria-hidden="true"></i></span>
+                <span class="profile-quick-action-text">
+                  <span class="profile-quick-action-title">Task Marketplace</span>
+                  <span class="profile-quick-action-sub">Post or accept tasks</span>
+                </span>
+                <i class="ti ti-chevron-right profile-quick-action-chevron" aria-hidden="true"></i>
+              </a>
+              <a href="./equipment.html" class="profile-quick-action-btn">
+                <span class="profile-quick-action-icon blue"><i class="ti ti-package" aria-hidden="true"></i></span>
+                <span class="profile-quick-action-text">
+                  <span class="profile-quick-action-title">Equipment Rentals</span>
+                  <span class="profile-quick-action-sub">List or book equipment</span>
+                </span>
+                <i class="ti ti-chevron-right profile-quick-action-chevron" aria-hidden="true"></i>
+              </a>
+              <a href="./sales.html" class="profile-quick-action-btn">
+                <span class="profile-quick-action-icon gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></span>
+                <span class="profile-quick-action-text">
+                  <span class="profile-quick-action-title">Sales</span>
+                  <span class="profile-quick-action-sub">Buy and sell items</span>
+                </span>
+                <i class="ti ti-chevron-right profile-quick-action-chevron" aria-hidden="true"></i>
+              </a>
+              <a href="./tutors.html" class="profile-quick-action-btn">
+                <span class="profile-quick-action-icon navy"><i class="ti ti-school-bell" aria-hidden="true"></i></span>
+                <span class="profile-quick-action-text">
+                  <span class="profile-quick-action-title">Verified Tutors</span>
+                  <span class="profile-quick-action-sub">Browse lecturer-endorsed tutors</span>
+                </span>
+                <i class="ti ti-chevron-right profile-quick-action-chevron" aria-hidden="true"></i>
+              </a>
+            </div>
+          </div>
           <div class="profile-info-card">
             <div class="profile-info-card-header"><h3><i class="ti ti-chart-bar" aria-hidden="true"></i> Statistics</h3></div>
             <div class="profile-stats-grid-v2" id="statsGrid"></div>
@@ -102,33 +140,6 @@
 
     <div id="endorsementsTab" class="profile-tab-panel">
       <div id="myEndorsementsContainer"></div>
-    </div>
-  </section>
-
-  <section class="section" style="padding-top:0;">
-    <div class="section-header">
-      <div>
-        <h2><i class="ti ti-bolt" aria-hidden="true"></i> Quick Actions</h2>
-        <p>Manage your Taskify activity</p>
-      </div>
-    </div>
-    <div class="categories-grid">
-      <a href="./tasks.html" class="category-card">
-        <div class="category-icon green"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
-        <h3>Task Marketplace</h3><p>Post or accept tasks</p>
-      </a>
-      <a href="./equipment.html" class="category-card">
-        <div class="category-icon blue"><i class="ti ti-package" aria-hidden="true"></i></div>
-        <h3>Equipment Rentals</h3><p>List or book equipment</p>
-      </a>
-      <a href="./sales.html" class="category-card">
-        <div class="category-icon gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>
-        <h3>Sales</h3><p>Buy and sell items</p>
-      </a>
-      <a href="./tutors.html" class="category-card">
-        <div class="category-icon navy"><i class="ti ti-school-bell" aria-hidden="true"></i></div>
-        <h3>Verified Tutors</h3><p>Browse lecturer-endorsed tutors</p>
-      </a>
     </div>
   </section>
 </div>
