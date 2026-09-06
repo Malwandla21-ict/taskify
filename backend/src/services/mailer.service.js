@@ -19,7 +19,18 @@ function getTransporter() {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === "true",
-    auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined
+    auth: process.env.SMTP_USER ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS } : undefined,
+    /*
+      Nodemailer's defaults here are generous enough to feel like a hang to
+      a real user — up to 2 minutes just to connect, up to 10 minutes on
+      the socket overall — with nothing surfaced to the frontend in the
+      meantime. A misconfigured host/port (wrong value, blocked outbound
+      port, secure/port mismatch) should fail loud and fast instead, so
+      the caller's try/catch actually gets a chance to run.
+    */
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
   });
 
   return transporter;
