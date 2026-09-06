@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-const auditLogService = require("./auditLog.service");
+const auditLogService = require("./auditlog.service");
 const notificationService = require("./notification.service");
 
 const VALID_CONTEXT_TYPES = ["task", "equipment_booking", "sales_item", "event"];

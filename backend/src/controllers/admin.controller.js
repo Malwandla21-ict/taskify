@@ -1,6 +1,6 @@
 const { validationResult } = require("express-validator");
 const adminService = require("../services/admin.service");
-const auditLogService = require("../services/auditLog.service");
+const auditLogService = require("../services/auditlog.service");
 const moderationService = require("../services/moderation.service");
 
 async function getDashboardStats(req, res, next) {

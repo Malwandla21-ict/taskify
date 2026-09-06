@@ -1,5 +1,5 @@
 const pool = require("../config/db");
-const auditLogService = require("./auditLog.service");
+const auditLogService = require("./auditlog.service");
 const notificationService = require("./notification.service");
 
 /* ── Suspend / Unsuspend ──

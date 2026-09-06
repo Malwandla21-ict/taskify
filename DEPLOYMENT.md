@@ -90,19 +90,40 @@ that no `.env` file is about to be committed before you push.)
 2. Once it's provisioned (a minute or two), open the service and copy its
    connection details: **Host**, **Port**, **User**, **Password**,
    **Database name** (Aiven names the default database `defaultdb`).
-3. Import your schema (one line — see the "Where to run" note above):
+
+3. **Which `.env` file to edit.** This project actually has two `.env`
+   files: one directly in the `Taskify` folder (project root), and one
+   inside `backend/`. The app itself (`npm start`) reads the one inside
+   `backend/` — leave that one alone, pointed at your local database, so
+   local development keeps working unaffected by everything below. The
+   scripts in this section (`import-schema.js`, every `repair-*.js`, and
+   `create-admin.js`) all read the **root** one instead. So: open the
+   `.env` file directly inside `Taskify` (not `Taskify\backend\.env`) and
+   set `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` to your
+   Aiven values from step 2, and set `DB_SSL=true`.
+
+4. **Import your schema.** Don't use the `mysql` command-line client for
+   this — the older client bundled with tools like XAMPP often can't
+   speak MySQL 8's `caching_sha2_password` authentication that Aiven (and
+   most modern hosted MySQL) uses, and fails with a
+   `Plugin caching_sha2_password could not be loaded` error. Use the
+   included Node script instead, which reuses the same database driver
+   this project's backend already depends on and doesn't have that
+   problem. From the `backend/` folder:
 
    ```bash
-   mysql --host=<aiven-host> --port=<aiven-port> --user=<aiven-user> --password=<aiven-password> --ssl-mode=REQUIRED <aiven-database-name> < taskify-schema.sql
+   node scripts/import-schema.js "..\taskify-schema.sql"
    ```
 
-4. Bring the schema fully up to date by running every repair script against
-   Aiven, **in this order** (they're all idempotent, so re-running any of
-   them is harmless if you're not sure which ones your dump already had):
+   (adjust the path if `taskify-schema.sql` isn't in the project root —
+   it just needs to point at the file from step 0). You should see
+   `Success — executed ~N statement(s) against defaultdb.`
 
-   Temporarily point `backend/.env` at Aiven — edit `DB_HOST`, `DB_PORT`,
-   `DB_USER`, `DB_PASSWORD`, `DB_NAME` to the Aiven values from step 2, and
-   set `DB_SSL=true`. Then, from the `backend/` folder:
+5. Bring the schema fully up to date by running every repair script
+   against Aiven, **in this order** (they're all idempotent, so
+   re-running any of them is harmless if you're not sure which ones your
+   dump already had). `.env` is already pointed at Aiven from step 3, so
+   just run these from the `backend/` folder:
 
    ```bash
    node scripts/repair-schema.js
@@ -114,15 +135,19 @@ that no `.env` file is about to be committed before you push.)
    node scripts/repair-review-generalization-schema.js
    ```
 
-   Afterward, **revert `backend/.env`** back to your local MySQL values so
-   local development keeps working against your local database.
-
-5. Create your first admin account directly on Aiven while `backend/.env`
-   is still pointed at it (or re-point it briefly again):
+6. Create your first admin account directly on Aiven, still with the root
+   `.env` pointed at it:
 
    ```bash
    node scripts/create-admin.js create "Your Name" you@ump.ac.za "a-strong-password"
    ```
+
+7. You're done needing Aiven credentials in a file for now. Since the app
+   itself reads `backend/.env` (untouched, still local) rather than the
+   root one, there's no urgency — but it's tidy to set the root `.env`'s
+   `DB_*` values back to your local ones once you're finished with this
+   section, so a future `node scripts/repair-*.js` run doesn't
+   accidentally target Aiven again by surprise.
 
 ---
 
