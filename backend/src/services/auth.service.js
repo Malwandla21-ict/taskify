@@ -612,17 +612,25 @@ async function requestEmailTwoFactorSetupCode(userId) {
   const code = generateNumericCode(6);
   const expiryMinutes = Number(process.env.LOGIN_EMAIL_OTP_EXPIRY_MINUTES) || 10;
 
-  await pool.execute(
-    `UPDATE users SET login_email_otp_hash = ?, login_email_otp_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE), login_email_otp_requested_at = NOW() WHERE id = ?`,
-    [hashToken(code), expiryMinutes, userId]
-  );
-
+  /*
+    Send before persisting: if the email fails to go out, we don't want to
+    have already burned this attempt's cooldown window (login_email_otp_
+    requested_at) — that would lock the user out of ever getting a working
+    code for `cooldownSeconds` at a time, purely because sending is broken,
+    with no way to retry sooner. Only record the attempt once we know the
+    email actually went out.
+  */
   try {
     await mailerService.sendTwoFactorSetupOtpEmail(user.email, user.full_name, code);
   } catch (error) {
     console.error("Failed to send 2FA email-setup code:", error.message);
     throwError("Couldn't send the email right now. Please try again shortly.", 502);
   }
+
+  await pool.execute(
+    `UPDATE users SET login_email_otp_hash = ?, login_email_otp_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE), login_email_otp_requested_at = NOW() WHERE id = ?`,
+    [hashToken(code), expiryMinutes, userId]
+  );
 
   return { message: `We've sent a 6-digit code to ${maskEmail(user.email)}. It expires in ${expiryMinutes} minutes.` };
 }
@@ -804,17 +812,20 @@ async function requestLoginEmailOtp(tempToken) {
   const code = generateNumericCode(6);
   const expiryMinutes = Number(process.env.LOGIN_EMAIL_OTP_EXPIRY_MINUTES) || 10;
 
-  await pool.execute(
-    `UPDATE users SET login_email_otp_hash = ?, login_email_otp_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE), login_email_otp_requested_at = NOW() WHERE id = ?`,
-    [hashToken(code), expiryMinutes, user.id]
-  );
-
+  // Send before persisting — see the matching comment in
+  // requestEmailTwoFactorSetupCode for why: a failed send must not burn
+  // this attempt's cooldown window.
   try {
     await mailerService.sendLoginOtpEmail(user.email, user.full_name, code);
   } catch (error) {
     console.error("Failed to send login email-OTP:", error.message);
     throwError("Couldn't send the email right now. Please try again shortly.", 502);
   }
+
+  await pool.execute(
+    `UPDATE users SET login_email_otp_hash = ?, login_email_otp_expires = DATE_ADD(NOW(), INTERVAL ? MINUTE), login_email_otp_requested_at = NOW() WHERE id = ?`,
+    [hashToken(code), expiryMinutes, user.id]
+  );
 
   await securityLogService.logSecurityEvent({ userId: user.id, email: user.email, event: "twofa_email_otp_requested" });
 
