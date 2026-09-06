@@ -58,18 +58,20 @@ function wrapTemplate(title, bodyHtml) {
     </div>`;
 }
 
-async function sendVerificationEmail(email, fullName, verifyUrl) {
+/* OTP-based, not a clickable link — same "short code to type back in"
+   pattern as sendLoginOtpEmail, reused here for the registration step. */
+async function sendVerificationEmail(email, fullName, code) {
+  const expiryMinutes = process.env.EMAIL_VERIFICATION_OTP_EXPIRY_MINUTES || 15;
   return sendMail({
     to: email,
-    subject: "Verify your Taskify account",
+    subject: `Your Taskify verification code: ${code}`,
     html: wrapTemplate("Verify your email", `
       <p>Hi ${fullName},</p>
-      <p>Thanks for signing up for Taskify. Please confirm this is your email address to activate your account:</p>
-      <p style="margin:24px 0;"><a href="${verifyUrl}" style="background:#009B72;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">Verify my email</a></p>
-      <p>Or paste this link into your browser:<br><span style="word-break:break-all;">${verifyUrl}</span></p>
-      <p>This link expires in ${process.env.EMAIL_VERIFICATION_EXPIRY_HOURS || 24} hours.</p>
+      <p>Thanks for signing up for Taskify. Enter this code to confirm your email and activate your account:</p>
+      <p style="margin:24px 0;font-size:32px;font-weight:800;letter-spacing:4px;color:#009B72;">${code}</p>
+      <p>This code expires in ${expiryMinutes} minutes.</p>
     `),
-    text: `Hi ${fullName}, verify your Taskify account: ${verifyUrl} (expires in ${process.env.EMAIL_VERIFICATION_EXPIRY_HOURS || 24} hours)`
+    text: `Your Taskify verification code is ${code}. It expires in ${expiryMinutes} minutes.`
   });
 }
 
@@ -101,4 +103,72 @@ async function sendSecurityNoticeEmail(email, fullName, message) {
   });
 }
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendSecurityNoticeEmail };
+/* Login-time 2FA fallback for someone without their authenticator app or
+   backup codes on hand — see auth.service.js's requestLoginEmailOtp. Kept
+   visually distinct from sendVerificationEmail/sendPasswordResetEmail
+   (no clickable button — the whole point is a short code to type back
+   into the two-factor screen) and mirrors sendPasswordResetEmail's
+   expiry-minutes wording. */
+async function sendLoginOtpEmail(email, fullName, code) {
+  const expiryMinutes = process.env.LOGIN_EMAIL_OTP_EXPIRY_MINUTES || 10;
+  return sendMail({
+    to: email,
+    subject: `Your Taskify sign-in code: ${code}`,
+    html: wrapTemplate("Your sign-in code", `
+      <p>Hi ${fullName},</p>
+      <p>Use this code to finish signing in to Taskify:</p>
+      <p style="margin:24px 0;font-size:32px;font-weight:800;letter-spacing:4px;color:#009B72;">${code}</p>
+      <p>This code expires in ${expiryMinutes} minutes. If you didn't just try to sign in, you can ignore this email — your account is safe.</p>
+    `),
+    text: `Your Taskify sign-in code is ${code}. It expires in ${expiryMinutes} minutes. If you didn't try to sign in, ignore this email.`
+  });
+}
+
+/* Confirms an account controls its own email before turning on email-based
+   2FA (the "prove it" step, same role the QR-code scan + app code plays
+   for the authenticator method) — see auth.service.js's
+   requestEmailTwoFactorSetupCode / enableEmailTwoFactor. Distinct copy
+   from sendLoginOtpEmail so someone doesn't mistake a setup email for a
+   login attempt they didn't make. */
+async function sendTwoFactorSetupOtpEmail(email, fullName, code) {
+  const expiryMinutes = process.env.LOGIN_EMAIL_OTP_EXPIRY_MINUTES || 10;
+  return sendMail({
+    to: email,
+    subject: `Your Taskify two-factor setup code: ${code}`,
+    html: wrapTemplate("Confirm two-factor setup", `
+      <p>Hi ${fullName},</p>
+      <p>Use this code to finish turning on email-based two-factor authentication for your Taskify account:</p>
+      <p style="margin:24px 0;font-size:32px;font-weight:800;letter-spacing:4px;color:#009B72;">${code}</p>
+      <p>This code expires in ${expiryMinutes} minutes. If you didn't request this, you can ignore this email — nothing changes on your account.</p>
+    `),
+    text: `Your Taskify two-factor setup code is ${code}. It expires in ${expiryMinutes} minutes. If you didn't request this, ignore this email.`
+  });
+}
+
+/* Generic wrapper for the short list of high-value in-app notifications
+   that also get emailed (see notification.service.js's `email: true`
+   opt-in) — content flagged for review, new reports, listings removed,
+   account suspended/banned, task accepted, payment released. Reuses the
+   same title/message text already written for the in-app notification
+   rather than a separate copy of wording to maintain. */
+async function sendNotificationEmail(email, fullName, title, message, actionUrl = null) {
+  return sendMail({
+    to: email,
+    subject: `Taskify: ${title}`,
+    html: wrapTemplate(title, `
+      <p>Hi ${fullName},</p>
+      <p>${message}</p>
+      ${actionUrl ? `<p style="margin:24px 0;"><a href="${actionUrl}" style="background:#009B72;color:#fff;padding:12px 20px;border-radius:6px;text-decoration:none;font-weight:600;">View in Taskify</a></p>` : ""}
+    `),
+    text: `${message}${actionUrl ? `\n\nView in Taskify: ${actionUrl}` : ""}`
+  });
+}
+
+module.exports = {
+  sendVerificationEmail,
+  sendPasswordResetEmail,
+  sendSecurityNoticeEmail,
+  sendLoginOtpEmail,
+  sendTwoFactorSetupOtpEmail,
+  sendNotificationEmail
+};

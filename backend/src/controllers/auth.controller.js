@@ -48,6 +48,7 @@ async function login(req, res, next) {
     const result = await authService.loginUser({
       email: req.body.email,
       password: req.body.password,
+      deviceToken: req.body.deviceToken,
       ip,
       userAgent
     });
@@ -56,7 +57,7 @@ async function login(req, res, next) {
       return res.status(200).json({
         success: true,
         message: "Password verified. Enter your two-factor authentication code to finish signing in.",
-        data: { requires2FA: true, tempToken: result.tempToken }
+        data: { requires2FA: true, tempToken: result.tempToken, method: result.method, canRememberDevice: result.canRememberDevice }
       });
     }
 
@@ -68,7 +69,8 @@ async function login(req, res, next) {
 
 async function verifyEmail(req, res, next) {
   try {
-    const result = await authService.verifyEmailToken(req.query.token);
+    if (validationFailure(req, res)) return;
+    const result = await authService.verifyEmailOtp(req.body.email, req.body.code);
     return res.status(200).json({ success: true, message: "Email verified. You're now logged in.", data: result });
   } catch (error) {
     next(error);
@@ -109,8 +111,22 @@ async function verifyTwoFactorLogin(req, res, next) {
   try {
     if (validationFailure(req, res)) return;
     const { ip, userAgent } = requestContext(req);
-    const result = await authService.verifyTwoFactorLogin(req.body.tempToken, req.body.code, { ip, userAgent });
+    const result = await authService.verifyTwoFactorLogin(req.body.tempToken, req.body.code, {
+      rememberDevice: Boolean(req.body.rememberDevice),
+      ip,
+      userAgent
+    });
     return res.status(200).json({ success: true, message: "Login successful.", data: result });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function requestTwoFactorEmailOtp(req, res, next) {
+  try {
+    if (validationFailure(req, res)) return;
+    const result = await authService.requestLoginEmailOtp(req.body.tempToken);
+    return res.status(200).json({ success: true, message: result.message, data: { emailHint: result.emailHint } });
   } catch (error) {
     next(error);
   }
@@ -123,5 +139,6 @@ module.exports = {
   resendVerification,
   forgotPassword,
   resetPassword,
-  verifyTwoFactorLogin
+  verifyTwoFactorLogin,
+  requestTwoFactorEmailOtp
 };

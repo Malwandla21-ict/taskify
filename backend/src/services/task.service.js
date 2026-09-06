@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
+const contentModerationService = require("./contentModeration.service");
 
 /* Derived-table pattern (subquery in FROM, not in ON) for "latest
    endorsement per context" — safe and fast, unlike a correlated subquery
@@ -57,18 +58,40 @@ async function createTask({
   title, description, category, section,
   price, location, urgent, createdBy, imageUrls = []
 }) {
+  const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
+
+  if (moderation.severe) {
+    const error = new Error("This content violates our content policy and cannot be posted.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const [result] = await pool.execute(
     `INSERT INTO tasks (
        title, description, category, section,
-       price, location, urgent, created_by, image_urls
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       price, location, urgent, created_by, image_urls,
+       moderation_status, moderation_flags
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       title.trim(), description.trim(), category.trim(),
       section || "General", Number(price), location.trim(),
       urgent ? 1 : 0, createdBy,
-      imageUrls.length ? JSON.stringify(imageUrls) : null
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.flagged ? "pending_review" : "clean",
+      moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null
     ]
   );
+
+  if (moderation.flagged) {
+    await notificationService.notifyAllAdmins({
+      title: "Content Flagged for Review",
+      message: `A new task, "${title.trim()}", was flagged for review (${moderation.flaggedCategories.join(", ")}).`,
+      contextType: "task",
+      contextId: result.insertId,
+      email: true
+    });
+  }
+
   return getTaskById(result.insertId);
 }
 
@@ -80,7 +103,7 @@ async function getAllTasks() {
      LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
      ${TASK_ENDORSEMENT_JOIN}
-     WHERE t.status = 'Posted'
+     WHERE t.status = 'Posted' AND t.moderation_status != 'removed'
      ORDER BY t.urgent DESC, t.created_at DESC`
   );
 
@@ -138,7 +161,8 @@ async function acceptTask(taskId, userId) {
       title: "Task Accepted",
       message: `${accepterName} accepted your task "${task.title}".`,
       contextType: "task",
-      contextId: taskId
+      contextId: taskId,
+      email: true
     });
 
     return getTaskById(taskId);
@@ -245,7 +269,8 @@ async function confirmTaskCompletion(taskId, ownerId) {
       title: "Payment Released",
       message: `You completed "${task.title}" and payment has been released.`,
       contextType: "task",
-      contextId: taskId
+      contextId: taskId,
+      email: true
     });
 
     return getTaskById(taskId);

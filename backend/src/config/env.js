@@ -62,6 +62,15 @@ function validateEnv() {
       "instead of sent. Fine for local dev, not for real users. See EMAIL_SETUP.md.\n"
     );
   }
+
+  if (!process.env.AZURE_CONTENT_SAFETY_ENDPOINT || !process.env.AZURE_CONTENT_SAFETY_KEY) {
+    console.warn(
+      "\nWARNING: AZURE_CONTENT_SAFETY_ENDPOINT/AZURE_CONTENT_SAFETY_KEY are not set — AI content " +
+      "moderation is disabled. Tasks, sales listings, equipment listings, events, and their images " +
+      "will publish unchecked. The free F0 tier needs no payment method under Azure for Students " +
+      "— see CONTENT_MODERATION_SETUP.md.\n"
+    );
+  }
 }
 
 module.exports = { validateEnv };

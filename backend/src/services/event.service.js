@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
+const contentModerationService = require("./contentModeration.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -28,18 +29,40 @@ async function createEvent({
   organizerId, title, description, category, section,
   location, eventDate, capacity, imageUrls = []
 }) {
+  const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
+
+  if (moderation.severe) {
+    const error = new Error("This content violates our content policy and cannot be posted.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const [result] = await pool.execute(
     `INSERT INTO events (
        organizer_id, title, description, category, section,
-       location, event_date, capacity, image_urls
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       location, event_date, capacity, image_urls,
+       moderation_status, moderation_flags
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       organizerId, title.trim(), description.trim(), category.trim(),
       section || "General", location.trim(), eventDate,
       capacity ? Number(capacity) : null,
-      imageUrls.length ? JSON.stringify(imageUrls) : null
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.flagged ? "pending_review" : "clean",
+      moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null
     ]
   );
+
+  if (moderation.flagged) {
+    await notificationService.notifyAllAdmins({
+      title: "Content Flagged for Review",
+      message: `A new event, "${title.trim()}", was flagged for review (${moderation.flaggedCategories.join(", ")}).`,
+      contextType: "event",
+      contextId: result.insertId,
+      email: true
+    });
+  }
+
   return getEventById(result.insertId);
 }
 
@@ -48,7 +71,7 @@ async function getAllUpcomingEvents() {
     `SELECT ${SELECT_FIELDS}
      FROM events e
      INNER JOIN users u ON e.organizer_id = u.id
-     WHERE e.status = 'Upcoming' AND e.event_date >= NOW()
+     WHERE e.status = 'Upcoming' AND e.event_date >= NOW() AND e.moderation_status != 'removed'
      ORDER BY e.event_date ASC`
   );
   const parsed = rows.map(parseImageUrls);
@@ -67,7 +90,7 @@ async function getPastEvents() {
     `SELECT ${SELECT_FIELDS}
      FROM events e
      INNER JOIN users u ON e.organizer_id = u.id
-     WHERE e.event_date < NOW()
+     WHERE e.event_date < NOW() AND e.moderation_status != 'removed'
      ORDER BY e.event_date DESC
      LIMIT 20`
   );

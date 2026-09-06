@@ -2,7 +2,7 @@ const pool = require("../config/db");
 const auditLogService = require("./auditLog.service");
 const notificationService = require("./notification.service");
 
-const VALID_CONTEXT_TYPES = ["task", "equipment_booking", "sales_item"];
+const VALID_CONTEXT_TYPES = ["task", "equipment_booking", "sales_item", "event"];
 
 /* Looks up a human-readable label and the id needed to link back to the
    right detail page for a given report context. Equipment bookings need
@@ -28,6 +28,11 @@ async function resolveContext(contextType, contextId) {
   if (contextType === "sales_item") {
     const [rows] = await pool.execute(`SELECT id, title FROM sales_items WHERE id = ? LIMIT 1`, [contextId]);
     if (!rows.length) { const e = new Error("Sales item not found."); e.statusCode = 404; throw e; }
+    return { title: rows[0].title, linkId: rows[0].id };
+  }
+  if (contextType === "event") {
+    const [rows] = await pool.execute(`SELECT id, title FROM events WHERE id = ? LIMIT 1`, [contextId]);
+    if (!rows.length) { const e = new Error("Event not found."); e.statusCode = 404; throw e; }
     return { title: rows[0].title, linkId: rows[0].id };
   }
   const error = new Error("Invalid report context type.");
@@ -93,7 +98,8 @@ async function createReport({ reporterId, reportedUserId, contextType, contextId
 
   await notificationService.notifyAllAdmins({
     title: "New Report Filed",
-    message: `${reporterName} reported ${reportedName}${contextNote}. Reason: ${reasonPreview}`
+    message: `${reporterName} reported ${reportedName}${contextNote}. Reason: ${reasonPreview}`,
+    email: true
   });
 
   return { ...report, context_title: context?.title || null, context_link_id: context?.linkId || null };
@@ -122,6 +128,7 @@ async function enrichReportsWithContext(rows) {
   const taskIds     = rows.filter(r => r.context_type === "task").map(r => r.context_id);
   const bookingIds   = rows.filter(r => r.context_type === "equipment_booking").map(r => r.context_id);
   const salesItemIds = rows.filter(r => r.context_type === "sales_item").map(r => r.context_id);
+  const eventIds      = rows.filter(r => r.context_type === "event").map(r => r.context_id);
 
   const taskMap = new Map();
   if (taskIds.length) {
@@ -147,11 +154,18 @@ async function enrichReportsWithContext(rows) {
     salesRows.forEach(s => salesMap.set(s.id, { title: s.title, linkId: s.id }));
   }
 
+  const eventMap = new Map();
+  if (eventIds.length) {
+    const [eventRows] = await pool.query(`SELECT id, title FROM events WHERE id IN (?)`, [eventIds]);
+    eventRows.forEach(ev => eventMap.set(ev.id, { title: ev.title, linkId: ev.id }));
+  }
+
   return rows.map(row => {
     let context = null;
     if (row.context_type === "task") context = taskMap.get(row.context_id);
     if (row.context_type === "equipment_booking") context = bookingMap.get(row.context_id);
     if (row.context_type === "sales_item") context = salesMap.get(row.context_id);
+    if (row.context_type === "event") context = eventMap.get(row.context_id);
 
     return {
       ...row,

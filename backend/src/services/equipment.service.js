@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
+const contentModerationService = require("./contentModeration.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -27,17 +28,41 @@ const EQUIPMENT_SELECT_FIELDS = `
 async function createEquipment({
   ownerId, name, description, category, section, dailyPrice, imageUrls = []
 }) {
+  const moderation = await contentModerationService.evaluateListingContent({ title: name, description, imageUrls });
+
+  if (moderation.severe) {
+    const error = new Error("This content violates our content policy and cannot be posted.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const [result] = await pool.execute(
     `INSERT INTO equipment (
        owner_id, name, description, category,
-       section, daily_price, is_available, image_urls
-     ) VALUES (?, ?, ?, ?, ?, ?, 1, ?)`,
+       section, daily_price, is_available, image_urls,
+       moderation_status, moderation_flags
+     ) VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
     [
       ownerId, name.trim(), description.trim(), category.trim(),
       section || "General", Number(dailyPrice),
-      imageUrls.length ? JSON.stringify(imageUrls) : null
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.flagged ? "pending_review" : "clean",
+      moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null
     ]
   );
+
+  if (moderation.flagged) {
+    /* No dedicated "equipment listing" notification context exists (only
+       "equipment_booking", which points at a booking row, not a listing) —
+       left untyped rather than mislabeling it, same as event.service.js
+       does for RSVP notifications. */
+    await notificationService.notifyAllAdmins({
+      title: "Content Flagged for Review",
+      message: `A new equipment listing, "${name.trim()}", was flagged for review (${moderation.flaggedCategories.join(", ")}).`,
+      email: true
+    });
+  }
+
   return getEquipmentById(result.insertId);
 }
 
@@ -46,7 +71,7 @@ async function getAllAvailableEquipment() {
     `SELECT ${EQUIPMENT_SELECT_FIELDS}
      FROM equipment e
      LEFT JOIN users u ON e.owner_id = u.id
-     WHERE e.is_available = 1
+     WHERE e.is_available = 1 AND e.moderation_status != 'removed'
      ORDER BY e.created_at DESC`
   );
   const parsed = rows.map(parseImageUrls);

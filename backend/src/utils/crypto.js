@@ -56,10 +56,21 @@ function generateBackupCodes(count = 10) {
   return codes;
 }
 
+/* Short numeric code for the login-time email-OTP fallback (see
+   auth.service.js's requestLoginEmailOtp) — deliberately short and
+   digits-only so it's easy to read out of an email and type on a phone,
+   unlike generateRawToken's long hex string. crypto.randomInt is uniform
+   (unlike `Math.random() * 10**digits`), and padStart keeps leading zeros. */
+function generateNumericCode(digits = 6) {
+  const max = 10 ** digits;
+  return String(crypto.randomInt(0, max)).padStart(digits, "0");
+}
+
 module.exports = {
   generateRawToken,
   hashToken,
   encryptSecret,
   decryptSecret,
-  generateBackupCodes
+  generateBackupCodes,
+  generateNumericCode
 };

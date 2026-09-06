@@ -1,5 +1,7 @@
 const pool = require("../config/db");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
+const notificationService = require("./notification.service");
+const contentModerationService = require("./contentModeration.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -27,18 +29,40 @@ async function createSalesItem({
   sellerId, title, description, category, section,
   price, conditionStatus, location, imageUrls = []
 }) {
+  const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
+
+  if (moderation.severe) {
+    const error = new Error("This content violates our content policy and cannot be posted.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const [result] = await pool.execute(
     `INSERT INTO sales_items (
        seller_id, title, description, category, section,
-       price, condition_status, location, status, image_urls
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?)`,
+       price, condition_status, location, status, image_urls,
+       moderation_status, moderation_flags
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?, ?, ?)`,
     [
       sellerId, title.trim(), description.trim(), category.trim(),
       section || "Academic", Number(price),
       conditionStatus || "Good", location.trim(),
-      imageUrls.length ? JSON.stringify(imageUrls) : null
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.flagged ? "pending_review" : "clean",
+      moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null
     ]
   );
+
+  if (moderation.flagged) {
+    await notificationService.notifyAllAdmins({
+      title: "Content Flagged for Review",
+      message: `A new sales listing, "${title.trim()}", was flagged for review (${moderation.flaggedCategories.join(", ")}).`,
+      contextType: "sales_item",
+      contextId: result.insertId,
+      email: true
+    });
+  }
+
   return getSalesItemById(result.insertId);
 }
 
@@ -47,7 +71,7 @@ async function getAllAvailableSalesItems() {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
-     WHERE si.status = 'Available'
+     WHERE si.status = 'Available' AND si.moderation_status != 'removed'
      ORDER BY si.created_at DESC`
   );
   const parsed = rows.map(parseImageUrls);

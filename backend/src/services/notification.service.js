@@ -1,17 +1,39 @@
 const pool = require("../config/db");
+const mailerService = require("./mailer.service");
 
-async function createNotification({ userId, title, message, contextType = null, contextId = null }) {
+/* Fire-and-forget: looks up the recipient's email/name and sends the
+   templated notification email. Never awaited by callers, and any
+   failure (bad SMTP config, missing user row, etc.) is swallowed here
+   so a flaky email provider can never block or fail a notification
+   write. See mailer.service.js's sendNotificationEmail. */
+async function maybeSendEmail(userId, title, message) {
+  try {
+    const [rows] = await pool.execute(`SELECT email, full_name FROM users WHERE id = ? LIMIT 1`, [userId]);
+    if (!rows.length) return;
+    const actionUrl = process.env.APP_URL ? `${process.env.APP_URL}/notifications.html` : null;
+    await mailerService.sendNotificationEmail(rows[0].email, rows[0].full_name, title, message, actionUrl);
+  } catch (error) {
+    console.error("[notification] Failed to send notification email, continuing without it:", error.message);
+  }
+}
+
+async function createNotification({ userId, title, message, contextType = null, contextId = null, email = false }) {
   const [result] = await pool.execute(
     `INSERT INTO notifications (user_id, title, message, context_type, context_id) VALUES (?, ?, ?, ?, ?)`,
     [userId, title.trim(), message.trim(), contextType, contextId]
   );
+
+  if (email) {
+    maybeSendEmail(userId, title.trim(), message.trim());
+  }
+
   return getNotificationById(result.insertId);
 }
 
-async function notifyAllAdmins({ title, message, contextType = null, contextId = null }) {
+async function notifyAllAdmins({ title, message, contextType = null, contextId = null, email = false }) {
   const [admins] = await pool.execute(`SELECT id FROM users WHERE role = 'admin'`);
   await Promise.all(
-    admins.map(admin => createNotification({ userId: admin.id, title, message, contextType, contextId }))
+    admins.map(admin => createNotification({ userId: admin.id, title, message, contextType, contextId, email }))
   );
 }
 

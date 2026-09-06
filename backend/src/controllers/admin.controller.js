@@ -80,6 +80,37 @@ async function refundPayment(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getModerationQueue(req, res, next) {
+  try {
+    const queue = await adminService.getModerationQueue();
+    return res.status(200).json({ success: true, message: "Moderation queue fetched successfully.", data: queue });
+  } catch (error) { next(error); }
+}
+
+async function clearModerationFlag(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const result = await adminService.clearModerationFlag(
+      req.params.contentType, Number(req.params.contentId), req.user.id
+    );
+    return res.status(200).json({ success: true, message: "Content cleared — no longer flagged.", data: result });
+  } catch (error) { next(error); }
+}
+
+async function removeContent(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const result = await adminService.removeContent(
+      req.params.contentType, Number(req.params.contentId), req.user.id, req.body.reason
+    );
+    return res.status(200).json({ success: true, message: "Content removed.", data: result });
+  } catch (error) { next(error); }
+}
+
 async function getAuditLogs(req, res, next) {
   try {
     const logs = await auditLogService.getAuditLogs({
@@ -99,5 +130,8 @@ module.exports = {
   banUser,
   unbanUser,
   refundPayment,
-  getAuditLogs
+  getAuditLogs,
+  getModerationQueue,
+  clearModerationFlag,
+  removeContent
 };

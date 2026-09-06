@@ -1,5 +1,5 @@
 const express = require("express");
-const { body, query } = require("express-validator");
+const { body } = require("express-validator");
 const authController = require("../controllers/auth.controller");
 const twoFactorController = require("../controllers/twoFactor.controller");
 const upload = require("../middleware/upload.middleware");
@@ -69,14 +69,26 @@ router.post(
   [
     body("email").trim().notEmpty().withMessage("Email is required.")
       .isEmail().withMessage("Email must be valid."),
-    body("password").notEmpty().withMessage("Password is required.")
+    body("password").notEmpty().withMessage("Password is required."),
+    /* Optional "remember this device" proof from a prior 2FA login (see
+       /2fa/verify-login below) — never required, ignored entirely for
+       admin accounts server-side regardless of what's sent here. */
+    body("deviceToken").optional({ checkFalsy: true }).trim().isLength({ max: 128 }).withMessage("Invalid device token.")
   ],
   authController.login
 );
 
-router.get(
+/* OTP-based, not a link click — twoFactorLimiter (not emailActionLimiter)
+   because this is the "guess a 6-digit code" endpoint, same abuse shape as
+   2FA verification, not the "send an email" endpoint (that's below). */
+router.post(
   "/verify-email",
-  [ query("token").trim().notEmpty().withMessage("Verification token is required.") ],
+  twoFactorLimiter,
+  [
+    body("email").trim().notEmpty().withMessage("Email is required.")
+      .isEmail().withMessage("Email must be valid."),
+    body("code").trim().notEmpty().withMessage("Enter the 6-digit code from your email.")
+  ],
   authController.verifyEmail
 );
 
@@ -111,9 +123,24 @@ router.post(
   twoFactorLimiter,
   [
     body("tempToken").trim().notEmpty().withMessage("Missing session token."),
-    body("code").trim().notEmpty().withMessage("Enter your 6-digit code or a backup code.")
+    body("code").trim().notEmpty().withMessage("Enter your 6-digit code or a backup code."),
+    /* Only honored for student/lecturer accounts — ignored for admin
+       server-side even if somehow sent as true (see loginUser/
+       verifyTwoFactorLogin's canRememberDevice/role checks). */
+    body("rememberDevice").optional().isBoolean().withMessage("Invalid value.")
   ],
   authController.verifyTwoFactorLogin
+);
+
+/* Sends the email-OTP fallback (see auth.service.js's requestLoginEmailOtp).
+   Rate-limited with emailActionLimiter, same as forgot-password/resend-
+   verification, since this also sends mail — twoFactorLimiter is for
+   guessing codes, not requesting them. */
+router.post(
+  "/2fa/verify-login/email-otp",
+  emailActionLimiter,
+  [ body("tempToken").trim().notEmpty().withMessage("Missing session token.") ],
+  authController.requestTwoFactorEmailOtp
 );
 
 /* ── 2FA management (authenticated) ── */
@@ -136,5 +163,40 @@ router.post(
   ],
   twoFactorController.disable
 );
+
+/* Replaces the set of backup codes without a full disable/re-enroll —
+   same password + code proof as disable, so it can't be used to strand
+   someone else's account with fresh codes they never see. */
+router.post(
+  "/2fa/backup-codes/regenerate",
+  authenticate,
+  twoFactorLimiter,
+  [
+    body("password").notEmpty().withMessage("Password is required."),
+    body("code").trim().notEmpty().withMessage("Enter a 6-digit code or a backup code.")
+  ],
+  twoFactorController.regenerateBackupCodes
+);
+
+/* Email-based 2FA enrollment — alternative to the QR-code/authenticator
+   path above. setup-email sends mail (emailActionLimiter); enable-email
+   is a code guess (twoFactorLimiter), same split as the login-time
+   equivalents further up this file. */
+router.post("/2fa/setup-email", authenticate, emailActionLimiter, twoFactorController.setupEmail);
+router.post(
+  "/2fa/enable-email",
+  authenticate,
+  twoFactorLimiter,
+  [ body("code").trim().matches(/^\d{6}$/).withMessage("Enter the 6-digit code from your email.") ],
+  twoFactorController.enableEmail
+);
+
+/* Trusted-device management (Stage 3 of the 2FA rollout) — view and revoke
+   the devices that currently skip 2FA on login. Plain authenticate is
+   enough here: these are read/manage-your-own-account actions, not a
+   credential-guessing surface, same tier as /2fa/status above. */
+router.get("/2fa/trusted-devices", authenticate, twoFactorController.listTrustedDevices);
+router.delete("/2fa/trusted-devices/:id", authenticate, twoFactorController.revokeTrustedDevice);
+router.post("/2fa/trusted-devices/revoke-all", authenticate, twoFactorController.revokeAllTrustedDevices);
 
 module.exports = router;

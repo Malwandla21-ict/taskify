@@ -67,6 +67,35 @@ router.patch(
   adminController.refundPayment
 );
 
+/* AI-flagged content (tasks, sales listings, equipment listings, events)
+   waiting on a human decision — see contentModeration.service.js for what
+   gets flagged automatically, and moderation.service.js (a separate file)
+   for user-level suspend/ban actions. */
+router.get("/moderation", adminController.getModerationQueue);
+
+router.patch(
+  "/moderation/:contentType/:contentId/clear",
+  [
+    param("contentType").isIn(["task", "sales_item", "equipment", "event"]).withMessage("Invalid content type."),
+    param("contentId").isInt({ min: 1 }).withMessage("Content ID must be a valid positive integer.")
+  ],
+  adminController.clearModerationFlag
+);
+
+/* Also the endpoint to act on a user report tied to a task/sales
+   item/equipment listing/event — resolveReport (report.routes.js) only
+   marks the report itself resolved; this is the step that actually takes
+   the listing down. */
+router.patch(
+  "/moderation/:contentType/:contentId/remove",
+  [
+    param("contentType").isIn(["task", "sales_item", "equipment", "event"]).withMessage("Invalid content type."),
+    param("contentId").isInt({ min: 1 }).withMessage("Content ID must be a valid positive integer."),
+    body("reason").optional().trim().isLength({ max: 500 }).withMessage("Reason must not exceed 500 characters.")
+  ],
+  adminController.removeContent
+);
+
 router.get(
   "/audit-logs",
   [

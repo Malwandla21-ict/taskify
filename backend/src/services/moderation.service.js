@@ -41,7 +41,8 @@ async function suspendUser(userId, adminId, reason) {
     title: "Account Suspended",
     message: reason
       ? `Your account has been suspended. Reason: ${reason}`
-      : "Your account has been suspended by an administrator."
+      : "Your account has been suspended by an administrator.",
+    email: true
   });
 
   return getUserSummary(userId);
@@ -117,7 +118,8 @@ async function banUser(userId, adminId, reason) {
     title: "Account Banned",
     message: reason
       ? `Your account has been banned. Reason: ${reason}`
-      : "Your account has been banned by an administrator."
+      : "Your account has been banned by an administrator.",
+    email: true
   });
 
   return getUserSummary(userId);
