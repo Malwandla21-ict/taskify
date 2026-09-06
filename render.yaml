@@ -69,8 +69,13 @@ services:
       - key: CLOUDINARY_API_SECRET
         sync: false
 
-      # Leave SMTP_HOST empty in the Render dashboard to run in dev mode
-      # (emails logged instead of sent) until real SMTP creds are set up.
+      # Render's free web services block outbound SMTP ports (25/465/587),
+      # so plain SMTP_HOST/PORT below can never work here no matter how
+      # correct the values are — set BREVO_API_KEY instead (Brevo dashboard
+      # -> Settings -> SMTP & API -> API Keys) to send over HTTPS instead.
+      # Leave both empty to run in dev mode (emails logged instead of sent).
+      - key: BREVO_API_KEY
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

@@ -177,7 +177,7 @@ Steps:
    | `TOTP_ENCRYPTION_KEY` | generate: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
    | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` | from your existing Cloudinary account |
    | `CLIENT_URL`, `APP_URL` | leave blank for now — see step 4 |
-   | `SMTP_HOST`, `SMTP_USER`, `SMTP_PASS` | leave blank to run in dev mode (emails log to Render's console instead of sending) unless you already have SMTP creds set up |
+   | `BREVO_API_KEY` | get one free from Brevo (Settings → SMTP & API → API Keys) — leave blank to run in dev mode (emails log to Render's console instead of sending). **Use this, not `SMTP_*`** — Render's free tier blocks outbound SMTP ports entirely, so plain SMTP can never work here regardless of credentials. See `backend/EMAIL_SETUP.md`. |
    | `AZURE_CONTENT_SAFETY_ENDPOINT`, `AZURE_CONTENT_SAFETY_KEY` | leave blank to run without content moderation, or fill in if you have them |
 
 4. Click **Apply**. Render builds and deploys both services — this takes a
@@ -258,7 +258,9 @@ completion backend logic it currently calls.
   the `*.onrender.com` URLs work fine for both — but a custom domain (e.g.
   from a university or a cheap registrar) can be added later in Render's
   dashboard under each service's "Custom Domains" tab if wanted.
-- **Emails run in dev mode** (logged, not sent) until real SMTP
-  credentials are added — registration/verification/password-reset emails
-  won't actually arrive in anyone's inbox until then. See
-  `EMAIL_SETUP.md`.
+- **Emails run in dev mode** (logged, not sent) until `BREVO_API_KEY` is
+  added — registration/verification/password-reset emails won't actually
+  arrive in anyone's inbox until then. Note this is `BREVO_API_KEY`, not
+  `SMTP_*` — Render's free tier blocks outbound SMTP ports entirely, so
+  plain SMTP credentials will hang and time out here no matter how correct
+  they are. See `backend/EMAIL_SETUP.md`.

@@ -1,11 +1,26 @@
 const nodemailer = require("nodemailer");
 
 /*
-  Thin wrapper around nodemailer. If SMTP_HOST isn't configured (local dev,
-  or before you've set up a provider), emails are logged to the console
-  instead of thrown as errors — so registration/reset/2FA flows are still
-  fully testable without real credentials. See EMAIL_SETUP.md for wiring
-  up a real provider (5 minutes, free tier).
+  Thin wrapper around nodemailer/Brevo's HTTP API. If neither BREVO_API_KEY
+  nor SMTP_HOST is configured (local dev, or before you've set up a
+  provider), emails are logged to the console instead of thrown as errors —
+  so registration/reset/2FA flows are still fully testable without real
+  credentials. See EMAIL_SETUP.md for wiring up a real provider.
+
+  Two send paths, checked in this order:
+
+  1. BREVO_API_KEY set → Brevo's HTTP transactional email API
+     (api.brevo.com, over HTTPS/443). This is REQUIRED for a Render free
+     web service: Render blocks outbound traffic on ports 25/465/587 for
+     free-tier services specifically to prevent spam abuse (see
+     https://render.com/changelog/free-web-services-will-no-longer-allow-outbound-traffic-to-smtp-ports),
+     so plain SMTP can never work there no matter how correct the
+     SMTP_HOST/PORT/USER/PASS values are — it'll just hang until it hits
+     the timeouts below, then fail with a connection error. The HTTP API
+     sidesteps that entirely since it isn't an SMTP-port connection at all.
+  2. SMTP_HOST set (and no BREVO_API_KEY) → plain SMTP via nodemailer.
+     Fine for local dev or any host that doesn't block those ports.
+  3. Neither set → dev-mode console logging (unchanged).
 */
 
 let transporter = null;
@@ -36,12 +51,58 @@ function getTransporter() {
   return transporter;
 }
 
+/* "Taskify <no-reply@taskify.local>" → { name: "Taskify", email: "no-reply@taskify.local" }.
+   Brevo's API wants sender name/email as separate fields rather than one
+   RFC 5322 string the way nodemailer/SMTP accepts it. */
+function parseFromAddress(fromString) {
+  const match = /^(.*)<(.+)>$/.exec(fromString || "");
+  if (match) return { name: match[1].trim() || undefined, email: match[2].trim() };
+  return { email: (fromString || "").trim() };
+}
+
+async function sendViaBrevoApi({ to, subject, html, text }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        accept: "application/json",
+        "content-type": "application/json",
+        "api-key": process.env.BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: parseFromAddress(process.env.EMAIL_FROM || "Taskify <no-reply@taskify.local>"),
+        to: [{ email: to }],
+        subject,
+        htmlContent: html,
+        textContent: text
+      }),
+      signal: controller.signal
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => "");
+      throw new Error(`Brevo API responded ${response.status}: ${body.slice(0, 300)}`);
+    }
+
+    return response.json();
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function sendMail({ to, subject, html, text }) {
+  if (process.env.BREVO_API_KEY) {
+    return sendViaBrevoApi({ to, subject, html, text });
+  }
+
   const activeTransporter = getTransporter();
 
   if (!activeTransporter) {
     if (!loggedDevModeNotice) {
-      console.warn("[mailer] SMTP_HOST not set — emails will be logged instead of sent (dev mode).");
+      console.warn("[mailer] Neither BREVO_API_KEY nor SMTP_HOST is set — emails will be logged instead of sent (dev mode).");
       loggedDevModeNotice = true;
     }
     console.log(`\n[mailer] (dev mode) would send email:\n  To: ${to}\n  Subject: ${subject}\n  ${text || html}\n`);
