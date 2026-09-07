@@ -1,0 +1,23 @@
+name: Keep backend awake
+
+# Render's free tier puts the backend to sleep after 15 minutes with no
+# traffic, and waking it back up takes 30-60 seconds — which is what makes
+# the app feel "broken" on a cold visit. This workflow pings the backend's
+# lightweight root endpoint every 10 minutes so it never goes 15 minutes
+# without a request, at no cost (GitHub gives free accounts scheduled runs).
+#
+# Note: GitHub automatically pauses scheduled workflows in a repo that's
+# had no commits for 60 days. If that ever happens, pushing any commit (or
+# re-running this workflow manually from the Actions tab) turns it back on.
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Taskify backend
+        run: curl -fsS --max-time 20 https://taskify-backend.onrender.com/ || true

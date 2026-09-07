@@ -370,7 +370,7 @@
   position: absolute;
   inset: 0;
   z-index: -2;
-  background-image: url('../assets/images/ump-gate.png');
+  background-image: url('../assets/images/ump-gate.jpg');
   background-size: cover;
   background-position: center;
   transition: transform 0.6s ease;

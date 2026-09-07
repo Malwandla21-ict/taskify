@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Taskify spinner preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ump-navy: #0C1D4A;
+    --ump-green: #009B72;
+    --background: #F5F7FA;
+    --text: #333333;
+    --muted: #687280;
+    --border: #E4E8EF;
+    --card: #FFFFFF;
+    --radius-lg: 16px;
+    --shadow-sm: 0 2px 8px rgba(12,29,74,0.07);
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Poppins', Arial, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    margin: 0;
+    padding: 48px 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 40px;
+  }
+  h1 { font-size: 18px; color: var(--ump-navy); margin: 0 0 4px; }
+  p.caption { font-size: 13px; color: var(--muted); margin: 0 0 20px; text-align: center; max-width: 480px; }
+
+  /* ── the actual spinner rule being proposed, verbatim ── */
+  @keyframes taskify-spin { to { transform: rotate(360deg); } }
+  .ti-loader {
+    display: inline-block;
+    width: 1em; height: 1em;
+    box-sizing: border-box;
+    border-radius: 50%;
+    border: 0.16em solid rgba(12,29,74,0.14);
+    border-top-color: var(--ump-navy);
+    border-right-color: var(--ump-green);
+    animation: taskify-spin 0.7s linear infinite;
+    vertical-align: -0.15em;
+  }
+
+  .demo-block { display: flex; flex-direction: column; align-items: center; }
+
+  .empty-state {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    padding: 48px 60px;
+    text-align: center;
+  }
+  .empty-state-icon { font-size: 40px; margin-bottom: 14px; }
+  .empty-state h3 { margin: 0; font-size: 15px; color: var(--text); font-weight: 700; }
+
+  .primary-button {
+    background: var(--ump-navy);
+    color: white;
+    border: none;
+    padding: 13px 26px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: default;
+  }
+
+  .old-compare { display: flex; gap: 60px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .old-loader {
+    display: inline-block;
+    font-size: 40px;
+    color: var(--ump-navy);
+    animation: taskify-spin 0.8s linear infinite;
+  }
+  .label { font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 14px; letter-spacing: 0.3px; text-transform: uppercase; }
+</style>
+</head>
+<body>
+
+  <div class="demo-block">
+    <h1>Old vs. new — side by side</h1>
+    <p class="caption">Left: the current spinner (a flat icon glyph just rotating). Right: the proposed dual-ring navy/green replacement. Same markup everywhere in the app — only this one CSS rule changes.</p>
+    <div class="old-compare">
+      <div class="demo-block">
+        <div class="old-loader">&#8635;</div>
+        <div class="label">Before</div>
+      </div>
+      <div class="demo-block">
+        <i class="ti-loader" style="font-size:40px;"></i>
+        <div class="label">After</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-block">
+    <h1>In context — page loading state</h1>
+    <p class="caption">e.g. the Endorsed Students page while its data is being fetched.</p>
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="ti-loader"></i></div>
+      <h3>Loading endorsed students…</h3>
+    </div>
+  </div>
+
+  <div class="demo-block">
+    <h1>In context — button mid-action</h1>
+    <p class="caption">e.g. clicking "Publish" on a new task listing.</p>
+    <button class="primary-button"><i class="ti-loader"></i> Publishing…</button>
+  </div>
+
+</body>
+</html>
