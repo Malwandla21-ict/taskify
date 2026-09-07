@@ -5,21 +5,174 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Taskify — UMP Student Marketplace</title>
   <meta name="description" content="Taskify is a student marketplace for the University of Mpumalanga — post and accept tasks, rent equipment, buy and sell with fellow students." />
-  <!-- Google Search Console site-ownership verification. Google's verifier
-       just fetches this page's raw HTML and looks for this tag — it does
-       not run the JS redirect below or follow the meta refresh — so this
-       works even though visitors immediately get sent on to login.html. -->
+  <!-- Google Search Console site-ownership verification — leave this in
+       place even though the page below is no longer a redirect stub. -->
   <meta name="google-site-verification" content="bztFoZo3qrLzf-U6zISyNu4TSoZ7Tkxbs3vGWAoSxxo" />
-  <!-- No app logic lives here — this is just the front door. Everything in
-       the app requires login, so the root URL simply hands visitors to the
-       login page (new students go on to Register from there). Having a
-       real page at "/" also means the bare domain doesn't 404, which
-       matters once this is submitted to Google Search Console. -->
-  <meta http-equiv="refresh" content="0; url=./login.html" />
-  <link rel="canonical" href="./login.html" />
-  <script>window.location.replace("./login.html");</script>
+  <link rel="canonical" href="./index.html" />
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/landing.css" />
 </head>
 <body>
-  <p>Redirecting to <a href="./login.html">Taskify login</a>…</p>
+
+  <nav class="landing-nav">
+    <div class="landing-nav-logo">
+      <img src="./assets/logo/T_Transparent.png" alt="Taskify" />
+      <div class="landing-nav-logo-text">
+        <strong>Taskify</strong>
+        <span>UMP Marketplace</span>
+      </div>
+    </div>
+    <div class="landing-nav-links">
+      <a href="#home" data-nav="home" class="active">Home</a>
+      <a href="#features" data-nav="features">Features</a>
+      <a href="#how-it-works" data-nav="how-it-works">How It Works</a>
+      <a href="#about" data-nav="about">About</a>
+    </div>
+    <div class="landing-nav-actions">
+      <a href="./login.html" class="landing-nav-signin">Sign In</a>
+      <a href="./register.html" class="landing-nav-cta"><i class="ti ti-user-plus" aria-hidden="true"></i> Create Account</a>
+    </div>
+  </nav>
+
+  <section class="landing-hero" id="home">
+    <div class="landing-hero-bg"></div>
+    <div class="landing-hero-overlay"></div>
+    <div class="landing-hero-inner">
+      <h1>Your campus.<br />Your <span>marketplace</span>.</h1>
+      <p>Post tasks, rent equipment, buy and sell with fellow students, and discover campus events — all in one place, built for UMP students.</p>
+      <div class="landing-hero-actions">
+        <a href="./register.html" class="primary-button"><i class="ti ti-user-plus" aria-hidden="true"></i> Create Account</a>
+        <a href="./login.html" class="landing-hero-secondary"><i class="ti ti-login" aria-hidden="true"></i> Sign In</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="features">
+    <div class="landing-section-head centered reveal">
+      <span class="landing-eyebrow">What you can do</span>
+      <h2>Everything your campus needs, in one place</h2>
+      <p>Taskify brings the everyday things students help each other with onto one trusted, verified platform.</p>
+    </div>
+
+    <div class="feature-grid-landing">
+      <div class="feature-card-landing reveal">
+        <div class="feature-card-landing-icon" style="background:var(--ump-green);"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+        <h3>Tasks</h3>
+        <p>Post a task or lend a hand — tutoring, errands, projects and more, right on campus.</p>
+      </div>
+      <div class="feature-card-landing reveal" style="transition-delay:0.06s;">
+        <div class="feature-card-landing-icon" style="background:var(--ump-blue);"><i class="ti ti-building-store" aria-hidden="true"></i></div>
+        <h3>Rentals</h3>
+        <p>Borrow or lend out equipment with fellow students, safely and easily.</p>
+      </div>
+      <div class="feature-card-landing reveal" style="transition-delay:0.12s;">
+        <div class="feature-card-landing-icon" style="background:var(--ump-gold);"><i class="ti ti-shopping-cart" aria-hidden="true"></i></div>
+        <h3>Marketplace</h3>
+        <p>Buy and sell textbooks, gear and everyday essentials with students nearby.</p>
+      </div>
+      <div class="feature-card-landing reveal" style="transition-delay:0.18s;">
+        <div class="feature-card-landing-icon" style="background:var(--ump-red);"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+        <h3>Events</h3>
+        <p>Discover and organize campus events happening around you.</p>
+      </div>
+      <div class="feature-card-landing reveal" style="transition-delay:0.24s;">
+        <div class="feature-card-landing-icon" style="background:var(--ump-navy);"><i class="ti ti-school-bell" aria-hidden="true"></i></div>
+        <h3>Endorsed Students</h3>
+        <p>See who's been personally vouched for by a UMP lecturer — a real signal of trust.</p>
+      </div>
+      <div class="feature-card-landing reveal" style="transition-delay:0.30s;">
+        <div class="feature-card-landing-icon" style="background:var(--ump-green);"><i class="ti ti-shield-check" aria-hidden="true"></i></div>
+        <h3>Secure &amp; Verified</h3>
+        <p>Student email verification and two-factor authentication keep every account protected.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section tint" id="how-it-works">
+    <div class="landing-split">
+      <div>
+        <div class="landing-section-head reveal">
+          <span class="landing-eyebrow">How it works</span>
+          <h2>Get started in three steps</h2>
+        </div>
+        <div class="how-steps-landing">
+          <div class="how-step-landing reveal">
+            <div class="how-step-landing-number">1</div>
+            <div>
+              <h3>Sign up with your student email</h3>
+              <p>Verify your UMP student or staff email and you're in — no waiting around.</p>
+            </div>
+          </div>
+          <div class="how-step-landing reveal" style="transition-delay:0.1s;">
+            <div class="how-step-landing-number">2</div>
+            <div>
+              <h3>Post or browse listings</h3>
+              <p>Tasks, rentals, marketplace items, events — find what you need or offer what you have.</p>
+            </div>
+          </div>
+          <div class="how-step-landing reveal" style="transition-delay:0.2s;">
+            <div class="how-step-landing-number">3</div>
+            <div>
+              <h3>Connect and build trust</h3>
+              <p>Complete tasks, leave reviews, and get endorsed by lecturers as your reputation grows.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="landing-split-media reveal-img">
+        <img src="./assets/images/UMP-Buildings-62.jpg" alt="UMP campus library" />
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section" id="about">
+    <div class="landing-split reverse">
+      <div class="landing-split-media reveal-img">
+        <img src="./assets/images/UMP-Buildings-20.jpg" alt="UMP lecture hall" />
+      </div>
+      <div class="landing-about-text">
+        <div class="landing-section-head reveal">
+          <span class="landing-eyebrow">About Taskify</span>
+          <h2>Built for the UMP community</h2>
+        </div>
+        <div class="reveal">
+          <p>Taskify is a marketplace built specifically for University of Mpumalanga students — a single place to post and accept tasks, rent out or borrow equipment, buy and sell with people on your own campus, and keep up with student events.</p>
+          <p>Every account is verified with a real UMP student or staff email, and trust runs both ways: students build a reputation through reviews, and can be personally endorsed by lecturers along the way.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="landing-cta-banner reveal">
+    <div class="landing-cta-banner-bg"></div>
+    <div class="landing-cta-banner-overlay"></div>
+    <div class="landing-cta-banner-inner">
+      <h2>Ready to join your campus marketplace?</h2>
+      <p>It only takes your student email and a couple of minutes.</p>
+      <a href="./register.html" class="primary-button"><i class="ti ti-user-plus" aria-hidden="true"></i> Create Your Account</a>
+    </div>
+  </div>
+
+  <footer class="landing-footer">
+    <div class="landing-footer-inner">
+      <div class="landing-footer-brand">
+        <img src="./assets/logo/T_Transparent.png" alt="Taskify" />
+        <div class="landing-footer-brand-text">
+          <strong>Taskify</strong>
+          <span>UMP Marketplace</span>
+        </div>
+      </div>
+      <div class="landing-footer-links">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How It Works</a>
+        <a href="#about">About</a>
+        <a href="./login.html">Sign In</a>
+        <a href="./register.html">Create Account</a>
+      </div>
+      <p class="landing-footer-copy">Taskify — a marketplace built for University of Mpumalanga students.</p>
+    </div>
+  </footer>
+
+  <script src="./js/landing.js"></script>
 </body>
 </html>

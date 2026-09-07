@@ -1,0 +1,444 @@
+/* ── landing.css — the public landing page (index.html) only.
+   Assumes main.css is loaded first for :root variables, the Poppins font,
+   base reset, and .primary-button. Everything here is scoped under
+   `.landing-*` classes so it can't leak into or collide with any other
+   page's styles, since main.css is shared across the whole app. ── */
+
+/* ==============================
+   Reveal-on-scroll (progressive enhancement)
+   landing.js toggles .is-visible via IntersectionObserver as each section
+   scrolls into view. Elements are fully visible by default so anyone
+   without JS, or with prefers-reduced-motion, still sees everything.
+============================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+.reveal-img {
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 0.9s ease, transform 0.9s ease;
+}
+.reveal-img.is-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal-img { opacity: 1; transform: none; transition: none; }
+}
+
+/* ==============================
+   TOP NAV
+============================== */
+.landing-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px clamp(20px, 5vw, 64px);
+  background: rgba(255,255,255,0.90);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.landing-nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.landing-nav-logo img { height: 32px; width: auto; }
+.landing-nav-logo-text { display: flex; flex-direction: column; line-height: 1.15; }
+.landing-nav-logo-text strong { font-weight: 800; font-size: 15.5px; color: var(--ump-navy); }
+.landing-nav-logo-text span { font-size: 10.5px; font-weight: 600; color: var(--muted); letter-spacing: 0.3px; }
+
+.landing-nav-links {
+  display: flex;
+  align-items: center;
+  gap: 30px;
+}
+.landing-nav-links a {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  padding-bottom: 4px;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.landing-nav-links a:hover { color: var(--ump-navy); }
+.landing-nav-links a.active { color: var(--ump-navy); border-bottom-color: var(--ump-green); }
+@media (max-width: 780px) {
+  .landing-nav-links { display: none; }
+}
+
+.landing-nav-actions { display: flex; align-items: center; gap: 10px; }
+.landing-nav-signin {
+  color: var(--ump-navy);
+  border: 1.5px solid var(--border);
+  padding: 9px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 600;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.landing-nav-signin:hover { border-color: var(--ump-navy); background: var(--background); }
+.landing-nav-cta {
+  background: var(--ump-green);
+  color: white;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  font-size: 13.5px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.landing-nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(0,155,114,0.30); }
+
+/* ==============================
+   HERO — full-bleed real campus photo, gradient only where text sits so
+   the photo itself stays the focus (per feedback: less "chip/badge"
+   decoration, more real photography doing the work).
+============================== */
+.landing-hero {
+  position: relative;
+  min-height: 600px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+.landing-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: url('../assets/images/IMG_0632.jpg');
+  background-size: cover;
+  background-position: center 30%;
+  background-attachment: fixed;
+}
+@media (max-width: 900px) {
+  /* background-attachment:fixed is unreliable on mobile browsers and can
+     cause jank — fall back to a normal scrolling background there. */
+  .landing-hero-bg { background-attachment: scroll; }
+}
+.landing-hero-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(6,19,51,0.90) 0%, rgba(6,19,51,0.72) 32%, rgba(6,19,51,0.30) 58%, rgba(6,19,51,0.08) 78%),
+    linear-gradient(0deg, rgba(6,19,51,0.55) 0%, transparent 40%);
+}
+
+.landing-hero-inner {
+  position: relative;
+  max-width: 620px;
+  padding: 90px clamp(20px, 6vw, 64px) 90px;
+  color: white;
+}
+.landing-hero-inner h1 {
+  font-size: clamp(32px, 4.6vw, 50px);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 18px;
+}
+.landing-hero-inner h1 span { color: #6BE3B8; }
+
+.landing-hero-inner p {
+  font-size: clamp(14.5px, 1.6vw, 16.5px);
+  color: rgba(255,255,255,0.86);
+  line-height: 1.65;
+  max-width: 480px;
+  margin: 0 0 32px;
+}
+
+.landing-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.landing-hero-actions .primary-button {
+  width: auto;
+  padding: 15px 28px;
+  font-size: 14.5px;
+  background: var(--ump-green);
+  box-shadow: 0 10px 30px rgba(0,155,114,0.35);
+}
+.landing-hero-actions .primary-button:hover { transform: translateY(-2px); }
+.landing-hero-secondary {
+  padding: 15px 28px;
+  border-radius: var(--radius);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  color: white;
+  font-weight: 600;
+  font-size: 14.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.landing-hero-secondary:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.6); }
+
+/* ==============================
+   SECTION SHELL
+============================== */
+.landing-section {
+  padding: 88px clamp(20px, 6vw, 64px);
+  max-width: 1180px;
+  margin: 0 auto;
+}
+.landing-section-head {
+  max-width: 620px;
+  margin: 0 0 48px;
+}
+.landing-section-head.centered { text-align: center; margin-left: auto; margin-right: auto; }
+.landing-eyebrow {
+  display: inline-block;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--ump-green);
+  margin-bottom: 10px;
+}
+.landing-section-head h2 {
+  font-size: clamp(24px, 3.4vw, 32px);
+  font-weight: 800;
+  color: var(--ump-navy);
+  margin-bottom: 12px;
+}
+.landing-section-head p {
+  font-size: 14.5px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+/* ==============================
+   FEATURE GRID — solid circular icon badges
+============================== */
+.feature-grid-landing {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+@media (max-width: 900px) {
+  .feature-grid-landing { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 600px) {
+  .feature-grid-landing { grid-template-columns: 1fr; }
+}
+
+.feature-card-landing {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px 24px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.feature-card-landing:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(0,155,114,0.35);
+}
+.feature-card-landing-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  color: white;
+  margin-bottom: 16px;
+}
+.feature-card-landing h3 {
+  font-size: 15.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.feature-card-landing p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ==============================
+   SPLIT SECTIONS (How it Works / About) — text one side, real campus
+   photo the other, with a subtle zoom-out-into-place reveal + gentle
+   hover zoom for interactivity.
+============================== */
+.landing-section.tint {
+  background: var(--card);
+  max-width: none;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.landing-split {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 56px;
+  align-items: center;
+}
+.landing-split.reverse { grid-template-columns: 0.9fr 1.1fr; }
+.landing-split.reverse .landing-split-media { order: 2; }
+@media (max-width: 860px) {
+  .landing-split, .landing-split.reverse { grid-template-columns: 1fr; }
+  .landing-split.reverse .landing-split-media { order: 0; }
+}
+
+.landing-split-media {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  aspect-ratio: 4 / 3;
+}
+.landing-split-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+.landing-split-media:hover img { transform: scale(1.06); }
+
+.how-steps-landing {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+.how-step-landing { display: flex; gap: 16px; align-items: flex-start; }
+.how-step-landing-number {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--ump-navy);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 16px;
+}
+.how-step-landing:nth-child(2) .how-step-landing-number { background: var(--ump-green); }
+.how-step-landing:nth-child(3) .how-step-landing-number { background: var(--ump-blue); }
+.how-step-landing h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.how-step-landing p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.landing-about-text p {
+  font-size: 14.5px;
+  color: var(--text);
+  line-height: 1.75;
+  margin-bottom: 16px;
+}
+.landing-about-text p:last-child { margin-bottom: 0; }
+
+/* ==============================
+   CLOSING CTA BANNER — real campus-gate photo
+============================== */
+.landing-cta-banner {
+  position: relative;
+  margin: 0 clamp(20px, 6vw, 64px) 88px;
+  max-width: 1180px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  isolation: isolate;
+}
+.landing-cta-banner-bg {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background-image: url('../assets/images/ump-gate.png');
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.6s ease;
+}
+.landing-cta-banner:hover .landing-cta-banner-bg { transform: scale(1.04); }
+.landing-cta-banner-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(100deg, rgba(6,19,51,0.90) 0%, rgba(6,19,51,0.72) 40%, rgba(6,19,51,0.35) 75%);
+}
+.landing-cta-banner-inner {
+  padding: 56px clamp(24px, 6vw, 72px);
+  max-width: 480px;
+}
+.landing-cta-banner-inner h2 {
+  color: white;
+  font-size: clamp(22px, 3vw, 28px);
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+.landing-cta-banner-inner p {
+  color: rgba(255,255,255,0.82);
+  font-size: 14px;
+  margin-bottom: 26px;
+}
+.landing-cta-banner-inner .primary-button {
+  width: auto;
+  display: inline-flex;
+  background: var(--ump-green);
+  padding: 15px 30px;
+  font-size: 14.5px;
+  box-shadow: 0 10px 26px rgba(0,155,114,0.35);
+}
+.landing-cta-banner-inner .primary-button:hover { transform: translateY(-2px); }
+
+/* ==============================
+   FOOTER
+============================== */
+.landing-footer {
+  padding: 40px clamp(20px, 6vw, 64px);
+  border-top: 1px solid var(--border);
+}
+.landing-footer-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.landing-footer-brand { display: flex; align-items: center; gap: 10px; }
+.landing-footer-brand img { height: 26px; width: auto; }
+.landing-footer-brand-text strong { display: block; font-size: 14px; font-weight: 800; color: var(--ump-navy); }
+.landing-footer-brand-text span { font-size: 11px; color: var(--muted); }
+.landing-footer-links {
+  display: flex;
+  gap: 22px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.landing-footer-links a { color: var(--muted); }
+.landing-footer-links a:hover { color: var(--ump-green); }
+.landing-footer-copy {
+  width: 100%;
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 8px;
+}
