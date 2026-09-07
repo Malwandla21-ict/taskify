@@ -657,24 +657,28 @@ button.back-link {
    by however far the avatar reaches upward). */
 .profile-header-body {
   position: relative;
-  padding: 62px 28px 20px;
-  padding-left: calc(28px + clamp(96px, 13vw, 120px) + 20px);
+  /* padding-top is deliberately NOT "just past the avatar's bottom edge" —
+     the name/badges/email block should sit against the lower-middle of
+     the (now much larger) avatar, the same way the reference layout has
+     it, rather than starting only once the photo is fully out of the way. */
+  padding: 40px 28px 20px;
+  padding-left: calc(28px + clamp(110px, 14vw, 150px) + 24px);
   z-index: 2;
 }
 
 .profile-header-card .profile-avatar-large-wrap {
   position: absolute;
   left: 28px;
-  /* Half the avatar's own height, so it straddles the seam between the
-     cover photo and this card exactly as before — just recentered for
-     the slightly bigger avatar (108px → 120px max). */
-  top: -60px;
+  /* Overlaps about a third of the way up into the 150px cover photo,
+     leaving most of the avatar hanging down into the white card — a
+     bigger, more prominent photo than the half-and-half overlap before. */
+  top: -50px;
   z-index: 3;
 }
 
 .profile-header-card .profile-avatar-large {
-  width: clamp(96px, 13vw, 120px);
-  height: clamp(96px, 13vw, 120px);
+  width: clamp(110px, 14vw, 150px);
+  height: clamp(110px, 14vw, 150px);
   border: 4px solid white;
   background: var(--background);
   box-shadow: var(--shadow-md);
@@ -747,7 +751,7 @@ button.back-link {
      overlapping them at the left, which suits a narrow single-column
      layout better than the absolute overlap desktop uses. */
   .profile-header-body { padding: 0 18px 18px; padding-left: 18px; }
-  .profile-header-card .profile-avatar-large-wrap { position: static; margin-top: -50px; margin-bottom: 12px; display: flex; justify-content: center; }
+  .profile-header-card .profile-avatar-large-wrap { position: static; margin-top: -58px; margin-bottom: 12px; display: flex; justify-content: center; }
   .profile-stats-inline { padding: 14px 18px 18px; gap: 18px; }
   .profile-header-card .edit-profile-header-btn { top: 10px; right: 12px; }
 }
