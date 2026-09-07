@@ -632,21 +632,27 @@ button.back-link {
    by however far the avatar reaches upward). */
 .profile-header-body {
   position: relative;
-  /* padding-top and the padding-left buffer were both sized for a
-     108px-tall avatar alone; now that the avatar-wrap also stacks a
-     "Change Photo" pill button underneath it (main.css), the wrap is
-     taller and a bit wider than the avatar circle itself, so both get
-     extra room here — otherwise the name/email text starts overlapping
-     the pill instead of clearing it. */
-  padding: 130px 28px 20px;
-  padding-left: calc(28px + clamp(88px, 12vw, 108px) + 50px);
+  /* The padding-left buffer is a bit wider than the avatar-wrap rule
+     below sizes it for — the "Change Photo" pill button under the
+     avatar (main.css) is wider than the avatar circle itself, so the
+     name/email text needs extra clearance or the pill's edge crowds it. */
+  padding: 62px 28px 20px;
+  padding-left: calc(28px + clamp(88px, 12vw, 108px) + 35px);
   z-index: 2;
 }
 
 .profile-header-card .profile-avatar-large-wrap {
   position: absolute;
   left: 28px;
-  top: -54px;
+  /* Shifted up from -54px (which centered the bare avatar circle across
+     the cover-photo seam) to -108px, which is exactly the added height
+     of the "Change Photo" pill + its gap now stacked underneath the
+     avatar (main.css). That keeps the *bottom* of the whole avatar+button
+     stack sitting where the avatar's own bottom used to sit — so the
+     name/email text next to it lines up the same way it always did,
+     instead of the button pushing everything down and leaving a gap
+     between the photo and the name. */
+  top: -108px;
   z-index: 3;
 }
 
