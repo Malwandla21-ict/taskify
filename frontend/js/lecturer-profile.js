@@ -69,11 +69,6 @@ async function loadProfile() {
             <div class="profile-avatar-large" style="overflow:hidden;">
               ${avatarHtml(profile.full_name, profile.profilePhoto)}
             </div>
-            <button type="button" id="changeProfilePhoto" class="profile-photo-edit-btn"
-                    aria-label="Change profile photo" title="Change profile photo">
-              <i class="ti ti-pencil" aria-hidden="true"></i>
-              <span class="profile-photo-edit-label">Change Photo</span>
-            </button>
           </div>
           <div class="profile-header-info">
             <h2>${posterName(profile.full_name, profile.lecturer_title)} <span class="lecturer-title-badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified Lecturer</span></h2>
@@ -382,9 +377,22 @@ document.getElementById("addServiceBtn")?.addEventListener("click", () => {
 editSkillInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("addSkillBtn").click(); } });
 editServiceInput?.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); document.getElementById("addServiceBtn").click(); } });
 
+/* Keeps the small avatar preview at the top of the Edit Profile modal in
+   sync with whatever's currently loaded — called when the modal opens and
+   again right after a new photo finishes uploading (the modal's own DOM
+   isn't part of profileMainCard, so loadProfile() re-rendering the header
+   doesn't touch it automatically). */
+function refreshEditPhotoPreview() {
+  const preview = document.getElementById("editPhotoPreview");
+  if (preview && latestProfile) {
+    preview.innerHTML = avatarHtml(latestProfile.full_name, latestProfile.profilePhoto, { lightbox: false });
+  }
+}
+
 function openEditProfileModal() {
   if (!latestProfile) return;
 
+  refreshEditPhotoPreview();
   document.getElementById("editBio").value = latestProfile.bio || "";
   document.getElementById("editLecturerTitle").value = latestProfile.lecturer_title || "";
   document.getElementById("editYearsExperience").value = latestProfile.years_experience ?? "";
@@ -478,6 +486,7 @@ profilePhotoInput?.addEventListener("change", () => {
       showToast("Profile photo updated.");
       await loadProfile();
       populateAvatar();
+      refreshEditPhotoPreview();
     } catch (error) {
       showToast(error.message, "error");
       if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = originalHtml; }

@@ -420,6 +420,31 @@
   overflow-y: auto;
 }
 
+/* ── "Change Photo" row, top of the Edit Profile modal ── */
+.edit-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.edit-photo-row .profile-avatar-large {
+  width: 62px;
+  height: 62px;
+  flex-shrink: 0;
+  border: 3px solid white;
+  box-shadow: var(--shadow-sm);
+  background: var(--background);
+  color: var(--muted);
+  font-size: 20px;
+}
+.edit-photo-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 7px;
+}
+
 .profile-header-card { position: relative; }
 
 .edit-profile-header-btn {
@@ -632,33 +657,24 @@ button.back-link {
    by however far the avatar reaches upward). */
 .profile-header-body {
   position: relative;
-  /* The padding-left buffer is a bit wider than the avatar-wrap rule
-     below sizes it for — the "Change Photo" pill button under the
-     avatar (main.css) is wider than the avatar circle itself, so the
-     name/email text needs extra clearance or the pill's edge crowds it. */
   padding: 62px 28px 20px;
-  padding-left: calc(28px + clamp(88px, 12vw, 108px) + 35px);
+  padding-left: calc(28px + clamp(96px, 13vw, 120px) + 20px);
   z-index: 2;
 }
 
 .profile-header-card .profile-avatar-large-wrap {
   position: absolute;
   left: 28px;
-  /* Shifted up from -54px (which centered the bare avatar circle across
-     the cover-photo seam) to -108px, which is exactly the added height
-     of the "Change Photo" pill + its gap now stacked underneath the
-     avatar (main.css). That keeps the *bottom* of the whole avatar+button
-     stack sitting where the avatar's own bottom used to sit — so the
-     name/email text next to it lines up the same way it always did,
-     instead of the button pushing everything down and leaving a gap
-     between the photo and the name. */
-  top: -108px;
+  /* Half the avatar's own height, so it straddles the seam between the
+     cover photo and this card exactly as before — just recentered for
+     the slightly bigger avatar (108px → 120px max). */
+  top: -60px;
   z-index: 3;
 }
 
 .profile-header-card .profile-avatar-large {
-  width: clamp(88px, 12vw, 108px);
-  height: clamp(88px, 12vw, 108px);
+  width: clamp(96px, 13vw, 120px);
+  height: clamp(96px, 13vw, 120px);
   border: 4px solid white;
   background: var(--background);
   box-shadow: var(--shadow-md);
@@ -727,12 +743,11 @@ button.back-link {
 .profile-stats-inline .pstat-label { font-size: 11px; color: var(--muted); opacity: 1; margin-top: 1px; }
 
 @media (max-width: 700px) {
-  /* Below 700px, main.css already turns .profile-avatar-large-wrap into a
-     centered flex column (avatar above the "Change Photo" button) — keep
-     that same stacked treatment here instead of the absolute overlap,
-     which doesn't suit a narrow single-column layout. */
+  /* Below 700px the avatar is centered above the name/badges instead of
+     overlapping them at the left, which suits a narrow single-column
+     layout better than the absolute overlap desktop uses. */
   .profile-header-body { padding: 0 18px 18px; padding-left: 18px; }
-  .profile-header-card .profile-avatar-large-wrap { position: static; margin-top: -46px; display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .profile-header-card .profile-avatar-large-wrap { position: static; margin-top: -50px; margin-bottom: 12px; display: flex; justify-content: center; }
   .profile-stats-inline { padding: 14px 18px 18px; gap: 18px; }
   .profile-header-card .edit-profile-header-btn { top: 10px; right: 12px; }
 }

@@ -2654,22 +2654,19 @@ textarea { min-height: 110px; resize: vertical; }
 .profile-avatar-large-wrap {
   position: relative;
   flex-shrink: 0;
-  /* Stacked avatar-above-button on every screen size now — this used to
-     only apply below 700px, with desktop instead getting a tiny circular
-     pencil overlay pinned to the avatar's corner. Standardized on the
-     mobile treatment everywhere so "Change Photo" is an actually-labeled
-     button on desktop too, not a small icon easy to miss. */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
 }
 
+/* "Change Photo" now lives inside the Edit Profile modal (next to a
+   preview of the current photo) instead of overlapping the avatar on the
+   header itself — stacking it under the avatar there pushed the name/
+   email text down and threw off their alignment. Styled as a plain pill
+   button since it's just sitting inline in the modal now, not overlaid
+   on anything. */
 .profile-photo-edit-btn {
   width: auto;
   height: auto;
-  min-height: 44px;
-  padding: 10px 18px;
+  min-height: 40px;
+  padding: 9px 16px;
   border-radius: 999px;
   background: var(--ump-green);
   color: white;
@@ -2678,7 +2675,7 @@ textarea { min-height: 110px; resize: vertical; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   font-family: inherit;
   white-space: nowrap;
