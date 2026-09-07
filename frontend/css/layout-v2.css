@@ -150,6 +150,19 @@ body.dashboard-body {
 .app-sidebar .nav-link:hover { background: rgba(255,255,255,0.07); color: white; }
 .app-sidebar .nav-link.active { background: var(--ump-green); color: white; }
 
+/* main.css's older `.nav-link.active` rules were built for the horizontal
+   topbar nav — a green icon color (meant to stand out against a dark,
+   non-green pill) and a floating ::after dash 16px below the link (an
+   "active tab" underline, which needs open space beneath it). This sidebar
+   reuses the same .nav-link class name, so both leak in here and cause two
+   visible bugs: the icon turns the same green as this rule's own green
+   background and disappears into it, and the dash — pill-shaped, 18x3px,
+   var(--ump-green) — floats into the whitespace below the active item,
+   which in a tightly-stacked vertical menu means it overlaps/sits oddly
+   against the *next* link down. Neutralize both for the sidebar only. */
+.app-sidebar .nav-link.active i { color: white; }
+.app-sidebar .nav-link.active::after { content: none; }
+
 .nav-badge {
   margin-left: auto;
   background: var(--ump-gold);
@@ -903,6 +916,24 @@ body.dashboard-body {
   margin-bottom: 22px;
 }
 .notif-toolbar-row .filters-row { margin-bottom: 0; flex: 1; }
+
+/* On a narrow phone screen, 7 filter pills (All/Unread/Tasks/Rentals/
+   Sales/Reviews/System) wrapping onto several lines reads as one long
+   stack rather than a filter bar. Turn it into a single horizontally
+   scrollable row instead — swipeable, and every pill stays a normal,
+   unsquished size. */
+@media (max-width: 700px) {
+  .notif-toolbar-row .filters-row {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .notif-toolbar-row .filters-row::-webkit-scrollbar { display: none; }
+  .notif-toolbar-row .filter-pill { flex-shrink: 0; }
+}
+
 .notif-mark-all-btn {
   background: none; border: none; cursor: pointer; font-family: inherit;
   font-size: 12.5px; font-weight: 700; color: var(--ump-navy);

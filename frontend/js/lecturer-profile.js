@@ -72,6 +72,7 @@ async function loadProfile() {
             <button type="button" id="changeProfilePhoto" class="profile-photo-edit-btn"
                     aria-label="Change profile photo" title="Change profile photo">
               <i class="ti ti-pencil" aria-hidden="true"></i>
+              <span class="profile-photo-edit-label">Change Photo</span>
             </button>
           </div>
           <div class="profile-header-info">

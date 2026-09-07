@@ -632,8 +632,14 @@ button.back-link {
    by however far the avatar reaches upward). */
 .profile-header-body {
   position: relative;
-  padding: 62px 28px 20px;
-  padding-left: calc(28px + clamp(88px, 12vw, 108px) + 20px);
+  /* padding-top and the padding-left buffer were both sized for a
+     108px-tall avatar alone; now that the avatar-wrap also stacks a
+     "Change Photo" pill button underneath it (main.css), the wrap is
+     taller and a bit wider than the avatar circle itself, so both get
+     extra room here — otherwise the name/email text starts overlapping
+     the pill instead of clearing it. */
+  padding: 130px 28px 20px;
+  padding-left: calc(28px + clamp(88px, 12vw, 108px) + 50px);
   z-index: 2;
 }
 
