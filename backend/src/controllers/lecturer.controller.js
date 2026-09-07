@@ -65,10 +65,10 @@ async function getStats(req, res, next) {
   } catch (error) { next(error); }
 }
 
-async function getVerifiedTutors(req, res, next) {
+async function getEndorsedStudents(req, res, next) {
   try {
-    const data = await lecturerService.getVerifiedTutors();
-    return res.status(200).json({ success: true, message: "Verified tutors fetched.", data });
+    const data = await lecturerService.getEndorsedStudents();
+    return res.status(200).json({ success: true, message: "Endorsed students fetched.", data });
   } catch (error) { next(error); }
 }
 
@@ -80,5 +80,5 @@ module.exports = {
   getEndorsementsGiven,
   getEndorsementsReceived,
   getStats,
-  getVerifiedTutors
+  getEndorsedStudents
 };

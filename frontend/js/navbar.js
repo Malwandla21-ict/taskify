@@ -136,7 +136,7 @@ function setupUserMenuToggle() {
    dashboard, profile, messages, etc.) fall back to Tasks, matching the
    original behaviour. ── */
 const TOPBAR_SEARCH_PAGES = new Set([
-  "tasks.html", "equipment.html", "sales.html", "events.html", "tutors.html",
+  "tasks.html", "equipment.html", "sales.html", "events.html", "endorsed-students.html",
   "academic.html", "general.html"
 ]);
 

@@ -2319,9 +2319,20 @@ textarea { min-height: 110px; resize: vertical; }
 
 /* ==============================
    LOADING SPINNERS
-   Every button across the app that shows <i class="ti ti-loader"> during
-   an async action (publish, upload, confirm, delete, etc.) now actually
-   spins — previously the icon was static despite being used everywhere.
+   Every <i class="ti ti-loader"> across the app (buttons mid-action,
+   empty-state "Loading…" panels, the upload overlay) renders through this
+   one rule, so upgrading it here upgrades every spinner in the app at
+   once — no markup changes needed anywhere else.
+
+   Rather than just spinning the flat Tabler glyph (a single-color icon
+   rotating in place), this replaces it with a two-tone ring in the brand
+   navy/green: a light navy track with a solid navy-to-green sweep, which
+   reads as a proper loading indicator rather than a spinning icon. The
+   glyph itself (rendered via ::before, the standard icon-font technique)
+   is suppressed with `content: none` so only the ring shows. Sizing is in
+   `em`, so it automatically scales with whatever font-size each usage
+   already sets (a button's inline icon vs. the 26px upload overlay icon)
+   without needing separate size variants.
 ============================== */
 
 @keyframes taskify-spin {
@@ -2330,7 +2341,19 @@ textarea { min-height: 110px; resize: vertical; }
 
 .ti-loader {
   display: inline-block;
-  animation: taskify-spin 0.8s linear infinite;
+  width: 1em;
+  height: 1em;
+  box-sizing: border-box;
+  border-radius: 50%;
+  border: 0.16em solid rgba(12,29,74,0.14);
+  border-top-color: var(--ump-navy);
+  border-right-color: var(--ump-green);
+  animation: taskify-spin 0.7s linear infinite;
+  vertical-align: -0.15em;
+}
+
+.ti-loader::before {
+  content: none;
 }
 
 /* ==============================

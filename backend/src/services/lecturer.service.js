@@ -145,10 +145,15 @@ async function getLecturerStats(lecturerId) {
   };
 }
 
-async function getVerifiedTutors() {
+/* Every lecturer-endorsed student, across all endorsement types (Tutoring,
+   Toolkit, General) — this used to be filtered down to "Tutoring" only and
+   badged as "Tutors," but UMP already has its own official tutors hired on
+   campus, so this is a general trust/reputation signal for any endorsed
+   student rather than a tutoring-specific listing. */
+async function getEndorsedStudents() {
   const [rows] = await pool.execute(
     `SELECT
-       le.id, le.message, le.created_at,
+       le.id, le.message, le.endorsement_type, le.created_at,
        student.id AS student_id, student.full_name AS student_name,
        student.profile_photo_url AS student_photo, student.faculty,
        student.rating_average, student.total_reviews,
@@ -156,7 +161,6 @@ async function getVerifiedTutors() {
      FROM lecturer_endorsements le
      INNER JOIN users student ON le.endorsed_user_id = student.id
      INNER JOIN users lecturer ON le.lecturer_id = lecturer.id
-     WHERE le.endorsement_type = 'Tutoring'
      ORDER BY le.created_at DESC`
   );
 
@@ -176,6 +180,7 @@ async function getVerifiedTutors() {
     byStudent.get(row.student_id).endorsements.push({
       id: row.id,
       message: row.message,
+      endorsement_type: row.endorsement_type,
       created_at: row.created_at,
       lecturer_name: row.lecturer_name,
       lecturer_title: row.lecturer_title
@@ -193,5 +198,5 @@ module.exports = {
   getEndorsementsGiven,
   getEndorsementsReceived,
   getLecturerStats,
-  getVerifiedTutors
+  getEndorsedStudents
 };

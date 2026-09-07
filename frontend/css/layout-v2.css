@@ -135,9 +135,17 @@ body.dashboard-body {
    effectively "always" on mobile, since the sidebar itself only opens
    below 1080px. `.qa-link` never had that old rule, which is why Quick
    Actions kept their labels while Discover links didn't. Restored here
-   with higher specificity so it wins regardless of viewport width. */
+   with higher specificity so it wins regardless of viewport width.
+
+   :not(.qa-dot) matters: `.qa-dot` (the colored icon circle) is also a
+   <span>, so the bare `.qa-link span` selector was matching it too —
+   at (0,0,2,1) it beat `.qa-dot`'s own `display: flex` (0,0,1,0) and
+   silently flattened it to inline, which broke the icon's centering
+   (align-items/justify-content do nothing on a non-flex box), pushing
+   every Quick Actions glyph up-left inside its circle instead of
+   centering it. Excluding .qa-dot here restores its flex display. */
 .app-sidebar .nav-link span,
-.app-sidebar .qa-link span { display: inline; }
+.app-sidebar .qa-link span:not(.qa-dot) { display: inline; }
 
 .app-sidebar .nav-link:hover { background: rgba(255,255,255,0.07); color: white; }
 .app-sidebar .nav-link.active { background: var(--ump-green); color: white; }
@@ -783,7 +791,7 @@ body.dashboard-body {
 .popular-category-chip.purple i { color: #6c3dff; }
 
 /* ============================================================
-   TUTORS PAGE
+   ENDORSED STUDENTS PAGE
 ============================================================ */
 
 /* Rail cards can now host a small decorative icon in the corner */
@@ -829,8 +837,8 @@ body.dashboard-body {
 .step-text strong { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 2px; }
 .step-text span { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
 
-/* ── Tutor cards ── */
-.tutor-card-v2 {
+/* ── Endorsed student cards ── */
+.student-card-v2 {
   background: white;
   border: 1.5px solid var(--border);
   border-radius: var(--radius-lg);
@@ -838,24 +846,24 @@ body.dashboard-body {
   box-shadow: var(--shadow-sm);
   transition: all 0.22s;
 }
-.tutor-card-v2:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.student-card-v2:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
-.tutor-card-v2-media { height: 180px; position: relative; }
+.student-card-v2-media { height: 180px; position: relative; }
 
-.corner-badge.tutor-endorsed { background: var(--ump-green); }
+.corner-badge.student-endorsed { background: var(--ump-green); }
 
-.tutor-card-v2-body { padding: 16px 18px 18px; }
-.tutor-card-v2-name { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
-.tutor-card-v2-subject { font-size: 12.5px; color: var(--ump-blue); font-weight: 700; margin-bottom: 9px; }
+.student-card-v2-body { padding: 16px 18px 18px; }
+.student-card-v2-name { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 2px; }
+.student-card-v2-subject { font-size: 12.5px; color: var(--ump-blue); font-weight: 700; margin-bottom: 9px; }
 
-.tutor-card-v2-meta {
+.student-card-v2-meta {
   display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
   font-size: 11.5px; color: var(--muted); margin-bottom: 12px;
 }
-.tutor-card-v2-meta span { display: flex; align-items: center; gap: 4px; }
-.tutor-card-v2-meta .rating i { color: var(--ump-gold); }
+.student-card-v2-meta span { display: flex; align-items: center; gap: 4px; }
+.student-card-v2-meta .rating i { color: var(--ump-gold); }
 
-.tutor-card-v2-quote {
+.student-card-v2-quote {
   background: var(--background);
   border-left: 3px solid var(--ump-green);
   border-radius: var(--radius-sm);
@@ -866,7 +874,7 @@ body.dashboard-body {
   line-height: 1.5;
   margin-bottom: 14px;
 }
-.tutor-card-v2-quote strong {
+.student-card-v2-quote strong {
   display: block; margin-top: 5px; font-style: normal;
   font-weight: 700; font-size: 11px; color: var(--muted);
 }
@@ -1401,7 +1409,7 @@ body.dashboard-body {
   font-size: 11.5px;
 }
 
-/* ── Rail: checklist (e.g. "What makes a tutor endorsed?") ── */
+/* ── Rail: checklist (e.g. "What makes a student endorsed?") ── */
 .info-checklist { display: flex; flex-direction: column; gap: 10px; }
 .info-checklist-item {
   display: flex; align-items: center; gap: 9px;

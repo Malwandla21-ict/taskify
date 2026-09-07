@@ -5,7 +5,7 @@ const { authenticate, requireLecturer } = require("../middleware/auth.middleware
 
 const router = express.Router();
 
-router.get("/tutors", authenticate, lecturerController.getVerifiedTutors);
+router.get("/endorsed-students", authenticate, lecturerController.getEndorsedStudents);
 router.get(
   "/endorsements/received/:userId",
   authenticate,
