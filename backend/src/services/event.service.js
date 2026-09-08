@@ -3,6 +3,19 @@ const notificationService = require("./notification.service");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 const contentModerationService = require("./contentModeration.service");
 
+function toMysqlDatetime(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const error = new Error("Invalid event date.");
+    error.statusCode = 400;
+    throw error;
+  }
+  // MySQL DATETIME wants "YYYY-MM-DD HH:MM:SS" — JS's toISOString() gives
+  // "YYYY-MM-DDTHH:MM:SS.sssZ", which strict-mode MySQL rejects outright
+  // (ER_TRUNCATED_WRONG_VALUE) rather than truncating.
+  return date.toISOString().slice(0, 19).replace("T", " ");
+}
+
 function parseImageUrls(row) {
   if (!row) return row;
   if (Array.isArray(row.image_urls)) return row;
@@ -45,7 +58,7 @@ async function createEvent({
      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       organizerId, title.trim(), description.trim(), category.trim(),
-      section || "General", location.trim(), eventDate,
+      section || "General", location.trim(), toMysqlDatetime(eventDate),
       capacity ? Number(capacity) : null,
       imageUrls.length ? JSON.stringify(imageUrls) : null,
       moderation.flagged ? "pending_review" : "clean",
