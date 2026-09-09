@@ -16,6 +16,7 @@ async function loadNavbar() {
     setupTopbarSearch();
     startNotificationPolling();
     startMessagesBadgePolling();
+    setupPushNotifications();
     setupLogout();
     attachProfileLinkEvents();
   } catch (error) {
@@ -336,11 +337,108 @@ function startMessagesBadgePolling() {
 function setupLogout() {
   const logoutButton = document.getElementById("logoutButton");
   if (!logoutButton) return;
-  logoutButton.addEventListener("click", () => {
+  logoutButton.addEventListener("click", async () => {
+    /* Best-effort: drop this browser's push subscription so a different
+       account logging in on the same device afterward doesn't keep
+       receiving THIS account's push notifications. Never blocks logout —
+       a slow/failed unsubscribe still lets the redirect happen. */
+    try {
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration("./sw.js");
+        const subscription = await registration?.pushManager.getSubscription();
+        if (subscription) {
+          await apiRequest("/notifications/push/unsubscribe", "POST", { endpoint: subscription.endpoint }).catch(() => {});
+          await subscription.unsubscribe();
+        }
+      }
+    } catch (_) { /* best-effort only */ }
+
     localStorage.removeItem("taskifyToken");
     localStorage.removeItem("taskifyUser");
     window.location.href = "./login.html";
   });
+}
+
+/* ── Real browser push notifications ──
+   Reaches the user even with the tab (or the whole browser) closed —
+   distinct from the 30s-polled in-app notifications above, which only
+   work while a Taskify tab is open. Registers sw.js (scope "/", so it
+   covers every page) and, if permission hasn't been decided yet, shows a
+   soft in-page banner rather than calling Notification.requestPermission()
+   unprompted on page load — most browsers ignore or flag permission
+   prompts not tied to a deliberate user click anyway. */
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function ensurePushSubscription(registration) {
+  try {
+    const keyRes = await fetch(`${API_BASE_URL}/notifications/push/public-key`);
+    const keyPayload = await keyRes.json();
+    const publicKey = keyPayload?.data?.publicKey;
+    if (!publicKey) return; // VAPID keys not configured on this backend yet
+
+    let subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey)
+      });
+    }
+    await apiRequest("/notifications/push/subscribe", "POST", { subscription });
+  } catch (error) {
+    console.error("Push subscription failed:", error);
+  }
+}
+
+function showPushPermissionBanner(registration) {
+  if (document.getElementById("pushPermissionBanner")) return;
+
+  const banner = document.createElement("div");
+  banner.id = "pushPermissionBanner";
+  banner.className = "push-permission-banner";
+  banner.innerHTML = `
+    <i class="ti ti-bell-ringing" aria-hidden="true"></i>
+    <span>Turn on notifications to hear about new messages, tasks, and bookings — even when Taskify isn't open.</span>
+    <div class="push-permission-actions">
+      <button type="button" class="primary-button" id="pushEnableBtn">Enable</button>
+      <button type="button" class="secondary-button" id="pushDismissBtn">Not now</button>
+    </div>`;
+  document.body.appendChild(banner);
+
+  document.getElementById("pushEnableBtn").addEventListener("click", async () => {
+    banner.remove();
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") await ensurePushSubscription(registration);
+  });
+  document.getElementById("pushDismissBtn").addEventListener("click", () => {
+    localStorage.setItem("taskifyPushDismissed", "1");
+    banner.remove();
+  });
+}
+
+async function setupPushNotifications() {
+  if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+  if (Notification.permission === "denied") return;
+  if (localStorage.getItem("taskifyPushDismissed") === "1") return;
+
+  try {
+    const registration = await navigator.serviceWorker.register("./sw.js");
+
+    if (Notification.permission === "granted") {
+      await ensurePushSubscription(registration);
+      return;
+    }
+
+    showPushPermissionBanner(registration);
+  } catch (error) {
+    console.error("Push setup failed:", error);
+  }
 }
 
 loadNavbar();

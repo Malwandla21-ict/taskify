@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const mailerService = require("./mailer.service");
+const pushService = require("./push.service");
 
 /* Fire-and-forget: looks up the recipient's email/name and sends the
    templated notification email. Never awaited by callers, and any
@@ -26,6 +27,14 @@ async function createNotification({ userId, title, message, contextType = null, 
   if (email) {
     maybeSendEmail(userId, title.trim(), message.trim());
   }
+
+  /* Unlike email (a deliberate shortlist, opted into per call site), push
+     goes out for every in-app notification — that was the point of
+     building it: reaching the user for the same things the bell icon
+     already covers (new messages, booking updates, RSVPs...), not just
+     the high-value few. Fire-and-forget; a missing/misconfigured push
+     setup or an unreachable push service can never fail this write. */
+  pushService.sendPushToUser(userId, { title: title.trim(), message: message.trim() });
 
   return getNotificationById(result.insertId);
 }

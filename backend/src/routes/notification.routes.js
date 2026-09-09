@@ -23,4 +23,17 @@ router.patch(
   notificationController.markNotificationAsRead
 );
 
+/* GET /api/notifications/push/public-key — no auth needed, the VAPID
+   public key isn't secret; the frontend needs it before a user even has
+   a token if we ever want to offer this pre-login (not done yet, but
+   costs nothing to leave open). */
+router.get("/push/public-key", notificationController.getPushPublicKey);
+
+/* POST /api/notifications/push/subscribe — body: { subscription } (the
+   raw PushSubscription object from the browser's pushManager.subscribe). */
+router.post("/push/subscribe", authenticate, notificationController.subscribeToPush);
+
+/* POST /api/notifications/push/unsubscribe — body: { endpoint } */
+router.post("/push/unsubscribe", authenticate, notificationController.unsubscribeFromPush);
+
 module.exports = router;

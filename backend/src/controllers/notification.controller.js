@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const notificationService = require("../services/notification.service");
+const pushService = require("../services/push.service");
 
 async function getUserNotifications(req, res, next) {
   try {
@@ -52,8 +53,50 @@ async function markNotificationAsRead(req, res, next) {
   }
 }
 
+/* GET /api/notifications/push/public-key — not secret, just tells the
+   browser which VAPID key pair it's subscribing against. */
+async function getPushPublicKey(req, res, next) {
+  try {
+    const publicKey = pushService.getPublicKey();
+    return res.status(200).json({
+      success: true,
+      message: "Push public key fetched.",
+      data: { publicKey }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function subscribeToPush(req, res, next) {
+  try {
+    await pushService.saveSubscription(req.user.id, req.body.subscription);
+    return res.status(200).json({
+      success: true,
+      message: "Subscribed to push notifications."
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function unsubscribeFromPush(req, res, next) {
+  try {
+    await pushService.removeSubscription(req.user.id, req.body.endpoint);
+    return res.status(200).json({
+      success: true,
+      message: "Unsubscribed from push notifications."
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getUserNotifications,
   getUnreadCount,
-  markNotificationAsRead
+  markNotificationAsRead,
+  getPushPublicKey,
+  subscribeToPush,
+  unsubscribeFromPush
 };
