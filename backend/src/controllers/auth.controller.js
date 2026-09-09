@@ -34,7 +34,7 @@ async function register(req, res, next) {
       consultationMode: req.body.consultationMode
     });
 
-    return res.status(201).json({ success: true, message: result.message, data: { email: result.email } });
+    return res.status(201).json({ success: true, message: result.message, data: { email: result.email, verified: result.verified } });
   } catch (error) {
     next(error);
   }

@@ -221,6 +221,24 @@ registerForm.addEventListener("submit", async (e) => {
     const response = await apiMultipartRequest("/auth/register", "POST", registerData);
     const registeredEmail = document.getElementById("email").value.trim();
 
+    /* TEMPORARY: while SKIP_EMAIL_VERIFICATION is on (email delivery isn't
+       reliable yet), the backend marks new accounts verified immediately
+       and tells us via data.verified — skip the code-entry detour and send
+       people straight to log in instead of a page waiting on a code that
+       will never arrive. Remove this branch once that env var is gone. */
+    if (response.data && response.data.verified) {
+      showMessage(
+        response.message || "Account created! You can log in now.",
+        "var(--ump-green)"
+      );
+      submitBtn.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i> Account created`;
+
+      setTimeout(() => {
+        window.location.href = "./login.html";
+      }, 1500);
+      return;
+    }
+
     /* Registration no longer logs you in automatically — the account isn't
        usable until the email address is confirmed via the code we just
        emailed. Stash the email for verify-email.html (it only ever asks

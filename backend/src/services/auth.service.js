@@ -7,6 +7,14 @@ const twoFactorService = require("./twoFactor.service");
 const { generateRawToken, hashToken, generateNumericCode } = require("../utils/crypto");
 const { signAccessToken, signPurposeToken, verifyPurposeToken } = require("../utils/jwt");
 
+/* TEMPORARY: email delivery is unreliable right now (EMAIL_FROM is on an
+   unauthenticated free-provider address — see the mailer/domain thread).
+   Set SKIP_EMAIL_VERIFICATION=true on Render to let people register and log
+   in without ever needing a code to arrive. Flip it back to false/unset
+   once EMAIL_FROM points at a properly verified domain — no code change
+   needed either way, just the env var. */
+const SKIP_EMAIL_VERIFICATION = process.env.SKIP_EMAIL_VERIFICATION === "true";
+
 const SAFE_USER_FIELDS = `
   id, full_name, student_number, member_type, email, phone_number,
   faculty, academic_year, profile_photo_url AS profilePhoto,
@@ -188,7 +196,7 @@ async function registerUser({
         lecturer_title, years_experience, office_location, consultation_mode,
         is_verified, email_verification_token_hash, email_verification_expires
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? MINUTE))
     `,
     [
       fullName.trim(),
@@ -205,17 +213,20 @@ async function registerUser({
       isLecturer && yearsExperience ? Number(yearsExperience) : null,
       isLecturer ? (officeLocation ? officeLocation.trim() : null) : null,
       isLecturer ? (consultationMode ? consultationMode.trim() : null) : null,
+      SKIP_EMAIL_VERIFICATION ? 1 : 0,
       hashToken(verificationCode),
       verificationExpiryMinutes
     ]
   );
 
-  try {
-    await mailerService.sendVerificationEmail(normalizedEmail, fullName.trim(), verificationCode);
-  } catch (error) {
-    /* Don't fail registration just because the email couldn't be sent —
-       the user can request a resend. Do log it loudly though. */
-    console.error("Failed to send verification email:", error.message);
+  if (!SKIP_EMAIL_VERIFICATION) {
+    try {
+      await mailerService.sendVerificationEmail(normalizedEmail, fullName.trim(), verificationCode);
+    } catch (error) {
+      /* Don't fail registration just because the email couldn't be sent —
+         the user can request a resend. Do log it loudly though. */
+      console.error("Failed to send verification email:", error.message);
+    }
   }
 
   await securityLogService.logSecurityEvent({
@@ -226,7 +237,10 @@ async function registerUser({
 
   return {
     email: normalizedEmail,
-    message: "Account created. Please check your email for a 6-digit code to verify your account before logging in."
+    verified: SKIP_EMAIL_VERIFICATION,
+    message: SKIP_EMAIL_VERIFICATION
+      ? "Account created. You can log in now."
+      : "Account created. Please check your email for a 6-digit code to verify your account before logging in."
   };
 }
 
@@ -380,7 +394,7 @@ async function loginUser({ email, password, deviceToken = null, ip = null, userA
     await pool.execute(`UPDATE users SET failed_login_attempts = 0, lockout_until = NULL WHERE id = ?`, [user.id]);
   }
 
-  if (!user.is_verified) {
+  if (!SKIP_EMAIL_VERIFICATION && !user.is_verified) {
     await securityLogService.logSecurityEvent({ userId: user.id, email: normalizedEmail, event: "login_blocked_unverified", ip, userAgent });
     throwError("Please verify your email before logging in. Check your inbox, or request a new verification code.", 403);
   }
