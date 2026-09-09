@@ -97,5 +97,15 @@ if (loginForm) {
   });
 }
 
+/* ── Session-expired banner ──
+   api.js redirects here and sets this flag whenever a request comes back
+   401 with a token attached — session expired, or invalidated by a
+   password change/reset or 2FA toggle. Surface that plainly instead of
+   leaving the user wondering why they were bounced to the login page. */
+if (localStorage.getItem("taskifySessionExpired")) {
+  localStorage.removeItem("taskifySessionExpired");
+  showMessage("Your session has expired. Please log in again.", "#B45309");
+}
+
 /* ── Init ── */
 initPasswordToggles();

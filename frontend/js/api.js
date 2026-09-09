@@ -62,6 +62,28 @@ function stopTopLoader() {
   }, 200);
 }
 
+/* ── Session expiry handling ──
+   A 401 on a request that carried a token means the token itself is no
+   longer valid — it expired (JWT_EXPIRES_IN, 1 day by default), or was
+   invalidated server-side by a password change, password reset, or 2FA
+   toggle bumping the account's token_version. Without this, the stale
+   token stays sitting in localStorage, the UI keeps looking logged in
+   (navbar, profile, everything looks normal), and every action after that
+   just throws a confusing "Unauthorized. Invalid token." with nothing
+   telling the user to log back in. Login itself never sends a token, so a
+   401 from a wrong password there is untouched by this and handled
+   normally by the caller. */
+let sessionExpiredRedirecting = false;
+function handleSessionExpired() {
+  if (sessionExpiredRedirecting) return;
+  if (window.location.pathname.endsWith("login.html")) return;
+
+  sessionExpiredRedirecting = true;
+  localStorage.removeItem("taskifyToken");
+  localStorage.setItem("taskifySessionExpired", "1");
+  window.location.href = "./login.html";
+}
+
 async function apiRequest(endpoint, method = "GET", body = null, token = null) {
   startTopLoader();
   try {
@@ -82,6 +104,12 @@ async function apiRequest(endpoint, method = "GET", body = null, token = null) {
     }
 
     const data = await response.json();
+
+    if (response.status === 401 && resolvedToken) {
+      handleSessionExpired();
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
     if (!response.ok) throw new Error(data.message || "Something went wrong.");
 
     return data;
@@ -104,6 +132,12 @@ async function apiMultipartRequest(endpoint, method, formData, token = null) {
     }
 
     const data = await response.json();
+
+    if (response.status === 401 && resolvedToken) {
+      handleSessionExpired();
+      throw new Error("Your session has expired. Please log in again.");
+    }
+
     if (!response.ok) throw new Error(data.message || "Something went wrong.");
     return data;
   } finally {
