@@ -42,7 +42,21 @@ let carouselTimer = null;
 function spotlightIconFor(type) {
   if (type === "event") return "ti-calendar-event";
   if (type === "rental") return "ti-camera";
+  if (type === "sale") return "ti-shopping-cart";
   return "ti-clipboard-check";
+}
+
+/* Fisher-Yates shuffle — used so the spotlight doesn't always show the
+   exact same handful of listings (whatever the API happens to return
+   first) on every single visit; a fresh shuffle each time loadDashboard()
+   runs surfaces a different mix from the wider pool below. */
+function shuffleArray(arr) {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
 }
 
 function carouselSlideHtml({ type, tag, image, title, meta, href }) {
@@ -276,7 +290,12 @@ async function loadDashboard() {
       ? upcoming.map(spotlightItem).join("")
       : `<p class="rail-loading">No upcoming events yet.</p>`;
 
-    const eventItems = events.slice(0, 4).map(ev => ({
+    /* Shuffled + widened pool per category (was a flat .slice(0, 4) off
+       whatever order the API returned — always the same first few items,
+       every visit, forever). Sales listings were also fetched but never
+       actually made it into the carousel at all — added as a fourth
+       category below. */
+    const eventItems = shuffleArray(events).slice(0, 6).map(ev => ({
       type: "event",
       tag: "Event",
       image: ev.image_urls?.[0] || null,
@@ -284,7 +303,7 @@ async function loadDashboard() {
       meta: `${new Date(ev.event_date).toLocaleDateString([], { month: "short", day: "numeric" })} · ${ev.location}`,
       href: `./event-details.html?id=${ev.id}`
     }));
-    const taskItems = tasks.slice(0, 4).map(t => ({
+    const taskItems = shuffleArray(tasks).slice(0, 6).map(t => ({
       type: "task",
       tag: "Task",
       image: t.image_urls?.[0] || null,
@@ -292,7 +311,7 @@ async function loadDashboard() {
       meta: `R${t.price} · ${t.location}`,
       href: `./task-details.html?id=${t.id}`
     }));
-    const rentalItems = equipment.slice(0, 4).map(eq => ({
+    const rentalItems = shuffleArray(equipment).slice(0, 6).map(eq => ({
       type: "rental",
       tag: "Rental",
       image: eq.image_urls?.[0] || null,
@@ -300,16 +319,25 @@ async function loadDashboard() {
       meta: `R${eq.daily_price}/day · ${eq.category}`,
       href: `./equipment-details.html?id=${eq.id}`
     }));
+    const saleItems = shuffleArray(sales).slice(0, 6).map(s => ({
+      type: "sale",
+      tag: "For Sale",
+      image: s.image_urls?.[0] || null,
+      title: s.title,
+      meta: `R${s.price} · ${s.location}`,
+      href: `./sale-details.html?id=${s.id}`
+    }));
 
-    /* Interleave round-robin (event, task, rental, event, task, rental…)
-       so each page of 3 mixes categories instead of one page being all
+    /* Interleave round-robin (event, task, rental, sale, event, task…) so
+       each page of 3 mixes categories instead of one page being all
        events followed by a page that's all rentals. */
     const carouselItems = [];
-    const maxLen = Math.max(eventItems.length, taskItems.length, rentalItems.length);
+    const maxLen = Math.max(eventItems.length, taskItems.length, rentalItems.length, saleItems.length);
     for (let i = 0; i < maxLen; i++) {
       if (eventItems[i]) carouselItems.push(eventItems[i]);
       if (taskItems[i]) carouselItems.push(taskItems[i]);
       if (rentalItems[i]) carouselItems.push(rentalItems[i]);
+      if (saleItems[i]) carouselItems.push(saleItems[i]);
     }
     initCarousel(carouselItems);
 

@@ -659,6 +659,7 @@ body.dashboard-body {
 .spotlight-card-pill.event  { background: rgba(245,180,0,0.16); color: #c99200; }
 .spotlight-card-pill.task   { background: rgba(0,155,114,0.14); color: var(--ump-green); }
 .spotlight-card-pill.rental { background: rgba(255,255,255,0.22); color: white; }
+.spotlight-card-pill.sale   { background: rgba(0,114,206,0.14); color: var(--ump-blue); }
 .spotlight-card-icon {
   width: 24px; height: 24px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
