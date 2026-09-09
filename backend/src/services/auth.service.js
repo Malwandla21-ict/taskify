@@ -20,7 +20,7 @@ const SAFE_USER_FIELDS = `
   faculty, academic_year, profile_photo_url AS profilePhoto,
   role, rating_average, total_reviews,
   lecturer_title, years_experience, office_location, consultation_mode,
-  is_verified, totp_enabled
+  is_verified, totp_enabled, has_seen_onboarding
 `;
 
 function normalizePhoneNumber(phoneNumber) {

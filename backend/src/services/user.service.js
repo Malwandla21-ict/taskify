@@ -235,4 +235,13 @@ async function updateProfileDetails(userId, {
   return getUserProfile(userId);
 }
 
-module.exports = { getUserProfile, updateProfilePhoto, updateProfileDetails };
+/* Marks the first-login onboarding modal as seen, permanently, so it never
+   reappears for this account regardless of device/browser (unlike a
+   localStorage flag, which would reset the moment someone clears storage
+   or signs in elsewhere). See dashboard.js / repair-onboarding-schema.js. */
+async function markOnboardingSeen(userId) {
+  await pool.execute(`UPDATE users SET has_seen_onboarding = 1 WHERE id = ?`, [userId]);
+  return { has_seen_onboarding: true };
+}
+
+module.exports = { getUserProfile, updateProfilePhoto, updateProfileDetails, markOnboardingSeen };

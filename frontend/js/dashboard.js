@@ -5,6 +5,105 @@ const featuredTasksContainer = document.getElementById("featuredTasksContainer")
 const spotlightEventsContainer = document.getElementById("spotlightEventsContainer");
 const recentActivityContainer  = document.getElementById("recentActivityContainer");
 
+const onboardingOverlay        = document.getElementById("onboardingModalOverlay");
+const onboardingSkipBtn        = document.getElementById("onboardingSkipBtn");
+const onboardingGetStartedBtn  = document.getElementById("onboardingGetStartedBtn");
+const carouselTrack            = document.getElementById("carouselTrack");
+const carouselDots             = document.getElementById("carouselDots");
+
+/* ── First-login onboarding modal ──
+   has_seen_onboarding is persisted server-side (SAFE_USER_FIELDS /
+   markOnboardingSeen), not in localStorage — so it never reappears for
+   this account regardless of device/browser, unlike a per-browser flag. */
+async function dismissOnboarding() {
+  onboardingOverlay.hidden = true;
+  try {
+    await apiRequest("/users/me/onboarding-seen", "PATCH");
+    currentUser.has_seen_onboarding = 1;
+    localStorage.setItem("taskifyUser", JSON.stringify(currentUser));
+  } catch (err) {
+    /* Non-critical — worst case the modal just shows again next login. */
+    console.error("Failed to mark onboarding as seen:", err.message);
+  }
+}
+
+if (onboardingOverlay && currentUser && !currentUser.has_seen_onboarding) {
+  onboardingOverlay.hidden = false;
+  onboardingSkipBtn?.addEventListener("click", dismissOnboarding);
+  onboardingGetStartedBtn?.addEventListener("click", dismissOnboarding);
+}
+
+/* ── Hero spotlight: compact cards (3 per page) mixing events/tasks/rentals ──
+   Reuses the tasks/equipment/events already fetched by loadDashboard()
+   below rather than firing extra requests just for this. Pages of 3 cards
+   at a time, auto-advancing through pages when there's more than one. */
+let carouselTimer = null;
+
+function spotlightIconFor(type) {
+  if (type === "event") return "ti-calendar-event";
+  if (type === "rental") return "ti-camera";
+  return "ti-clipboard-check";
+}
+
+function carouselSlideHtml({ type, tag, image, title, meta, href }) {
+  const isRental = type === "rental";
+  const bgAttr = isRental && image ? ` style="background-image:url('${image}')"` : "";
+  return `
+    <a href="${href}" class="spotlight-card ${type}"${bgAttr}>
+      <div class="spotlight-card-top">
+        <span class="spotlight-card-pill ${type}">${tag}</span>
+        <span class="spotlight-card-icon"><i class="ti ${spotlightIconFor(type)}" aria-hidden="true"></i></span>
+      </div>
+      <div>
+        <div class="spotlight-card-title">${title}</div>
+        <div class="spotlight-card-meta">${meta}</div>
+      </div>
+    </a>`;
+}
+
+function initCarousel(items) {
+  if (!carouselTrack) return;
+  clearInterval(carouselTimer);
+
+  if (!items.length) {
+    carouselTrack.innerHTML = `<div class="carousel-slide-loading">Nothing to show yet — check back soon.</div>`;
+    carouselDots.innerHTML = "";
+    return;
+  }
+
+  const pages = [];
+  for (let i = 0; i < items.length; i += 3) pages.push(items.slice(i, i + 3));
+
+  let current = 0;
+
+  function render() {
+    carouselTrack.innerHTML = pages[current].map(carouselSlideHtml).join("");
+  }
+
+  function renderDots() {
+    carouselDots.innerHTML = pages.length > 1
+      ? pages.map((_, i) => `<button type="button" class="carousel-dot ${i === current ? "active" : ""}" data-page="${i}" aria-label="Page ${i + 1}"></button>`).join("")
+      : "";
+    carouselDots.querySelectorAll(".carousel-dot").forEach(dot => {
+      dot.addEventListener("click", () => { goTo(Number(dot.dataset.page)); resetTimer(); });
+    });
+  }
+
+  function goTo(index) {
+    current = (index + pages.length) % pages.length;
+    render();
+    renderDots();
+  }
+
+  function resetTimer() {
+    clearInterval(carouselTimer);
+    if (pages.length > 1) carouselTimer = setInterval(() => goTo(current + 1), 5000);
+  }
+
+  goTo(0);
+  resetTimer();
+}
+
 const statActiveTasks = document.getElementById("statActiveTasks");
 const statServices    = document.getElementById("statServices");
 const statReviews     = document.getElementById("statReviews");
@@ -17,7 +116,7 @@ const exploreSalesCount    = document.getElementById("exploreSalesCount");
 
 if (heroWelcomeEl && currentUser) {
   const first = currentUser.full_name?.split(" ")[0] || "Student";
-  heroWelcomeEl.textContent = `Welcome back, ${first}! 👋`;
+  heroWelcomeEl.textContent = `Welcome back, ${first}`;
 }
 
 /* ── Client-side-only "saved" heart toggle ──
@@ -186,6 +285,34 @@ async function loadDashboard() {
     spotlightEventsContainer.innerHTML = upcoming.length
       ? upcoming.map(spotlightItem).join("")
       : `<p class="rail-loading">No upcoming events yet.</p>`;
+
+    const carouselItems = [
+      ...events.slice(0, 2).map(ev => ({
+        type: "event",
+        tag: "Event",
+        image: ev.image_urls?.[0] || null,
+        title: ev.title,
+        meta: `${new Date(ev.event_date).toLocaleDateString([], { month: "short", day: "numeric" })} · ${ev.location}`,
+        href: `./event-details.html?id=${ev.id}`
+      })),
+      ...tasks.slice(0, 2).map(t => ({
+        type: "task",
+        tag: "Task",
+        image: t.image_urls?.[0] || null,
+        title: t.title,
+        meta: `R${t.price} · ${t.location}`,
+        href: `./task-details.html?id=${t.id}`
+      })),
+      ...equipment.slice(0, 2).map(eq => ({
+        type: "rental",
+        tag: "Rental",
+        image: eq.image_urls?.[0] || null,
+        title: eq.name,
+        meta: `R${eq.daily_price}/day · ${eq.category}`,
+        href: `./equipment-details.html?id=${eq.id}`
+      }))
+    ];
+    initCarousel(carouselItems);
 
     const activity = (profile.recent_activity || []).slice(0, 4);
     recentActivityContainer.innerHTML = activity.length

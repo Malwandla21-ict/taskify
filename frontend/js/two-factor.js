@@ -183,7 +183,7 @@ twoFactorForm.addEventListener("submit", async (event) => {
 
     showMessage("Verified. Redirecting…", "var(--ump-green)");
     setTimeout(() => {
-      window.location.href = "./profile.html";
+      window.location.href = "./dashboard.html";
     }, 700);
   } catch (error) {
     showMessage(error.message || "Invalid code. Please try again.", "red");

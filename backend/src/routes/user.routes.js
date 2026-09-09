@@ -45,6 +45,12 @@ router.patch(
   userController.changeMyPassword
 );
 
+router.patch(
+  "/me/onboarding-seen",
+  authenticate,
+  userController.markOnboardingSeen
+);
+
 router.get(
   "/:id/profile",
   [

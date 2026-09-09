@@ -92,9 +92,19 @@ async function changeMyPassword(req, res, next) {
   }
 }
 
+async function markOnboardingSeen(req, res, next) {
+  try {
+    await userService.markOnboardingSeen(req.user.id);
+    return res.status(200).json({ success: true, message: "Onboarding marked as seen." });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getUserProfile,
   updateMyProfilePhoto,
   updateMyProfileDetails,
-  changeMyPassword
+  changeMyPassword,
+  markOnboardingSeen
 };

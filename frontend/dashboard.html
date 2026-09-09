@@ -9,21 +9,55 @@
   <link rel="stylesheet" href="./css/layout-v2.css" />
 </head>
 <body class="dashboard-body">
+
+<div class="onboarding-modal-overlay" id="onboardingModalOverlay" hidden>
+  <div class="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTagline">
+    <button type="button" class="onboarding-modal-close" id="onboardingSkipBtn" aria-label="Skip">
+      <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+    <p class="onboarding-tagline" id="onboardingTagline">Your campus, all in one place.</p>
+    <p class="onboarding-subtext">Taskify is UMP's student marketplace — tasks, sales, equipment rentals, and events, all in one app.</p>
+    <div class="onboarding-pillars">
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon green"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+        <h3>Tasks</h3>
+        <p>Post or pick up paid tasks from fellow students.</p>
+      </div>
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon blue"><i class="ti ti-shopping-cart" aria-hidden="true"></i></div>
+        <h3>Sales</h3>
+        <p>Buy and sell items within campus.</p>
+      </div>
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon gold"><i class="ti ti-package" aria-hidden="true"></i></div>
+        <h3>Equipment</h3>
+        <p>Rent out or borrow gear you need.</p>
+      </div>
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon red"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+        <h3>Events</h3>
+        <p>Never miss what's happening on campus.</p>
+      </div>
+    </div>
+    <button type="button" class="onboarding-get-started-btn" id="onboardingGetStartedBtn">
+      <i class="ti ti-rocket" aria-hidden="true"></i> Get Started
+    </button>
+  </div>
+</div>
+
 <div id="navbarContainer"></div>
 <div class="dashboard-container">
 
-  <section class="hero-section-v2">
-    <div class="hero-v2-text">
-      <h1 id="heroWelcome">Welcome back! 👋</h1>
-      <p>Your campus. Your community.<br>Connect. Help. Earn. Grow.</p>
-      <div class="hero-v2-actions">
-        <a href="./tasks.html" class="hero-btn-primary"><i class="ti ti-building-store" aria-hidden="true"></i> Browse Marketplace</a>
-        <a href="./tasks.html" class="hero-btn-outline"><i class="ti ti-plus" aria-hidden="true"></i> Post a Task</a>
-      </div>
+  <section class="hero-spotlight" aria-label="What's happening on Taskify">
+    <div class="hero-spotlight-top">
+      <p class="hero-spotlight-eyebrow" id="heroWelcome">Welcome back, Student</p>
+      <span class="hero-spotlight-uni">University of Mpumalanga</span>
     </div>
-    <div class="hero-v2-media">
-      <div class="media-placeholder"><img src="./assets/images/ump-gate.jpg" alt="UMP Campus" /></div>
+    <p class="hero-v2-tagline">Everything campus life needs, in one place.</p>
+    <div class="hero-spotlight-row" id="carouselTrack">
+      <div class="carousel-slide-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</div>
     </div>
+    <div class="carousel-dots" id="carouselDots"></div>
   </section>
 
   <div class="stat-card-row">

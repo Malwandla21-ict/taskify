@@ -82,11 +82,11 @@ if (loginForm) {
 
       showMessage("Login successful. Redirecting…", "var(--ump-green)");
 
-      /* Every login now lands on the profile page rather than the
-         dashboard — it's the natural "check who I am / what's
-         outstanding" landing spot. */
+      /* Login now lands on the dashboard — it carries the tagline/hero
+         and (for a first-time account) the onboarding modal, so it's the
+         better first thing a user sees after signing in. */
       setTimeout(() => {
-        window.location.href = "./profile.html";
+        window.location.href = "./dashboard.html";
       }, 900);
 
     } catch (error) {
