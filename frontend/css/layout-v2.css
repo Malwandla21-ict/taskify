@@ -709,6 +709,13 @@ body.dashboard-body {
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
 }
+/* Higher specificity than the rule above, so the JS setting
+   overlay.hidden = true actually hides it — a plain "display: flex" on
+   the base class otherwise overrides the browser's default [hidden]
+   behavior regardless of the hidden attribute being present. */
+.onboarding-modal-overlay[hidden] {
+  display: none;
+}
 .onboarding-modal {
   position: relative;
   background: white;
