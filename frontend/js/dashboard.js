@@ -104,11 +104,6 @@ function initCarousel(items) {
   resetTimer();
 }
 
-const statActiveTasks = document.getElementById("statActiveTasks");
-const statServices    = document.getElementById("statServices");
-const statReviews     = document.getElementById("statReviews");
-const statRating      = document.getElementById("statRating");
-
 const exploreAcademicCount = document.getElementById("exploreAcademicCount");
 const exploreGeneralCount  = document.getElementById("exploreGeneralCount");
 const exploreRentalsCount  = document.getElementById("exploreRentalsCount");
@@ -263,11 +258,6 @@ async function loadDashboard() {
     const sales     = salesRes.data;
     const events    = eventsRes.data;
 
-    statActiveTasks.textContent = profile.stats.tasks_in_progress ?? 0;
-    statServices.textContent    = profile.stats.total_rentals ?? 0;
-    statReviews.textContent     = profile.total_reviews ?? 0;
-    statRating.textContent      = Number(profile.rating_average || 0).toFixed(1);
-
     const academicCount = tasks.filter(t => t.section === "Academic").length;
     const generalCount  = tasks.filter(t => t.section === "General").length;
     exploreAcademicCount.textContent = `${academicCount} task${academicCount === 1 ? "" : "s"}`;
@@ -286,32 +276,41 @@ async function loadDashboard() {
       ? upcoming.map(spotlightItem).join("")
       : `<p class="rail-loading">No upcoming events yet.</p>`;
 
-    const carouselItems = [
-      ...events.slice(0, 2).map(ev => ({
-        type: "event",
-        tag: "Event",
-        image: ev.image_urls?.[0] || null,
-        title: ev.title,
-        meta: `${new Date(ev.event_date).toLocaleDateString([], { month: "short", day: "numeric" })} · ${ev.location}`,
-        href: `./event-details.html?id=${ev.id}`
-      })),
-      ...tasks.slice(0, 2).map(t => ({
-        type: "task",
-        tag: "Task",
-        image: t.image_urls?.[0] || null,
-        title: t.title,
-        meta: `R${t.price} · ${t.location}`,
-        href: `./task-details.html?id=${t.id}`
-      })),
-      ...equipment.slice(0, 2).map(eq => ({
-        type: "rental",
-        tag: "Rental",
-        image: eq.image_urls?.[0] || null,
-        title: eq.name,
-        meta: `R${eq.daily_price}/day · ${eq.category}`,
-        href: `./equipment-details.html?id=${eq.id}`
-      }))
-    ];
+    const eventItems = events.slice(0, 4).map(ev => ({
+      type: "event",
+      tag: "Event",
+      image: ev.image_urls?.[0] || null,
+      title: ev.title,
+      meta: `${new Date(ev.event_date).toLocaleDateString([], { month: "short", day: "numeric" })} · ${ev.location}`,
+      href: `./event-details.html?id=${ev.id}`
+    }));
+    const taskItems = tasks.slice(0, 4).map(t => ({
+      type: "task",
+      tag: "Task",
+      image: t.image_urls?.[0] || null,
+      title: t.title,
+      meta: `R${t.price} · ${t.location}`,
+      href: `./task-details.html?id=${t.id}`
+    }));
+    const rentalItems = equipment.slice(0, 4).map(eq => ({
+      type: "rental",
+      tag: "Rental",
+      image: eq.image_urls?.[0] || null,
+      title: eq.name,
+      meta: `R${eq.daily_price}/day · ${eq.category}`,
+      href: `./equipment-details.html?id=${eq.id}`
+    }));
+
+    /* Interleave round-robin (event, task, rental, event, task, rental…)
+       so each page of 3 mixes categories instead of one page being all
+       events followed by a page that's all rentals. */
+    const carouselItems = [];
+    const maxLen = Math.max(eventItems.length, taskItems.length, rentalItems.length);
+    for (let i = 0; i < maxLen; i++) {
+      if (eventItems[i]) carouselItems.push(eventItems[i]);
+      if (taskItems[i]) carouselItems.push(taskItems[i]);
+      if (rentalItems[i]) carouselItems.push(rentalItems[i]);
+    }
     initCarousel(carouselItems);
 
     const activity = (profile.recent_activity || []).slice(0, 4);
