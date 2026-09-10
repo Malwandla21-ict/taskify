@@ -658,7 +658,7 @@ body.dashboard-body {
 }
 .spotlight-card-pill.event  { background: rgba(245,180,0,0.16); color: #c99200; }
 .spotlight-card-pill.task   { background: rgba(0,155,114,0.14); color: var(--ump-green); }
-.spotlight-card-pill.rental { background: rgba(255,255,255,0.22); color: white; }
+.spotlight-card-pill.rental { background: rgba(12,29,74,0.10); color: var(--ump-navy); }
 .spotlight-card-pill.sale   { background: rgba(0,114,206,0.14); color: var(--ump-blue); }
 .spotlight-card-icon {
   width: 24px; height: 24px; border-radius: 50%;
@@ -669,21 +669,31 @@ body.dashboard-body {
 .spotlight-card-title { font-size: 14px; font-weight: 700; color: var(--text); margin-top: 10px; line-height: 1.3; }
 .spotlight-card-meta { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
 
-.spotlight-card.rental {
+/* ── Photo cards ──
+   Any spotlight card with an actual image (task, sale, event, or rental —
+   whichever items happen to have one) gets the same full-bleed
+   background-image + dark overlay + white text treatment. Keyed off
+   "has-image" rather than a specific category, since photos aren't
+   exclusive to rentals; a category with no image just keeps the plain
+   white/icon card below. */
+.spotlight-card.has-image {
   background-size: cover;
   background-position: center;
   color: white;
 }
-.spotlight-card.rental::before {
+.spotlight-card.has-image::before {
   content: "";
   position: absolute; inset: 0;
   background: linear-gradient(180deg, rgba(6,19,51,0.35), rgba(6,19,51,0.82));
   z-index: 0;
 }
-.spotlight-card.rental > * { position: relative; z-index: 1; }
-.spotlight-card.rental .spotlight-card-icon { background: rgba(255,255,255,0.2); color: white; }
-.spotlight-card.rental .spotlight-card-title,
-.spotlight-card.rental .spotlight-card-meta { color: white; }
+.spotlight-card.has-image > * { position: relative; z-index: 1; }
+.spotlight-card.has-image .spotlight-card-icon { background: rgba(255,255,255,0.2); color: white; }
+.spotlight-card.has-image .spotlight-card-title,
+.spotlight-card.has-image .spotlight-card-meta { color: white; }
+/* Pills always read as white-on-glass over a photo, regardless of category
+   color, since the dark overlay sits behind them either way. */
+.spotlight-card.has-image .spotlight-card-pill { background: rgba(255,255,255,0.22); color: white; }
 
 .carousel-dots {
   display: flex;

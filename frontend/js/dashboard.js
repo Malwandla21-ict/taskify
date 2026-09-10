@@ -60,10 +60,15 @@ function shuffleArray(arr) {
 }
 
 function carouselSlideHtml({ type, tag, image, title, meta, href }) {
-  const isRental = type === "rental";
-  const bgAttr = isRental && image ? ` style="background-image:url('${image}')"` : "";
+  /* Photo-card treatment (full-bleed background image + dark overlay,
+     white text) now applies to whichever items actually have a photo —
+     tasks, sales and events can all carry images, not just rentals — so
+     it's keyed off "does this item have an image" rather than "is this a
+     rental". Items without one keep the plain white/icon card. */
+  const hasImage = Boolean(image);
+  const bgAttr = hasImage ? ` style="background-image:url('${image}')"` : "";
   return `
-    <a href="${href}" class="spotlight-card ${type}"${bgAttr}>
+    <a href="${href}" class="spotlight-card ${type}${hasImage ? " has-image" : ""}"${bgAttr}>
       <div class="spotlight-card-top">
         <span class="spotlight-card-pill ${type}">${tag}</span>
         <span class="spotlight-card-icon"><i class="ti ${spotlightIconFor(type)}" aria-hidden="true"></i></span>
