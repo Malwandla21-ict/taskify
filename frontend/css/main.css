@@ -30,6 +30,14 @@
   --radius:         12px;
   --radius-lg:      16px;
   --radius-xl:      20px;
+
+  /* Strong easing curves for deliberate UI motion — the browser's built-in
+     `ease`/`ease-out` are too weak to feel intentional. Used wherever a
+     transition/animation is meant to read as considered rather than
+     default; existing `transition: all 0.2s;`-style rules keep their
+     properties and duration untouched and only pick up the curve. */
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);     /* entering / exiting */
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);    /* moving/morphing on screen */
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -42,8 +50,33 @@ body {
   line-height: 1.6;
 }
 
+/* ── Reduced motion, site-wide ──
+   Previously only handled on the marketing landing page — every hover
+   lift, modal, toast, and carousel elsewhere had no reduced-motion
+   handling at all. This shortens transitions/animations to effectively
+   instant for anyone with the OS-level "reduce motion" preference on,
+   without removing the opacity/color change itself (which still helps
+   convey state), and has zero effect on anyone without that preference. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 a { text-decoration: none; color: inherit; }
-button { border: none; cursor: pointer; transition: all 0.2s ease; font-family: inherit; }
+button { border: none; cursor: pointer; transition: all 0.2s var(--ease-out); font-family: inherit; }
+
+/* Instant feedback on press — previously no button anywhere had an :active
+   state, so pressing one felt unresponsive until whatever :hover/click
+   effect eventually caught up. Rides the existing `transition: all 0.2s`
+   each of these already declares, so nothing about duration/properties
+   changes, just adds the missing press state. */
+button:active,
+.primary-button:active,
+.secondary-button:active { transform: scale(0.97); }
 
 input, textarea, select {
   width: 100%;
@@ -133,7 +166,7 @@ textarea { min-height: 110px; resize: vertical; }
   padding: 7px 13px;
   border-radius: var(--radius);
   position: relative;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -296,7 +329,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-weight: 700;
   padding: 11px 20px;
   border-radius: var(--radius);
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -320,7 +353,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-weight: 700;
   padding: 11px 20px;
   border-radius: var(--radius);
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -555,7 +588,7 @@ textarea { min-height: 110px; resize: vertical; }
   padding: 7px 14px;
   border-radius: var(--radius);
   border: 1.5px solid var(--border);
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   white-space: nowrap;
   background: white;
 }
@@ -579,7 +612,7 @@ textarea { min-height: 110px; resize: vertical; }
   border-radius: var(--radius-lg);
   padding: 24px 14px 20px;
   text-align: center;
-  transition: all 0.22s;
+  transition: all 0.22s var(--ease-out);
   box-shadow: var(--shadow-sm);
   cursor: pointer;
 }
@@ -704,7 +737,7 @@ textarea { min-height: 110px; resize: vertical; }
   overflow: hidden;
   border: 1.5px solid var(--border);
   box-shadow: var(--shadow-sm);
-  transition: all 0.22s;
+  transition: transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out), border-color 0.22s var(--ease-out);
 }
 
 .market-card:hover {
@@ -823,7 +856,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-weight: 700;
   padding: 7px 14px;
   border-radius: var(--radius);
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: flex;
   align-items: center;
   gap: 5px;
@@ -882,7 +915,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   color: var(--muted);
   font-family: inherit;
   display: flex;
@@ -936,7 +969,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-size: 14px;
   font-weight: 700;
   font-family: inherit;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -956,7 +989,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-weight: 600;
   font-family: inherit;
   color: var(--text);
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1173,7 +1206,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-weight: 600;
   font-size: 13px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -1200,7 +1233,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-weight: 600;
   font-size: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   gap: 6px;
 }
 
@@ -1231,11 +1264,17 @@ textarea { min-height: 110px; resize: vertical; }
   box-shadow: var(--shadow-md);
   font-weight: 600;
   font-size: 13px;
-  animation: toastIn 0.25s ease;
+  animation: toastIn 0.25s var(--ease-out);
   display: flex;
   align-items: center;
   gap: 9px;
 }
+
+/* Exit the way it entered: toasts used to just vanish via .remove() with
+   no exit animation at all. showToast() in helpers.js now adds this class
+   ~250ms before removing the element, so it slides/fades out the same way
+   it slid/faded in instead of popping out of existence. */
+.toast.toast-leaving { animation: toastOut 0.2s var(--ease-in-out) forwards; }
 
 .toast i { font-size: 18px; flex-shrink: 0; }
 .toast.error   { border-left-color: var(--ump-red); }
@@ -1250,6 +1289,7 @@ textarea { min-height: 110px; resize: vertical; }
   place-items: center;
   padding: 20px;
   background: rgba(12,29,74,0.55);
+  animation: priorityOverlayIn 0.2s var(--ease-out);
 }
 .priority-notification-dialog {
   width: min(480px, 100%);
@@ -1261,6 +1301,7 @@ textarea { min-height: 110px; resize: vertical; }
   background: #fff;
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
+  animation: priorityDialogIn 0.25s var(--ease-out);
 }
 .priority-notification-icon {
   width: 44px;
@@ -1290,6 +1331,21 @@ textarea { min-height: 110px; resize: vertical; }
 @keyframes toastIn {
   from { opacity: 0; transform: translateX(20px); }
   to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(20px); }
+}
+
+/* Priority notification modal is appended fresh via JS each time it fires
+   (never reused/toggled), so a keyframe entrance is safe — no rapid
+   re-trigger risk. Same "modals are exempt from trigger-anchoring, never
+   scale from 0" reasoning as the onboarding modal. */
+@keyframes priorityOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes priorityDialogIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 /* ==============================
@@ -1395,7 +1451,7 @@ textarea { min-height: 110px; resize: vertical; }
   padding: 13px 22px;
   border-radius: var(--radius);
   text-align: center;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1417,7 +1473,7 @@ textarea { min-height: 110px; resize: vertical; }
   border-radius: var(--radius);
   border: 1.5px solid rgba(255,255,255,0.28);
   text-align: center;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1442,7 +1498,7 @@ textarea { min-height: 110px; resize: vertical; }
   gap: 13px;
   align-items: flex-start;
   box-shadow: var(--shadow-sm);
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
 }
 
 .notification-card.unread { border-left: 4px solid var(--ump-green); border-radius: 0 var(--radius-lg) var(--radius-lg) 0; }
@@ -1648,7 +1704,7 @@ textarea { min-height: 110px; resize: vertical; }
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   position: relative;
 }
 
@@ -1700,7 +1756,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-size: 17px;
   position: relative;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   text-decoration: none;
 }
 
@@ -1757,7 +1813,7 @@ textarea { min-height: 110px; resize: vertical; }
   display: flex;
   align-items: center;
   gap: 5px;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   font-family: inherit;
 }
 
@@ -1828,7 +1884,7 @@ textarea { min-height: 110px; resize: vertical; }
   padding: 28px 20px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   position: relative;
 }
 
@@ -1950,7 +2006,7 @@ textarea { min-height: 110px; resize: vertical; }
   overflow: hidden;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
   flex-shrink: 0;
 }
 
@@ -2000,7 +2056,7 @@ textarea { min-height: 110px; resize: vertical; }
   font-size: 22px;
   cursor: pointer;
   z-index: 1500;
-  transition: all 0.2s;
+  transition: all 0.2s var(--ease-out);
 }
 
 .activity-tracker-fab:hover {

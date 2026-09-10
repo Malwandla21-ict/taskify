@@ -9,7 +9,14 @@ function showToast(message, type = "success") {
   toast.className = `toast ${type}`;
   toast.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i> ${message}`;
   toastContainer.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+  /* Exit the way it entered (see .toast-leaving / toastOut in main.css) —
+     add the leaving class first so it plays its own out-animation, then
+     remove the element once that's had time to finish, instead of the
+     toast just popping out of existence. */
+  setTimeout(() => {
+    toast.classList.add("toast-leaving");
+    setTimeout(() => toast.remove(), 200);
+  }, 3500);
 }
 
 function emptyState(icon, title, subtitle = "") {

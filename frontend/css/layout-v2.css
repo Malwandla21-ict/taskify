@@ -645,6 +645,14 @@ body.dashboard-body {
   color: inherit;
   background: white;
   overflow: hidden;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
+}
+/* These are clickable links with no hover feedback at all before this —
+   matches the same lift already used on .market-card/.explore-tile.
+   Gated to real hover-capable pointers since touch fires a false :hover
+   on tap that would otherwise stick until the next tap elsewhere. */
+@media (hover: hover) and (pointer: fine) {
+  .spotlight-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
 }
 .spotlight-card-top { display: flex; align-items: flex-start; justify-content: space-between; }
 .spotlight-card-pill {
@@ -719,6 +727,7 @@ body.dashboard-body {
   background: rgba(6, 19, 51, 0.72);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
+  animation: onboardingOverlayIn 0.25s var(--ease-out);
 }
 /* Higher specificity than the rule above, so the JS setting
    overlay.hidden = true actually hides it — a plain "display: flex" on
@@ -736,6 +745,20 @@ body.dashboard-body {
   padding: 40px 36px 32px;
   text-align: center;
   box-shadow: var(--shadow-md);
+  animation: onboardingModalIn 0.3s var(--ease-out);
+}
+/* A first-login modal is exactly the "rare / first-time" tier that earns
+   a little delight — it used to just pop into existence with the [hidden]
+   toggle. Modals are exempt from trigger-anchored transform-origin (not
+   anchored to a button, so centered is correct), and never scale from 0 —
+   starting at 0.95 keeps it from looking like it's materializing from
+   nothing. Re-triggers safely on each [hidden] toggle since this modal is
+   shown at most once per account (has_seen_onboarding), not something a
+   user fires repeatedly. */
+@keyframes onboardingOverlayIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes onboardingModalIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
 }
 .onboarding-modal-close {
   position: absolute; top: 14px; right: 14px;
@@ -863,7 +886,7 @@ body.dashboard-body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out);
 }
 .explore-tile:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
@@ -1075,7 +1098,7 @@ body.dashboard-body {
   border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  transition: all 0.22s;
+  transition: transform 0.22s var(--ease-out), box-shadow 0.22s var(--ease-out);
 }
 .student-card-v2:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
 
