@@ -64,6 +64,18 @@ body {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Exception: the loading spinner is functional, not decorative — it's
+     the only signal that something is in progress. The blanket rule
+     above was freezing it (an infinite spin cut to a 0.01ms/1-iteration
+     animation just renders as a static ring), which is worse than the
+     mild rotation it replaces. Reduced motion means fewer and gentler
+     animations, not zero for something that's actually communicating
+     state. */
+  .ti-loader {
+    animation-duration: 0.7s !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 a { text-decoration: none; color: inherit; }

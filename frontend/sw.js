@@ -28,8 +28,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Taskify";
   const options = {
     body: data.body || "",
-    icon: "./assets/logo/T_Transparent.png",
-    badge: "./assets/logo/T_Transparent.png",
+    icon: "./assets/favicon/icon-192x192.png",
+    badge: "./assets/favicon/favicon-48x48.png",
     data: { url: data.url || "./notifications.html" }
   };
 
