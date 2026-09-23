@@ -85,7 +85,7 @@ async function sendViaBrevoApi({ to, subject, html, text }) {
         "api-key": process.env.BREVO_API_KEY
       },
       body: JSON.stringify({
-        sender: parseFromAddress(process.env.EMAIL_FROM || "Taskify <no-reply@taskify.local>"),
+        sender: parseFromAddress(process.env.EMAIL_FROM || "Taskify <no-reply@taskify-marketplace.co.za>"),
         to: [{ email: to }],
         subject,
         htmlContent: html,
@@ -122,7 +122,7 @@ async function sendMail({ to, subject, html, text }) {
   }
 
   return activeTransporter.sendMail({
-    from: process.env.EMAIL_FROM || "Taskify <no-reply@taskify.local>",
+    from: process.env.EMAIL_FROM || "Taskify <no-reply@taskify-marketplace.co.za>",
     to,
     subject,
     html,
