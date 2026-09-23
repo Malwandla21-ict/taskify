@@ -61,15 +61,23 @@ async function getModerationQueue() {
    so this can't be used to un-remove something (use a direct DB fix for
    that, same as everywhere else in this app that treats removal/ban as
    normally-permanent). */
+/* Now doubles as the "approve & publish" action — with pending_review
+   content hidden from public view (see task/sales/equipment/event
+   .service.js's listing queries and *ByIdForViewing), this is what makes a
+   held listing visible for the first time, not just what dismisses a
+   flag on something already live. The owner is notified accordingly. */
 async function clearModerationFlag(contentType, contentId, adminId) {
   const config = CONTENT_TABLES[contentType];
   if (!config) { const error = new Error("Invalid content type."); error.statusCode = 400; throw error; }
 
   const [rows] = await pool.execute(
-    `SELECT id, moderation_status FROM ${config.table} WHERE id = ? LIMIT 1`, [contentId]
+    `SELECT id, moderation_status, ${config.titleColumn} AS title, ${config.ownerColumn} AS owner_id
+     FROM ${config.table} WHERE id = ? LIMIT 1`,
+    [contentId]
   );
   if (!rows.length) { const error = new Error("Content not found."); error.statusCode = 404; throw error; }
-  if (rows[0].moderation_status !== "pending_review") {
+  const content = rows[0];
+  if (content.moderation_status !== "pending_review") {
     const error = new Error("Only content pending review can be cleared."); error.statusCode = 400; throw error;
   }
 
@@ -78,6 +86,15 @@ async function clearModerationFlag(contentType, contentId, adminId) {
   await auditLogService.createAuditLog({
     adminId, action: "content.clear_flag", targetType: contentType, targetId: contentId
   });
+
+  if (content.owner_id) {
+    await notificationService.createNotification({
+      userId: content.owner_id,
+      title: "Content Approved",
+      message: `Your ${CONTENT_LABELS[contentType]} "${content.title}" has been reviewed and approved — it's now live and visible to everyone.`,
+      email: true
+    });
+  }
 
   return { contentType, id: contentId, moderationStatus: "clean" };
 }

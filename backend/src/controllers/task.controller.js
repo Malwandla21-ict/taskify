@@ -30,7 +30,10 @@ async function getTaskById(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
 
-    const task = await taskService.getTaskByIdForViewing(Number(req.params.id));
+    /* req.user may be null here — this route allows guest viewing (see
+       task.routes.js's optionalAuthenticate). getTaskByIdForViewing 404s a
+       pending/removed task for anyone but its creator or an admin. */
+    const task = await taskService.getTaskByIdForViewing(Number(req.params.id), req.user?.id, req.user?.role);
     return res.status(200).json({ success: true, message: "Task fetched successfully.", data: task });
   } catch (error) { next(error); }
 }

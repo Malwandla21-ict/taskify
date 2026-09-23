@@ -17,7 +17,7 @@ function parseImageUrls(row) {
 const EQUIPMENT_SELECT_FIELDS = `
   e.id, e.owner_id, e.name, e.description, e.category,
   e.section, e.daily_price, e.is_available, e.created_at,
-  e.image_urls,
+  e.image_urls, e.moderation_status,
   u.full_name AS owner_name,
   u.profile_photo_url AS owner_profile_photo,
   u.phone_number AS owner_phone_number,
@@ -31,6 +31,16 @@ async function createEquipment({
   const moderation = await contentModerationService.evaluateListingContent({ title: name, description, imageUrls });
 
   if (moderation.severe) {
+    await contentModerationService.recordBlockedAttempt({
+      contentType: "equipment", userId: ownerId, title: name, description,
+      flaggedCategories: moderation.flaggedCategories
+    });
+    await notificationService.notifyAllAdmins({
+      title: "Content Blocked",
+      message: `An equipment listing titled "${(name || "").trim()}" was blocked at creation for violating content policy (${moderation.flaggedCategories.join(", ")}).`,
+      email: true
+    });
+
     const error = new Error("This content violates our content policy and cannot be posted.");
     error.statusCode = 400;
     throw error;
@@ -61,18 +71,36 @@ async function createEquipment({
       message: `A new equipment listing, "${name.trim()}", was flagged for review (${moderation.flaggedCategories.join(", ")}).`,
       email: true
     });
+    await notificationService.createNotification({
+      userId: ownerId,
+      title: "Listing Held for Review",
+      message: `Your equipment listing "${name.trim()}" was flagged by our moderation system and is held from public view until an admin reviews it. We'll let you know as soon as it's approved.`,
+      email: true
+    });
   }
 
   return getEquipmentById(result.insertId);
 }
 
-async function getAllAvailableEquipment() {
+/* Equipment has no dedicated "my listings" page in the frontend today —
+   an owner sees their own items in this same public list, distinguished
+   only by the "Yours" badge equipment.js adds client-side. So a
+   pending-review item still needs to show up here for its own owner (with
+   a "Pending Review" badge instead of "Yours"), even though it's hidden
+   from everyone else — unlike tasks/sales/events, which each have a
+   separate "my X" view unaffected by this filter. viewerId is optional
+   (undefined for a guest, who never matches owner_id anyway). Removed
+   items stay hidden from everyone, including the owner, same as before. */
+async function getAllAvailableEquipment(viewerId = null) {
   const [rows] = await pool.execute(
     `SELECT ${EQUIPMENT_SELECT_FIELDS}
      FROM equipment e
      LEFT JOIN users u ON e.owner_id = u.id
-     WHERE e.is_available = 1 AND e.moderation_status != 'removed'
-     ORDER BY e.created_at DESC`
+     WHERE e.is_available = 1
+       AND (e.moderation_status = 'clean'
+            OR (e.moderation_status = 'pending_review' AND e.owner_id = ?))
+     ORDER BY e.created_at DESC`,
+    [viewerId]
   );
   const parsed = rows.map(parseImageUrls);
   return attachLatestEndorsements(parsed, "equipment");
@@ -279,9 +307,19 @@ async function getEquipmentById(equipmentId) {
   return attachLatestEndorsement(parsed, "equipment");
 }
 
-async function getEquipmentByIdForViewing(equipmentId, userId) {
+async function getEquipmentByIdForViewing(equipmentId, userId, viewerRole = null) {
   const item = await getEquipmentById(equipmentId);
   if (!item) {
+    const error = new Error("Equipment not found."); error.statusCode = 404; throw error;
+  }
+
+  /* A listing that isn't 'clean' (pending_review or removed) is invisible
+     to everyone except its own owner and admins — a 404, same as a
+     genuinely missing item, so a direct link never reveals that something
+     was flagged. See equipment.controller.js's getEquipmentById. */
+  const isOwnerForModeration = userId != null && Number(item.owner_id) === Number(userId);
+  const isAdmin = viewerRole === "admin";
+  if (item.moderation_status !== "clean" && !isOwnerForModeration && !isAdmin) {
     const error = new Error("Equipment not found."); error.statusCode = 404; throw error;
   }
 

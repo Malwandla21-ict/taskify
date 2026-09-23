@@ -17,7 +17,7 @@ function parseImageUrls(row) {
 const SELECT_FIELDS = `
   si.id, si.seller_id, si.title, si.description, si.category,
   si.section, si.price, si.condition_status, si.location,
-  si.status, si.created_at, si.image_urls,
+  si.status, si.created_at, si.image_urls, si.moderation_status,
   u.full_name AS seller_name,
   u.profile_photo_url AS seller_profile_photo,
   u.phone_number AS seller_phone_number,
@@ -32,6 +32,16 @@ async function createSalesItem({
   const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
 
   if (moderation.severe) {
+    await contentModerationService.recordBlockedAttempt({
+      contentType: "sales_item", userId: sellerId, title, description,
+      flaggedCategories: moderation.flaggedCategories
+    });
+    await notificationService.notifyAllAdmins({
+      title: "Content Blocked",
+      message: `A sales listing titled "${(title || "").trim()}" was blocked at creation for violating content policy (${moderation.flaggedCategories.join(", ")}).`,
+      email: true
+    });
+
     const error = new Error("This content violates our content policy and cannot be posted.");
     error.statusCode = 400;
     throw error;
@@ -61,6 +71,14 @@ async function createSalesItem({
       contextId: result.insertId,
       email: true
     });
+    await notificationService.createNotification({
+      userId: sellerId,
+      title: "Listing Held for Review",
+      message: `Your sales listing "${title.trim()}" was flagged by our moderation system and is held from public view until an admin reviews it. We'll let you know as soon as it's approved.`,
+      contextType: "sales_item",
+      contextId: result.insertId,
+      email: true
+    });
   }
 
   return getSalesItemById(result.insertId);
@@ -71,7 +89,7 @@ async function getAllAvailableSalesItems() {
     `SELECT ${SELECT_FIELDS}
      FROM sales_items si
      INNER JOIN users u ON si.seller_id = u.id
-     WHERE si.status = 'Available' AND si.moderation_status != 'removed'
+     WHERE si.status = 'Available' AND si.moderation_status = 'clean'
      ORDER BY si.created_at DESC`
   );
   const parsed = rows.map(parseImageUrls);
@@ -125,6 +143,26 @@ async function getSalesItemById(itemId) {
   return attachLatestEndorsement(parsed, "sales_item");
 }
 
+/* viewerId/viewerRole are optional (a guest passes neither). A listing
+   that isn't 'clean' (pending_review or removed) is invisible to everyone
+   except its own seller and admins — a 404, same as a genuinely missing
+   item, so a direct link never reveals that something was flagged. See
+   sales.controller.js's getSalesItemById. */
+async function getSalesItemByIdForViewing(itemId, viewerId = null, viewerRole = null) {
+  const item = await getSalesItemById(itemId);
+  if (!item) {
+    const error = new Error("Sales item not found."); error.statusCode = 404; throw error;
+  }
+
+  const isOwner = viewerId != null && Number(item.seller_id) === Number(viewerId);
+  const isAdmin = viewerRole === "admin";
+  if (item.moderation_status !== "clean" && !isOwner && !isAdmin) {
+    const error = new Error("Sales item not found."); error.statusCode = 404; throw error;
+  }
+
+  return item;
+}
+
 async function deleteSalesItem(itemId, userId) {
   const [rows] = await pool.execute(
     `SELECT id, seller_id, status FROM sales_items WHERE id = ? LIMIT 1`, [itemId]
@@ -148,6 +186,7 @@ module.exports = {
   getAllAvailableSalesItems,
   getMySalesItems,
   getSalesItemById,
+  getSalesItemByIdForViewing,
   markSalesItemAsSold,
   deleteSalesItem
 };

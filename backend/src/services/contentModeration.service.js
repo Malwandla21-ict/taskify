@@ -83,17 +83,29 @@ const INTRA_WORD_SEPARATOR = "[^a-z0-9]{0,2}"; // optional punctuation/space ins
    these hard-block outright, same as a severe AI hit. */
 const HARD_BLOCK_PHRASES = [
   "kill myself", "kill himself", "kill herself",
-  "commit suicide", "hire a hitman", "hire a killer"
+  "commit suicide", "hire a hitman", "hire a killer",
+  /* Added 2026-09-23 — a direct first-person statement of intent to harm a
+     person ("I want to kill someone") previously only matched the bare
+     "kill" soft-flag below and published unchanged pending admin review.
+     These target-word combinations (a violent verb immediately followed by
+     a person-reference) are specific enough to hard-block outright, same
+     reasoning as "kill myself" above — nobody uses "kill someone"/"kill
+     him" as an idiom the way they do "kill time". Bare "kill"/"murder" on
+     their own stay soft-flag-only below, to keep that idiomatic-use
+     protection intact. */
+  "kill someone", "kill him", "kill her", "kill them", "kill a person",
+  "murder someone", "murder him", "murder her", "murder them"
 ];
 
 /* Bare single words with real idiomatic/benign uses ("kill time", "kill
    the lights", "murder mystery night", "killer app") — testing this
    locally caught exactly that false-positive risk before it ever reached
-   real users. These only soft-flag: published, but immediately queued for
-   admin review, same outcome as an AI soft hit. That's actually the right
-   fix for the original problem — "I need someone to kill [someone]" no
-   longer publishes with zero signal to anyone, but a bare ambiguous word
-   alone doesn't hard-reject a legitimate post either. */
+   real users. These only soft-flag: held for admin review and hidden from
+   public view until approved (see evaluateListingContent's callers), same
+   outcome as an AI soft hit. That's actually the right fix for the
+   original problem — "I need someone to kill [someone]" no longer
+   publishes with zero signal to anyone, but a bare ambiguous word alone
+   doesn't hard-reject a legitimate post either. */
 const SOFT_FLAG_PHRASES = ["kill", "murder", "assassinate", "hitman"];
 
 function escapeRegexChar(ch) {
@@ -300,6 +312,27 @@ async function recordFlaggedUpload(imageUrl, flaggedCategories) {
   );
 }
 
+/* Persistent record of a hard-blocked (severe) creation attempt. Nothing
+   about the attempt is ever written to tasks/sales_items/equipment/events
+   (the whole point of a hard block is that it's never created), so without
+   this there would be zero durable trace of it anywhere beyond a one-off
+   admin email — no way to later notice a repeat offender. description is
+   truncated to keep the row small; this is a moderation record, not a
+   full copy of the offending listing. */
+async function recordBlockedAttempt({ contentType, userId, title, description, flaggedCategories }) {
+  await pool.execute(
+    `INSERT INTO blocked_content_attempts (content_type, user_id, title, description_snippet, flagged_categories)
+     VALUES (?, ?, ?, ?, ?)`,
+    [
+      contentType,
+      userId,
+      (title || "").slice(0, 255),
+      (description || "").slice(0, 300),
+      flaggedCategories?.length ? JSON.stringify(flaggedCategories) : null
+    ]
+  );
+}
+
 async function checkPreviouslyFlaggedImages(imageUrls = []) {
   if (!imageUrls.length) return { flagged: false, flaggedCategories: [] };
 
@@ -341,6 +374,7 @@ module.exports = {
   evaluateImage,
   evaluateListingContent,
   recordFlaggedUpload,
+  recordBlockedAttempt,
   checkHardBlockKeywords,
   SEVERE_THRESHOLDS,
   SOFT_THRESHOLD,

@@ -37,10 +37,10 @@ async function getSalesItemById(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
 
-    const item = await salesService.getSalesItemById(Number(req.params.id));
-    if (!item) {
-      return res.status(404).json({ success: false, message: "Sales item not found." });
-    }
+    /* req.user may be null here — this route allows guest viewing (see
+       sales.routes.js's optionalAuthenticate). getSalesItemByIdForViewing
+       404s a pending/removed item for anyone but its seller or an admin. */
+    const item = await salesService.getSalesItemByIdForViewing(Number(req.params.id), req.user?.id, req.user?.role);
     return res.status(200).json({ success: true, message: "Sales item fetched successfully.", data: item });
   } catch (error) { next(error); }
 }

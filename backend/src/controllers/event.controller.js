@@ -48,7 +48,10 @@ async function getMyEvents(req, res, next) {
 
 async function getEventById(req, res, next) {
   try {
-    const event = await eventService.getEventByIdForViewing(Number(req.params.id));
+    /* req.user may be null here — this route allows guest viewing (see
+       event.routes.js's optionalAuthenticate). getEventByIdForViewing 404s
+       a pending/removed event for anyone but its organizer or an admin. */
+    const event = await eventService.getEventByIdForViewing(Number(req.params.id), req.user?.id, req.user?.role);
     return res.status(200).json({ success: true, message: "Event fetched successfully.", data: event });
   } catch (error) { next(error); }
 }

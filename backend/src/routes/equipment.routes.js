@@ -5,7 +5,11 @@ const { authenticate, optionalAuthenticate } = require("../middleware/auth.middl
 
 const router = express.Router();
 
-router.get("/",       equipmentController.getAllAvailableEquipment);
+/* optionalAuthenticate (not authenticate, and not left bare) — guests still
+   see the full public list, but a logged-in owner needs req.user populated
+   so their own pending-review listing can still show up here (equipment has
+   no separate "my listings" page — see getAllAvailableEquipment). */
+router.get("/", optionalAuthenticate, equipmentController.getAllAvailableEquipment);
 router.get("/history", authenticate, equipmentController.getEquipmentHistory);
 router.get("/my-listings", authenticate, equipmentController.getMyEquipment);
 

@@ -23,7 +23,7 @@ const TASK_SELECT_FIELDS = `
   t.id, t.title, t.description, t.category, t.section,
   t.price, t.location, t.status, t.urgent,
   t.created_by, t.accepted_by, t.created_at,
-  t.image_urls,
+  t.image_urls, t.moderation_status,
   u.full_name AS created_by_name,
   u.profile_photo_url AS created_by_profile_photo,
   u.phone_number AS created_by_phone_number,
@@ -61,6 +61,16 @@ async function createTask({
   const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
 
   if (moderation.severe) {
+    await contentModerationService.recordBlockedAttempt({
+      contentType: "task", userId: createdBy, title, description,
+      flaggedCategories: moderation.flaggedCategories
+    });
+    await notificationService.notifyAllAdmins({
+      title: "Content Blocked",
+      message: `A task titled "${(title || "").trim()}" was blocked at creation for violating content policy (${moderation.flaggedCategories.join(", ")}).`,
+      email: true
+    });
+
     const error = new Error("This content violates our content policy and cannot be posted.");
     error.statusCode = 400;
     throw error;
@@ -90,6 +100,14 @@ async function createTask({
       contextId: result.insertId,
       email: true
     });
+    await notificationService.createNotification({
+      userId: createdBy,
+      title: "Task Held for Review",
+      message: `Your task "${title.trim()}" was flagged by our moderation system and is held from public view until an admin reviews it. We'll let you know as soon as it's approved.`,
+      contextType: "task",
+      contextId: result.insertId,
+      email: true
+    });
   }
 
   return getTaskById(result.insertId);
@@ -103,7 +121,7 @@ async function getAllTasks() {
      LEFT JOIN users w ON t.accepted_by = w.id
      LEFT JOIN payments p ON t.id = p.task_id
      ${TASK_ENDORSEMENT_JOIN}
-     WHERE t.status = 'Posted' AND t.moderation_status != 'removed'
+     WHERE t.status = 'Posted' AND t.moderation_status = 'clean'
      ORDER BY t.urgent DESC, t.created_at DESC`
   );
 
@@ -401,11 +419,23 @@ async function getUserTaskHistory(userId) {
   return rows.map(parseImageUrls);
 }
 
-async function getTaskByIdForViewing(taskId) {
+/* viewerId/viewerRole are optional (a guest passes neither). Content that
+   isn't 'clean' (pending_review or removed) is invisible to everyone
+   except its own creator and admins — a 404, same as a genuinely missing
+   task, so a direct link never reveals that something was flagged. See
+   task.controller.js's getTaskById. */
+async function getTaskByIdForViewing(taskId, viewerId = null, viewerRole = null) {
   const task = await getTaskById(taskId);
   if (!task) {
     const error = new Error("Task not found."); error.statusCode = 404; throw error;
   }
+
+  const isOwner = viewerId != null && Number(task.created_by) === Number(viewerId);
+  const isAdmin = viewerRole === "admin";
+  if (task.moderation_status !== "clean" && !isOwner && !isAdmin) {
+    const error = new Error("Task not found."); error.statusCode = 404; throw error;
+  }
+
   return task;
 }
 

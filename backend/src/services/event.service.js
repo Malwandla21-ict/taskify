@@ -30,7 +30,7 @@ function parseImageUrls(row) {
 const SELECT_FIELDS = `
   e.id, e.organizer_id, e.title, e.description, e.category,
   e.section, e.location, e.event_date, e.capacity, e.status,
-  e.created_at, e.image_urls,
+  e.created_at, e.image_urls, e.moderation_status,
   u.full_name AS organizer_name,
   u.profile_photo_url AS organizer_profile_photo,
   u.member_type AS organizer_member_type,
@@ -45,6 +45,16 @@ async function createEvent({
   const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
 
   if (moderation.severe) {
+    await contentModerationService.recordBlockedAttempt({
+      contentType: "event", userId: organizerId, title, description,
+      flaggedCategories: moderation.flaggedCategories
+    });
+    await notificationService.notifyAllAdmins({
+      title: "Content Blocked",
+      message: `An event titled "${(title || "").trim()}" was blocked at creation for violating content policy (${moderation.flaggedCategories.join(", ")}).`,
+      email: true
+    });
+
     const error = new Error("This content violates our content policy and cannot be posted.");
     error.statusCode = 400;
     throw error;
@@ -74,6 +84,14 @@ async function createEvent({
       contextId: result.insertId,
       email: true
     });
+    await notificationService.createNotification({
+      userId: organizerId,
+      title: "Event Held for Review",
+      message: `Your event "${title.trim()}" was flagged by our moderation system and is held from public view until an admin reviews it. We'll let you know as soon as it's approved.`,
+      contextType: "event",
+      contextId: result.insertId,
+      email: true
+    });
   }
 
   return getEventById(result.insertId);
@@ -84,7 +102,7 @@ async function getAllUpcomingEvents() {
     `SELECT ${SELECT_FIELDS}
      FROM events e
      INNER JOIN users u ON e.organizer_id = u.id
-     WHERE e.status = 'Upcoming' AND e.event_date >= NOW() AND e.moderation_status != 'removed'
+     WHERE e.status = 'Upcoming' AND e.event_date >= NOW() AND e.moderation_status = 'clean'
      ORDER BY e.event_date ASC`
   );
   const parsed = rows.map(parseImageUrls);
@@ -103,7 +121,7 @@ async function getPastEvents() {
     `SELECT ${SELECT_FIELDS}
      FROM events e
      INNER JOIN users u ON e.organizer_id = u.id
-     WHERE e.event_date < NOW() AND e.moderation_status != 'removed'
+     WHERE e.event_date < NOW() AND e.moderation_status = 'clean'
      ORDER BY e.event_date DESC
      LIMIT 20`
   );
@@ -223,11 +241,23 @@ async function getEventById(eventId) {
   return attachLatestEndorsement(parsed, "event");
 }
 
-async function getEventByIdForViewing(eventId) {
+/* viewerId/viewerRole are optional (a guest passes neither). An event that
+   isn't 'clean' (pending_review or removed) is invisible to everyone
+   except its own organizer and admins — a 404, same as a genuinely missing
+   event, so a direct link never reveals that something was flagged. See
+   event.controller.js's getEventById. */
+async function getEventByIdForViewing(eventId, viewerId = null, viewerRole = null) {
   const event = await getEventById(eventId);
   if (!event) {
     const error = new Error("Event not found."); error.statusCode = 404; throw error;
   }
+
+  const isOwner = viewerId != null && Number(event.organizer_id) === Number(viewerId);
+  const isAdmin = viewerRole === "admin";
+  if (event.moderation_status !== "clean" && !isOwner && !isAdmin) {
+    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+  }
+
   return event;
 }
 

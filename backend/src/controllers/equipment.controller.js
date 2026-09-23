@@ -19,7 +19,12 @@ async function createEquipment(req, res, next) {
 
 async function getAllAvailableEquipment(req, res, next) {
   try {
-    const equipment = await equipmentService.getAllAvailableEquipment();
+    /* req.user may be null here — this route allows guest viewing (see
+       equipment.routes.js's optionalAuthenticate). Passing the viewer's id
+       lets a logged-in owner still see their own pending-review listing in
+       this list (see getAllAvailableEquipment's comment) — a guest's
+       undefined id simply never matches an owner_id. */
+    const equipment = await equipmentService.getAllAvailableEquipment(req.user?.id);
     return res.status(200).json({ success: true, message: "Available equipment fetched successfully.", data: equipment });
   } catch (error) { next(error); }
 }
@@ -32,8 +37,9 @@ async function getEquipmentById(req, res, next) {
     /* req.user may be null here — this route allows guest viewing (see
        equipment.routes.js's optionalAuthenticate). getEquipmentByIdForViewing
        compares owner/renter IDs against userId, which safely resolves to
-       "not a match" for an undefined guest ID rather than crashing. */
-    const item = await equipmentService.getEquipmentByIdForViewing(Number(req.params.id), req.user?.id);
+       "not a match" for an undefined guest ID rather than crashing, and
+       404s a pending/removed item for anyone but the owner or an admin. */
+    const item = await equipmentService.getEquipmentByIdForViewing(Number(req.params.id), req.user?.id, req.user?.role);
     return res.status(200).json({ success: true, message: "Equipment fetched successfully.", data: item });
   } catch (error) { next(error); }
 }
