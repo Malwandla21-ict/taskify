@@ -153,16 +153,16 @@ function renderSaleDetails(item) {
   }
 
   saleDetailsContainer.innerHTML = `
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
-      <div>
-        <div style="position:relative;">
+    <div class="detail-layout">
+      <div class="detail-main">
+        <div class="detail-media">
           ${renderImageGallery(item.image_urls, "ti-shopping-bag")}
           ${endorsementCornerBadge(item)}
           ${lecturerPostedCornerBadge(item.seller_member_type)}
         </div>
         ${sectionBadge(item.section || "General")}
-        <h1 style="font-size:32px;font-weight:800;margin:16px 0 10px;letter-spacing:-0.5px;">${item.title}</h1>
-        <p style="color:var(--muted);line-height:1.75;font-size:15px;">${item.description}</p>
+        <h1 class="detail-title">${item.title}</h1>
+        <p class="detail-description">${item.description}</p>
         <div class="market-tags" style="margin-top:18px;">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
           ${conditionBadge(item.condition_status)}
@@ -171,7 +171,7 @@ function renderSaleDetails(item) {
         </div>
         ${endorsementDetailBlock(item)}
       </div>
-      <div class="form-panel">
+      <div class="form-panel detail-summary">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
           <i class="ti ti-receipt" aria-hidden="true"></i> Item Summary
         </h3>

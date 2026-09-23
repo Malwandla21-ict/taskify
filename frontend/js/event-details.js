@@ -66,16 +66,16 @@ function renderEventDetails(event, hasRsvped) {
   }
 
   eventDetailsContainer.innerHTML = `
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
-      <div>
-        <div style="position:relative;">
+    <div class="detail-layout">
+      <div class="detail-main">
+        <div class="detail-media">
           ${renderImageGallery(event.image_urls, "ti-calendar-event")}
           ${endorsementCornerBadge(event)}
           ${lecturerPostedCornerBadge(event.organizer_member_type)}
         </div>
         ${sectionBadge(event.section || "General")}
-        <h1 style="font-size:32px;font-weight:800;margin:16px 0 10px;letter-spacing:-0.5px;">${event.title}</h1>
-        <p style="color:var(--muted);line-height:1.75;font-size:15px;">${event.description}</p>
+        <h1 class="detail-title">${event.title}</h1>
+        <p class="detail-description">${event.description}</p>
         <div class="market-tags" style="margin-top:18px;">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${event.category}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
@@ -84,7 +84,7 @@ function renderEventDetails(event, hasRsvped) {
         </div>
         ${endorsementDetailBlock(event)}
       </div>
-      <div class="form-panel">
+      <div class="form-panel detail-summary">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
           <i class="ti ti-receipt" aria-hidden="true"></i> Event Summary
         </h3>
