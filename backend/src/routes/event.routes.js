@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const eventController = require("../controllers/event.controller");
-const { authenticate } = require("../middleware/auth.middleware");
+const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -60,10 +60,13 @@ router.delete(
   wildcard only if ordered correctly). This is what lets event-details.js
   load an event once it has passed or been cancelled — GET / only returns
   upcoming ones.
+
+  optionalAuthenticate (not authenticate) — guests can view an event's full
+  details page without an account; only RSVPing actually requires login.
 */
 router.get(
   "/:id",
-  authenticate,
+  optionalAuthenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer.") ],
   eventController.getEventById
 );

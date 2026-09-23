@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const taskController = require("../controllers/task.controller");
-const { authenticate } = require("../middleware/auth.middleware");
+const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -85,10 +85,14 @@ router.delete(
   different HTTP method) so "/history" is never swallowed by this
   wildcard. This is what lets task-details.js load a task once it has
   moved past "Posted" — the public GET / list intentionally excludes those.
+
+  optionalAuthenticate (not authenticate) — guests can view a task's full
+  details page without an account; only the actions below it (accept,
+  message, etc.) actually require login.
 */
 router.get(
   "/:id",
-  authenticate,
+  optionalAuthenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer.") ],
   taskController.getTaskById
 );

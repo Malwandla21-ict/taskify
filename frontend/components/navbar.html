@@ -66,6 +66,16 @@
       <a href="./notifications.html"><i class="ti ti-bell" aria-hidden="true"></i> Notifications</a>
       <button type="button" class="danger" id="logoutButton"><i class="ti ti-logout" aria-hidden="true"></i> Logout</button>
     </div>
+    <!-- Shown instead of the account toggle/menu above when browsing as a
+         guest (no account) — see navbar.js's applyGuestNavbarState(). -->
+    <div id="sidebarGuestActions" style="display:none;padding:6px 4px;">
+      <a href="./register.html" class="primary-button" style="width:100%;justify-content:center;margin-bottom:8px;">
+        <i class="ti ti-user-plus" aria-hidden="true"></i> Create Account
+      </a>
+      <a href="./login.html" class="secondary-button" style="width:100%;justify-content:center;">
+        <i class="ti ti-login" aria-hidden="true"></i> Sign In
+      </a>
+    </div>
   </div>
 </aside>
 
@@ -80,14 +90,20 @@
     <input type="text" id="topbarSearchInput" placeholder="Search tasks, equipment, services..." />
   </div>
   <div class="topbar-actions">
-    <a href="./notifications.html" class="topbar-icon-btn notification-link" aria-label="Notifications">
+    <a href="./notifications.html" class="topbar-icon-btn notification-link" id="topbarNotifLink" aria-label="Notifications">
       <i class="ti ti-bell" aria-hidden="true"></i>
       <span class="notification-count" id="navNotifCount" style="display:none;">0</span>
     </a>
-    <a href="./messages.html" class="topbar-icon-btn" aria-label="Messages">
+    <a href="./messages.html" class="topbar-icon-btn" id="topbarMessagesLink" aria-label="Messages">
       <i class="ti ti-message-circle" aria-hidden="true"></i>
       <span class="notification-count blue" id="navMessagesTopCount" style="display:none;">0</span>
     </a>
     <a href="./profile.html" class="topbar-avatar nav-avatar-target" id="navAvatarTop" aria-label="My Profile"></a>
+    <!-- Shown instead of the icons/avatar above when browsing as a guest
+         (no account) — see navbar.js's applyGuestNavbarState(). -->
+    <div id="topbarGuestActions" style="display:none;gap:8px;align-items:center;">
+      <a href="./login.html" class="secondary-button" style="padding:8px 14px;font-size:13px;">Sign In</a>
+      <a href="./register.html" class="primary-button" style="padding:8px 14px;font-size:13px;">Create Account</a>
+    </div>
   </div>
 </header>

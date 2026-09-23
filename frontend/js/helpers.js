@@ -63,6 +63,34 @@ function requireAuth() {
   return JSON.parse(localStorage.getItem("taskifyUser"));
 }
 
+/* Like requireAuth(), but never redirects — used on pages that guests are
+   allowed to browse (tasks/equipment/sales/events lists and their detail
+   pages). Returns the logged-in user, or null for a guest; callers are
+   responsible for guarding anything that actually needs an account. */
+function getCurrentUser() {
+  try {
+    const raw = localStorage.getItem("taskifyToken") ? localStorage.getItem("taskifyUser") : null;
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+/* Gate a single action (post a task, accept, book, RSVP, message, review…)
+   behind having an account, on a page a guest is otherwise allowed to
+   browse. Call it at the top of the click handler / form submit — returns
+   true and does nothing if logged in; for a guest it shows a toast and
+   sends them to login, then returns false so the caller can just
+   `if (!requireAuthAction()) return;`. (Doesn't carry a return-to URL —
+   login doesn't support that yet, same as every other login redirect in
+   the app today.) */
+function requireAuthAction(message = "Create an account or sign in to do that.") {
+  if (getCurrentUser()) return true;
+  showToast(message, "warning");
+  setTimeout(() => { window.location.href = "./login.html"; }, 900);
+  return false;
+}
+
 function myProfileUrl(user) {
   return user?.member_type === "Lecturer" ? "./lecturer-profile.html" : "./profile.html";
 }

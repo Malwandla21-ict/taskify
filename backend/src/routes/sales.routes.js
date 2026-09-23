@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const salesController = require("../controllers/sales.controller");
-const { authenticate } = require("../middleware/auth.middleware");
+const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -52,10 +52,14 @@ router.delete(
   ordering relative to them doesn't matter — this just needs to come after
   "/my-listings" since that's also a GET). This lets sale-details.js load
   an item once it's sold, since GET / only returns Available items.
+
+  optionalAuthenticate (not authenticate) — guests can view an item's full
+  details page without an account; only messaging the seller actually
+  requires login.
 */
 router.get(
   "/:id",
-  authenticate,
+  optionalAuthenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Sales item ID must be a valid positive integer.") ],
   salesController.getSalesItemById
 );

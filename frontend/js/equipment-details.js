@@ -1,4 +1,7 @@
-const currentUser = requireAuth();
+/* Guests (no account) can view this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   booking or messaging the owner is guarded individually below. */
+const currentUser = getCurrentUser();
 
 const equipmentDetailsContainer = document.getElementById("equipmentDetailsContainer");
 const bookingModal              = document.getElementById("bookingModal");
@@ -28,7 +31,7 @@ async function loadEquipmentDetails() {
 }
 
 function renderEquipmentDetails(item) {
-  const isOwn = Number(item.owner_id) === Number(currentUser.id);
+  const isOwn = !!currentUser && Number(item.owner_id) === Number(currentUser.id);
 
   let actionArea;
   if (isOwn) {
@@ -103,6 +106,7 @@ function renderEquipmentDetails(item) {
   attachProfileLinkEvents();
 
   document.getElementById("openBookingButton")?.addEventListener("click", () => {
+    if (!requireAuthAction("Sign in to book this equipment.")) return;
     bookingForm.reset();
     bookingEquipmentIdInput.value = item.id;
     bookingMessage.textContent = "";
@@ -110,6 +114,7 @@ function renderEquipmentDetails(item) {
   });
 
   document.getElementById("messageOwnerButton")?.addEventListener("click", (e) => {
+    if (!requireAuthAction("Sign in to message the owner.")) return;
     startConversationAndRedirect("equipment", equipmentId, e.currentTarget);
   });
 

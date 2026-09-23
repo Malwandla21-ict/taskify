@@ -1,4 +1,7 @@
-const currentUser = requireAuth();
+/* Guests (no account) can browse this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   anything that actually needs an account is guarded individually below. */
+const currentUser = getCurrentUser();
 
 const salesForm         = document.getElementById("salesForm");
 const salesMessage      = document.getElementById("salesMessage");
@@ -90,6 +93,7 @@ document.getElementById("backSalesStep2")?.addEventListener("click", () => showS
 document.getElementById("salesPrice")?.addEventListener("input", updateSalesPreview);
 
 function openSalesCreateModal() {
+  if (!requireAuthAction("Sign in to sell an item.")) return;
   salesForm?.reset();
   salesMessage.textContent = "";
   showSalesStep(1);
@@ -168,7 +172,7 @@ function safeMap(items, builder, label) {
 }
 
 function saleCard(item) {
-  const isOwn = Number(item.seller_id) === Number(currentUser.id);
+  const isOwn = !!currentUser && Number(item.seller_id) === Number(currentUser.id);
   const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
   const isSaved = getSavedIds().includes(item.id);
 
@@ -390,6 +394,11 @@ async function loadSalesItems() {
 }
 
 async function loadMySalesItems() {
+  if (!currentUser) {
+    mySalesContainer.innerHTML = emptyState("ti-lock", "Sign in to see your listings", "Create an account or log in to list and manage your own items.");
+    mySalesMiniContainer.innerHTML = `<p class="rail-loading">Sign in to see your listings.</p>`;
+    return;
+  }
   try {
     const res = await apiRequest("/sales/my-listings");
     renderMySalesItems(Array.isArray(res.data) ? res.data : []);

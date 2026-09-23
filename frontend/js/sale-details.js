@@ -1,4 +1,7 @@
-const currentUser          = requireAuth();
+/* Guests (no account) can view this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   messaging the seller is guarded individually below. */
+const currentUser          = getCurrentUser();
 const saleDetailsContainer = document.getElementById("saleDetailsContainer");
 
 const params = new URLSearchParams(window.location.search);
@@ -17,7 +20,7 @@ async function loadSaleDetails() {
 }
 
 function renderSaleDetails(item) {
-  const isOwn = Number(item.seller_id) === Number(currentUser.id);
+  const isOwn = !!currentUser && Number(item.seller_id) === Number(currentUser.id);
 
   const actionArea = isOwn
     ? `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>
@@ -90,6 +93,7 @@ function renderSaleDetails(item) {
   attachProfileLinkEvents();
 
   document.getElementById("messageSellerButton")?.addEventListener("click", (e) => {
+    if (!requireAuthAction("Sign in to message the seller.")) return;
     startConversationAndRedirect("sale", saleId, e.currentTarget);
   });
 

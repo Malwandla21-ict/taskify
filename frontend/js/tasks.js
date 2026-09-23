@@ -1,4 +1,8 @@
-const currentUser = requireAuth();
+/* Guests (no account) can browse this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   anything that actually needs an account (posting, accepting, reviewing,
+   history) is guarded individually below rather than gating the whole page. */
+const currentUser = getCurrentUser();
 
 const tasksContainer            = document.getElementById("tasksContainer");
 const historyContainer          = document.getElementById("historyContainer");
@@ -49,6 +53,7 @@ const heroCreateTaskButton = document.getElementById("heroCreateTaskButton");
 const closeTaskModalButton = document.getElementById("closeTaskModalButton");
 
 function openTaskCreateModal() {
+  if (!requireAuthAction("Sign in to post a task.")) return;
   taskForm?.reset();
   taskMessage.textContent = "";
   showTaskStep(1);
@@ -181,7 +186,7 @@ function attachSaveHeartEvents() {
    lecturer account. Urgent badge already occupies top-left, so the
    Recommended ribbon shifts down when both are present. */
 function taskCard(task) {
-  const isOwn      = Number(task.created_by) === Number(currentUser.id);
+  const isOwn      = !!currentUser && Number(task.created_by) === Number(currentUser.id);
   const canCancel  = isOwn && ["Posted", "Accepted"].includes(task.status);
   const isEndorsed = !!task.endorsed_by_lecturer_name;
   const isSaved    = getSavedIds().includes(task.id);
@@ -294,7 +299,7 @@ function attachDeleteTaskEvents() {
 }
 
 function historyCard(task) {
-  const isPoster  = Number(task.created_by) === Number(currentUser.id);
+  const isPoster  = !!currentUser && Number(task.created_by) === Number(currentUser.id);
   const roleLabel = isPoster ? "You posted this" : "You accepted this";
 
   return `
@@ -469,6 +474,11 @@ async function loadTasks() {
 }
 
 async function loadTaskHistory() {
+  if (!currentUser) {
+    historyContainer.innerHTML = emptyState("ti-lock", "Sign in to see your task history", "Create an account or log in to track tasks you've posted or accepted.");
+    taskHistoryMiniContainer.innerHTML = `<p class="rail-loading">Sign in to see your history.</p>`;
+    return;
+  }
   try {
     const res   = await apiRequest("/tasks/history");
     const tasks = res.data;

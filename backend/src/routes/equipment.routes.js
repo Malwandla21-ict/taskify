@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const equipmentController = require("../controllers/equipment.controller");
-const { authenticate } = require("../middleware/auth.middleware");
+const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
@@ -84,10 +84,14 @@ router.delete(
   ordering is just for readability). This is what equipment-details.js
   needs to load an item once it's booked, since GET / only returns
   available equipment.
+
+  optionalAuthenticate (not authenticate) — guests can view an item's full
+  details page without an account; only booking/messaging actually
+  requires login.
 */
 router.get(
   "/:id",
-  authenticate,
+  optionalAuthenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Equipment ID must be a valid positive integer.") ],
   equipmentController.getEquipmentById
 );

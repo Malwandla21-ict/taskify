@@ -1,4 +1,7 @@
-const currentUser = requireAuth();
+/* Guests (no account) can view this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   RSVPing is guarded individually below. */
+const currentUser = getCurrentUser();
 
 const eventDetailsContainer = document.getElementById("eventDetailsContainer");
 
@@ -16,11 +19,21 @@ function formatEventDate(iso) {
 
 async function loadEventDetails() {
   try {
-    const [eventRes, rsvpRes] = await Promise.all([
-      apiRequest(`/events/${eventId}`),
-      apiRequest("/events/rsvp-status")
-    ]);
-    renderEventDetails(eventRes.data, rsvpRes.data.includes(eventRes.data.id));
+    /* /events/rsvp-status requires an account — fetched separately (and
+       only when logged in) so a guest can still view the event even
+       though they have no RSVP status to fetch. A Promise.all here would
+       fail the whole page for a guest the moment the auth-only call 401s. */
+    const eventRes = await apiRequest(`/events/${eventId}`);
+    let hasRsvped = false;
+    if (currentUser) {
+      try {
+        const rsvpRes = await apiRequest("/events/rsvp-status");
+        hasRsvped = rsvpRes.data.includes(eventRes.data.id);
+      } catch (err) {
+        console.error("Failed to load RSVP status:", err);
+      }
+    }
+    renderEventDetails(eventRes.data, hasRsvped);
   } catch (err) {
     eventDetailsContainer.innerHTML = errorState(err.message || "This event is no longer available.");
     showToast(err.message, "error");
@@ -28,7 +41,7 @@ async function loadEventDetails() {
 }
 
 function renderEventDetails(event, hasRsvped) {
-  const isOwn  = Number(event.organizer_id) === Number(currentUser.id);
+  const isOwn  = !!currentUser && Number(event.organizer_id) === Number(currentUser.id);
   const isFull = event.capacity && event.rsvp_count >= event.capacity;
 
   let actionArea;
@@ -104,6 +117,7 @@ function renderEventDetails(event, hasRsvped) {
   attachProfileLinkEvents();
 
   document.getElementById("rsvpButton")?.addEventListener("click", async (e) => {
+    if (!requireAuthAction("Sign in to RSVP to this event.")) return;
     const btn = e.currentTarget;
     btn.disabled = true;
     btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;

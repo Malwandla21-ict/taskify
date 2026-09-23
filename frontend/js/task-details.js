@@ -1,4 +1,7 @@
-const currentUser          = requireAuth();
+/* Guests (no account) can view this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   accepting the task or messaging the poster is guarded individually below. */
+const currentUser          = getCurrentUser();
 const taskDetailsContainer = document.getElementById("taskDetailsContainer");
 
 const params = new URLSearchParams(window.location.search);
@@ -17,8 +20,8 @@ async function loadTaskDetails() {
 }
 
 function renderTaskDetails(task) {
-  const isOwn           = Number(task.created_by)  === Number(currentUser.id);
-  const isAcceptedByMe   = Number(task.accepted_by) === Number(currentUser.id);
+  const isOwn           = !!currentUser && Number(task.created_by)  === Number(currentUser.id);
+  const isAcceptedByMe   = !!currentUser && Number(task.accepted_by) === Number(currentUser.id);
   const canMessagePoster = !isOwn;
 
   let primaryAction;
@@ -116,6 +119,7 @@ function renderTaskDetails(task) {
   attachProfileLinkEvents();
 
   document.getElementById("messagePosterButton")?.addEventListener("click", (e) => {
+    if (!requireAuthAction("Sign in to message the poster.")) return;
     startConversationAndRedirect("task", taskId, e.currentTarget);
   });
 }
@@ -126,7 +130,7 @@ function attachTaskActionEvents() {
   const complete = document.getElementById("completeTaskButton");
   const confirmBtn = document.getElementById("confirmCompletionButton");
 
-  if (accept)   accept.addEventListener("click",   () => openPaymentSimulationModal(accept));
+  if (accept)   accept.addEventListener("click",   () => { if (!requireAuthAction("Sign in to accept this task.")) return; openPaymentSimulationModal(accept); });
   if (start)    start.addEventListener("click",    () => updateTask(start,    `/tasks/${start.dataset.taskId}/status`,    "PATCH", { status: "In Progress" },         "Task started!",   "Starting…"));
   if (complete) complete.addEventListener("click", () => updateTask(complete, `/tasks/${complete.dataset.taskId}/status`, "PATCH", { status: "Awaiting Confirmation" },"Marked as done — awaiting confirmation.", "Submitting…"));
   if (confirmBtn) confirmBtn.addEventListener("click", () => {

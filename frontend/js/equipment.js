@@ -1,4 +1,7 @@
-const currentUser = requireAuth();
+/* Guests (no account) can browse this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   anything that actually needs an account is guarded individually below. */
+const currentUser = getCurrentUser();
 
 const equipmentContainer        = document.getElementById("equipmentContainer");
 const equipmentHistoryContainer = document.getElementById("equipmentHistoryContainer");
@@ -43,6 +46,7 @@ closeReviewModalButton?.addEventListener("click", () => closeModal(reviewModal, 
 document.getElementById("overlay")?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
 
 function openEquipmentCreateModal() {
+  if (!requireAuthAction("Sign in to list equipment.")) return;
   equipmentForm?.reset();
   equipmentMessage.textContent = "";
   showEquipmentStep(1);
@@ -166,7 +170,7 @@ function attachSaveHeartEvents() {
 }
 
 function equipmentCard(item) {
-  const isOwn = Number(item.owner_id) === Number(currentUser.id);
+  const isOwn = !!currentUser && Number(item.owner_id) === Number(currentUser.id);
   const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
   const isSaved = getSavedIds().includes(item.id);
 
@@ -266,8 +270,8 @@ function renderEquipment() {
 }
 
 function historyCard(booking) {
-  const isOwner   = Number(booking.owner_id)  === Number(currentUser.id);
-  const isRenter  = Number(booking.renter_id) === Number(currentUser.id);
+  const isOwner   = !!currentUser && Number(booking.owner_id)  === Number(currentUser.id);
+  const isRenter  = !!currentUser && Number(booking.renter_id) === Number(currentUser.id);
   const canReturn = booking.status === "Confirmed" && (isOwner || isRenter);
   const canReview = booking.status === "Returned" && (isOwner || isRenter);
   const roleLabel = isOwner ? "You own this" : "You rented this";
@@ -326,7 +330,7 @@ function historyCard(booking) {
 }
 
 function historyMiniCard(booking) {
-  const isOwner = Number(booking.owner_id) === Number(currentUser.id);
+  const isOwner = !!currentUser && Number(booking.owner_id) === Number(currentUser.id);
   return `
     <a href="./equipment-details.html?id=${booking.equipment_id}" class="mini-history-item">
       <div class="mini-history-thumb">${Array.isArray(booking.image_urls) && booking.image_urls.length
@@ -473,6 +477,11 @@ async function loadEquipment() {
 }
 
 async function loadEquipmentHistory() {
+  if (!currentUser) {
+    equipmentHistoryContainer.innerHTML = emptyState("ti-lock", "Sign in to see your rental history", "Create an account or log in to track equipment you've listed or booked.");
+    equipmentHistoryMiniContainer.innerHTML = `<p class="rail-loading">Sign in to see your history.</p>`;
+    return;
+  }
   try {
     const res   = await apiRequest("/equipment/history");
     const items = Array.isArray(res.data) ? res.data : [];

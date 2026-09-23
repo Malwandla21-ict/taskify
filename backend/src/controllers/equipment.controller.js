@@ -29,7 +29,11 @@ async function getEquipmentById(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
 
-    const item = await equipmentService.getEquipmentByIdForViewing(Number(req.params.id), req.user.id);
+    /* req.user may be null here — this route allows guest viewing (see
+       equipment.routes.js's optionalAuthenticate). getEquipmentByIdForViewing
+       compares owner/renter IDs against userId, which safely resolves to
+       "not a match" for an undefined guest ID rather than crashing. */
+    const item = await equipmentService.getEquipmentByIdForViewing(Number(req.params.id), req.user?.id);
     return res.status(200).json({ success: true, message: "Equipment fetched successfully.", data: item });
   } catch (error) { next(error); }
 }

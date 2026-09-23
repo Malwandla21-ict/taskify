@@ -1,4 +1,7 @@
-const currentUser = requireAuth();
+/* Guests (no account) can browse this page — see helpers.js's
+   getCurrentUser()/requireAuthAction(). currentUser is null for a guest;
+   anything that actually needs an account is guarded individually below. */
+const currentUser = getCurrentUser();
 
 const eventForm           = document.getElementById("eventForm");
 const eventMessage        = document.getElementById("eventMessage");
@@ -31,6 +34,7 @@ let myRsvpIds       = [];
 let selectedSection = "All";
 
 openCreateEventButton?.addEventListener("click", () => {
+  if (!requireAuthAction("Sign in to create an event.")) return;
   eventForm.reset();
   eventMessage.textContent = "";
   showEventStep(1);
@@ -94,7 +98,7 @@ function formatEventDate(iso) {
 }
 
 function eventCard(event) {
-  const isOwn     = Number(event.organizer_id) === Number(currentUser.id);
+  const isOwn     = !!currentUser && Number(event.organizer_id) === Number(currentUser.id);
   const hasRsvped = myRsvpIds.includes(event.id);
   const isFull    = event.capacity && event.rsvp_count >= event.capacity;
 
@@ -180,7 +184,7 @@ function pastEventCard(event) {
 }
 
 function myEventMiniCard(event) {
-  const isOwn = Number(event.organizer_id) === Number(currentUser.id);
+  const isOwn = !!currentUser && Number(event.organizer_id) === Number(currentUser.id);
   return `
     <div class="mini-history-item">
       <div class="mini-history-thumb">${event.image_urls?.length
@@ -260,6 +264,7 @@ function attachEventButtonEvents(scope = document) {
     if (btn.dataset.bound) return;
     btn.dataset.bound = "1";
     btn.addEventListener("click", async () => {
+      if (!requireAuthAction("Sign in to RSVP to this event.")) return;
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
       try {
@@ -314,12 +319,24 @@ function attachEventButtonEvents(scope = document) {
 
 async function loadEvents() {
   try {
-    const [eventsRes, rsvpRes] = await Promise.all([
-      apiRequest("/events"),
-      apiRequest("/events/rsvp-status")
-    ]);
+    /* /events/rsvp-status requires an account — fetched separately (and
+       only when logged in) so a guest still gets the event list even
+       though they have no RSVP status to fetch. A Promise.all here would
+       fail the whole page for a guest the moment the auth-only call 401s. */
+    const eventsRes = await apiRequest("/events");
     cachedEvents = eventsRes.data;
-    myRsvpIds    = rsvpRes.data;
+
+    if (currentUser) {
+      try {
+        const rsvpRes = await apiRequest("/events/rsvp-status");
+        myRsvpIds = rsvpRes.data;
+      } catch (err) {
+        console.error("Failed to load RSVP status:", err);
+        myRsvpIds = [];
+      }
+    } else {
+      myRsvpIds = [];
+    }
 
     const params = new URLSearchParams(window.location.search);
     const searchParam = params.get("search");
@@ -335,6 +352,12 @@ async function loadEvents() {
 }
 
 async function loadMyEvents() {
+  if (!currentUser) {
+    myEventsMiniContainer.innerHTML = `<p class="rail-loading">Sign in to see events you're organizing or attending.</p>`;
+    pastEventsContainer.innerHTML = emptyState("ti-lock", "Sign in to see past events", "Create an account or log in to track events you've organized or attended.");
+    if (myEventsCountBadge) myEventsCountBadge.textContent = "";
+    return;
+  }
   try {
     const res = await apiRequest("/events/my");
     myEvents = res.data;

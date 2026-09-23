@@ -59,6 +59,53 @@ async function authenticate(req, res, next) {
   }
 }
 
+/*
+  Same idea as authenticate, but for routes that should work for BOTH a
+  logged-in user (with their own personalized view) and an anonymous guest
+  browsing without an account — e.g. viewing a single task/equipment/sales
+  item/event's detail page. Never rejects the request: a missing, expired,
+  invalid, or suspended/banned-account token just falls back to req.user =
+  null (treated as a guest) instead of a 401, since blocking someone from
+  viewing a public listing over a stale token would be the wrong failure
+  mode here. Controllers behind this route must handle req.user being null.
+*/
+async function optionalAuthenticate(req, res, next) {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const token = authHeader.split(" ")[1];
+    const decoded = verifyToken(token);
+
+    const [rows] = await pool.execute(
+      `SELECT role, member_type, token_version, totp_enabled FROM users WHERE id = ? LIMIT 1`,
+      [decoded.id]
+    );
+
+    if (rows.length === 0) {
+      req.user = null;
+      return next();
+    }
+
+    const { role: currentRole, member_type: currentMemberType, token_version, totp_enabled } = rows[0];
+
+    if ((decoded.tv || 0) !== token_version || currentRole === "suspended" || currentRole === "banned") {
+      req.user = null;
+      return next();
+    }
+
+    req.user = { ...decoded, role: currentRole, memberType: currentMemberType, totpEnabled: !!totp_enabled };
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+}
+
 function authorize(...roles) {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
@@ -102,6 +149,7 @@ function requireTwoFactor(req, res, next) {
 
 module.exports = {
   authenticate,
+  optionalAuthenticate,
   authorize,
   requireLecturer,
   requireTwoFactor

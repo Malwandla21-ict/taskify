@@ -11,6 +11,7 @@ async function loadNavbar() {
     highlightActiveLink();
     populateAvatar();
     toggleAdminLink();
+    applyGuestNavbarState();
     setupSidebarToggle();
     setupUserMenuToggle();
     setupTopbarSearch();
@@ -87,6 +88,32 @@ function populateAvatar() {
   } catch (e) {
     console.warn("Could not parse taskifyUser:", e);
   }
+}
+
+/* Swaps the sidebar footer's account menu and the topbar's notification/
+   messages/avatar icons for a "Sign In / Create Account" prompt when
+   browsing as a guest (no account) — the guest-browsable pages (tasks,
+   equipment, sales, events and their detail pages) still load this same
+   navbar shell, so it needs to make sense without a logged-in user. See
+   helpers.js's getCurrentUser(). */
+function applyGuestNavbarState() {
+  const isGuest = !getCurrentUser();
+
+  const sidebarUserToggle   = document.getElementById("sidebarUserToggle");
+  const sidebarUserMenu     = document.getElementById("sidebarUserMenu");
+  const sidebarGuestActions = document.getElementById("sidebarGuestActions");
+  if (sidebarUserToggle)   sidebarUserToggle.style.display = isGuest ? "none" : "";
+  if (sidebarUserMenu)     sidebarUserMenu.style.display   = isGuest ? "none" : "";
+  if (sidebarGuestActions) sidebarGuestActions.style.display = isGuest ? "block" : "none";
+
+  const topbarNotifLink    = document.getElementById("topbarNotifLink");
+  const topbarMessagesLink = document.getElementById("topbarMessagesLink");
+  const navAvatarTop       = document.getElementById("navAvatarTop");
+  const topbarGuestActions = document.getElementById("topbarGuestActions");
+  if (topbarNotifLink)    topbarNotifLink.style.display = isGuest ? "none" : "";
+  if (topbarMessagesLink) topbarMessagesLink.style.display = isGuest ? "none" : "";
+  if (navAvatarTop)       navAvatarTop.style.display = isGuest ? "none" : "";
+  if (topbarGuestActions) topbarGuestActions.style.display = isGuest ? "flex" : "none";
 }
 
 function toggleAdminLink() {
