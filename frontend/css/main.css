@@ -2139,23 +2139,72 @@ textarea { min-height: 110px; resize: vertical; }
    IMAGE GALLERY (detail pages)
 ============================== */
 
+/* Two-column detail layout (content + summary sidebar). Stacks on
+   tablets/phones so neither column gets squeezed. min-width:0 lets the
+   grid columns shrink below their content's intrinsic width. */
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.detail-main { min-width: 0; }
+.detail-media { position: relative; }
+
+.detail-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 16px 0 10px;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.detail-description {
+  color: var(--muted);
+  line-height: 1.75;
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+
 .image-gallery {
   margin-bottom: 24px;
 }
 
-.image-gallery-main {
+/* Detail images are shown whole (contain), never stretched or hard-cropped.
+   The frame behind them is a blurred copy of the same photo (--detail-img,
+   set in helpers.js) so portrait/odd-ratio shots don't sit in empty bars. */
+.image-gallery-main,
+.detail-image-single {
+  position: relative;
   width: 100%;
-  height: 300px;
+  aspect-ratio: 4 / 3;
+  max-height: 460px;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  margin-bottom: 10px;
   border: 1.5px solid var(--border);
+  background: #0f1a2e;
+  isolation: isolate;
+}
+.image-gallery-main { margin-bottom: 10px; }
+.detail-image-single { margin-bottom: 24px; }
+
+.image-gallery-main::before,
+.detail-image-single::before {
+  content: "";
+  position: absolute;
+  inset: -24px;
+  z-index: -1;
+  background-image: var(--detail-img);
+  background-size: cover;
+  background-position: center;
+  filter: blur(22px) brightness(0.75) saturate(1.1);
 }
 
-.image-gallery-main img {
+.image-gallery-main img,
+.detail-image-single img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   transition: opacity 0.2s;
 }
@@ -2187,20 +2236,50 @@ textarea { min-height: 110px; resize: vertical; }
 .image-gallery-thumb.active { border-color: var(--ump-navy); }
 .image-gallery-thumb:hover  { border-color: var(--ump-green); }
 
-.detail-image-single {
-  width: 100%;
-  height: 300px;
+/* No-photo placeholder on a detail page: give it the same frame as a photo
+   instead of the 160px card-image height. */
+.detail-media > .market-image {
+  height: auto;
+  aspect-ratio: 16 / 9;
+  max-height: 320px;
   border-radius: var(--radius-lg);
-  overflow: hidden;
-  margin-bottom: 24px;
   border: 1.5px solid var(--border);
+  margin-bottom: 20px;
 }
 
-.detail-image-single img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+@media (max-width: 900px) {
+  .detail-layout { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+  .detail-title { font-size: 26px; }
+}
+
+@media (max-width: 700px) {
+  /* The page wrapper is itself a .form-panel; nesting the summary panel
+     inside it doubled the side padding and left little room on phones. */
+  .detail-shell { padding: 14px; border-radius: var(--radius-lg); }
+  .detail-summary { padding: 18px 16px; }
+
+  .image-gallery-main,
+  .detail-image-single {
+    aspect-ratio: 1 / 1;
+    max-height: 70vh;
+    border-radius: var(--radius);
+  }
+  .image-gallery { margin-bottom: 18px; }
+  .detail-image-single { margin-bottom: 18px; }
+
+  /* Thumbnails scroll sideways instead of wrapping into several rows. */
+  .image-gallery-thumbs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .image-gallery-thumbs::-webkit-scrollbar { display: none; }
+  .image-gallery-thumb { width: 60px; height: 60px; }
+
+  .detail-title { font-size: 22px; margin: 12px 0 8px; letter-spacing: -0.3px; }
+  .detail-description { font-size: 14px; line-height: 1.65; }
+  .detail-media > .market-image { aspect-ratio: 16 / 10; border-radius: var(--radius); }
 }
 /* ==============================
    ACTIVITY TRACKER (floating widget)

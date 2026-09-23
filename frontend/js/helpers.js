@@ -547,14 +547,14 @@ function renderImageGallery(imageUrls = [], fallbackIcon = "ti-image") {
 
   if (imageUrls.length === 1) {
     return `
-      <div class="detail-image-single">
+      <div class="detail-image-single" style="--detail-img:${detailBackdropUrl(imageUrls[0])}">
         <img src="${imageUrls[0]}" alt="Listing image" class="lightbox-img" data-gallery="${galleryId}" data-full="${imageUrls[0]}" />
       </div>`;
   }
 
   return `
     <div class="image-gallery">
-      <div class="image-gallery-main">
+      <div class="image-gallery-main" style="--detail-img:${detailBackdropUrl(imageUrls[0])}">
         <img src="${imageUrls[0]}" alt="Main image" id="galleryMain" class="lightbox-img" data-gallery="${galleryId}" data-full="${imageUrls[0]}" />
       </div>
       <div class="image-gallery-thumbs">
@@ -567,9 +567,20 @@ function renderImageGallery(imageUrls = [], fallbackIcon = "ti-image") {
     </div>`;
 }
 
+/* Detail images are shown whole (object-fit: contain) rather than cropped,
+   so the frame's spare space is filled with a blurred copy of the same
+   photo — see .detail-image-single / .image-gallery-main in main.css. */
+function detailBackdropUrl(url) {
+  return `url('${String(url).replace(/'/g, "%27")}')`;
+}
+
 function switchGalleryImage(url, thumbEl) {
   const main = document.getElementById("galleryMain");
-  if (main) { main.src = url; main.dataset.full = url; }
+  if (main) {
+    main.src = url;
+    main.dataset.full = url;
+    main.parentElement?.style.setProperty("--detail-img", detailBackdropUrl(url));
+  }
   document.querySelectorAll(".image-gallery-thumb").forEach(t => t.classList.remove("active"));
   thumbEl.classList.add("active");
 }

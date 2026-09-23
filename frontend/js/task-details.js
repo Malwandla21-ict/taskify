@@ -64,17 +64,17 @@ function renderTaskDetails(task) {
       </button>` : ""}`;
 
   taskDetailsContainer.innerHTML = `
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:28px;align-items:start;">
-      <div>
-        <div style="position:relative;">
+    <div class="detail-layout">
+      <div class="detail-main">
+        <div class="detail-media">
           ${renderImageGallery(task.image_urls, "ti-clipboard-list")}
           ${endorsementCornerBadge(task)}
           ${lecturerPostedCornerBadge(task.created_by_member_type)}
         </div>
         ${task.urgent ? `<div class="urgent-badge" style="display:inline-flex;margin-bottom:12px;"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${sectionBadge(task.section || "General")}
-        <h1 style="font-size:32px;font-weight:800;margin:16px 0 10px;letter-spacing:-0.5px;">${task.title}</h1>
-        <p style="color:var(--muted);line-height:1.75;font-size:15px;">${task.description}</p>
+        <h1 class="detail-title">${task.title}</h1>
+        <p class="detail-description">${task.description}</p>
         <div class="market-tags" style="margin-top:18px;">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
@@ -82,7 +82,7 @@ function renderTaskDetails(task) {
         </div>
         ${endorsementDetailBlock(task)}
       </div>
-      <div class="form-panel">
+      <div class="form-panel detail-summary">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
           <i class="ti ti-receipt" aria-hidden="true"></i> Task Summary
         </h3>
