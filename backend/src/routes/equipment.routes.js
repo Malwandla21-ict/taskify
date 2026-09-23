@@ -1,5 +1,5 @@
 const express = require("express");
-const { body, param } = require("express-validator");
+const { body, param, query } = require("express-validator");
 const equipmentController = require("../controllers/equipment.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
@@ -12,6 +12,12 @@ const router = express.Router();
 router.get("/", optionalAuthenticate, equipmentController.getAllAvailableEquipment);
 router.get("/history", authenticate, equipmentController.getEquipmentHistory);
 router.get("/my-listings", authenticate, equipmentController.getMyEquipment);
+
+/* DEMO payment simulation — the logged-in user's renter trust level */
+router.get("/my-trust", authenticate, equipmentController.getMyTrust);
+
+const photoUrlsValidator = body("photoUrls")
+  .isArray({ min: 1, max: 5 }).withMessage("Add between 1 and 5 condition photos.");
 
 router.post(
   "/",
@@ -26,9 +32,24 @@ router.post(
     body("section").optional().isIn(["Academic", "General"])
       .withMessage("Section must be either Academic or General."),
     body("dailyPrice").notEmpty().withMessage("Daily price is required.")
-      .isFloat({ min: 0 }).withMessage("Daily price must be a valid positive number.")
+      .isFloat({ min: 0 }).withMessage("Daily price must be a valid positive number."),
+    body("itemValue").notEmpty().withMessage("Item value is required.").bail()
+      .isFloat({ min: 1, max: 1000000 }).withMessage("Item value must be a valid amount in Rand.")
   ],
   equipmentController.createEquipment
+);
+
+/* DEMO: money breakdown (rental + protection fee + trust-based deposit)
+   shown before the renter confirms a booking. */
+router.get(
+  "/:id/rental-quote",
+  authenticate,
+  [
+    param("id").isInt({ min: 1 }).withMessage("Equipment ID must be a valid positive integer."),
+    query("startDate").notEmpty().withMessage("Start date is required.").isISO8601().withMessage("Start date must be valid."),
+    query("endDate").notEmpty().withMessage("End date is required.").isISO8601().withMessage("End date must be valid.")
+  ],
+  equipmentController.getRentalQuote
 );
 
 router.post(
@@ -65,11 +86,45 @@ router.patch(
   equipmentController.cancelBooking
 );
 
+/* Renter: collected the item — "before" condition photos */
+router.patch(
+  "/bookings/:bookingId/pickup",
+  authenticate,
+  [
+    param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer."),
+    photoUrlsValidator
+  ],
+  equipmentController.confirmPickup
+);
+
+/* Renter or owner: item handed back — "after" condition photos (required
+   for new bookings; legacy bookings from before the payment simulation
+   can still be returned without them, so photoUrls is optional here and
+   the service decides). */
 router.patch(
   "/bookings/:bookingId/return",
   authenticate,
   [ param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer.") ],
   equipmentController.returnEquipment
+);
+
+/* Owner: after return, either confirm the condition (deposit released)
+   or report damage (deposit held for an admin to review). */
+router.patch(
+  "/bookings/:bookingId/condition-ok",
+  authenticate,
+  [ param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer.") ],
+  equipmentController.confirmCondition
+);
+
+router.patch(
+  "/bookings/:bookingId/report-damage",
+  authenticate,
+  [
+    param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer."),
+    body("note").trim().isLength({ min: 10, max: 1000 }).withMessage("Describe the damage in 10 to 1000 characters.")
+  ],
+  equipmentController.reportDamage
 );
 
 /* DELETE — only owner, only if currently available (not booked) */
@@ -100,4 +155,4 @@ router.get(
   equipmentController.getEquipmentById
 );
 
-module.exports = router;
+module.exports = router;

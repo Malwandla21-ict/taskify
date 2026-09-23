@@ -65,11 +65,45 @@ async function deleteSalesItem(req, res, next) {
   } catch (error) { next(error); }
 }
 
+/* ── Taskify Protection (DEMO) — see sales.service.js ── */
+async function buySalesItem(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const { order } = await salesService.buySalesItem(Number(req.params.id), req.user.id);
+    return res.status(201).json({ success: true, message: "Payment held (demo). Show your handover code only once you have the item.", data: order });
+  } catch (error) { next(error); }
+}
+
+async function releaseSaleOrder(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const order = await salesService.releaseSaleOrder(Number(req.params.orderId), req.user.id, req.body.code);
+    return res.status(200).json({ success: true, message: "Code accepted. Payment released (demo).", data: order });
+  } catch (error) { next(error); }
+}
+
+async function cancelSaleOrder(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const order = await salesService.cancelSaleOrder(Number(req.params.orderId), req.user.id);
+    return res.status(200).json({ success: true, message: "Order cancelled and refunded (demo).", data: order });
+  } catch (error) { next(error); }
+}
+
 module.exports = {
+  buySalesItem,
+  releaseSaleOrder,
+  cancelSaleOrder,
   createSalesItem,
   getAllAvailableSalesItems,
   getMySalesItems,
   getSalesItemById,
   markSalesItemAsSold,
   deleteSalesItem
-};
+};

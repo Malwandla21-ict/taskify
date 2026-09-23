@@ -196,6 +196,13 @@
         <input type="number" id="equipmentDailyPrice" placeholder="e.g. 50" required />
       </div>
       <div class="form-group">
+        <label for="equipmentItemValue"><i class="ti ti-shield-check" aria-hidden="true"></i> What is the item worth? (R)</label>
+        <input type="number" id="equipmentItemValue" placeholder="e.g. 4500" min="1" required />
+        <small style="display:block;margin-top:6px;font-size:11.5px;color:var(--muted);line-height:1.5;">
+          Roughly what it would cost to replace. Taskify uses this to decide which renters can book it and how big their deposit is. New renters can only rent cheaper items, and trusted renters pay a smaller deposit (demo — no real money).
+        </small>
+      </div>
+      <div class="form-group">
         <label><i class="ti ti-photo" aria-hidden="true"></i> Images (optional)</label>
         <div class="upload-area" id="equipmentUploadArea">
           <i class="ti ti-cloud-upload upload-area-icon" aria-hidden="true"></i>
@@ -208,6 +215,7 @@
       <div id="equipmentPreview" class="form-panel" style="box-shadow:none;background:var(--background);margin-bottom:18px;">
         <p style="color:var(--muted);font-size:13px;">Preview will appear here.</p>
       </div>
+      <div id="equipmentPolicyNotice"></div>
       <div class="form-row">
         <button type="button" class="secondary-button" id="backEquipmentStep2"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
         <button type="submit" class="primary-button"><i class="ti ti-send" aria-hidden="true"></i> Publish Listing</button>
@@ -243,6 +251,54 @@
   </form>
   <p id="reviewMessage" style="margin-top:12px;font-size:13px;font-weight:600;"></p>
 </div>
+<!-- Rental condition photos (pickup = "before", return = "after") — demo payment simulation -->
+<div id="rentalPhotoModal">
+  <h2 id="rentalPhotoTitle"><i class="ti ti-camera" aria-hidden="true"></i> Condition Photos</h2>
+  <p id="rentalPhotoIntro" class="pay-note"></p>
+  <input type="hidden" id="rentalPhotoBookingId" />
+  <input type="hidden" id="rentalPhotoMode" />
+  <div class="form-group">
+    <div class="upload-area" id="rentalPhotoUploadArea">
+      <i class="ti ti-camera-plus upload-area-icon" aria-hidden="true"></i>
+      <div class="upload-area-label">Click or drag photos here</div>
+      <div class="upload-area-hint">At least 1 photo · JPEG, PNG or WebP</div>
+      <div class="upload-counter">0/5 images</div>
+    </div>
+    <div class="upload-preview-grid" id="rentalPhotoPreviewGrid"></div>
+  </div>
+  <div class="form-row">
+    <button type="button" id="closeRentalPhotoModal" class="secondary-button">
+      <i class="ti ti-x" aria-hidden="true"></i> Cancel
+    </button>
+    <button type="button" id="submitRentalPhotos" class="primary-button">
+      <i class="ti ti-check" aria-hidden="true"></i> <span id="submitRentalPhotosLabel">Confirm</span>
+    </button>
+  </div>
+  <p id="rentalPhotoMessage" style="margin-top:12px;font-size:13px;font-weight:600;"></p>
+</div>
+
+<!-- Owner: report damage after a return -->
+<div id="damageModal">
+  <h2><i class="ti ti-alert-triangle" aria-hidden="true"></i> Report Damage</h2>
+  <p class="pay-note">Describe what's wrong. The renter's deposit stays on hold and an admin will compare the pickup and return photos (demo).</p>
+  <form id="damageForm">
+    <input type="hidden" id="damageBookingId" />
+    <div class="form-group">
+      <label for="damageNote"><i class="ti ti-message" aria-hidden="true"></i> What's damaged?</label>
+      <textarea id="damageNote" minlength="10" maxlength="1000" required placeholder="e.g. The lens cap is missing and there's a scratch on the screen."></textarea>
+    </div>
+    <div class="form-row">
+      <button type="button" id="closeDamageModal" class="secondary-button">
+        <i class="ti ti-x" aria-hidden="true"></i> Cancel
+      </button>
+      <button type="submit" class="primary-button" style="background:var(--ump-red);">
+        <i class="ti ti-flag" aria-hidden="true"></i> Report Damage
+      </button>
+    </div>
+  </form>
+  <p id="damageMessage" style="margin-top:12px;font-size:13px;font-weight:600;"></p>
+</div>
+
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>
 <script src="./js/navbar.js"></script>

@@ -241,6 +241,7 @@ function myListingCard(item) {
         <div class="market-top">
           ${sectionBadge(item.section)}
           ${statusBadge(item.status)}
+          ${pendingReviewBadge(item.moderation_status)}
         </div>
         <h3>${item.title}</h3>
         <p style="color:var(--muted);font-size:13px;margin:8px 0 12px;">${item.description}</p>
@@ -251,13 +252,16 @@ function myListingCard(item) {
           <div class="market-price" style="font-size:16px;">R${item.price}</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px;">
-          ${!isSold ? `
+          ${item.status === "Reserved" ? `
+            <a href="./sale-details.html?id=${item.id}" class="market-action-btn" style="flex:1;justify-content:center;">
+              <i class="ti ti-lock-open" aria-hidden="true"></i> Buyer paid — enter code
+            </a>` : !isSold ? `
             <button class="market-action-btn mark-sold-btn" data-item-id="${item.id}" style="flex:1;">
               <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
             </button>` : ""}
-          <button class="market-action-btn outline delete-sale-btn" data-item-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+          ${item.status === "Reserved" ? "" : `<button class="market-action-btn outline delete-sale-btn" data-item-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
             <i class="ti ti-trash" aria-hidden="true"></i> Delete
-          </button>
+          </button>`}
         </div>
       </div>
     </div>`;
@@ -273,6 +277,7 @@ function myListingMiniCard(item) {
         <div class="mini-history-top">
           ${sectionBadge(item.section)}
           ${statusBadge(item.status)}
+          ${pendingReviewBadge(item.moderation_status)}
         </div>
         <div class="mini-history-title">${item.title}</div>
         <div class="mini-history-meta">R${item.price} &middot; ${item.condition_status}</div>
@@ -455,6 +460,9 @@ salesForm?.addEventListener("submit", async e => {
     submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Publish Item`;
   }
 });
+
+const salesPolicyNoticeEl = document.getElementById("salesPolicyNotice");
+if (salesPolicyNoticeEl) salesPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
 loadSalesItems();
 loadMySalesItems();

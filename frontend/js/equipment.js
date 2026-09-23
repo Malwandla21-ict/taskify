@@ -43,7 +43,104 @@ const closeReviewModalButton = document.getElementById("closeReviewModal");
 const reviewMessage          = document.getElementById("reviewMessage");
 
 closeReviewModalButton?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
-document.getElementById("overlay")?.addEventListener("click", () => closeModal(reviewModal, reviewForm, reviewMessage));
+document.getElementById("overlay")?.addEventListener("click", () => {
+  closeModal(reviewModal, reviewForm, reviewMessage);
+  closeRentalPhotoModal();
+  closeModal(damageModal, damageForm, damageMessage);
+});
+
+/* ── Payment simulation (DEMO) — condition photos + damage report ──
+   Pickup = renter's "before" photos, Return = "after" photos. Both are
+   uploaded through the normal /upload endpoint first, then the URLs are
+   saved on the booking. */
+const rentalPhotoModal        = document.getElementById("rentalPhotoModal");
+const rentalPhotoTitle        = document.getElementById("rentalPhotoTitle");
+const rentalPhotoIntro        = document.getElementById("rentalPhotoIntro");
+const rentalPhotoBookingId    = document.getElementById("rentalPhotoBookingId");
+const rentalPhotoMode         = document.getElementById("rentalPhotoMode");
+const rentalPhotoMessage      = document.getElementById("rentalPhotoMessage");
+const submitRentalPhotosBtn   = document.getElementById("submitRentalPhotos");
+const submitRentalPhotosLabel = document.getElementById("submitRentalPhotosLabel");
+const rentalPhotoUploader     = initImageUploader("rentalPhotoUploadArea", "rentalPhotoPreviewGrid");
+
+const damageModal   = document.getElementById("damageModal");
+const damageForm    = document.getElementById("damageForm");
+const damageMessage = document.getElementById("damageMessage");
+
+function openRentalPhotoModal(bookingId, mode) {
+  rentalPhotoBookingId.value = bookingId;
+  rentalPhotoMode.value = mode;
+  rentalPhotoMessage.textContent = "";
+  if (rentalPhotoUploader) rentalPhotoUploader.reset();
+  if (mode === "pickup") {
+    rentalPhotoTitle.innerHTML = `<i class="ti ti-camera" aria-hidden="true"></i> Confirm Pickup`;
+    rentalPhotoIntro.textContent = "Take photos of the item right now, before you use it — front, back and any scratches it already has. These are your proof of the condition you received it in.";
+    submitRentalPhotosLabel.textContent = "Confirm Pickup";
+  } else {
+    rentalPhotoTitle.innerHTML = `<i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment`;
+    rentalPhotoIntro.textContent = "Take photos of the item as it's handed back. The owner compares these with the pickup photos before the deposit is released.";
+    submitRentalPhotosLabel.textContent = "Confirm Return";
+  }
+  openModal(rentalPhotoModal);
+}
+
+function closeRentalPhotoModal() {
+  closeModal(rentalPhotoModal, null, rentalPhotoMessage);
+  if (rentalPhotoUploader) rentalPhotoUploader.reset();
+}
+
+document.getElementById("closeRentalPhotoModal")?.addEventListener("click", closeRentalPhotoModal);
+document.getElementById("closeDamageModal")?.addEventListener("click", () => closeModal(damageModal, damageForm, damageMessage));
+
+submitRentalPhotosBtn?.addEventListener("click", async () => {
+  if (!rentalPhotoUploader || !rentalPhotoUploader.getFiles().length) {
+    rentalPhotoMessage.textContent = "Please add at least one photo.";
+    rentalPhotoMessage.style.color = "red";
+    return;
+  }
+  const mode = rentalPhotoMode.value;
+  const originalHtml = submitRentalPhotosBtn.innerHTML;
+  submitRentalPhotosBtn.disabled = true;
+  submitRentalPhotosBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
+  try {
+    const photoUrls = await rentalPhotoUploader.upload("equipment");
+    await apiRequest(`/equipment/bookings/${rentalPhotoBookingId.value}/${mode === "pickup" ? "pickup" : "return"}`, "PATCH", { photoUrls });
+    showToast(mode === "pickup" ? "Pickup confirmed. Enjoy the rental!" : "Equipment returned. The owner will check its condition.");
+    closeRentalPhotoModal();
+    await loadEquipment();
+    await loadEquipmentHistory();
+  } catch (err) {
+    rentalPhotoMessage.textContent = err.message;
+    rentalPhotoMessage.style.color = "red";
+    showToast(err.message, "error");
+  } finally {
+    submitRentalPhotosBtn.disabled = false;
+    submitRentalPhotosBtn.innerHTML = originalHtml;
+  }
+});
+
+damageForm?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const submitBtn = damageForm.querySelector("button[type='submit']");
+  const originalHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Reporting…`;
+  try {
+    await apiRequest(`/equipment/bookings/${document.getElementById("damageBookingId").value}/report-damage`, "PATCH", {
+      note: document.getElementById("damageNote").value.trim()
+    });
+    showToast("Damage reported. An admin will review the photos.");
+    closeModal(damageModal, damageForm, damageMessage);
+    await loadEquipmentHistory();
+  } catch (err) {
+    damageMessage.textContent = err.message;
+    damageMessage.style.color = "red";
+    showToast(err.message, "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalHtml;
+  }
+});
 
 function openEquipmentCreateModal() {
   if (!requireAuthAction("Sign in to list equipment.")) return;
@@ -211,6 +308,7 @@ function equipmentCard(item) {
             </a>
             ${isOwn ? `
               <div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Yours</div>
+              ${pendingReviewBadge(item.moderation_status)}
               <button class="market-action-btn outline delete-equipment-btn" data-equipment-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
                 <i class="ti ti-trash" aria-hidden="true"></i> Delete
               </button>` : ""}
@@ -269,20 +367,71 @@ function renderEquipment() {
   attachSaveHeartEvents();
 }
 
+/* DEMO money + condition summary for a booking made with the payment
+   simulation. Legacy bookings (made before it) have no payment_status and
+   show nothing extra. */
+function bookingMoneyLine(booking, isOwner) {
+  if (!booking.payment_status) return "";
+  const depositText = {
+    None:     "no deposit",
+    Held:     "held by Taskify",
+    Refunded: "released back to renter",
+    Disputed: "on hold — damage reported"
+  }[booking.deposit_status] || "";
+  const paymentText = {
+    Held:     "held by Taskify",
+    Released: isOwner ? "released to you" : "released to owner",
+    Refunded: "refunded"
+  }[booking.payment_status] || "";
+  const conditionText = {
+    Pending: isOwner ? "Check the item and confirm its condition." : "Waiting for the owner to check the item.",
+    OK:      "Condition confirmed OK.",
+    Damaged: "Damage reported — an admin will review."
+  }[booking.condition_status] || "";
+
+  return `
+    <div class="booking-money-line">
+      <div><i class="ti ti-receipt" aria-hidden="true"></i> Rent <strong>${formatRand(booking.rental_amount)}</strong> (${paymentText}) · Fee <strong>${formatRand(booking.protection_fee)}</strong></div>
+      <div><i class="ti ti-shield-lock" aria-hidden="true"></i> Deposit <strong>${formatRand(booking.deposit_amount)}</strong> — ${depositText} <span style="opacity:.7;">(demo)</span></div>
+      ${conditionText ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> ${conditionText}</div>` : ""}
+      ${booking.damage_note ? `<div style="color:var(--ump-red);"><i class="ti ti-alert-triangle" aria-hidden="true"></i> "${booking.damage_note}"</div>` : ""}
+      ${booking.pickup_photos?.length ? `<div style="margin-top:6px;">Pickup photos</div>${conditionPhotoStrip(booking.pickup_photos, `pickup-${booking.id}`)}` : ""}
+      ${booking.return_photos?.length ? `<div style="margin-top:6px;">Return photos</div>${conditionPhotoStrip(booking.return_photos, `return-${booking.id}`)}` : ""}
+    </div>`;
+}
+
 function historyCard(booking) {
   const isOwner   = !!currentUser && Number(booking.owner_id)  === Number(currentUser.id);
   const isRenter  = !!currentUser && Number(booking.renter_id) === Number(currentUser.id);
-  const canReturn = booking.status === "Confirmed" && (isOwner || isRenter);
+  const isNewFlow = !!booking.payment_status;
+  const canPickup = isNewFlow && isRenter && booking.status === "Confirmed" && !booking.picked_up_at;
+  const canReturn = booking.status === "Confirmed" && (isOwner || isRenter) && (!isNewFlow || !!booking.picked_up_at);
+  const canCheckCondition = isNewFlow && isOwner && booking.status === "Returned" && booking.condition_status === "Pending";
   const canReview = booking.status === "Returned" && (isOwner || isRenter);
   const roleLabel = isOwner ? "You own this" : "You rented this";
   const imageUrl  = Array.isArray(booking.image_urls) && booking.image_urls.length ? booking.image_urls[0] : null;
 
   let footerAction;
-  if (canReturn) {
+  if (canPickup) {
     footerAction = `
-      <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;">
-        <i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment
+      <button class="market-action-btn pickup-equipment-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;justify-content:center;">
+        <i class="ti ti-camera" aria-hidden="true"></i> Confirm Pickup (add photos)
       </button>`;
+  } else if (canReturn) {
+    footerAction = `
+      <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" data-new-flow="${isNewFlow ? "1" : ""}" style="margin-top:14px;width:100%;">
+        <i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment${isNewFlow ? " (add photos)" : ""}
+      </button>`;
+  } else if (canCheckCondition) {
+    footerAction = `
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="market-action-btn condition-ok-btn" data-booking-id="${booking.id}" style="flex:1;justify-content:center;">
+          <i class="ti ti-circle-check" aria-hidden="true"></i> Condition OK
+        </button>
+        <button class="market-action-btn outline report-damage-btn" data-booking-id="${booking.id}" style="flex:1;justify-content:center;background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+          <i class="ti ti-alert-triangle" aria-hidden="true"></i> Report Damage
+        </button>
+      </div>`;
   } else if (canReview) {
     footerAction = booking.my_review_id
       ? `<div style="display:flex;gap:8px;margin-top:14px;">
@@ -297,7 +446,10 @@ function historyCard(booking) {
            <i class="ti ti-star" aria-hidden="true"></i> Leave Review
          </button>`;
   } else {
-    footerAction = `
+    const waitingNote = isNewFlow && isOwner && booking.status === "Confirmed" && !booking.picked_up_at
+      ? `<div class="booking-money-line"><i class="ti ti-clock" aria-hidden="true"></i> Waiting for the renter to collect it and add pickup photos.</div>`
+      : "";
+    footerAction = `${waitingNote}
       <a href="./equipment-details.html?id=${booking.equipment_id}" class="market-action-btn outline" style="margin-top:14px;width:100%;justify-content:center;">
         <i class="ti ti-eye" aria-hidden="true"></i> View Equipment
       </a>`;
@@ -324,6 +476,7 @@ function historyCard(booking) {
           <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${booking.start_date}</div>
           <div class="market-tag"><i class="ti ti-calendar-off" aria-hidden="true"></i> ${booking.end_date}</div>
         </div>
+        ${bookingMoneyLine(booking, isOwner)}
         ${footerAction}
       </div>
     </div>`;
@@ -367,8 +520,43 @@ function attachDeleteEquipmentEvents() {
 }
 
 function attachReturnEquipmentButtonEvents(scope = document) {
+  scope.querySelectorAll(".pickup-equipment-btn").forEach(btn => {
+    btn.addEventListener("click", () => openRentalPhotoModal(btn.dataset.bookingId, "pickup"));
+  });
+
+  scope.querySelectorAll(".condition-ok-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm("Confirm the item came back in good condition? This releases the renter's deposit (demo).")) return;
+      btn.disabled = true;
+      btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
+      try {
+        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/condition-ok`, "PATCH");
+        showToast("Condition confirmed. Deposit released (demo).");
+        await loadEquipmentHistory();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+        btn.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i> Condition OK`;
+      }
+    });
+  });
+
+  scope.querySelectorAll(".report-damage-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      damageForm.reset();
+      damageMessage.textContent = "";
+      document.getElementById("damageBookingId").value = btn.dataset.bookingId;
+      openModal(damageModal);
+    });
+  });
+
   scope.querySelectorAll(".return-equipment-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
+      /* New (payment simulation) bookings need "after" photos. */
+      if (btn.dataset.newFlow) {
+        openRentalPhotoModal(btn.dataset.bookingId, "return");
+        return;
+      }
       if (!confirm("Confirm equipment return?")) return;
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Returning…`;
@@ -514,6 +702,8 @@ equipmentForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const price = document.getElementById("equipmentDailyPrice").value.trim();
   if (!price) { showToast("Please enter a rental price.", "error"); return; }
+  const itemValue = document.getElementById("equipmentItemValue").value.trim();
+  if (!itemValue || Number(itemValue) <= 0) { showToast("Please enter roughly what the item is worth.", "error"); return; }
 
   const submitBtn = equipmentForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
@@ -533,6 +723,7 @@ equipmentForm?.addEventListener("submit", async e => {
       section:     document.getElementById("equipmentSection").value,
       condition:   document.getElementById("equipmentCondition").value,
       dailyPrice:  Number(price),
+      itemValue:   Number(itemValue),
       imageUrls
     });
     showToast("Equipment listed successfully!");
@@ -551,6 +742,9 @@ equipmentForm?.addEventListener("submit", async e => {
     submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Publish Listing`;
   }
 });
+
+const equipmentPolicyNoticeEl = document.getElementById("equipmentPolicyNotice");
+if (equipmentPolicyNoticeEl) equipmentPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
 loadEquipment();
 loadEquipmentHistory();

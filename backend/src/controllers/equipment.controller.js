@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const equipmentService = require("../services/equipment.service");
+const trustService = require("../services/trust.service");
 
 async function createEquipment(req, res, next) {
   try {
@@ -10,6 +11,7 @@ async function createEquipment(req, res, next) {
       ownerId: req.user.id, name: req.body.name,
       description: req.body.description, category: req.body.category,
       section: req.body.section, dailyPrice: req.body.dailyPrice,
+      itemValue: req.body.itemValue,
       imageUrls: req.body.imageUrls || []
     });
 
@@ -41,6 +43,27 @@ async function getEquipmentById(req, res, next) {
        404s a pending/removed item for anyone but the owner or an admin. */
     const item = await equipmentService.getEquipmentByIdForViewing(Number(req.params.id), req.user?.id, req.user?.role);
     return res.status(200).json({ success: true, message: "Equipment fetched successfully.", data: item });
+  } catch (error) { next(error); }
+}
+
+/* DEMO payment quote — see config/paymentSettings.js */
+async function getRentalQuote(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const quote = await equipmentService.getRentalQuote({
+      equipmentId: Number(req.params.id), renterId: req.user.id,
+      startDate: req.query.startDate, endDate: req.query.endDate
+    });
+    return res.status(200).json({ success: true, message: "Rental quote calculated.", data: quote });
+  } catch (error) { next(error); }
+}
+
+async function getMyTrust(req, res, next) {
+  try {
+    const trust = await trustService.getRenterTrust(req.user.id);
+    return res.status(200).json({ success: true, message: "Trust level fetched.", data: trust });
   } catch (error) { next(error); }
 }
 
@@ -93,8 +116,38 @@ async function returnEquipment(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
 
-    const booking = await equipmentService.returnEquipment(Number(req.params.bookingId), req.user.id);
+    const booking = await equipmentService.returnEquipment(Number(req.params.bookingId), req.user.id, req.body?.photoUrls);
     return res.status(200).json({ success: true, message: "Equipment returned successfully.", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function confirmPickup(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const booking = await equipmentService.confirmPickup(Number(req.params.bookingId), req.user.id, req.body.photoUrls);
+    return res.status(200).json({ success: true, message: "Pickup confirmed.", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function confirmCondition(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const booking = await equipmentService.confirmCondition(Number(req.params.bookingId), req.user.id);
+    return res.status(200).json({ success: true, message: "Condition confirmed. Deposit released (demo).", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function reportDamage(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const booking = await equipmentService.reportDamage(Number(req.params.bookingId), req.user.id, req.body.note);
+    return res.status(200).json({ success: true, message: "Damage reported. An admin will review it.", data: booking });
   } catch (error) { next(error); }
 }
 
@@ -126,12 +179,17 @@ module.exports = {
   createEquipment,
   getAllAvailableEquipment,
   getEquipmentById,
+  getRentalQuote,
+  getMyTrust,
   bookEquipment,
   confirmBooking,
   declineBooking,
   cancelBooking,
   returnEquipment,
+  confirmPickup,
+  confirmCondition,
+  reportDamage,
   getEquipmentHistory,
   getMyEquipment,
   deleteEquipment
-};
+};

@@ -922,7 +922,7 @@ function renderModerationTable() {
           <td>
             <div class="admin-table-actions">
               ${detailUrl ? `<a href="${detailUrl}" class="table-icon-btn" title="View listing" target="_blank" rel="noopener"><i class="ti ti-external-link" aria-hidden="true"></i></a>` : ""}
-              <button type="button" class="table-icon-btn success clear-moderation-btn" data-content-type="${item.contentType}" data-content-id="${item.id}" data-title="${title}" title="Clear flag — keep published">
+              <button type="button" class="table-icon-btn success clear-moderation-btn" data-content-type="${item.contentType}" data-content-id="${item.id}" data-title="${title}" title="Approve — publish this listing">
                 <i class="ti ti-circle-check" aria-hidden="true"></i>
               </button>
               <button type="button" class="table-icon-btn danger remove-moderation-btn" data-content-type="${item.contentType}" data-content-id="${item.id}" data-title="${title}" title="Remove content">
@@ -932,7 +932,7 @@ function renderModerationTable() {
           </td>
         </tr>`;
       }).join("")
-    : `<tr><td colspan="6">${emptyState("ti-shield-check", "Nothing flagged", "AI-flagged tasks, sales listings, equipment and events will appear here for review.")}</td></tr>`;
+    : `<tr><td colspan="6">${emptyState("ti-shield-check", "Nothing flagged", "AI-flagged tasks, sales listings, equipment and events are held from public view here until you approve or remove them.")}</td></tr>`;
 
   document.getElementById("moderationTableCount").textContent =
     filtered.length ? `Showing ${(moderationPage - 1) * PAGE_SIZE + 1} to ${Math.min(moderationPage * PAGE_SIZE, filtered.length)} of ${filtered.length} flagged item${filtered.length === 1 ? "" : "s"}` : "";
@@ -946,10 +946,10 @@ function renderModerationTable() {
 function attachModerationRowEvents() {
   document.querySelectorAll(".clear-moderation-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
-      if (!confirm(`Clear the AI flag on "${btn.dataset.title}"? It stays published as-is.`)) return;
+      if (!confirm(`Approve "${btn.dataset.title}"? It's currently hidden from everyone but its owner — approving makes it publicly visible and notifies the owner.`)) return;
       try {
         await apiRequest(`/admin/moderation/${btn.dataset.contentType}/${btn.dataset.contentId}/clear`, "PATCH");
-        showToast("Flag cleared.");
+        showToast("Content approved and published.");
         await Promise.all([loadModerationQueue(), loadStats(), loadAuditLogs()]);
       } catch (err) { showToast(err.message, "error"); }
     });

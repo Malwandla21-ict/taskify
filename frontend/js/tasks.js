@@ -315,6 +315,7 @@ function historyCard(task) {
         <div class="market-top">
           ${sectionBadge(task.section || "General")}
           ${statusBadge(task.status)}
+          ${pendingReviewBadge(task.moderation_status)}
         </div>
         <h3>${task.title}</h3>
         <p style="color:var(--muted);font-size:13px;margin:6px 0 10px;">${task.description}</p>
@@ -356,6 +357,7 @@ function historyMiniCard(task) {
         <div class="mini-history-top">
           ${sectionBadge(task.section || "General")}
           ${statusBadge(task.status)}
+          ${pendingReviewBadge(task.moderation_status)}
         </div>
         <div class="mini-history-title">${task.title}</div>
         <div class="mini-history-meta">R${task.price} &middot; ${task.payment_status || "N/A"}</div>
@@ -548,6 +550,9 @@ taskForm?.addEventListener("submit", async e => {
     submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Post Task`;
   }
 });
+
+const taskPolicyNoticeEl = document.getElementById("taskPolicyNotice");
+if (taskPolicyNoticeEl) taskPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
 loadTasks();
 loadTaskHistory();

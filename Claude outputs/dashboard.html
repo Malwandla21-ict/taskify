@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Taskify — Home</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
+</head>
+<body class="dashboard-body">
+
+<div class="onboarding-modal-overlay" id="onboardingModalOverlay" hidden>
+  <div class="onboarding-modal" role="dialog" aria-modal="true" aria-labelledby="onboardingTagline">
+    <button type="button" class="onboarding-modal-close" id="onboardingSkipBtn" aria-label="Skip">
+      <i class="ti ti-x" aria-hidden="true"></i>
+    </button>
+    <p class="onboarding-tagline" id="onboardingTagline">Your campus, all in one place.</p>
+    <p class="onboarding-subtext">Taskify is UMP's student marketplace — tasks, sales, equipment rentals, and events, all in one app.</p>
+    <div class="onboarding-pillars">
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon green"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>
+        <h3>Tasks</h3>
+        <p>Post or pick up paid tasks from fellow students.</p>
+      </div>
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon blue"><i class="ti ti-shopping-cart" aria-hidden="true"></i></div>
+        <h3>Sales</h3>
+        <p>Buy and sell items within campus.</p>
+      </div>
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon gold"><i class="ti ti-package" aria-hidden="true"></i></div>
+        <h3>Equipment</h3>
+        <p>Rent out or borrow gear you need.</p>
+      </div>
+      <div class="onboarding-pillar">
+        <div class="onboarding-pillar-icon red"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>
+        <h3>Events</h3>
+        <p>Never miss what's happening on campus.</p>
+      </div>
+    </div>
+    <button type="button" class="onboarding-get-started-btn" id="onboardingGetStartedBtn">
+      <i class="ti ti-rocket" aria-hidden="true"></i> Get Started
+    </button>
+  </div>
+</div>
+
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+
+  <section class="hero-spotlight" aria-label="What's happening on Taskify">
+    <div class="hero-spotlight-top">
+      <p class="hero-spotlight-eyebrow" id="heroWelcome">Welcome back, Student</p>
+      <span class="hero-spotlight-uni">University of Mpumalanga</span>
+    </div>
+    <p class="hero-v2-tagline">Everything campus life needs, in one place.</p>
+    <div class="hero-spotlight-row" id="carouselTrack">
+      <div class="carousel-slide-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</div>
+    </div>
+    <div class="carousel-dots" id="carouselDots"></div>
+  </section>
+
+  <div class="stat-card-row">
+    <div class="stat-card">
+      <div class="hero-stat-icon green"><i class="ti ti-clipboard-check" aria-hidden="true"></i></div>
+      <div><div class="stat-card-value" id="statActiveTasks">—</div><div class="stat-card-label">Active Tasks</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="hero-stat-icon blue"><i class="ti ti-adjustments" aria-hidden="true"></i></div>
+      <div><div class="stat-card-value" id="statServices">—</div><div class="stat-card-label">Services Hired</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="hero-stat-icon gold"><i class="ti ti-star" aria-hidden="true"></i></div>
+      <div><div class="stat-card-value" id="statReviews">—</div><div class="stat-card-label">Reviews Received</div></div>
+    </div>
+    <div class="stat-card">
+      <div class="hero-stat-icon red"><i class="ti ti-shield-check" aria-hidden="true"></i></div>
+      <div><div class="stat-card-value" id="statRating">—</div><div class="stat-card-label">Trust Rating</div></div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
+
+      <section class="section-block">
+        <div class="section-header">
+          <div>
+            <h2><i class="ti ti-layout-grid" aria-hidden="true"></i> Explore Marketplace</h2>
+            <p>Popular categories on campus</p>
+          </div>
+          <a href="./tasks.html" class="view-all-link">View all <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <div class="explore-tiles">
+          <a href="./academic.html" class="explore-tile green">
+            <div class="explore-tile-icon"><i class="ti ti-school" aria-hidden="true"></i></div>
+            <h3>Academic</h3>
+            <p>Tutoring, assignments, research &amp; more</p>
+            <div class="explore-tile-footer"><span id="exploreAcademicCount">— tasks</span><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+          </a>
+          <a href="./general.html" class="explore-tile blue">
+            <div class="explore-tile-icon"><i class="ti ti-map-pin" aria-hidden="true"></i></div>
+            <h3>General</h3>
+            <p>Errands, cleaning, deliveries &amp; more</p>
+            <div class="explore-tile-footer"><span id="exploreGeneralCount">— tasks</span><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+          </a>
+          <a href="./equipment.html" class="explore-tile gold">
+            <div class="explore-tile-icon"><i class="ti ti-package" aria-hidden="true"></i></div>
+            <h3>Rentals</h3>
+            <p>Equipment, electronics and more</p>
+            <div class="explore-tile-footer"><span id="exploreRentalsCount">— items</span><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+          </a>
+          <a href="./sales.html" class="explore-tile red">
+            <div class="explore-tile-icon"><i class="ti ti-shopping-cart" aria-hidden="true"></i></div>
+            <h3>Sales</h3>
+            <p>Buy and sell items within campus</p>
+            <div class="explore-tile-footer"><span id="exploreSalesCount">— items</span><i class="ti ti-arrow-right" aria-hidden="true"></i></div>
+          </a>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <div class="section-header">
+          <div>
+            <h2><i class="ti ti-clipboard-list" aria-hidden="true"></i> Featured Tasks</h2>
+            <p>Tasks students are working on</p>
+          </div>
+          <a href="./tasks.html" class="view-all-link">View all <i class="ti ti-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <div id="featuredTasksContainer" class="marketplace-grid">
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading tasks…</h3></div>
+        </div>
+      </section>
+
+    </div>
+
+    <aside class="dashboard-rail">
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-map-2" aria-hidden="true"></i> Campus Spotlight</h3>
+          <a href="./events.html" class="view-all-link small">View all</a>
+        </div>
+        <p class="rail-card-sub">What's happening around campus</p>
+        <div id="spotlightEventsContainer" class="spotlight-list">
+          <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+        </div>
+        <a href="./events.html" class="primary-button" style="margin-top:14px;"><i class="ti ti-calendar-event" aria-hidden="true"></i> See all events</a>
+      </div>
+
+      <div class="rail-card">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-activity" aria-hidden="true"></i> Recent Activity</h3>
+        </div>
+        <div id="recentActivityContainer" class="profile-activity-list">
+          <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+        </div>
+        <a href="./notifications.html" class="view-all-link small" style="margin-top:12px;display:inline-flex;">View all activity</a>
+      </div>
+    </aside>
+  </div>
+
+</div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/dashboard.js"></script>
+</body>
+</html>

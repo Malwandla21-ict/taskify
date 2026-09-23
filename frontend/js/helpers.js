@@ -120,9 +120,70 @@ function statusBadge(status) {
   const map = {
     Posted: "blue", Accepted: "gold", "In Progress": "gold",
     Completed: "", Cancelled: "red", Available: "", Booked: "gold", Returned: "",
-    Upcoming: "blue"
+    Upcoming: "blue", Reserved: "gold", Pending: "gold", Confirmed: "blue"
   };
   return `<div class="badge ${map[status] ?? ""}">${status}</div>`;
+}
+
+/* ── Payment simulation helpers (DEMO — no real money moves) ──
+   Shared by the rental (equipment) and sales pages. All the numbers come
+   from the backend (config/paymentSettings.js); these only format them. */
+function formatRand(amount) {
+  return `R${Number(amount || 0).toFixed(2)}`;
+}
+
+function demoPaymentBanner(text) {
+  return `
+    <div class="demo-pay-banner">
+      <i class="ti ti-info-circle" aria-hidden="true"></i>
+      <span><strong>Demo mode.</strong> ${text}</span>
+    </div>`;
+}
+
+function moneyRow(label, amount, { strong = false, hint = "" } = {}) {
+  return `
+    <div class="money-row${strong ? " strong" : ""}">
+      <span>${label}${hint ? `<small>${hint}</small>` : ""}</span>
+      <span>${formatRand(amount)}</span>
+    </div>`;
+}
+
+/* Renter trust level chip — level key is "new" | "trusted" | "top". */
+function trustChip(level, label) {
+  const icon = level === "top" ? "ti-crown" : level === "trusted" ? "ti-shield-check" : "ti-seedling";
+  return `<span class="trust-chip ${level || "new"}"><i class="ti ${icon}" aria-hidden="true"></i> ${label || "New"} renter</span>`;
+}
+
+/* Small row of clickable condition-photo thumbnails (pickup/return). */
+function conditionPhotoStrip(urls = [], galleryId = "") {
+  if (!Array.isArray(urls) || !urls.length) return "";
+  return `
+    <div class="condition-photo-strip">
+      ${urls.map(url => `<img src="${url}" alt="Condition photo" class="lightbox-img" data-gallery="${galleryId}" data-full="${url}" />`).join("")}
+    </div>`;
+}
+
+/* Shown on a poster's own task/listing/event when it's held under
+   moderation review (moderation_status === 'pending_review') — it isn't
+   visible to anyone else yet, so this is the only place a badge like this
+   is needed. Returns "" for anything else (clean/removed/undefined), so
+   callers can drop it inline without an extra condition. */
+function pendingReviewBadge(moderationStatus) {
+  if (moderationStatus !== "pending_review") return "";
+  return `<div class="badge gold" title="Only visible to you until an admin reviews it">
+            <i class="ti ti-alert-triangle" aria-hidden="true"></i> Pending Review
+          </div>`;
+}
+
+/* Short content-policy reminder shown just above the submit button on the
+   task/sales/equipment/event creation forms, so posters see it right
+   before they publish rather than only after something gets flagged. */
+function contentPolicyNotice() {
+  return `
+    <div style="display:flex;gap:10px;align-items:flex-start;background:rgba(245,180,0,0.08);border:1px solid rgba(245,180,0,0.25);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:12.5px;color:var(--muted);line-height:1.5;">
+      <i class="ti ti-shield-exclamation" aria-hidden="true" style="color:#b38900;font-size:16px;flex-shrink:0;margin-top:1px;"></i>
+      <span><strong>Keep it appropriate.</strong> Threats, violence, hate speech, sexual content or anything promoting self-harm aren't allowed on Taskify. Posts that violate this are blocked or held for admin review before anyone else can see them, and repeat violations can lead to account suspension.</span>
+    </div>`;
 }
 
 /* ── Endorsement / lecturer UI helpers ──

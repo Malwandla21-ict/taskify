@@ -194,6 +194,7 @@ function myEventMiniCard(event) {
         <div class="mini-history-top">
           ${sectionBadge(event.section || "General")}
           <div class="badge ${isOwn ? "navy" : ""}">${isOwn ? "Organizing" : "Attending"}</div>
+          ${pendingReviewBadge(event.moderation_status)}
         </div>
         <a href="./event-details.html?id=${event.id}" class="mini-history-title">${event.title}</a>
         <div class="mini-history-meta">${formatEventDate(event.event_date)}</div>
@@ -408,6 +409,9 @@ eventForm?.addEventListener("submit", async e => {
     submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Post Event`;
   }
 });
+
+const eventPolicyNoticeEl = document.getElementById("eventPolicyNotice");
+if (eventPolicyNoticeEl) eventPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
 loadEvents();
 loadMyEvents();

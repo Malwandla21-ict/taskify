@@ -45,6 +45,31 @@ router.delete(
   salesController.deleteSalesItem
 );
 
+/* ── Taskify Protection (DEMO escrow + handover code) ── */
+router.post(
+  "/:id/buy",
+  authenticate,
+  [ param("id").isInt({ min: 1 }).withMessage("Sales item ID must be a valid positive integer.") ],
+  salesController.buySalesItem
+);
+
+router.post(
+  "/orders/:orderId/release",
+  authenticate,
+  [
+    param("orderId").isInt({ min: 1 }).withMessage("Order ID must be a valid positive integer."),
+    body("code").trim().matches(/^\d{4}$/).withMessage("The handover code is 4 digits.")
+  ],
+  salesController.releaseSaleOrder
+);
+
+router.patch(
+  "/orders/:orderId/cancel",
+  authenticate,
+  [ param("orderId").isInt({ min: 1 }).withMessage("Order ID must be a valid positive integer.") ],
+  salesController.cancelSaleOrder
+);
+
 /*
   GET /:id — single-item lookup, unfiltered by status. Placed after the
   literal "/my-listings" route (Express only conflicts on same method +
@@ -64,4 +89,4 @@ router.get(
   salesController.getSalesItemById
 );
 
-module.exports = router;
+module.exports = router;
