@@ -25,4 +25,4 @@ Allow: /resend-verification.html
 Allow: /sitemap.xml
 Allow: /robots.txt
 
-Sitemap: https://taskify-frontend-ol07.onrender.com/sitemap.xml
+Sitemap: https://taskify-marketplace.co.za/sitemap.xml
