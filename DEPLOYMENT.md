@@ -133,6 +133,7 @@ that no `.env` file is about to be committed before you push.)
    node scripts/repair-two-factor-method-schema.js
    node scripts/repair-trusted-devices-schema.js
    node scripts/repair-review-generalization-schema.js
+   node scripts/repair-onboarding-schema.js
    ```
 
 6. Create your first admin account directly on Aiven, still with the root
