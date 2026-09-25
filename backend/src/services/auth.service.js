@@ -281,6 +281,15 @@ async function verifyEmailOtp(email, code) {
     throwError("This code is invalid or has expired. Please request a new one.", 400);
   }
 
+  /* Build the full response (profile read + token) BEFORE marking the
+     account verified. Previously the profile SELECT ran after the UPDATE,
+     so if it failed (e.g. a column in SAFE_USER_FIELDS missing from the
+     live schema) the account was already verified but the user got a 500
+     — and retrying told them "already verified". Anything that can throw
+     now happens while the code is still unused and retryable. */
+  const [userRows] = await pool.execute(`SELECT ${SAFE_USER_FIELDS} FROM users WHERE id = ? LIMIT 1`, [user.id]);
+  const token = signAccessToken(user);
+
   await pool.execute(
     `UPDATE users SET is_verified = 1, email_verification_token_hash = NULL, email_verification_expires = NULL WHERE id = ?`,
     [user.id]
@@ -288,10 +297,7 @@ async function verifyEmailOtp(email, code) {
 
   await securityLogService.logSecurityEvent({ userId: user.id, email: user.email, event: "email_verified" });
 
-  const token = signAccessToken(user);
-  const [userRows] = await pool.execute(`SELECT ${SAFE_USER_FIELDS} FROM users WHERE id = ? LIMIT 1`, [user.id]);
-
-  return { token, user: userRows[0] };
+  return { token, user: { ...userRows[0], is_verified: 1 } };
 }
 
 async function resendVerificationEmail(email) {
