@@ -107,6 +107,16 @@ document.querySelectorAll(".messages-list-header .filter-pill").forEach(btn => {
 conversationSearchInput?.addEventListener("input", renderConversationsList);
 
 /* ── Thread ── */
+/* Contact details (phone, email, WhatsApp) are replaced with
+   "[contact hidden]" by the server until a payment is held through
+   Taskify — see conversation.service.js. Explain why when it happens. */
+const contactHiddenNote = document.getElementById("contactHiddenNote");
+function updateContactNote(messages, justMasked = false) {
+  if (!contactHiddenNote) return;
+  const anyHidden = messages.some(m => String(m.body).includes("[contact hidden]"));
+  contactHiddenNote.hidden = !(justMasked || anyHidden);
+}
+
 function messageBubble(msg) {
   const isMine = Number(msg.sender_id) === Number(currentUser.id);
   return `
@@ -122,6 +132,7 @@ function messageBubble(msg) {
 }
 
 function renderMessages(messages) {
+  updateContactNote(messages);
   if (!messages.length) {
     messagesThread.innerHTML = `<p style="color:var(--muted);font-size:13px;text-align:center;margin:auto;">No messages yet — say hello!</p>`;
     return;
@@ -244,9 +255,10 @@ messageForm?.addEventListener("submit", async e => {
   submitBtn.disabled = true;
 
   try {
-    await apiRequest(`/conversations/${activeConversationId}/messages`, "POST", { body });
+    const res = await apiRequest(`/conversations/${activeConversationId}/messages`, "POST", { body });
     messageBody.value = "";
     await loadMessages();
+    if (res.data?.contact_masked) updateContactNote([], true);
     await loadConversations({ silent: true });
   } catch (err) {
     showToast(err.message, "error");

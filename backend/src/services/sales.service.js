@@ -5,6 +5,7 @@ const contentModerationService = require("./contentModeration.service");
 const crypto = require("crypto");
 const { SALES } = require("../config/paymentSettings");
 const { roundMoney } = require("./trust.service");
+const { closeOpenOffers, notifyClosedOffers, deleteOffersFor } = require("./offerClosure.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -23,7 +24,6 @@ const SELECT_FIELDS = `
   si.status, si.created_at, si.image_urls, si.moderation_status,
   u.full_name AS seller_name,
   u.profile_photo_url AS seller_profile_photo,
-  u.phone_number AS seller_phone_number,
   u.member_type AS seller_member_type,
   u.lecturer_title AS seller_lecturer_title
 `;
@@ -123,9 +123,12 @@ async function getMySalesItems(userId) {
    Either side can cancel before that → order 'Refunded', item back to
    'Available'. Too many wrong codes locks the release. */
 
-function paymentRulesFor(price) {
+/* forceProtection: a price agreed through an in-app offer always goes
+   through Taskify Protection — even if the deal ended up below the
+   threshold — because the deal was made in the app. */
+function paymentRulesFor(price, { forceProtection = false } = {}) {
   const itemPrice = Number(price);
-  const requiresProtection = itemPrice >= SALES.escrowThreshold;
+  const requiresProtection = forceProtection || itemPrice >= SALES.escrowThreshold;
   const protectionFee = requiresProtection ? roundMoney(itemPrice * (SALES.protectionFeePercent / 100)) : 0;
   return {
     demo: true,
@@ -198,7 +201,19 @@ async function getLatestOrderForViewer(itemId, viewerId) {
   return orderViewFor(rows[0], viewerId);
 }
 
-async function buySalesItem(itemId, buyerId) {
+/* The one place a sales item gets reserved and the buyer's (demo) payment
+   held — used by the "Buy with Taskify Protection" button (listed price)
+   AND by an accepted offer (offer.service.js).
+
+   Options (only offer.service passes them):
+     agreedPrice  — the price both sides agreed on; the protection fee is
+                    worked out on this, and protection applies even below
+                    the threshold
+     beforeCommit — async (connection, item) => {...}; runs inside this
+                    same transaction right after the item is reserved, so
+                    the offer is marked Accepted in the same all-or-nothing
+                    step */
+async function buySalesItem(itemId, buyerId, { agreedPrice = null, beforeCommit = null } = {}) {
   const item = await getSalesItemById(itemId);
   if (!item || item.moderation_status !== "clean") {
     const error = new Error("Sales item not found."); error.statusCode = 404; throw error;
@@ -210,7 +225,9 @@ async function buySalesItem(itemId, buyerId) {
     const error = new Error("This item is no longer available."); error.statusCode = 400; throw error;
   }
 
-  const rules = paymentRulesFor(item.price);
+  const rules = agreedPrice != null
+    ? paymentRulesFor(agreedPrice, { forceProtection: true })
+    : paymentRulesFor(item.price);
   if (!rules.requiresProtection) {
     const error = new Error(`Items under R${SALES.escrowThreshold} are paid in cash when you meet. Message the seller to arrange it.`);
     error.statusCode = 400; throw error;
@@ -218,6 +235,7 @@ async function buySalesItem(itemId, buyerId) {
 
   const connection = await pool.getConnection();
   let orderId;
+  let closedOffers = [];
   const handoverCode = generateHandoverCode();
   try {
     await connection.beginTransaction();
@@ -241,6 +259,11 @@ async function buySalesItem(itemId, buyerId) {
     );
     orderId = result.insertId;
 
+    if (beforeCommit) await beforeCommit(connection, item);
+
+    /* The item is taken — every other open offer on it is closed. */
+    closedOffers = await closeOpenOffers(connection, "sales_item", itemId, { winnerId: buyerId });
+
     await connection.commit();
   } catch (error) {
     await connection.rollback();
@@ -248,6 +271,11 @@ async function buySalesItem(itemId, buyerId) {
   } finally {
     connection.release();
   }
+
+  await notifyClosedOffers(closedOffers, {
+    contextType: "sales_item", contextId: itemId, title: item.title,
+    reason: "another buyer is buying the item"
+  });
 
   const [buyerRows] = await pool.execute(`SELECT full_name FROM users WHERE id = ? LIMIT 1`, [buyerId]);
   const buyerName = buyerRows[0]?.full_name || "A student";
@@ -401,7 +429,14 @@ async function markSalesItemAsSold(itemId, userId) {
   }
 
   await pool.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [itemId]);
-  return getSalesItemById(itemId);
+
+  const closedOffers = await closeOpenOffers(pool, "sales_item", itemId);
+  const sold = await getSalesItemById(itemId);
+  await notifyClosedOffers(closedOffers, {
+    contextType: "sales_item", contextId: itemId, title: sold.title,
+    reason: "the seller marked it as sold"
+  });
+  return sold;
 }
 
 async function getSalesItemById(itemId) {
@@ -439,6 +474,18 @@ async function getSalesItemByIdForViewing(itemId, viewerId = null, viewerRole = 
   item.payment_rules = paymentRulesFor(item.price);
   item.my_order = await getLatestOrderForViewer(item.id, viewerId);
 
+  /* Phone numbers are never in public listing data — the buyer and seller
+     only see each other's once a (demo) payment is held between them. */
+  if (item.my_order && ["Held", "Released"].includes(item.my_order.status)) {
+    const [phoneRows] = await pool.execute(
+      `SELECT id, phone_number FROM users WHERE id IN (?, ?)`,
+      [item.my_order.buyer_id, item.my_order.seller_id]
+    );
+    const phoneOf = (id) => phoneRows.find(r => Number(r.id) === Number(id))?.phone_number || null;
+    if (item.my_order.role === "buyer") item.seller_phone_number = phoneOf(item.my_order.seller_id);
+    else item.my_order.buyer_phone_number = phoneOf(item.my_order.buyer_id);
+  }
+
   return item;
 }
 
@@ -460,7 +507,15 @@ async function deleteSalesItem(itemId, userId) {
     const error = new Error("A buyer's payment is being held for this item. Cancel the order first, then delete the listing."); error.statusCode = 400; throw error;
   }
 
+  const [titleRows] = await pool.execute(`SELECT title FROM sales_items WHERE id = ? LIMIT 1`, [itemId]);
+  const closedOffers = await closeOpenOffers(pool, "sales_item", itemId);
+  await deleteOffersFor(pool, "sales_item", itemId);
   await pool.execute(`DELETE FROM sales_items WHERE id = ?`, [itemId]);
+
+  await notifyClosedOffers(closedOffers, {
+    contextType: "sales_item", contextId: itemId, title: titleRows[0]?.title || "the item",
+    reason: "the seller deleted the listing"
+  });
 }
 
 module.exports = {
@@ -473,5 +528,6 @@ module.exports = {
   deleteSalesItem,
   buySalesItem,
   releaseSaleOrder,
-  cancelSaleOrder
+  cancelSaleOrder,
+  paymentRulesFor
 };

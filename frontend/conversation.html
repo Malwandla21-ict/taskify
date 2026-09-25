@@ -19,6 +19,10 @@
   <section class="section" style="padding-top:8px;">
     <div id="conversationHeader" class="form-panel" style="margin-bottom:16px;"></div>
     <div id="messagesThread" class="form-panel" style="min-height:320px;max-height:520px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;"></div>
+    <p class="chat-contact-note boxed" id="contactHiddenNote" hidden>
+      <i class="ti ti-lock" aria-hidden="true"></i>
+      <span>Contact details unlock once payment is held through Taskify. Deals outside Taskify aren't protected.</span>
+    </p>
     <form id="messageForm" class="form-panel" style="margin-top:16px;display:flex;gap:10px;align-items:flex-start;">
       <textarea id="messageBody" placeholder="Type a message…" style="min-height:48px;flex:1;" required></textarea>
       <button type="submit" class="primary-button" style="width:auto;padding:12px 20px;">

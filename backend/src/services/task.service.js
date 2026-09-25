@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
 const contentModerationService = require("./contentModeration.service");
+const { closeOpenOffers, notifyClosedOffers, deleteOffersFor } = require("./offerClosure.service");
 
 /* Derived-table pattern (subquery in FROM, not in ON) for "latest
    endorsement per context" — safe and fast, unlike a correlated subquery
@@ -26,12 +27,10 @@ const TASK_SELECT_FIELDS = `
   t.image_urls, t.moderation_status,
   u.full_name AS created_by_name,
   u.profile_photo_url AS created_by_profile_photo,
-  u.phone_number AS created_by_phone_number,
   u.member_type AS created_by_member_type,
   u.lecturer_title AS created_by_lecturer_title,
   w.full_name AS accepted_by_name,
   w.profile_photo_url AS accepted_by_profile_photo,
-  w.phone_number AS accepted_by_phone_number,
   w.member_type AS accepted_by_member_type,
   w.lecturer_title AS accepted_by_lecturer_title,
   p.status AS payment_status,
@@ -128,13 +127,25 @@ async function getAllTasks() {
   return rows.map(parseImageUrls);
 }
 
-async function acceptTask(taskId, userId) {
+/* The one place a task gets assigned and its (demo) payment held — used by
+   the normal "Accept Task" button (listed price) AND by an accepted offer
+   (offer.service.js), so both follow exactly the same rules.
+
+   Options (only offer.service passes them):
+     agreedPrice  — the price both sides agreed on; replaces tasks.price
+     beforeCommit — async (connection, task) => {...}; runs inside this
+                    same transaction, after the task row is locked and
+                    checked, so the offer can be locked and marked
+                    Accepted in the same all-or-nothing step
+     notify       — false skips the "Task Accepted" notification (the
+                    offer flow sends its own) */
+async function acceptTask(taskId, userId, { agreedPrice = null, beforeCommit = null, notify = true } = {}) {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     const [taskRows] = await connection.execute(
-      `SELECT id, created_by, accepted_by, status, price, title
+      `SELECT id, created_by, accepted_by, status, price, title, moderation_status
        FROM tasks WHERE id = ? LIMIT 1 FOR UPDATE`,
       [taskId]
     );
@@ -155,32 +166,46 @@ async function acceptTask(taskId, userId) {
       const error = new Error("Only posted tasks can be accepted."); error.statusCode = 400; throw error;
     }
 
+    if (beforeCommit) await beforeCommit(connection, task);
+
+    const amount = agreedPrice != null ? Number(agreedPrice) : Number(task.price);
+
     await connection.execute(
-      `UPDATE tasks SET accepted_by = ?, status = 'Accepted' WHERE id = ?`,
-      [userId, taskId]
+      `UPDATE tasks SET accepted_by = ?, status = 'Accepted', price = ? WHERE id = ?`,
+      [userId, amount, taskId]
     );
 
     await connection.execute(
       `INSERT INTO payments (task_id, amount, status)
        VALUES (?, ?, 'Held')
        ON DUPLICATE KEY UPDATE amount = VALUES(amount), status = 'Held'`,
-      [taskId, task.price]
+      [taskId, amount]
     );
+
+    /* The task is taken — every other open offer on it is closed. */
+    const closedOffers = await closeOpenOffers(connection, "task", taskId, { winnerId: userId });
 
     await connection.commit();
 
-    const [userRows] = await pool.execute(
-      `SELECT full_name FROM users WHERE id = ? LIMIT 1`, [userId]
-    );
-    const accepterName = userRows[0]?.full_name || "A student";
+    if (notify) {
+      const [userRows] = await pool.execute(
+        `SELECT full_name FROM users WHERE id = ? LIMIT 1`, [userId]
+      );
+      const accepterName = userRows[0]?.full_name || "A student";
 
-    await notificationService.createNotification({
-      userId: task.created_by,
-      title: "Task Accepted",
-      message: `${accepterName} accepted your task "${task.title}".`,
-      contextType: "task",
-      contextId: taskId,
-      email: true
+      await notificationService.createNotification({
+        userId: task.created_by,
+        title: "Task Accepted",
+        message: `${accepterName} accepted your task "${task.title}".`,
+        contextType: "task",
+        contextId: taskId,
+        email: true
+      });
+    }
+
+    await notifyClosedOffers(closedOffers, {
+      contextType: "task", contextId: taskId, title: task.title,
+      reason: "the task was given to someone else"
     });
 
     return getTaskById(taskId);
@@ -379,7 +404,14 @@ async function cancelTask(taskId, userId) {
       await connection.execute(`UPDATE payments SET status = 'Cancelled' WHERE task_id = ?`, [taskId]);
     }
 
+    const closedOffers = await closeOpenOffers(connection, "task", taskId);
+
     await connection.commit();
+
+    await notifyClosedOffers(closedOffers, {
+      contextType: "task", contextId: taskId, title: task.title,
+      reason: "the poster cancelled the task"
+    });
 
     if (task.accepted_by) {
       await notificationService.createNotification({
@@ -403,6 +435,8 @@ async function cancelTask(taskId, userId) {
 async function getUserTaskHistory(userId) {
   const [rows] = await pool.execute(
     `SELECT ${TASK_SELECT_FIELDS},
+       IF(p.status IN ('Held','Released'), u.phone_number, NULL) AS created_by_phone_number,
+       IF(p.status IN ('Held','Released'), w.phone_number, NULL) AS accepted_by_phone_number,
        my_review.id AS my_review_id,
        my_review.rating AS my_review_rating,
        my_review.comment AS my_review_comment
@@ -434,6 +468,20 @@ async function getTaskByIdForViewing(taskId, viewerId = null, viewerRole = null)
   const isAdmin = viewerRole === "admin";
   if (task.moderation_status !== "clean" && !isOwner && !isAdmin) {
     const error = new Error("Task not found."); error.statusCode = 404; throw error;
+  }
+
+  /* Phone numbers are never in public task data — only the poster and the
+     assigned student see each other's, and only once the (demo) payment
+     is held, so there's no reason to swap numbers before that. */
+  const isWorker = viewerId != null && Number(task.accepted_by) === Number(viewerId);
+  if ((isOwner || isWorker) && ["Held", "Released"].includes(task.payment_status)) {
+    const [phoneRows] = await pool.execute(
+      `SELECT id, phone_number FROM users WHERE id IN (?, ?)`,
+      [task.created_by, task.accepted_by]
+    );
+    const phoneOf = (id) => phoneRows.find(r => Number(r.id) === Number(id))?.phone_number || null;
+    task.created_by_phone_number = phoneOf(task.created_by);
+    task.accepted_by_phone_number = phoneOf(task.accepted_by);
   }
 
   return task;
@@ -471,7 +519,14 @@ async function deleteTask(taskId, userId) {
     const error = new Error("Only posted or cancelled tasks can be deleted."); error.statusCode = 400; throw error;
   }
 
+  const closedOffers = await closeOpenOffers(pool, "task", taskId);
+  await deleteOffersFor(pool, "task", taskId);
   await pool.execute(`DELETE FROM tasks WHERE id = ?`, [taskId]);
+
+  await notifyClosedOffers(closedOffers, {
+    contextType: "task", contextId: taskId, title: task.title,
+    reason: "the poster deleted the task"
+  });
 
   if (task.accepted_by) {
     await notificationService.createNotification({
@@ -494,5 +549,6 @@ module.exports = {
   cancelTask,
   getUserTaskHistory,
   getTaskByIdForViewing,
+  getTaskById,
   deleteTask
 };

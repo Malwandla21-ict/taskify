@@ -42,5 +42,27 @@ module.exports = {
     protectionFeePercent: 3,
     /* Wrong handover-code guesses allowed before the order locks. */
     maxCodeAttempts: 5
-  }
+  },
+
+  /* In-app offers ("Make an offer") on tasks and on sales items at or
+     above SALES.escrowThreshold. Agreeing on a price inside Taskify holds
+     the (demo) payment straight away, so there's no reason to take the
+     deal outside the app. */
+  NEGOTIATION: {
+    /* Counter-offers allowed per negotiation (both sides together). Once
+       used up, the other side can only accept or decline. */
+    maxCounterRounds: 3,
+    /* Each new amount gives the other side this long to respond. Checked
+       lazily whenever an offer is read or acted on (no cron job). */
+    offerExpiryHours: 48,
+    /* Allowed offer amounts, as a % of the listed price. */
+    taskAmountPercent: { min: 50, max: 300 },
+    saleAmountPercent: { min: 50, max: 100 },
+    /* Optional note sent with an offer or counter-offer. */
+    messageMaxLength: 300
+  },
+
+  /* Chat: phone numbers, emails and WhatsApp links are replaced with
+     this until a payment is held between the two people. */
+  CONTACT_MASK_TEXT: "[contact hidden]"
 };

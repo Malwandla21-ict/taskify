@@ -39,7 +39,13 @@ async function sendMessage(req, res, next) {
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
 
     const message = await conversationService.sendMessage(Number(req.params.id), req.user.id, req.body.body);
-    return res.status(201).json({ success: true, message: "Message sent.", data: message });
+    return res.status(201).json({
+      success: true,
+      message: message.contact_masked
+        ? "Message sent. Contact details are hidden until a payment is held through Taskify."
+        : "Message sent.",
+      data: message
+    });
   } catch (error) { next(error); }
 }
 

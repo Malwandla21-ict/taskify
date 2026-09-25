@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
+const { maskContactDetails } = require("../utils/contactMask");
 
 const CONTEXT_TABLES = {
   task:      { table: "tasks",       titleCol: "title", ownerCol: "created_by" },
@@ -122,13 +123,55 @@ async function getMessages(conversationId, requestingUserId) {
   return rows;
 }
 
+/* Have these two people already got a (demo) payment held or released
+   between them for this conversation's listing? Until they do, contact
+   details in their messages are hidden — see sendMessage. */
+async function contactUnlocked(conv) {
+  const pair = [conv.user_a_id, conv.user_b_id, conv.user_b_id, conv.user_a_id];
+  let sql;
+  if (conv.context_type === "task") {
+    sql = `SELECT 1 FROM tasks t
+           INNER JOIN payments p ON p.task_id = t.id
+           WHERE t.id = ? AND p.status IN ('Held','Released')
+             AND ((t.created_by = ? AND t.accepted_by = ?) OR (t.created_by = ? AND t.accepted_by = ?))
+           LIMIT 1`;
+  } else if (conv.context_type === "sale") {
+    sql = `SELECT 1 FROM sale_orders
+           WHERE sales_item_id = ? AND status IN ('Held','Released')
+             AND ((buyer_id = ? AND seller_id = ?) OR (buyer_id = ? AND seller_id = ?))
+           LIMIT 1`;
+  } else if (conv.context_type === "equipment") {
+    sql = `SELECT 1 FROM equipment_bookings eb
+           INNER JOIN equipment e ON e.id = eb.equipment_id
+           WHERE eb.equipment_id = ? AND eb.payment_status IN ('Held','Released')
+             AND ((e.owner_id = ? AND eb.renter_id = ?) OR (e.owner_id = ? AND eb.renter_id = ?))
+           LIMIT 1`;
+  } else {
+    return false;
+  }
+  const [rows] = await pool.execute(sql, [conv.context_id, ...pair]);
+  return rows.length > 0;
+}
+
 async function sendMessage(conversationId, senderId, body) {
   const conv = await assertParticipant(conversationId, senderId);
   const recipientId = Number(conv.user_a_id) === Number(senderId) ? conv.user_b_id : conv.user_a_id;
 
+  /* Phone numbers, emails and WhatsApp links are swapped for
+     "[contact hidden]" until money is held through Taskify, so the
+     easiest way to do the deal is the protected one. Only the masked text
+     is stored. */
+  let text = body.trim();
+  let contactMasked = false;
+  if (!(await contactUnlocked(conv))) {
+    const result = maskContactDetails(text);
+    text = result.text;
+    contactMasked = result.masked;
+  }
+
   const [result] = await pool.execute(
     `INSERT INTO messages (conversation_id, sender_id, body) VALUES (?, ?, ?)`,
-    [conversationId, senderId, body.trim()]
+    [conversationId, senderId, text]
   );
 
   await pool.execute(`UPDATE conversations SET updated_at = NOW() WHERE id = ?`, [conversationId]);
@@ -147,7 +190,7 @@ async function sendMessage(conversationId, senderId, body) {
      WHERE m.id = ? LIMIT 1`,
     [result.insertId]
   );
-  return rows[0];
+  return { ...rows[0], contact_masked: contactMasked };
 }
 
 async function getAllConversationsForAdmin() {

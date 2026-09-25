@@ -59,7 +59,6 @@ const EQUIPMENT_SELECT_FIELDS = `
   e.image_urls, e.moderation_status, e.item_value,
   u.full_name AS owner_name,
   u.profile_photo_url AS owner_profile_photo,
-  u.phone_number AS owner_phone_number,
   u.member_type AS owner_member_type,
   u.lecturer_title AS owner_lecturer_title
 `;
@@ -505,10 +504,10 @@ async function getEquipmentHistory(userId) {
        e.daily_price, e.item_value, e.owner_id, e.image_urls,
        owner.full_name AS owner_name,
        owner.profile_photo_url AS owner_profile_photo,
-       owner.phone_number AS owner_phone_number,
+       IF(eb.payment_status IN ('Held','Released'), owner.phone_number, NULL) AS owner_phone_number,
        renter.full_name AS renter_name,
        renter.profile_photo_url AS renter_profile_photo,
-       renter.phone_number AS renter_phone_number,
+       IF(eb.payment_status IN ('Held','Released'), renter.phone_number, NULL) AS renter_phone_number,
        my_review.id AS my_review_id,
        my_review.rating AS my_review_rating,
        my_review.comment AS my_review_comment
@@ -553,10 +552,10 @@ async function getEquipmentByIdForViewing(equipmentId, userId, viewerRole = null
   }
 
   const [bookingRows] = await pool.execute(
-    `SELECT eb.id, eb.renter_id, eb.start_date, eb.end_date, eb.status,
+    `SELECT eb.id, eb.renter_id, eb.start_date, eb.end_date, eb.status, eb.payment_status,
             renter.full_name AS renter_name,
             renter.profile_photo_url AS renter_profile_photo,
-            renter.phone_number AS renter_phone_number
+            IF(eb.payment_status IN ('Held','Released'), renter.phone_number, NULL) AS renter_phone_number
      FROM equipment_bookings eb
      INNER JOIN users renter ON eb.renter_id = renter.id
      WHERE eb.equipment_id = ? AND eb.status IN ('Pending', 'Confirmed')
@@ -568,6 +567,15 @@ async function getEquipmentByIdForViewing(equipmentId, userId, viewerRole = null
   item.active_bookings = isOwner
     ? bookingRows
     : bookingRows.filter(b => Number(b.renter_id) === Number(userId));
+
+  /* The owner's phone number is never in public listing data — a renter
+     only sees it once their (demo) rental payment is held. */
+  const renterHasHeldPayment = !isOwner && item.active_bookings
+    .some(b => ["Held", "Released"].includes(b.payment_status));
+  if (renterHasHeldPayment) {
+    const [ownerRows] = await pool.execute(`SELECT phone_number FROM users WHERE id = ? LIMIT 1`, [item.owner_id]);
+    item.owner_phone_number = ownerRows[0]?.phone_number || null;
+  }
 
   return item;
 }
