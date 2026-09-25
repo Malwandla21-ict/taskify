@@ -1349,7 +1349,11 @@ body.dashboard-body {
   text-decoration: none; flex-shrink: 0; background: none; border: none; cursor: pointer; font-family: inherit;
 }
 .thread-header-info { flex: 1; min-width: 0; }
-.thread-header-name { font-size: 15px; font-weight: 800; cursor: pointer; }
+.thread-header-name {
+  font-size: 15px; font-weight: 800; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.thread-profile-btn { width: auto; padding: 9px 18px; flex-shrink: 0; }
 
 .thread-context-card {
   display: flex; align-items: center; gap: 14px;
@@ -1358,7 +1362,7 @@ body.dashboard-body {
 }
 .thread-context-thumb { width: 56px; height: 56px; border-radius: var(--radius); overflow: hidden; flex-shrink: 0; }
 .thread-context-info { flex: 1; min-width: 0; }
-.thread-context-title { font-size: 13.5px; font-weight: 800; color: var(--text); }
+.thread-context-title { font-size: 13.5px; font-weight: 800; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .thread-context-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
 
 .thread-messages-scroll {
@@ -1409,6 +1413,54 @@ body.dashboard-body {
   body.thread-open .messages-list-pane { display: none; }
   body.thread-open .messages-thread-pane { display: flex; }
   .thread-back-link { display: inline-flex; }
+}
+
+/* Phones: the header row held a full "Back to Messages" link, avatar, name
+   and a padded "View Profile" button, leaving the name almost no room.
+   Collapse both buttons to icons so the name gets the width. */
+@media (max-width: 700px) {
+  /* 12px margin above and below the shell, so it fills the screen exactly
+     and the input bar is never pushed below the fold. */
+  .messages-page { margin-top: 12px; margin-bottom: 12px; }
+  .messages-shell {
+    height: calc(100vh - var(--topbar-height) - 24px);
+    height: calc(100dvh - var(--topbar-height) - 24px);
+    min-height: 0;
+    border-radius: var(--radius-lg);
+  }
+
+  .thread-header { gap: 10px; padding: 10px 12px; }
+  .thread-btn-label { display: none; }
+  .thread-back-link {
+    width: 36px; height: 36px; justify-content: center;
+    border-radius: 50%; font-size: 20px; margin-left: -4px;
+  }
+  .thread-back-link:active { background: var(--background); }
+  .conversation-item-avatar.thread-header-avatar { width: 38px; height: 38px; font-size: 13px; }
+  .thread-header-name { font-size: 15px; }
+  .thread-profile-btn {
+    width: 38px; height: 38px; padding: 0;
+    border-radius: 50%; justify-content: center;
+  }
+  .thread-profile-btn i { font-size: 18px; }
+
+  .thread-context-card { gap: 10px; padding: 10px 12px; }
+  .thread-context-thumb { width: 44px; height: 44px; }
+  .thread-context-title { font-size: 13px; }
+  .thread-context-meta { font-size: 11px; }
+  #threadContextStatus { flex-shrink: 0; }
+  #threadContextStatus .badge { font-size: 10px; padding: 3px 8px; }
+
+  .thread-messages-scroll { padding: 14px 12px; }
+  .message-bubble { max-width: 82%; font-size: 14px; }
+
+  .thread-input-row {
+    gap: 8px;
+    padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  }
+  /* 16px stops iOS Safari zooming the page in when the field is focused. */
+  .thread-input-row input { font-size: 16px; padding: 10px 14px; min-width: 0; }
+  .thread-send-btn { width: 44px; height: 44px; }
 }
 
 /* ============================================================

@@ -15,7 +15,7 @@
 </head>
 <body class="dashboard-body">
 <div id="navbarContainer"></div>
-<div class="dashboard-container" style="padding-bottom:0;">
+<div class="dashboard-container messages-page" style="padding-bottom:0;">
 
   <div class="messages-shell">
 
@@ -47,15 +47,15 @@
 
       <div id="threadContent" style="display:none;flex:1;min-height:0;flex-direction:column;">
         <div class="thread-header">
-          <button type="button" class="thread-back-link" id="threadBackButton">
-            <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Messages
+          <button type="button" class="thread-back-link" id="threadBackButton" aria-label="Back to Messages">
+            <i class="ti ti-arrow-left" aria-hidden="true"></i> <span class="thread-btn-label">Back to Messages</span>
           </button>
           <div class="conversation-item-avatar thread-header-avatar" id="threadAvatar"></div>
           <div class="thread-header-info">
             <div class="thread-header-name profile-link" id="threadUserName"></div>
           </div>
-          <button type="button" class="secondary-button profile-link" id="threadViewProfileButton" style="width:auto;padding:9px 18px;">
-            <i class="ti ti-user" aria-hidden="true"></i> View Profile
+          <button type="button" class="secondary-button profile-link thread-profile-btn" id="threadViewProfileButton" aria-label="View Profile">
+            <i class="ti ti-user" aria-hidden="true"></i> <span class="thread-btn-label">View Profile</span>
           </button>
         </div>
 
