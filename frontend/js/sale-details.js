@@ -47,6 +47,13 @@ function protectionExplainerPanel(rules) {
     </div>`;
 }
 
+/* Phone numbers only come back from the API once the (demo) payment is
+   held between the buyer and seller — see sales.service.js. */
+function contactLine(label, phone) {
+  if (!phone) return "";
+  return `<p class="pay-note" style="display:flex;align-items:center;gap:6px;"><i class="ti ti-phone" aria-hidden="true"></i> ${label}: <strong>${phone}</strong></p>`;
+}
+
 /* The buyer's or seller's view of an order still in progress / finished. */
 function orderPanel(item, order) {
   if (!order) return "";
@@ -58,6 +65,7 @@ function orderPanel(item, order) {
         <p class="pay-note" style="margin-bottom:4px;">Your handover code:</p>
         <div class="handover-code">${order.handover_code}</div>
         <p class="pay-note"><strong>Only show this code once you have the item and you're happy with it.</strong> The seller can't get paid without it. Nobody from Taskify will ever ask you for it.</p>
+        ${contactLine("Seller", item.seller_phone_number)}
         ${order.locked ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked. If you didn't get the item, cancel for a refund.</p>` : ""}
         <div class="money-breakdown">
           ${moneyRow("Item price", order.item_price)}
@@ -75,6 +83,7 @@ function orderPanel(item, order) {
       <div class="pay-panel" style="border-color:var(--ump-green);">
         <h4><i class="ti ti-shield-check" aria-hidden="true"></i> ${order.buyer_name || "The buyer"} has paid <span class="badge gold" style="margin-left:auto;">Demo</span></h4>
         <p class="pay-note">${formatRand(order.item_price)} is held by Taskify. Meet on campus, let them check the item, then ask for their 4-digit handover code and type it here to get paid.</p>
+        ${contactLine("Buyer", order.buyer_phone_number)}
         ${order.locked
           ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked. The buyer can cancel it for a refund.</p>`
           : `<input type="text" id="handoverCodeInput" class="handover-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="Buyer's 4-digit handover code" />
@@ -138,9 +147,14 @@ function renderSaleDetails(item) {
   } else if (item.status !== "Available") {
     actionArea = `${orderPanel(item, order)}<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Already sold</div>`;
   } else if (rules.requiresProtection) {
+    /* In-app offers (js/offers.js) are only on protected items. Starts
+       hidden for signed-in users until offers.js knows they can offer. */
     actionArea = `${orderPanel(item, order)}${protectionExplainerPanel(rules)}
        <button class="primary-button" id="buyProtectedButton">
          <i class="ti ti-shield-lock" aria-hidden="true"></i> Buy with Taskify Protection
+       </button>
+       <button class="secondary-button" id="makeOfferButton" style="margin-top:10px;"${currentUser ? " hidden" : ""}>
+         <i class="ti ti-tag" aria-hidden="true"></i> Make an offer
        </button>
        <button class="secondary-button" id="messageSellerButton" style="margin-top:10px;">
          <i class="ti ti-message-circle" aria-hidden="true"></i> Message Seller
@@ -170,6 +184,7 @@ function renderSaleDetails(item) {
           ${statusBadge(item.status)}
         </div>
         ${endorsementDetailBlock(item)}
+        <div id="offersSection"></div>
       </div>
       <div class="form-panel detail-summary">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
@@ -206,6 +221,21 @@ function renderSaleDetails(item) {
   document.getElementById("backButtonBottom")?.addEventListener("click", () => goBack("./sales.html"));
 
   attachProfileLinkEvents();
+
+  /* Owners get the Offers panel on protected items (their negotiations,
+     even after the item is reserved); buyers only while it's available. */
+  const canOffer = !isOwn && item.status === "Available" && rules.requiresProtection;
+  if ((isOwn && rules.requiresProtection) || canOffer) {
+    initOffers({
+      contextType: "sales_item",
+      contextId: saleId,
+      listing: item,
+      isOwner: isOwn,
+      sectionEl: document.getElementById("offersSection"),
+      makeOfferButton: document.getElementById("makeOfferButton"),
+      onListingChanged: loadSaleDetails
+    });
+  }
 
   document.getElementById("messageSellerButton")?.addEventListener("click", (e) => {
     if (!requireAuthAction("Sign in to message the seller.")) return;

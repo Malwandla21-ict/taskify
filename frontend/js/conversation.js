@@ -24,7 +24,18 @@ function messageBubble(msg) {
     </div>`;
 }
 
+/* Contact details (phone, email, WhatsApp) are replaced with
+   "[contact hidden]" by the server until a payment is held through
+   Taskify — see conversation.service.js. Explain why when it happens. */
+const contactHiddenNote = document.getElementById("contactHiddenNote");
+function updateContactNote(messages, justMasked = false) {
+  if (!contactHiddenNote) return;
+  const anyHidden = messages.some(m => String(m.body).includes("[contact hidden]"));
+  contactHiddenNote.hidden = !(justMasked || anyHidden);
+}
+
 function renderMessages(messages) {
+  updateContactNote(messages);
   messagesThread.innerHTML = messages.length
     ? messages.map(messageBubble).join("")
     : `<p style="color:var(--muted);font-size:13px;text-align:center;margin:auto;">No messages yet — say hello!</p>`;
@@ -87,9 +98,10 @@ messageForm?.addEventListener("submit", async e => {
   submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
 
   try {
-    await apiRequest(`/conversations/${conversationId}/messages`, "POST", { body });
+    const res = await apiRequest(`/conversations/${conversationId}/messages`, "POST", { body });
     messageBody.value = "";
     await loadConversation();
+    if (res.data?.contact_masked) updateContactNote([], true);
   } catch (err) {
     showToast(err.message, "error");
   } finally {

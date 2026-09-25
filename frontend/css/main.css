@@ -1365,7 +1365,7 @@ textarea { min-height: 110px; resize: vertical; }
 ============================== */
 
 #reviewModal, #bookingModal, #profileModal, #paymentModal,
-#rentalPhotoModal, #damageModal, #buyModal {
+#rentalPhotoModal, #damageModal, #buyModal, #offerModal, #offerConfirmModal {
   display: none;
   position: fixed;
   top: 10%;
@@ -1384,7 +1384,7 @@ textarea { min-height: 110px; resize: vertical; }
 }
 
 #reviewModal h2, #bookingModal h2, #profileModal h2, #paymentModal h2,
-#rentalPhotoModal h2, #damageModal h2, #buyModal h2 {
+#rentalPhotoModal h2, #damageModal h2, #buyModal h2, #offerModal h2, #offerConfirmModal h2 {
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 18px;
@@ -1395,7 +1395,8 @@ textarea { min-height: 110px; resize: vertical; }
 }
 
 #reviewModal h2 i, #bookingModal h2 i, #profileModal h2 i, #paymentModal h2 i,
-#rentalPhotoModal h2 i, #damageModal h2 i, #buyModal h2 i { font-size: 20px; color: var(--ump-green); }
+#rentalPhotoModal h2 i, #damageModal h2 i, #buyModal h2 i,
+#offerModal h2 i, #offerConfirmModal h2 i { font-size: 20px; color: var(--ump-green); }
 
 /* ==============================
    PAYMENT SIMULATION (demo)
@@ -1521,6 +1522,139 @@ textarea { min-height: 110px; resize: vertical; }
   border-radius: var(--radius);
   border: 1.5px solid var(--border);
   margin-bottom: 10px;
+}
+
+/* ── In-app offers (js/offers.js) ── */
+.offers-panel {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1.5px solid var(--border);
+}
+.offers-panel-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.offers-panel-head h3 {
+  font-size: 17px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-right: auto;
+}
+.offers-panel-head h3 i { color: var(--ump-green); }
+.offers-list { display: flex; flex-direction: column; gap: 12px; }
+
+.offer-card {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  background: white;
+}
+.offer-card:not(.open) { background: var(--background); }
+.offer-card.your-turn { border-color: var(--ump-green); box-shadow: 0 0 0 3px rgba(0,155,114,0.08); }
+.offer-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.offer-avatar { width: 36px; height: 36px; flex-shrink: 0; }
+.offer-card-who { display: flex; flex-direction: column; min-width: 0; margin-right: auto; }
+.offer-card-who strong {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.offer-card-who span { font-size: 11.5px; color: var(--muted); }
+
+.offer-trail {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.offer-trail-arrow { color: var(--muted); font-size: 14px; }
+.offer-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--background);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+.offer-chip small { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+.offer-chip.current {
+  background: rgba(12,29,74,0.06);
+  border-color: var(--ump-navy);
+  color: var(--ump-navy);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.offer-note {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.5;
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+.offer-note i { color: var(--muted); margin-top: 2px; flex-shrink: 0; }
+.offer-meta { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+.offer-meta strong { color: var(--ump-green); }
+
+.offer-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.offer-actions .offer-btn {
+  width: auto;
+  flex: 1 1 auto;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+.offer-actions .offer-btn.danger { color: var(--ump-red); border-color: rgba(224,58,62,0.3); }
+.offer-field-hint { display: block; margin-top: 5px; font-size: 11.5px; color: var(--muted); }
+.offer-optional { font-weight: 500; color: var(--muted); }
+
+/* Chat: shown when contact details in a message were hidden */
+.chat-contact-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #8a6d00;
+  background: rgba(245,180,0,0.12);
+  border-top: 1px solid rgba(245,180,0,0.35);
+}
+.chat-contact-note[hidden] { display: none; }
+.chat-contact-note i { flex-shrink: 0; margin-top: 1px; }
+/* conversation.html: sits between two separate panels, not inside one */
+.chat-contact-note.boxed {
+  margin-top: 16px;
+  border: 1px solid rgba(245,180,0,0.35);
+  border-radius: var(--radius);
+}
+
+@media (max-width: 700px) {
+  .offer-card { padding: 12px; }
+  .offer-actions .offer-btn { flex: 1 1 calc(50% - 4px); }
+  .offer-actions .offer-btn:first-child:nth-last-child(odd) { flex-basis: 100%; }
 }
 
 .condition-photo-strip {

@@ -120,7 +120,9 @@ function statusBadge(status) {
   const map = {
     Posted: "blue", Accepted: "gold", "In Progress": "gold",
     Completed: "", Cancelled: "red", Available: "", Booked: "gold", Returned: "",
-    Upcoming: "blue", Reserved: "gold", Pending: "gold", Confirmed: "blue"
+    Upcoming: "blue", Reserved: "gold", Pending: "gold", Confirmed: "blue",
+    /* offer statuses (Pending/Accepted above are shared) */
+    Declined: "red", Withdrawn: "navy", Expired: "navy"
   };
   return `<div class="badge ${map[status] ?? ""}">${status}</div>`;
 }

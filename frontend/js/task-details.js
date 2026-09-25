@@ -45,6 +45,28 @@ function renderTaskDetails(task) {
     primaryAction = statusBadge(task.status);
   }
 
+  /* In-app offers (js/offers.js) — only on an open task you don't own.
+     Starts hidden; offers.js shows it once it knows you can offer. Guests
+     see it straight away (it asks them to sign in). */
+  const canOffer = !isOwn && task.status === "Posted";
+  const makeOfferButton = canOffer
+    ? `<button class="secondary-button" id="makeOfferButton" style="margin-top:10px;"${currentUser ? " hidden" : ""}>
+         <i class="ti ti-tag" aria-hidden="true"></i> Make an offer
+       </button>`
+    : "";
+
+  /* The other person's phone number only comes back from the API once the
+     (demo) payment is held between you — see task.service.js. */
+  const otherPhone = isOwn ? task.accepted_by_phone_number : task.created_by_phone_number;
+  const contactRow = otherPhone
+    ? `<div style="margin-bottom:12px;">
+         <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Contact (payment held)</div>
+         <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;">
+           <i class="ti ti-phone" aria-hidden="true"></i> ${otherPhone}
+         </div>
+       </div>`
+    : "";
+
   const messageButton = canMessagePoster
     ? `<button class="secondary-button" id="messagePosterButton" style="margin-top:10px;">
          <i class="ti ti-message-circle" aria-hidden="true"></i> Message Poster
@@ -81,6 +103,7 @@ function renderTaskDetails(task) {
           ${statusBadge(task.status)}
         </div>
         ${endorsementDetailBlock(task)}
+        <div id="offersSection"></div>
       </div>
       <div class="form-panel detail-summary">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
@@ -103,7 +126,9 @@ function renderTaskDetails(task) {
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Budget</div>
           <div class="market-price">R${task.price} <span>/task</span></div>
         </div>
+        ${contactRow}
         ${primaryAction}
+        ${makeOfferButton}
         ${messageButton}
         ${ownerActions}
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
@@ -117,6 +142,20 @@ function renderTaskDetails(task) {
   attachTaskActionEvents();
   attachOwnerActionEvents();
   attachProfileLinkEvents();
+
+  /* Owners always get the Offers panel (their negotiations, even after the
+     task is taken); anyone else only while the task is open. */
+  if (isOwn || canOffer) {
+    initOffers({
+      contextType: "task",
+      contextId: taskId,
+      listing: task,
+      isOwner: isOwn,
+      sectionEl: document.getElementById("offersSection"),
+      makeOfferButton: document.getElementById("makeOfferButton"),
+      onListingChanged: loadTaskDetails
+    });
+  }
 
   document.getElementById("messagePosterButton")?.addEventListener("click", (e) => {
     if (!requireAuthAction("Sign in to message the poster.")) return;

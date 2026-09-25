@@ -18,6 +18,7 @@ const adminRoutes           = require("./routes/admin.routes");
 const adminMessagingRoutes  = require("./routes/adminMessaging.routes");
 const adminAllowlistRoutes  = require("./routes/adminAllowlist.routes");
 const lecturerRoutes        = require("./routes/lecturer.routes");
+const offerRoutes           = require("./routes/offer.routes");
 
 const { errorHandler }   = require("./middleware/error.middleware");
 const { apiLimiter }     = require("./middleware/rateLimit.middleware");
@@ -56,6 +57,7 @@ app.use("/api/admin",           adminRoutes);
 app.use("/api/admin/messages",  adminMessagingRoutes);
 app.use("/api/admin/allowlist", adminAllowlistRoutes);
 app.use("/api/lecturer",        lecturerRoutes);
+app.use("/api/offers",          offerRoutes);
 
 app.use(errorHandler);
 
