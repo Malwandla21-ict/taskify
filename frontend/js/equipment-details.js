@@ -223,13 +223,19 @@ bookingForm?.addEventListener("submit", async e => {
   submitBtn.disabled = true;
   submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Holding payment…`;
   try {
-    await apiRequest(`/equipment/${bookingEquipmentIdInput.value}/book`, "POST", {
+    const res = await apiRequest(`/equipment/${bookingEquipmentIdInput.value}/book`, "POST", {
       startDate: bookingStartDateInput.value,
       endDate:   bookingEndDateInput.value
     });
-    showToast("Booking requested! Your payment is held by Taskify (demo) until the owner responds.");
+    /* Rent + protection fee + deposit, as saved by the server. */
+    const booking = res?.data || {};
+    const heldTotal = Number(booking.rental_amount || 0) + Number(booking.protection_fee || 0) + Number(booking.deposit_amount || 0);
+    showPaymentMoment("held", heldTotal > 0
+      ? `Booking requested. ${formatRand(heldTotal)} is held by Taskify until the owner responds.`
+      : "Booking requested. Your payment is held by Taskify until the owner responds.");
     closeModal(bookingModal, bookingForm, bookingMessage);
-    setTimeout(() => window.location.href = "./equipment.html", 800);
+    /* 2s instead of 0.8s so the payment pop-up can finish before we leave. */
+    setTimeout(() => window.location.href = "./equipment.html", 2000);
   } catch (err) {
     bookingMessage.textContent = err.message;
     bookingMessage.style.color = "red";
