@@ -230,11 +230,14 @@
 
   // Puts the horizontal logo inside `container` and plays the reveal once.
   // color: colour of the "taskify" lettering ("#0E2238" on light, "#FFFFFF" on dark).
+  // marketColor: colour of the small "MARKETPLACE" line. Brand green by default;
+  // pass a lighter green on dark photo backgrounds, where the brand green is hard to read.
   function mountReveal(container, opts) {
-    const o = Object.assign({ color: "#0E2238", autoplay: true }, opts);
+    const o = Object.assign({ color: "#0E2238", marketColor: GREEN, autoplay: true }, opts);
     container.innerHTML = lockupSVG(WORD_PATH, MARKET_PATH);
     const svg = container.querySelector(".tk-lockup");
     svg.style.color = o.color;
+    svg.querySelector(".tk-market path").setAttribute("fill", o.marketColor);
     svg.style.width = "100%";
     svg.style.height = "auto";
     if (o.autoplay) playReveal(svg);
