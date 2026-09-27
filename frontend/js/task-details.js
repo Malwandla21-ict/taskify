@@ -41,7 +41,7 @@ function renderTaskDetails(task) {
                         <i class="ti ti-circle-check" aria-hidden="true"></i> Mark Complete
                       </button>`;
   } else if (task.status === "Awaiting Confirmation" && isOwn) {
-    primaryAction = `<button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" style="background:var(--ump-green);">
+    primaryAction = `<button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${task.price}" style="background:var(--ump-green);">
                         <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion
                       </button>`;
   } else {
@@ -177,7 +177,8 @@ function attachTaskActionEvents() {
   if (complete) complete.addEventListener("click", () => updateTask(complete, `/tasks/${complete.dataset.taskId}/status`, "PATCH", { status: "Awaiting Confirmation" },"Marked as done — awaiting confirmation.", "Submitting…"));
   if (confirmBtn) confirmBtn.addEventListener("click", () => {
     if (!window.confirm("Confirm this task is complete? This releases payment to the worker.")) return;
-    updateTask(confirmBtn, `/tasks/${confirmBtn.dataset.taskId}/confirm-completion`, "PATCH", null, "Task completed and payment released!", "Confirming…");
+    updateTask(confirmBtn, `/tasks/${confirmBtn.dataset.taskId}/confirm-completion`, "PATCH", null, "Task completed and payment released!", "Confirming…",
+      () => showPaymentMoment("released", `Task completed. ${formatRand(confirmBtn.dataset.taskPrice)} released to the worker.`));
   });
 }
 
@@ -210,7 +211,8 @@ function openPaymentSimulationModal(acceptBtn) {
         "PATCH",
         null,
         "Task accepted! Payment held in escrow (demo).",
-        "Accepting…"
+        "Accepting…",
+        () => showPaymentMoment("held", `Task accepted. ${formatRand(acceptBtn.dataset.taskPrice)} is held until the poster confirms the work is done.`)
       );
     };
   }
@@ -252,14 +254,19 @@ function attachOwnerActionEvents() {
   });
 }
 
-async function updateTask(btn, url, method, body, msg, loadingLabel) {
+/* onSuccess (optional): runs instead of the success toast. Only the
+   payment actions (accept, confirm completion) pass one, to play the
+   payment pop-up, and those wait longer before leaving the page so the
+   pop-up has time to finish. */
+async function updateTask(btn, url, method, body, msg, loadingLabel, onSuccess = null) {
   const originalHtml = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${loadingLabel}`;
   try {
     await apiRequest(url, method, body);
-    showToast(msg);
-    setTimeout(() => window.location.href = "./tasks.html", 800);
+    if (onSuccess) onSuccess();
+    else showToast(msg);
+    setTimeout(() => window.location.href = "./tasks.html", onSuccess ? 2000 : 800);
   } catch (err) {
     showToast(err.message, "error");
     btn.disabled = false;
