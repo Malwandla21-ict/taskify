@@ -78,7 +78,13 @@ function renderTaskDetails(task) {
 
   const canCancel = isOwn && ["Posted", "Accepted"].includes(task.status);
   const canDelete = isOwn && task.status === "Posted";
+  /* Editable only until someone accepts it — same rule as the server. */
+  const canEdit = isOwn && task.status === "Posted";
   const ownerActions = `
+    ${canEdit ? `
+      <a href="./tasks.html?edit=${task.id}" class="secondary-button" style="margin-top:10px;">
+        <i class="ti ti-edit" aria-hidden="true"></i> Edit Task
+      </a>` : ""}
     ${canCancel ? `
       <button class="secondary-button cancel-task-btn" data-task-id="${task.id}" style="margin-top:10px;">
         <i class="ti ti-x" aria-hidden="true"></i> Cancel Task

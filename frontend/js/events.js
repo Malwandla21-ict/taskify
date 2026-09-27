@@ -33,14 +33,81 @@ let myEvents        = [];
 let myRsvpIds       = [];
 let selectedSection = "All";
 
+/* Edit mode: the same form edits an existing event — from the Edit button
+   on an event card here, or when the page is opened as events.html?edit=<id>
+   (the Edit button on the event's detail page). */
+let editingEventId = null;
+const eventModalTitle = document.getElementById("eventModalTitle");
+const EVENT_TEXT = {
+  create: { title: `<i class="ti ti-calendar-plus" aria-hidden="true"></i> Post an Event`,
+            submit: `<i class="ti ti-send" aria-hidden="true"></i> Post Event` },
+  edit:   { title: `<i class="ti ti-edit" aria-hidden="true"></i> Edit Event`,
+            submit: `<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes` }
+};
+
+function setEventModalText() {
+  const text = editingEventId ? EVENT_TEXT.edit : EVENT_TEXT.create;
+  if (eventModalTitle) eventModalTitle.innerHTML = text.title;
+  const submitBtn = eventForm?.querySelector("button[type='submit']");
+  if (submitBtn) submitBtn.innerHTML = text.submit;
+}
+
+/* datetime-local inputs want the viewer's local time as "YYYY-MM-DDTHH:MM". */
+function toLocalDateTimeInput(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+}
+
 openCreateEventButton?.addEventListener("click", () => {
   if (!requireAuthAction("Sign in to create an event.")) return;
+  editingEventId = null;
   eventForm.reset();
   eventMessage.textContent = "";
+  setEventModalText();
   showEventStep(1);
   if (eventUploader) eventUploader.reset();
   openModal(bookingModal);
 });
+
+function openEventEditModal(event) {
+  editingEventId = event.id;
+  eventForm.reset();
+  eventMessage.textContent = "";
+  document.getElementById("eventTitle").value           = event.title || "";
+  document.getElementById("eventCategory").value        = event.category || "";
+  document.getElementById("eventSection").value         = event.section || "General";
+  document.getElementById("eventDescription").value     = event.description || "";
+  document.getElementById("eventLocation").value        = event.location || "";
+  document.getElementById("eventDate").value            = toLocalDateTimeInput(event.event_date);
+  document.getElementById("eventCapacity").value        = event.capacity ?? "";
+  document.getElementById("eventHasFood").checked         = !!Number(event.has_food);
+  document.getElementById("eventHasRefreshments").checked = !!Number(event.has_refreshments);
+  if (eventUploader) eventUploader.setExisting(event.image_urls || []);
+  setEventModalText();
+  showEventStep(1);
+  openModal(bookingModal);
+}
+
+async function openEventEditById(eventId) {
+  if (!currentUser) return;
+  try {
+    const res = await apiRequest(`/events/${eventId}`);
+    const event = res.data;
+    if (Number(event.organizer_id) !== Number(currentUser.id)) { showToast("You can only edit your own events.", "error"); return; }
+    if (event.status !== "Upcoming" || new Date(event.event_date) < new Date()) { showToast("Only upcoming events can be edited.", "error"); return; }
+    openEventEditModal(event);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+}
+
+function openEventEditFromUrl() {
+  const editId = getEditIdFromUrl();
+  if (!editId) return;
+  clearEditParam();
+  openEventEditById(editId);
+}
 closeEventModalButton?.addEventListener("click", () => closeModal(bookingModal, null, null));
 document.getElementById("overlay")?.addEventListener("click", () => closeModal(bookingModal, null, null));
 
@@ -48,7 +115,7 @@ function showEventStep(n) {
   eventStep1.style.display = n === 1 ? "block" : "none";
   eventStep2.style.display = n === 2 ? "block" : "none";
   eventStep3.style.display = n === 3 ? "block" : "none";
-  eventStepText.textContent = `Step ${n} of 3`;
+  eventStepText.textContent = `${editingEventId ? "Editing · " : ""}Step ${n} of 3`;
   eventProgressFill.style.width = n === 1 ? "33%" : n === 2 ? "66%" : "100%";
   [eDot1, eDot2, eDot3].forEach((dot, i) => {
     if (!dot) return;
@@ -106,6 +173,9 @@ function eventCard(event) {
   if (isOwn) {
     actionArea = `
       <div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Organizing</div>
+      <button class="market-action-btn outline edit-event-btn" data-event-id="${event.id}">
+        <i class="ti ti-edit" aria-hidden="true"></i> Edit
+      </button>
       <button class="market-action-btn outline delete-event-btn" data-event-id="${event.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
         <i class="ti ti-trash" aria-hidden="true"></i> Delete
       </button>`;
@@ -142,6 +212,7 @@ function eventCard(event) {
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${event.category}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
           <div class="market-tag"><i class="ti ti-clock" aria-hidden="true"></i> ${formatEventDate(event.event_date)}</div>
+          ${eventFoodTags(event)}
           ${endorsementBadge(event)}
         </div>
         <div class="market-footer">
@@ -298,6 +369,12 @@ function attachEventButtonEvents(scope = document) {
     });
   });
 
+  scope.querySelectorAll(".edit-event-btn").forEach(btn => {
+    if (btn.dataset.bound) return;
+    btn.dataset.bound = "1";
+    btn.addEventListener("click", () => openEventEditById(btn.dataset.eventId));
+  });
+
   scope.querySelectorAll(".delete-event-btn").forEach(btn => {
     if (btn.dataset.bound) return;
     btn.dataset.bound = "1";
@@ -374,27 +451,39 @@ eventForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const submitBtn = eventForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Posting…`;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingEventId ? "Saving…" : "Posting…"}`;
 
   try {
-    let imageUrls = [];
+    /* In edit mode, keep the saved photos the organizer didn't remove. */
+    let imageUrls = eventUploader ? eventUploader.getExisting() : [];
     if (eventUploader && eventUploader.getFiles().length) {
       showToast("Uploading images…", "warning");
-      imageUrls = await eventUploader.upload("events");
+      imageUrls = [...imageUrls, ...await eventUploader.upload("events")];
     }
 
     const capacityValue = document.getElementById("eventCapacity").value.trim();
 
-    await apiRequest("/events", "POST", {
-      title:       document.getElementById("eventTitle").value.trim(),
-      description: document.getElementById("eventDescription").value.trim(),
-      category:    document.getElementById("eventCategory").value.trim(),
-      section:     document.getElementById("eventSection").value,
-      location:    document.getElementById("eventLocation").value.trim(),
-      eventDate:   new Date(document.getElementById("eventDate").value).toISOString(),
-      capacity:    capacityValue ? Number(capacityValue) : null,
+    const payload = {
+      title:           document.getElementById("eventTitle").value.trim(),
+      description:     document.getElementById("eventDescription").value.trim(),
+      category:        document.getElementById("eventCategory").value.trim(),
+      section:         document.getElementById("eventSection").value,
+      location:        document.getElementById("eventLocation").value.trim(),
+      eventDate:       new Date(document.getElementById("eventDate").value).toISOString(),
+      capacity:        capacityValue ? Number(capacityValue) : null,
+      hasFood:         document.getElementById("eventHasFood").checked,
+      hasRefreshments: document.getElementById("eventHasRefreshments").checked,
       imageUrls
-    });
+    };
+
+    if (editingEventId) {
+      await apiRequest(`/events/${editingEventId}`, "PUT", payload);
+      showToast("Event updated!");
+      window.location.href = `./event-details.html?id=${editingEventId}`;
+      return;
+    }
+
+    await apiRequest("/events", "POST", payload);
 
     showToast("Event posted successfully!");
     closeModal(bookingModal, eventForm, eventMessage);
@@ -406,7 +495,7 @@ eventForm?.addEventListener("submit", async e => {
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Post Event`;
+    setEventModalText();
   }
 });
 
@@ -417,3 +506,5 @@ loadEvents();
 loadMyEvents();
 
 const eventUploader = initImageUploader("eventUploadArea", "eventPreviewGrid");
+
+openEventEditFromUrl();

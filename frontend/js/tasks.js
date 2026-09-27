@@ -52,14 +52,62 @@ const openTaskModalButton  = document.getElementById("openTaskModalButton");
 const heroCreateTaskButton = document.getElementById("heroCreateTaskButton");
 const closeTaskModalButton = document.getElementById("closeTaskModalButton");
 
+/* Edit mode: the same form edits an existing task when the page is opened
+   as tasks.html?edit=<id> (the Edit button on the task's detail page). */
+let editingTaskId = null;
+const TASK_SUBMIT_HTML = {
+  create: `<i class="ti ti-send" aria-hidden="true"></i> Post Task`,
+  edit:   `<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes`
+};
+
+function setTaskSubmitLabel() {
+  const submitBtn = taskForm?.querySelector("button[type='submit']");
+  if (submitBtn) submitBtn.innerHTML = editingTaskId ? TASK_SUBMIT_HTML.edit : TASK_SUBMIT_HTML.create;
+}
+
 function openTaskCreateModal() {
   if (!requireAuthAction("Sign in to post a task.")) return;
+  editingTaskId = null;
   taskForm?.reset();
   taskMessage.textContent = "";
+  setTaskSubmitLabel();
   showTaskStep(1);
   if (taskUploader) taskUploader.reset();
   taskCreateOverlay?.classList.add("open");
   taskCreateModal?.classList.add("open");
+}
+
+function openTaskEditModal(task) {
+  editingTaskId = task.id;
+  taskForm?.reset();
+  taskMessage.textContent = "";
+  document.getElementById("title").value       = task.title || "";
+  document.getElementById("category").value    = task.category || "";
+  document.getElementById("taskSection").value = task.section || "General";
+  document.getElementById("urgent").checked    = !!Number(task.urgent);
+  document.getElementById("description").value = task.description || "";
+  document.getElementById("location").value    = task.location || "";
+  document.getElementById("price").value       = task.price ?? "";
+  if (taskUploader) taskUploader.setExisting(task.image_urls || []);
+  setTaskSubmitLabel();
+  showTaskStep(1);
+  taskCreateOverlay?.classList.add("open");
+  taskCreateModal?.classList.add("open");
+}
+
+async function openTaskEditFromUrl() {
+  const editId = getEditIdFromUrl();
+  if (!editId || !currentUser) return;
+  clearEditParam();
+  try {
+    const res = await apiRequest(`/tasks/${editId}`);
+    const task = res.data;
+    if (Number(task.created_by) !== Number(currentUser.id)) { showToast("You can only edit your own tasks.", "error"); return; }
+    if (task.status !== "Posted") { showToast("A task can only be edited before someone accepts it.", "error"); return; }
+    openTaskEditModal(task);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
 }
 
 function closeTaskCreateModal() {
@@ -76,7 +124,7 @@ function showTaskStep(n) {
   taskStep1.style.display = n === 1 ? "block" : "none";
   taskStep2.style.display = n === 2 ? "block" : "none";
   taskStep3.style.display = n === 3 ? "block" : "none";
-  taskStepText.textContent  = `Step ${n} of 3`;
+  taskStepText.textContent  = `${editingTaskId ? "Editing · " : ""}Step ${n} of 3`;
   taskProgressFill.style.width = n === 1 ? "33%" : n === 2 ? "66%" : "100%";
 
   [tDot1, tDot2, tDot3].forEach((dot, i) => {
@@ -515,16 +563,17 @@ taskForm?.addEventListener("submit", async e => {
 
   const submitBtn = taskForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Posting…`;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingTaskId ? "Saving…" : "Posting…"}`;
 
   try {
-    let imageUrls = [];
+    /* In edit mode, keep the saved photos the owner didn't remove. */
+    let imageUrls = taskUploader ? taskUploader.getExisting() : [];
     if (taskUploader && taskUploader.getFiles().length) {
       showToast("Uploading images…", "warning");
-      imageUrls = await taskUploader.upload("tasks");
+      imageUrls = [...imageUrls, ...await taskUploader.upload("tasks")];
     }
 
-    await apiRequest("/tasks", "POST", {
+    const payload = {
       title:       document.getElementById("title").value.trim(),
       description: document.getElementById("description").value.trim(),
       category:    document.getElementById("category").value.trim(),
@@ -533,7 +582,16 @@ taskForm?.addEventListener("submit", async e => {
       location:    document.getElementById("location").value.trim(),
       urgent:      document.getElementById("urgent").checked,
       imageUrls
-    });
+    };
+
+    if (editingTaskId) {
+      await apiRequest(`/tasks/${editingTaskId}`, "PUT", payload);
+      showToast("Task updated!");
+      window.location.href = `./task-details.html?id=${editingTaskId}`;
+      return;
+    }
+
+    await apiRequest("/tasks", "POST", payload);
     showToast("Task posted successfully!");
     taskForm.reset();
     if (taskUploader) taskUploader.reset();
@@ -547,7 +605,7 @@ taskForm?.addEventListener("submit", async e => {
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Post Task`;
+    setTaskSubmitLabel();
   }
 });
 
@@ -558,3 +616,5 @@ loadTasks();
 loadTaskHistory();
 
 const taskUploader = initImageUploader("taskUploadArea", "taskPreviewGrid");
+
+openTaskEditFromUrl();

@@ -37,7 +37,7 @@ function showSalesStep(n) {
   salesStep1.style.display = n === 1 ? "block" : "none";
   salesStep2.style.display = n === 2 ? "block" : "none";
   salesStep3.style.display = n === 3 ? "block" : "none";
-  salesStepText.textContent = `Step ${n} of 3`;
+  salesStepText.textContent = `${editingSalesId ? "Editing · " : ""}Step ${n} of 3`;
   salesProgressFill.style.width = n === 1 ? "33%" : n === 2 ? "66%" : "100%";
   [sDot1, sDot2, sDot3].forEach((dot, i) => {
     if (!dot) return;
@@ -92,14 +92,63 @@ document.getElementById("backSalesStep1")?.addEventListener("click", () => showS
 document.getElementById("backSalesStep2")?.addEventListener("click", () => showSalesStep(2));
 document.getElementById("salesPrice")?.addEventListener("input", updateSalesPreview);
 
+/* Edit mode: the same form edits an existing listing when the page is
+   opened as sales.html?edit=<id> (the Edit button on the item's detail page). */
+let editingSalesId = null;
+const SALES_SUBMIT_HTML = {
+  create: `<i class="ti ti-send" aria-hidden="true"></i> Publish Item`,
+  edit:   `<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes`
+};
+
+function setSalesSubmitLabel() {
+  const submitBtn = salesForm?.querySelector("button[type='submit']");
+  if (submitBtn) submitBtn.innerHTML = editingSalesId ? SALES_SUBMIT_HTML.edit : SALES_SUBMIT_HTML.create;
+}
+
 function openSalesCreateModal() {
   if (!requireAuthAction("Sign in to sell an item.")) return;
+  editingSalesId = null;
   salesForm?.reset();
   salesMessage.textContent = "";
+  setSalesSubmitLabel();
   showSalesStep(1);
   if (salesUploader) salesUploader.reset();
   salesCreateOverlay?.classList.add("open");
   salesCreateModal?.classList.add("open");
+}
+
+function openSalesEditModal(item) {
+  editingSalesId = item.id;
+  salesForm?.reset();
+  salesMessage.textContent = "";
+  document.getElementById("salesTitle").value       = item.title || "";
+  document.getElementById("salesCategory").value    = item.category || "";
+  document.getElementById("salesSection").value     = item.section || "Academic";
+  document.getElementById("salesDescription").value = item.description || "";
+  document.getElementById("salesCondition").value   = item.condition_status || "Good";
+  document.getElementById("salesLocation").value    = item.location || "";
+  document.getElementById("salesPrice").value       = item.price ?? "";
+  if (salesUploader) salesUploader.setExisting(item.image_urls || []);
+  updateSalesPreview();
+  setSalesSubmitLabel();
+  showSalesStep(1);
+  salesCreateOverlay?.classList.add("open");
+  salesCreateModal?.classList.add("open");
+}
+
+async function openSalesEditFromUrl() {
+  const editId = getEditIdFromUrl();
+  if (!editId || !currentUser) return;
+  clearEditParam();
+  try {
+    const res = await apiRequest(`/sales/${editId}`);
+    const item = res.data;
+    if (Number(item.seller_id) !== Number(currentUser.id)) { showToast("You can only edit your own listings.", "error"); return; }
+    if (item.status !== "Available") { showToast("This item can't be edited once a buyer has paid or it's sold.", "error"); return; }
+    openSalesEditModal(item);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
 }
 
 function closeSalesCreateModal() {
@@ -425,16 +474,17 @@ salesForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const submitBtn = salesForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Publishing…`;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingSalesId ? "Saving…" : "Publishing…"}`;
 
   try {
-    let imageUrls = [];
+    /* In edit mode, keep the saved photos the seller didn't remove. */
+    let imageUrls = salesUploader ? salesUploader.getExisting() : [];
     if (salesUploader && salesUploader.getFiles().length) {
       showToast("Uploading images…", "warning");
-      imageUrls = await salesUploader.upload("sales");
+      imageUrls = [...imageUrls, ...await salesUploader.upload("sales")];
     }
 
-    await apiRequest("/sales", "POST", {
+    const payload = {
       title:           document.getElementById("salesTitle").value.trim(),
       description:     document.getElementById("salesDescription").value.trim(),
       category:        document.getElementById("salesCategory").value.trim(),
@@ -443,7 +493,16 @@ salesForm?.addEventListener("submit", async e => {
       conditionStatus: document.getElementById("salesCondition").value,
       location:        document.getElementById("salesLocation").value.trim(),
       imageUrls
-    });
+    };
+
+    if (editingSalesId) {
+      await apiRequest(`/sales/${editingSalesId}`, "PUT", payload);
+      showToast("Listing updated!");
+      window.location.href = `./sale-details.html?id=${editingSalesId}`;
+      return;
+    }
+
+    await apiRequest("/sales", "POST", payload);
     showToast("Item listed successfully!");
     salesForm.reset();
     if (salesUploader) salesUploader.reset();
@@ -457,7 +516,7 @@ salesForm?.addEventListener("submit", async e => {
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Publish Item`;
+    setSalesSubmitLabel();
   }
 });
 
@@ -468,3 +527,5 @@ loadSalesItems();
 loadMySalesItems();
 
 const salesUploader = initImageUploader("salesUploadArea", "salesPreviewGrid");
+
+openSalesEditFromUrl();

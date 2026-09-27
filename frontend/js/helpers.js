@@ -150,6 +150,28 @@ function moneyRow(label, amount, { strong = false, hint = "" } = {}) {
     </div>`;
 }
 
+/* "Food" / "Refreshments" tags on an event (the organizer ticks these when
+   posting or editing it). Empty string when neither is provided. */
+function eventFoodTags(event) {
+  return (Number(event.has_food) ? `<div class="market-tag"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Food</div>` : "")
+    + (Number(event.has_refreshments) ? `<div class="market-tag"><i class="ti ti-cup" aria-hidden="true"></i> Refreshments</div>` : "");
+}
+
+/* Edit mode for the create forms: an owner's Edit button on a detail page
+   links to e.g. tasks.html?edit=12, and that page opens its create form
+   pre-filled. clearEditParam() tidies the address bar afterwards so a
+   refresh doesn't reopen the form. */
+function getEditIdFromUrl() {
+  const id = new URLSearchParams(window.location.search).get("edit");
+  return id && /^\d+$/.test(id) ? id : null;
+}
+
+function clearEditParam() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete("edit");
+  history.replaceState(null, "", url);
+}
+
 /* Brand "Payment held" / "Payment released" pop-up (taskify-motion.js).
    Call it only after the API call has succeeded — it replaces the success
    toast. If the motion script isn't on the page it falls back to a normal
@@ -430,6 +452,10 @@ function initImageUploader(uploadAreaId, previewGridId) {
   if (!uploadArea || !previewGrid) return null;
 
   let selectedFiles = [];
+  /* Photos already saved on a listing (edit mode) — shown first, each
+     removable. upload() only sends the new files; the caller combines
+     getExisting() with what upload() returns. */
+  let existingUrls = [];
 
   const fileInput = document.createElement("input");
   fileInput.type     = "file";
@@ -468,7 +494,7 @@ function initImageUploader(uploadAreaId, previewGridId) {
       showToast("Only JPEG, PNG or WebP images are allowed.", "error");
       return;
     }
-    const remaining = 5 - selectedFiles.length;
+    const remaining = 5 - existingUrls.length - selectedFiles.length;
     if (remaining <= 0) {
       showToast("Maximum 5 images allowed.", "warning");
       return;
@@ -483,6 +509,21 @@ function initImageUploader(uploadAreaId, previewGridId) {
 
   function renderPreviews() {
     previewGrid.innerHTML = "";
+    existingUrls.forEach((url, index) => {
+      const item = document.createElement("div");
+      item.className = "upload-preview-item";
+      item.innerHTML = `
+        <img alt="Saved image ${index + 1}" />
+        <button type="button" class="upload-remove-btn" aria-label="Remove image">
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>`;
+      item.querySelector("img").src = url;
+      item.querySelector(".upload-remove-btn").addEventListener("click", () => {
+        existingUrls.splice(index, 1);
+        renderPreviews();
+      });
+      previewGrid.appendChild(item);
+    });
     selectedFiles.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = e => {
@@ -501,9 +542,10 @@ function initImageUploader(uploadAreaId, previewGridId) {
       };
       reader.readAsDataURL(file);
     });
-    uploadArea.classList.toggle("has-files", selectedFiles.length > 0);
+    const total = existingUrls.length + selectedFiles.length;
+    uploadArea.classList.toggle("has-files", total > 0);
     const counter = uploadArea.querySelector(".upload-counter");
-    if (counter) counter.textContent = `${selectedFiles.length}/5 images`;
+    if (counter) counter.textContent = `${total}/5 images`;
   }
 
   async function upload(folder = "general") {
@@ -535,13 +577,24 @@ function initImageUploader(uploadAreaId, previewGridId) {
 
   function reset() {
     selectedFiles = [];
+    existingUrls = [];
     previewGrid.innerHTML = "";
     uploadArea.classList.remove("has-files");
+    const counter = uploadArea.querySelector(".upload-counter");
+    if (counter) counter.textContent = "0/5 images";
   }
 
   function getFiles() { return selectedFiles; }
 
-  return { upload, reset, getFiles };
+  function setExisting(urls = []) {
+    existingUrls = Array.isArray(urls) ? urls.slice(0, 5) : [];
+    selectedFiles = [];
+    renderPreviews();
+  }
+
+  function getExisting() { return existingUrls.slice(); }
+
+  return { upload, reset, getFiles, setExisting, getExisting };
 }
 
 function renderImageGallery(imageUrls = [], fallbackIcon = "ti-image") {
