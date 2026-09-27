@@ -150,6 +150,15 @@ function moneyRow(label, amount, { strong = false, hint = "" } = {}) {
     </div>`;
 }
 
+/* Brand "Payment held" / "Payment released" pop-up (taskify-motion.js).
+   Call it only after the API call has succeeded — it replaces the success
+   toast. If the motion script isn't on the page it falls back to a normal
+   toast, so a successful action can never end up in a catch block. */
+function showPaymentMoment(type, message, options = {}) {
+  if (window.TaskifyMotion) TaskifyMotion.moment(type, { ...options, message });
+  else showToast(message);
+}
+
 /* Renter trust level chip — level key is "new" | "trusted" | "top". */
 function trustChip(level, label) {
   const icon = level === "top" ? "ti-crown" : level === "trusted" ? "ti-shield-check" : "ti-seedling";

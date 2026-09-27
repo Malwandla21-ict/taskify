@@ -270,7 +270,7 @@ function renderSaleDetails(item) {
       try {
         await apiRequest(`/sales/${saleId}/buy`, "POST");
         closeModal(buyModal);
-        showToast("Payment held (demo). Your handover code is ready.");
+        showPaymentMoment("held", `${formatRand(rules.total)} is held until you have the item. Your handover code is ready.`);
         await loadSaleDetails();
       } catch (err) {
         showToast(err.message, "error");
@@ -295,7 +295,7 @@ function renderSaleDetails(item) {
     btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Checking…`;
     try {
       await apiRequest(`/sales/orders/${btn.dataset.orderId}/release`, "POST", { code });
-      showToast("Code accepted! Payment released to you (demo).");
+      showPaymentMoment("released", `Code accepted. ${formatRand(order.item_price)} released to you.`);
     } catch (err) {
       showToast(err.message, "error");
     }
