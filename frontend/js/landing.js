@@ -62,11 +62,13 @@ function setupNavScrollSpy() {
 }
 
 /* Brand logo reveal in the hero. White lettering because the hero sits on
-   a dark photo overlay. taskify-motion.js handles "Reduce motion" itself. */
+   a dark photo overlay; "MARKETPLACE" uses the same light green as the
+   hero heading, since the darker brand green is hard to read on the photo.
+   taskify-motion.js handles "Reduce motion" itself. */
 function setupHeroLogo() {
   const heroLogo = document.querySelector(".landing-hero-logo");
   if (!heroLogo || !window.TaskifyMotion) return;
-  TaskifyMotion.mountReveal(heroLogo, { color: "#FFFFFF" });
+  TaskifyMotion.mountReveal(heroLogo, { color: "#FFFFFF", marketColor: "#6BE3B8" });
 }
 
 setupHeroLogo();
