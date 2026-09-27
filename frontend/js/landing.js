@@ -61,5 +61,14 @@ function setupNavScrollSpy() {
   sections.forEach(section => observer.observe(section));
 }
 
+/* Brand logo reveal in the hero. White lettering because the hero sits on
+   a dark photo overlay. taskify-motion.js handles "Reduce motion" itself. */
+function setupHeroLogo() {
+  const heroLogo = document.querySelector(".landing-hero-logo");
+  if (!heroLogo || !window.TaskifyMotion) return;
+  TaskifyMotion.mountReveal(heroLogo, { color: "#FFFFFF" });
+}
+
+setupHeroLogo();
 setupScrollReveal();
 setupNavScrollSpy();
