@@ -64,8 +64,9 @@ body.dashboard-body {
   text-decoration: none;
 }
 
+/* Square Taskify symbol — smaller than the old wide UMP logo. */
 .sidebar-brand-logo {
-  width: 100px;
+  width: 56px;
   height: auto;
   object-fit: contain;
 }
