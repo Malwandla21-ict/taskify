@@ -268,9 +268,12 @@ function attachNotificationEvents() {
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
       try {
-        await apiRequest(`/tasks/${btn.dataset.taskId}/confirm-completion`, "PATCH");
+        const res = await apiRequest(`/tasks/${btn.dataset.taskId}/confirm-completion`, "PATCH");
+        const price = res?.data?.price;
+        showPaymentMoment("released", price != null
+          ? `Task completed. ${formatRand(price)} released to the worker.`
+          : "Task completed. Payment released to the worker.");
         await apiRequest(`/notifications/${btn.dataset.notifId}/read`, "PATCH").catch(() => {});
-        showToast("Task completed and payment released!");
         await loadNotifications();
       } catch (err) {
         showToast(err.message, "error");
