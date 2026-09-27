@@ -315,23 +315,26 @@
     const isTask = offer.context_type === "task";
     const role = offer.my_role;
     const preview = offer.payment_preview;
-    let title, body, buttonText;
+    let title, body, buttonText, heldMessage;
 
     if (isTask && role === "owner") {
       title = "Accept & hold payment";
       buttonText = "Accept & pay";
+      heldMessage = `Offer accepted. ${formatRand(offer.amount)} is held until you confirm the work is done.`;
       body = `${demoPaymentBanner("No real payment gateway is connected. This simulates your payment being held in escrow until the task is done and you confirm it.")}
         <div class="money-breakdown">${moneyRow("Agreed price — held now", offer.amount, { strong: true })}</div>
         <p class="pay-note">The task is assigned to <strong>${esc(offer.offerer.name)}</strong> and every other offer is closed.</p>`;
     } else if (isTask) {
       title = `Accept ${formatRand(offer.amount)}?`;
       buttonText = "Accept offer";
+      heldMessage = `Offer accepted. ${formatRand(offer.amount)} is held until the poster confirms the work is done.`;
       body = `${demoPaymentBanner("This simulates the poster's payment being held in escrow until they confirm the work is done.")}
         <div class="money-breakdown">${moneyRow("You'll be paid", offer.amount, { strong: true, hint: "held by Taskify until the poster confirms" })}</div>
         <p class="pay-note">The task is assigned to you straight away.</p>`;
     } else if (role === "owner") {
       title = "Accept offer";
       buttonText = "Accept offer";
+      heldMessage = `Offer accepted. The buyer's payment is held, and ${formatRand(preview.itemPrice)} is released to you after handover.`;
       body = `${demoPaymentBanner("This simulates the buyer's payment being held by Taskify until they have the item.")}
         <div class="money-breakdown">
           ${moneyRow("You'll receive", preview.itemPrice, { strong: true, hint: "released when you enter their handover code" })}
@@ -340,6 +343,7 @@
     } else {
       title = "Accept & pay with Taskify Protection";
       buttonText = "Accept & pay";
+      heldMessage = `Offer accepted. ${formatRand(preview.total)} is held until you have the item. Your handover code is ready.`;
       body = `${demoPaymentBanner("No real payment gateway is connected. This simulates Taskify holding your money until you receive the item.")}
         <div class="money-breakdown">
           ${moneyRow("Agreed price", preview.itemPrice, { hint: "goes to the seller after handover" })}
@@ -360,7 +364,7 @@
       try {
         await apiRequest(`/offers/${offer.id}/accept`, "PATCH", { expectedAmount: offer.amount });
         closeModal(document.getElementById("offerConfirmModal"));
-        showToast(isTask ? "Offer accepted — task assigned and payment held (demo)." : "Offer accepted — item reserved and payment held (demo).");
+        showPaymentMoment("held", heldMessage);
         state.onListingChanged?.();
       } catch (err) {
         closeModal(document.getElementById("offerConfirmModal"));
