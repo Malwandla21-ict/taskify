@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const { SALES } = require("../config/paymentSettings");
 const { roundMoney } = require("./trust.service");
 const { closeOpenOffers, notifyClosedOffers, deleteOffersFor } = require("./offerClosure.service");
+const { messagingAccess } = require("./conversation.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -485,6 +486,10 @@ async function getSalesItemByIdForViewing(itemId, viewerId = null, viewerRole = 
     if (item.my_order.role === "buyer") item.seller_phone_number = phoneOf(item.my_order.seller_id);
     else item.my_order.buyer_phone_number = phoneOf(item.my_order.buyer_id);
   }
+
+  /* Whether this viewer may open a chat about it — the same rule
+     conversation.service's startConversation enforces. */
+  item.can_message = (await messagingAccess("sale", item.id, viewerId)).allowed;
 
   return item;
 }

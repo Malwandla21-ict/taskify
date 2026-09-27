@@ -130,9 +130,19 @@ function renderSaleDetails(item) {
   const order = item.my_order;
   const activeOrder = order && order.status === "Held" ? order : null;
 
+  /* Messaging the seller opens once you've bought through Taskify
+     Protection — or straight away on cheap cash items, where messaging is
+     how you arrange the sale. The server decides (item.can_message, see
+     conversation.service.js messagingAccess). */
+  const messageSellerButton = (primary = false) => item.can_message
+    ? `<button class="${primary ? "primary-button" : "secondary-button"}" id="messageSellerButton"${primary ? "" : ' style="margin-top:10px;"'}>
+         <i class="ti ti-message-circle" aria-hidden="true"></i> Message Seller
+       </button>`
+    : "";
+
   let actionArea;
   if (activeOrder) {
-    actionArea = orderPanel(item, activeOrder);
+    actionArea = `${orderPanel(item, activeOrder)}${activeOrder.role === "buyer" ? messageSellerButton() : ""}`;
   } else if (isOwn) {
     actionArea = `${orderPanel(item, order)}<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>
        ${item.status === "Available" ? `
@@ -145,7 +155,7 @@ function renderSaleDetails(item) {
   } else if (item.status === "Reserved") {
     actionArea = `<div class="badge gold"><i class="ti ti-clock" aria-hidden="true"></i> Reserved — another student is buying this</div>`;
   } else if (item.status !== "Available") {
-    actionArea = `${orderPanel(item, order)}<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Already sold</div>`;
+    actionArea = `${orderPanel(item, order)}<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Already sold</div>${messageSellerButton()}`;
   } else if (rules.requiresProtection) {
     /* In-app offers (js/offers.js) are only on protected items. Starts
        hidden for signed-in users until offers.js knows they can offer. */
@@ -156,14 +166,9 @@ function renderSaleDetails(item) {
        <button class="secondary-button" id="makeOfferButton" style="margin-top:10px;"${currentUser ? " hidden" : ""}>
          <i class="ti ti-tag" aria-hidden="true"></i> Make an offer
        </button>
-       <button class="secondary-button" id="messageSellerButton" style="margin-top:10px;">
-         <i class="ti ti-message-circle" aria-hidden="true"></i> Message Seller
-       </button>`;
+       ${messageSellerButton()}`;
   } else {
-    actionArea = `${safetyTipsPanel(rules)}
-       <button class="primary-button" id="messageSellerButton">
-         <i class="ti ti-message-circle" aria-hidden="true"></i> Message Seller
-       </button>`;
+    actionArea = `${safetyTipsPanel(rules)}${messageSellerButton(true)}`;
   }
 
   saleDetailsContainer.innerHTML = `

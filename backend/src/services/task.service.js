@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const notificationService = require("./notification.service");
 const contentModerationService = require("./contentModeration.service");
 const { closeOpenOffers, notifyClosedOffers, deleteOffersFor } = require("./offerClosure.service");
+const { messagingAccess } = require("./conversation.service");
 
 /* Derived-table pattern (subquery in FROM, not in ON) for "latest
    endorsement per context" — safe and fast, unlike a correlated subquery
@@ -483,6 +484,10 @@ async function getTaskByIdForViewing(taskId, viewerId = null, viewerRole = null)
     task.created_by_phone_number = phoneOf(task.created_by);
     task.accepted_by_phone_number = phoneOf(task.accepted_by);
   }
+
+  /* Whether this viewer may open a chat about it — the same rule
+     conversation.service's startConversation enforces. */
+  task.can_message = (await messagingAccess("task", task.id, viewerId)).allowed;
 
   return task;
 }

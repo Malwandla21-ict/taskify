@@ -61,9 +61,11 @@ function conversationItem(conv) {
     ? (conv.last_message.length > 48 ? conv.last_message.slice(0, 48) + "…" : conv.last_message)
     : "No messages yet — say hello!";
   const timeText = conv.last_message_at ? relativeDate(conv.last_message_at) : "";
+  /* Messages from the other person you haven't opened yet. */
+  const unread = Number(conv.unread_count) || 0;
 
   return `
-    <div class="conversation-item ${Number(conv.id) === Number(activeConversationId) ? "active" : ""}" data-conv-id="${conv.id}">
+    <div class="conversation-item ${Number(conv.id) === Number(activeConversationId) ? "active" : ""}${unread ? " unread" : ""}" data-conv-id="${conv.id}">
       <div class="conversation-item-avatar">${avatarHtml(conv.other_user_name, conv.other_user_photo)}</div>
       <div class="conversation-item-info">
         <div class="conversation-item-top">
@@ -71,7 +73,10 @@ function conversationItem(conv) {
           <div class="conversation-item-time">${timeText}</div>
         </div>
         <div class="conversation-item-context"><i class="ti ${meta.icon}" aria-hidden="true"></i> ${conv.context_title}</div>
-        <div class="conversation-item-preview">${preview}</div>
+        <div class="conversation-item-bottom">
+          <div class="conversation-item-preview">${preview}</div>
+          ${unread ? `<span class="conversation-unread-count" aria-label="${unread} unread">${unread > 9 ? "9+" : unread}</span>` : ""}
+        </div>
       </div>
     </div>`;
 }
@@ -89,7 +94,7 @@ function renderConversationsList() {
   const filtered = getFilteredConversations();
   conversationsListContainer.innerHTML = filtered.length
     ? filtered.map(conversationItem).join("")
-    : emptyState("ti-message-circle", "No conversations yet", "Message a task, rental or sale owner to start one.");
+    : emptyState("ti-message-circle", "No conversations yet", "Chats open once you are in a deal: a task assigned to you, an item you bought or a rental you booked.");
 
   conversationsListContainer.querySelectorAll(".conversation-item").forEach(el => {
     el.addEventListener("click", () => openConversation(Number(el.dataset.convId)));
@@ -237,6 +242,13 @@ async function loadMessages() {
   try {
     const res = await apiRequest(`/conversations/${activeConversationId}/messages`);
     renderMessages(res.data);
+    /* Opening the chat marked its messages as read on the server. */
+    const conv = cachedConversations.find(c => Number(c.id) === Number(activeConversationId));
+    if (conv && Number(conv.unread_count)) {
+      conv.unread_count = 0;
+      renderConversationsList();
+      if (typeof refreshMessagesBadge === "function") refreshMessagesBadge();
+    }
   } catch (err) {
     messagesThread.innerHTML = errorState(err.message);
   }

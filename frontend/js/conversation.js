@@ -58,6 +58,8 @@ function attachFlagEvents() {
   });
 }
 
+let badgeRefreshedOnOpen = false;
+
 async function loadConversation() {
   try {
     const [messagesRes, myConvRes] = await Promise.all([
@@ -81,6 +83,12 @@ async function loadConversation() {
     }
 
     renderMessages(messagesRes.data);
+    /* Opening the chat marked its messages as read — update the badge now
+       (first load only; the navbar keeps polling it after that). */
+    if (!badgeRefreshedOnOpen && typeof refreshMessagesBadge === "function") {
+      badgeRefreshedOnOpen = true;
+      refreshMessagesBadge();
+    }
   } catch (err) {
     messagesThread.innerHTML = errorState(err.message);
     showToast(err.message, "error");

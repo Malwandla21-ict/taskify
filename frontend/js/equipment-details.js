@@ -98,6 +98,14 @@ async function loadEquipmentDetails() {
 function renderEquipmentDetails(item) {
   const isOwn = !!currentUser && Number(item.owner_id) === Number(currentUser.id);
 
+  /* Messaging the owner opens once you've requested a booking. The server
+     decides (item.can_message, see conversation.service.js messagingAccess). */
+  const messageOwnerButton = item.can_message
+    ? `<button class="secondary-button" id="messageOwnerButton" style="margin-top:10px;">
+         <i class="ti ti-message-circle" aria-hidden="true"></i> Message Owner
+       </button>`
+    : "";
+
   let actionArea;
   if (isOwn) {
     actionArea = `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your listing</div>
@@ -106,16 +114,12 @@ function renderEquipmentDetails(item) {
                   </button>`;
   } else if (!item.is_available) {
     actionArea = `<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Currently booked</div>
-                  <button class="secondary-button" id="messageOwnerButton" style="margin-top:10px;">
-                    <i class="ti ti-message-circle" aria-hidden="true"></i> Message Owner
-                  </button>`;
+                  ${messageOwnerButton}`;
   } else {
     actionArea = `<button class="primary-button" id="openBookingButton" data-equipment-id="${item.id}">
                     <i class="ti ti-calendar-plus" aria-hidden="true"></i> Request Booking
                   </button>
-                  <button class="secondary-button" id="messageOwnerButton" style="margin-top:10px;">
-                    <i class="ti ti-message-circle" aria-hidden="true"></i> Message Owner
-                  </button>`;
+                  ${messageOwnerButton}`;
   }
 
   equipmentDetailsContainer.innerHTML = `
