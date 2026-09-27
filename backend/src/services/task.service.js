@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
 const contentModerationService = require("./contentModeration.service");
+const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
 const { closeOpenOffers, notifyClosedOffers, deleteOffersFor } = require("./offerClosure.service");
 const { messagingAccess } = require("./conversation.service");
 
@@ -111,6 +112,66 @@ async function createTask({
   }
 
   return getTaskById(result.insertId);
+}
+
+/* Only the creator, and only while the task is still "Posted" — once
+   someone has accepted it, the price and details they agreed to are fixed. */
+async function updateTask(taskId, userId, {
+  title, description, category, section, price, location, urgent, imageUrls = []
+}) {
+  const [rows] = await pool.execute(
+    `SELECT id, created_by, status, moderation_status, moderation_flags FROM tasks WHERE id = ? LIMIT 1`, [taskId]
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Task not found."); error.statusCode = 404; throw error;
+  }
+
+  const task = rows[0];
+
+  if (Number(task.created_by) !== Number(userId)) {
+    const error = new Error("Only the task creator can edit this task."); error.statusCode = 403; throw error;
+  }
+  if (task.status !== "Posted") {
+    const error = new Error("A task can only be edited before someone accepts it."); error.statusCode = 400; throw error;
+  }
+
+  const moderation = await moderateListingEdit({
+    contentType: "task", userId, title, description, imageUrls, current: task
+  });
+
+  /* "AND status = 'Posted'" so an accept that lands while this request
+     is running can't have its agreed details changed underneath it. */
+  const [result] = await pool.execute(
+    `UPDATE tasks
+     SET title = ?, description = ?, category = ?, section = ?,
+         price = ?, location = ?, urgent = ?, image_urls = ?,
+         moderation_status = ?, moderation_flags = ?
+     WHERE id = ? AND status = 'Posted'`,
+    [
+      title.trim(), description.trim(), category.trim(),
+      section || "General", Number(price), location.trim(),
+      urgent ? 1 : 0,
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.moderationStatus, moderation.moderationFlags,
+      taskId
+    ]
+  );
+
+  if (result.affectedRows === 0) {
+    const error = new Error("This task was accepted while you were editing it, so your changes weren't saved.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  if (moderation.newlyFlagged) {
+    await notifyEditFlagged({
+      contentType: "task", contextId: taskId, userId, title,
+      flaggedCategories: moderation.flaggedCategories
+    });
+  }
+
+  return getTaskById(taskId);
 }
 
 async function getAllTasks() {
@@ -546,6 +607,7 @@ async function deleteTask(taskId, userId) {
 
 module.exports = {
   createTask,
+  updateTask,
   getAllTasks,
   acceptTask,
   updateTaskStatus,

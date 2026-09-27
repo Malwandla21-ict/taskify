@@ -19,6 +19,22 @@ async function createEquipment(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function updateEquipment(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const equipment = await equipmentService.updateEquipment(Number(req.params.id), req.user.id, {
+      name: req.body.name, description: req.body.description,
+      category: req.body.category, section: req.body.section,
+      dailyPrice: req.body.dailyPrice, itemValue: req.body.itemValue,
+      imageUrls: req.body.imageUrls || []
+    });
+
+    return res.status(200).json({ success: true, message: "Listing updated successfully.", data: equipment });
+  } catch (error) { next(error); }
+}
+
 async function getAllAvailableEquipment(req, res, next) {
   try {
     /* req.user may be null here — this route allows guest viewing (see
@@ -177,6 +193,7 @@ async function deleteEquipment(req, res, next) {
 
 module.exports = {
   createEquipment,
+  updateEquipment,
   getAllAvailableEquipment,
   getEquipmentById,
   getRentalQuote,

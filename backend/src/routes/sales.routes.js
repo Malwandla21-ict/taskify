@@ -8,26 +8,36 @@ const router = express.Router();
 router.get("/",            salesController.getAllAvailableSalesItems);
 router.get("/my-listings", authenticate, salesController.getMySalesItems);
 
-router.post(
-  "/",
+/* Same field rules for listing an item and editing one. */
+const salesFieldRules = [
+  body("title").trim().notEmpty().withMessage("Title is required.")
+    .isLength({ min: 2, max: 150 }).withMessage("Title must be between 2 and 150 characters."),
+  body("description").trim().notEmpty().withMessage("Description is required.")
+    .isLength({ min: 5 }).withMessage("Description must be at least 5 characters."),
+  body("category").trim().notEmpty().withMessage("Category is required.")
+    .isLength({ min: 2, max: 100 }).withMessage("Category must be between 2 and 100 characters."),
+  body("section").optional().isIn(["Academic", "General"])
+    .withMessage("Section must be either Academic or General."),
+  body("price").notEmpty().withMessage("Price is required.")
+    .isFloat({ min: 0 }).withMessage("Price must be a valid positive number."),
+  body("conditionStatus").optional()
+    .isIn(["New", "Excellent", "Good", "Fair", "Used"]).withMessage("Invalid condition status."),
+  body("location").trim().notEmpty().withMessage("Location is required.")
+    .isLength({ min: 2, max: 150 }).withMessage("Location must be between 2 and 150 characters.")
+];
+
+router.post("/", authenticate, salesFieldRules, salesController.createSalesItem);
+
+/* Edit — only the seller, only while it's still for sale ("Available"). */
+router.put(
+  "/:id",
   authenticate,
   [
-    body("title").trim().notEmpty().withMessage("Title is required.")
-      .isLength({ min: 2, max: 150 }).withMessage("Title must be between 2 and 150 characters."),
-    body("description").trim().notEmpty().withMessage("Description is required.")
-      .isLength({ min: 5 }).withMessage("Description must be at least 5 characters."),
-    body("category").trim().notEmpty().withMessage("Category is required.")
-      .isLength({ min: 2, max: 100 }).withMessage("Category must be between 2 and 100 characters."),
-    body("section").optional().isIn(["Academic", "General"])
-      .withMessage("Section must be either Academic or General."),
-    body("price").notEmpty().withMessage("Price is required.")
-      .isFloat({ min: 0 }).withMessage("Price must be a valid positive number."),
-    body("conditionStatus").optional()
-      .isIn(["New", "Excellent", "Good", "Fair", "Used"]).withMessage("Invalid condition status."),
-    body("location").trim().notEmpty().withMessage("Location is required.")
-      .isLength({ min: 2, max: 150 }).withMessage("Location must be between 2 and 150 characters.")
+    param("id").isInt({ min: 1 }).withMessage("Sales item ID must be a valid positive integer."),
+    ...salesFieldRules,
+    body("imageUrls").optional().isArray({ max: 5 }).withMessage("A listing can have up to 5 images.")
   ],
-  salesController.createSalesItem
+  salesController.updateSalesItem
 );
 
 router.patch(

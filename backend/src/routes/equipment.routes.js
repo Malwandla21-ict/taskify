@@ -19,24 +19,35 @@ router.get("/my-trust", authenticate, equipmentController.getMyTrust);
 const photoUrlsValidator = body("photoUrls")
   .isArray({ min: 1, max: 5 }).withMessage("Add between 1 and 5 condition photos.");
 
-router.post(
-  "/",
+/* Same field rules for listing equipment and editing a listing. */
+const equipmentFieldRules = [
+  body("name").trim().notEmpty().withMessage("Name is required.")
+    .isLength({ min: 2, max: 150 }).withMessage("Name must be between 2 and 150 characters."),
+  body("description").trim().notEmpty().withMessage("Description is required.")
+    .isLength({ min: 5 }).withMessage("Description must be at least 5 characters."),
+  body("category").trim().notEmpty().withMessage("Category is required.")
+    .isLength({ min: 2, max: 100 }).withMessage("Category must be between 2 and 100 characters."),
+  body("section").optional().isIn(["Academic", "General"])
+    .withMessage("Section must be either Academic or General."),
+  body("dailyPrice").notEmpty().withMessage("Daily price is required.")
+    .isFloat({ min: 0 }).withMessage("Daily price must be a valid positive number."),
+  body("itemValue").notEmpty().withMessage("Item value is required.").bail()
+    .isFloat({ min: 1, max: 1000000 }).withMessage("Item value must be a valid amount in Rand.")
+];
+
+router.post("/", authenticate, equipmentFieldRules, equipmentController.createEquipment);
+
+/* Edit — only the owner. Allowed any time: every booking saved its own
+   rent/fee/deposit when it was made, so existing bookings don't change. */
+router.put(
+  "/:id",
   authenticate,
   [
-    body("name").trim().notEmpty().withMessage("Name is required.")
-      .isLength({ min: 2, max: 150 }).withMessage("Name must be between 2 and 150 characters."),
-    body("description").trim().notEmpty().withMessage("Description is required.")
-      .isLength({ min: 5 }).withMessage("Description must be at least 5 characters."),
-    body("category").trim().notEmpty().withMessage("Category is required.")
-      .isLength({ min: 2, max: 100 }).withMessage("Category must be between 2 and 100 characters."),
-    body("section").optional().isIn(["Academic", "General"])
-      .withMessage("Section must be either Academic or General."),
-    body("dailyPrice").notEmpty().withMessage("Daily price is required.")
-      .isFloat({ min: 0 }).withMessage("Daily price must be a valid positive number."),
-    body("itemValue").notEmpty().withMessage("Item value is required.").bail()
-      .isFloat({ min: 1, max: 1000000 }).withMessage("Item value must be a valid amount in Rand.")
+    param("id").isInt({ min: 1 }).withMessage("Equipment ID must be a valid positive integer."),
+    ...equipmentFieldRules,
+    body("imageUrls").optional().isArray({ max: 5 }).withMessage("A listing can have up to 5 images.")
   ],
-  equipmentController.createEquipment
+  equipmentController.updateEquipment
 );
 
 /* DEMO: money breakdown (rental + protection fee + trust-based deposit)

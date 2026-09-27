@@ -472,6 +472,8 @@ CREATE TABLE IF NOT EXISTS events (
     location VARCHAR(150) NOT NULL,
     event_date DATETIME NOT NULL,
     capacity INT DEFAULT NULL,
+    has_food TINYINT(1) NOT NULL DEFAULT 0,
+    has_refreshments TINYINT(1) NOT NULL DEFAULT 0,
     image_urls JSON DEFAULT NULL,
     status ENUM('Upcoming', 'Cancelled', 'Completed') NOT NULL DEFAULT 'Upcoming',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

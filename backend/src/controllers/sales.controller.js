@@ -18,6 +18,22 @@ async function createSalesItem(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function updateSalesItem(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const item = await salesService.updateSalesItem(Number(req.params.id), req.user.id, {
+      title: req.body.title, description: req.body.description,
+      category: req.body.category, section: req.body.section,
+      price: req.body.price, conditionStatus: req.body.conditionStatus,
+      location: req.body.location, imageUrls: req.body.imageUrls || []
+    });
+
+    return res.status(200).json({ success: true, message: "Listing updated successfully.", data: item });
+  } catch (error) { next(error); }
+}
+
 async function getAllAvailableSalesItems(req, res, next) {
   try {
     const items = await salesService.getAllAvailableSalesItems();
@@ -101,6 +117,7 @@ module.exports = {
   releaseSaleOrder,
   cancelSaleOrder,
   createSalesItem,
+  updateSalesItem,
   getAllAvailableSalesItems,
   getMySalesItems,
   getSalesItemById,
