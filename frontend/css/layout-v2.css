@@ -64,26 +64,13 @@ body.dashboard-body {
   text-decoration: none;
 }
 
-/* Square Taskify symbol — smaller than the old wide UMP logo. */
+/* Horizontal Taskify logo (white lettering, for the navy sidebar). It
+   already spells "taskify MARKETPLACE", so there's no separate brand text. */
 .sidebar-brand-logo {
-  width: 56px;
+  width: 190px;
+  max-width: 100%;
   height: auto;
   object-fit: contain;
-}
-
-.sidebar-brand-text strong {
-  display: block;
-  color: white;
-  font-size: 17px;
-  font-weight: 800;
-  line-height: 1.15;
-}
-
-.sidebar-brand-text span {
-  display: block;
-  color: rgba(255,255,255,0.5);
-  font-size: 11px;
-  font-weight: 600;
 }
 
 /* ── Nav ── */
