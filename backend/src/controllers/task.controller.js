@@ -18,6 +18,22 @@ async function createTask(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function updateTask(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const task = await taskService.updateTask(Number(req.params.id), req.user.id, {
+      title: req.body.title, description: req.body.description,
+      category: req.body.category, section: req.body.section,
+      price: req.body.price, location: req.body.location,
+      urgent: req.body.urgent, imageUrls: req.body.imageUrls || []
+    });
+
+    return res.status(200).json({ success: true, message: "Task updated successfully.", data: task });
+  } catch (error) { next(error); }
+}
+
 async function getAllTasks(req, res, next) {
   try {
     const tasks = await taskService.getAllTasks();
@@ -107,6 +123,7 @@ async function deleteTask(req, res, next) {
 
 module.exports = {
   createTask,
+  updateTask,
   getAllTasks,
   getTaskById,
   acceptTask,

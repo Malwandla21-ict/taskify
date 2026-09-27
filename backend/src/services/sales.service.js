@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 const notificationService = require("./notification.service");
 const contentModerationService = require("./contentModeration.service");
+const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
 const crypto = require("crypto");
 const { SALES } = require("../config/paymentSettings");
 const { roundMoney } = require("./trust.service");
@@ -86,6 +87,70 @@ async function createSalesItem({
   }
 
   return getSalesItemById(result.insertId);
+}
+
+/* Only the seller, and only while the item is "Available" — once a
+   buyer's payment is held (Reserved) or it's Sold, the listing is fixed. */
+async function updateSalesItem(itemId, userId, {
+  title, description, category, section, price, conditionStatus, location, imageUrls = []
+}) {
+  const [rows] = await pool.execute(
+    `SELECT id, seller_id, status, moderation_status, moderation_flags FROM sales_items WHERE id = ? LIMIT 1`, [itemId]
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Sales item not found."); error.statusCode = 404; throw error;
+  }
+
+  const item = rows[0];
+
+  if (Number(item.seller_id) !== Number(userId)) {
+    const error = new Error("Only the seller can edit this listing."); error.statusCode = 403; throw error;
+  }
+  if (item.status !== "Available") {
+    const error = new Error(item.status === "Reserved"
+      ? "A buyer's payment is being held for this item, so it can't be edited."
+      : "This item has been sold, so it can't be edited.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const moderation = await moderateListingEdit({
+    contentType: "sales_item", userId, title, description, imageUrls, current: item
+  });
+
+  /* "AND status = 'Available'" so a purchase that lands while this request
+     is running keeps the price the buyer actually paid. */
+  const [result] = await pool.execute(
+    `UPDATE sales_items
+     SET title = ?, description = ?, category = ?, section = ?,
+         price = ?, condition_status = ?, location = ?, image_urls = ?,
+         moderation_status = ?, moderation_flags = ?
+     WHERE id = ? AND status = 'Available'`,
+    [
+      title.trim(), description.trim(), category.trim(),
+      section || "Academic", Number(price),
+      conditionStatus || "Good", location.trim(),
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.moderationStatus, moderation.moderationFlags,
+      itemId
+    ]
+  );
+
+  if (result.affectedRows === 0) {
+    const error = new Error("Someone bought this item while you were editing it, so your changes weren't saved.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  if (moderation.newlyFlagged) {
+    await notifyEditFlagged({
+      contentType: "sales_item", contextId: itemId, userId, title,
+      flaggedCategories: moderation.flaggedCategories
+    });
+  }
+
+  return getSalesItemById(itemId);
 }
 
 async function getAllAvailableSalesItems() {
@@ -525,6 +590,7 @@ async function deleteSalesItem(itemId, userId) {
 
 module.exports = {
   createSalesItem,
+  updateSalesItem,
   getAllAvailableSalesItems,
   getMySalesItems,
   getSalesItemById,

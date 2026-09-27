@@ -11,10 +11,29 @@ async function createEvent(req, res, next) {
       description: req.body.description, category: req.body.category,
       section: req.body.section, location: req.body.location,
       eventDate: req.body.eventDate, capacity: req.body.capacity,
+      hasFood: req.body.hasFood, hasRefreshments: req.body.hasRefreshments,
       imageUrls: req.body.imageUrls || []
     });
 
     return res.status(201).json({ success: true, message: "Event created successfully.", data: event });
+  } catch (error) { next(error); }
+}
+
+async function updateEvent(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const event = await eventService.updateEvent(Number(req.params.id), req.user.id, {
+      title: req.body.title, description: req.body.description,
+      category: req.body.category, section: req.body.section,
+      location: req.body.location, eventDate: req.body.eventDate,
+      capacity: req.body.capacity,
+      hasFood: req.body.hasFood, hasRefreshments: req.body.hasRefreshments,
+      imageUrls: req.body.imageUrls || []
+    });
+
+    return res.status(200).json({ success: true, message: "Event updated successfully.", data: event });
   } catch (error) { next(error); }
 }
 
@@ -88,6 +107,7 @@ async function deleteEvent(req, res, next) {
 
 module.exports = {
   createEvent,
+  updateEvent,
   getAllUpcomingEvents,
   getPastEvents,
   getMyRsvpStatus,

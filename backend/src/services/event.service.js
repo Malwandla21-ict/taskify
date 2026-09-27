@@ -2,6 +2,7 @@ const pool = require("../config/db");
 const notificationService = require("./notification.service");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 const contentModerationService = require("./contentModeration.service");
+const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
 
 function toMysqlDatetime(value) {
   const date = new Date(value);
@@ -31,6 +32,7 @@ const SELECT_FIELDS = `
   e.id, e.organizer_id, e.title, e.description, e.category,
   e.section, e.location, e.event_date, e.capacity, e.status,
   e.created_at, e.image_urls, e.moderation_status,
+  e.has_food, e.has_refreshments,
   u.full_name AS organizer_name,
   u.profile_photo_url AS organizer_profile_photo,
   u.member_type AS organizer_member_type,
@@ -38,9 +40,14 @@ const SELECT_FIELDS = `
   (SELECT COUNT(*) FROM event_rsvps er WHERE er.event_id = e.id) AS rsvp_count
 `;
 
+/* Food / refreshments tick boxes arrive as true/false (or "true"/"false"). */
+function toFlag(value) {
+  return value === true || value === "true" || value === 1 || value === "1" ? 1 : 0;
+}
+
 async function createEvent({
   organizerId, title, description, category, section,
-  location, eventDate, capacity, imageUrls = []
+  location, eventDate, capacity, hasFood, hasRefreshments, imageUrls = []
 }) {
   const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
 
@@ -63,13 +70,14 @@ async function createEvent({
   const [result] = await pool.execute(
     `INSERT INTO events (
        organizer_id, title, description, category, section,
-       location, event_date, capacity, image_urls,
+       location, event_date, capacity, has_food, has_refreshments, image_urls,
        moderation_status, moderation_flags
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       organizerId, title.trim(), description.trim(), category.trim(),
       section || "General", location.trim(), toMysqlDatetime(eventDate),
       capacity ? Number(capacity) : null,
+      toFlag(hasFood), toFlag(hasRefreshments),
       imageUrls.length ? JSON.stringify(imageUrls) : null,
       moderation.flagged ? "pending_review" : "clean",
       moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null
@@ -216,6 +224,92 @@ async function cancelRsvp(eventId, userId) {
   return getEventById(eventId);
 }
 
+/* Only the organizer, only while the event is upcoming (not cancelled,
+   not already past). Capacity can't drop below the people already going.
+   Everyone going is told if the date/time or place changes. */
+async function updateEvent(eventId, userId, {
+  title, description, category, section, location, eventDate, capacity,
+  hasFood, hasRefreshments, imageUrls = []
+}) {
+  const [rows] = await pool.execute(
+    `SELECT e.id, e.organizer_id, e.title, e.status, e.location, e.moderation_status, e.moderation_flags,
+            DATE_FORMAT(e.event_date, '%Y-%m-%d %H:%i:%s') AS event_date_text,
+            e.event_date < NOW() AS has_passed,
+            (SELECT COUNT(*) FROM event_rsvps er WHERE er.event_id = e.id) AS rsvp_count
+     FROM events e WHERE e.id = ? LIMIT 1`,
+    [eventId]
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+  }
+
+  const event = rows[0];
+
+  if (Number(event.organizer_id) !== Number(userId)) {
+    const error = new Error("Only the organizer can edit this event."); error.statusCode = 403; throw error;
+  }
+  if (event.status !== "Upcoming" || Number(event.has_passed)) {
+    const error = new Error("Only upcoming events can be edited."); error.statusCode = 400; throw error;
+  }
+
+  const going = Number(event.rsvp_count);
+  if (capacity && Number(capacity) < going) {
+    const error = new Error(`${going} people are already going, so capacity can't be set lower than ${going}.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const moderation = await moderateListingEdit({
+    contentType: "event", userId, title, description, imageUrls, current: event
+  });
+
+  const newDate = toMysqlDatetime(eventDate);
+  await pool.execute(
+    `UPDATE events
+     SET title = ?, description = ?, category = ?, section = ?,
+         location = ?, event_date = ?, capacity = ?,
+         has_food = ?, has_refreshments = ?, image_urls = ?,
+         moderation_status = ?, moderation_flags = ?
+     WHERE id = ?`,
+    [
+      title.trim(), description.trim(), category.trim(),
+      section || "General", location.trim(), newDate,
+      capacity ? Number(capacity) : null,
+      toFlag(hasFood), toFlag(hasRefreshments),
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.moderationStatus, moderation.moderationFlags,
+      eventId
+    ]
+  );
+
+  if (moderation.newlyFlagged) {
+    await notifyEditFlagged({
+      contentType: "event", contextId: eventId, userId, title,
+      flaggedCategories: moderation.flaggedCategories
+    });
+  }
+
+  const dateChanged = newDate !== event.event_date_text;
+  const placeChanged = location.trim() !== event.location;
+  if ((dateChanged || placeChanged) && going > 0) {
+    const what = dateChanged && placeChanged ? "date/time and location"
+      : dateChanged ? "date/time" : "location";
+    const [attendees] = await pool.execute(
+      `SELECT user_id FROM event_rsvps WHERE event_id = ? AND user_id <> ?`, [eventId, userId]
+    );
+    await Promise.all(attendees.map(a => notificationService.createNotification({
+      userId: a.user_id,
+      title: "Event Updated",
+      message: `The ${what} of "${title.trim()}", an event you're going to, has changed. Check the event page for the new details.`,
+      contextType: "event",
+      contextId: eventId
+    })));
+  }
+
+  return getEventById(eventId);
+}
+
 async function deleteEvent(eventId, userId) {
   const [rows] = await pool.execute(
     `SELECT id, organizer_id FROM events WHERE id = ? LIMIT 1`, [eventId]
@@ -263,6 +357,7 @@ async function getEventByIdForViewing(eventId, viewerId = null, viewerRole = nul
 
 module.exports = {
   createEvent,
+  updateEvent,
   getAllUpcomingEvents,
   getPastEvents,
   getMyRsvpEventIds,

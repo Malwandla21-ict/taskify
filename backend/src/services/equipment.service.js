@@ -3,6 +3,7 @@ const notificationService = require("./notification.service");
 const { messagingAccess } = require("./conversation.service");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 const contentModerationService = require("./contentModeration.service");
+const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
 const trustService = require("./trust.service");
 
 /* Before/after condition photos are stored as JSON arrays of image URLs
@@ -120,6 +121,55 @@ async function createEquipment({
   }
 
   return getEquipmentById(result.insertId);
+}
+
+/* Only the owner. Allowed at any time — each booking saved its own rent,
+   fee and deposit when it was made, so changing the price or item value
+   here only affects new bookings. */
+async function updateEquipment(equipmentId, userId, {
+  name, description, category, section, dailyPrice, itemValue, imageUrls = []
+}) {
+  const [rows] = await pool.execute(
+    `SELECT id, owner_id, moderation_status, moderation_flags FROM equipment WHERE id = ? LIMIT 1`, [equipmentId]
+  );
+
+  if (rows.length === 0) {
+    const error = new Error("Equipment not found."); error.statusCode = 404; throw error;
+  }
+
+  const item = rows[0];
+
+  if (Number(item.owner_id) !== Number(userId)) {
+    const error = new Error("Only the owner can edit this listing."); error.statusCode = 403; throw error;
+  }
+
+  const moderation = await moderateListingEdit({
+    contentType: "equipment", userId, title: name, description, imageUrls, current: item
+  });
+
+  await pool.execute(
+    `UPDATE equipment
+     SET name = ?, description = ?, category = ?, section = ?,
+         daily_price = ?, item_value = ?, image_urls = ?,
+         moderation_status = ?, moderation_flags = ?
+     WHERE id = ?`,
+    [
+      name.trim(), description.trim(), category.trim(),
+      section || "General", Number(dailyPrice), Number(itemValue),
+      imageUrls.length ? JSON.stringify(imageUrls) : null,
+      moderation.moderationStatus, moderation.moderationFlags,
+      equipmentId
+    ]
+  );
+
+  if (moderation.newlyFlagged) {
+    await notifyEditFlagged({
+      contentType: "equipment", contextId: equipmentId, userId, title: name,
+      flaggedCategories: moderation.flaggedCategories
+    });
+  }
+
+  return getEquipmentById(equipmentId);
 }
 
 /* Equipment has no dedicated "my listings" page in the frontend today —
@@ -640,6 +690,7 @@ async function deleteEquipment(equipmentId, userId) {
 
 module.exports = {
   createEquipment,
+  updateEquipment,
   getAllAvailableEquipment,
   getRentalQuote,
   bookEquipment,

@@ -8,26 +8,24 @@ const router = express.Router();
 router.get("/",        taskController.getAllTasks);
 router.get("/history", authenticate, taskController.getUserTaskHistory);
 
-router.post(
-  "/",
-  authenticate,
-  [
-    body("title").trim().notEmpty().withMessage("Title is required.")
-      .isLength({ min: 3, max: 150 }).withMessage("Title must be between 3 and 150 characters."),
-    body("description").trim().notEmpty().withMessage("Description is required.")
-      .isLength({ min: 10 }).withMessage("Description must be at least 10 characters."),
-    body("category").trim().notEmpty().withMessage("Category is required.")
-      .isLength({ min: 2, max: 50 }).withMessage("Category must be between 2 and 50 characters."),
-    body("section").optional().isIn(["Academic", "General"])
-      .withMessage("Section must be either Academic or General."),
-    body("price").notEmpty().withMessage("Price is required.")
-      .isFloat({ min: 0 }).withMessage("Price must be a valid positive number."),
-    body("location").trim().notEmpty().withMessage("Location is required.")
-      .isLength({ min: 2, max: 100 }).withMessage("Location must be between 2 and 100 characters."),
-    body("urgent").optional().isBoolean().withMessage("Urgent must be true or false.")
-  ],
-  taskController.createTask
-);
+/* Same field rules for posting a task and editing one. */
+const taskFieldRules = [
+  body("title").trim().notEmpty().withMessage("Title is required.")
+    .isLength({ min: 3, max: 150 }).withMessage("Title must be between 3 and 150 characters."),
+  body("description").trim().notEmpty().withMessage("Description is required.")
+    .isLength({ min: 10 }).withMessage("Description must be at least 10 characters."),
+  body("category").trim().notEmpty().withMessage("Category is required.")
+    .isLength({ min: 2, max: 50 }).withMessage("Category must be between 2 and 50 characters."),
+  body("section").optional().isIn(["Academic", "General"])
+    .withMessage("Section must be either Academic or General."),
+  body("price").notEmpty().withMessage("Price is required.")
+    .isFloat({ min: 0 }).withMessage("Price must be a valid positive number."),
+  body("location").trim().notEmpty().withMessage("Location is required.")
+    .isLength({ min: 2, max: 100 }).withMessage("Location must be between 2 and 100 characters."),
+  body("urgent").optional().isBoolean().withMessage("Urgent must be true or false.")
+];
+
+router.post("/", authenticate, taskFieldRules, taskController.createTask);
 
 router.patch(
   "/:id/accept",
@@ -76,6 +74,18 @@ router.delete(
   authenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer.") ],
   taskController.deleteTask
+);
+
+/* Edit — only the creator, only while nobody has accepted it ("Posted"). */
+router.put(
+  "/:id",
+  authenticate,
+  [
+    param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer."),
+    ...taskFieldRules,
+    body("imageUrls").optional().isArray({ max: 5 }).withMessage("A task can have up to 5 images.")
+  ],
+  taskController.updateTask
 );
 
 /*
