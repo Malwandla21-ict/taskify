@@ -153,14 +153,61 @@ damageForm?.addEventListener("submit", async e => {
   }
 });
 
+/* Edit mode: the same form edits an existing listing when the page is
+   opened as equipment.html?edit=<id> (the Edit button on its detail page). */
+let editingEquipmentId = null;
+const EQUIPMENT_SUBMIT_HTML = {
+  create: `<i class="ti ti-send" aria-hidden="true"></i> Publish Listing`,
+  edit:   `<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes`
+};
+
+function setEquipmentSubmitLabel() {
+  const submitBtn = equipmentForm?.querySelector("button[type='submit']");
+  if (submitBtn) submitBtn.innerHTML = editingEquipmentId ? EQUIPMENT_SUBMIT_HTML.edit : EQUIPMENT_SUBMIT_HTML.create;
+}
+
 function openEquipmentCreateModal() {
   if (!requireAuthAction("Sign in to list equipment.")) return;
+  editingEquipmentId = null;
   equipmentForm?.reset();
   equipmentMessage.textContent = "";
+  setEquipmentSubmitLabel();
   showEquipmentStep(1);
   if (equipmentUploader) equipmentUploader.reset();
   equipmentCreateOverlay?.classList.add("open");
   equipmentCreateModal?.classList.add("open");
+}
+
+function openEquipmentEditModal(item) {
+  editingEquipmentId = item.id;
+  equipmentForm?.reset();
+  equipmentMessage.textContent = "";
+  document.getElementById("equipmentName").value        = item.name || "";
+  document.getElementById("equipmentCategory").value    = item.category || "";
+  document.getElementById("equipmentSection").value     = item.section || "General";
+  document.getElementById("equipmentDescription").value = item.description || "";
+  document.getElementById("equipmentDailyPrice").value  = item.daily_price ?? "";
+  document.getElementById("equipmentItemValue").value   = item.item_value ?? "";
+  if (equipmentUploader) equipmentUploader.setExisting(item.image_urls || []);
+  updateEquipmentPreview();
+  setEquipmentSubmitLabel();
+  showEquipmentStep(1);
+  equipmentCreateOverlay?.classList.add("open");
+  equipmentCreateModal?.classList.add("open");
+}
+
+async function openEquipmentEditFromUrl() {
+  const editId = getEditIdFromUrl();
+  if (!editId || !currentUser) return;
+  clearEditParam();
+  try {
+    const res = await apiRequest(`/equipment/${editId}`);
+    const item = res.data;
+    if (Number(item.owner_id) !== Number(currentUser.id)) { showToast("You can only edit your own listings.", "error"); return; }
+    openEquipmentEditModal(item);
+  } catch (err) {
+    showToast(err.message, "error");
+  }
 }
 
 function closeEquipmentCreateModal() {
@@ -177,7 +224,7 @@ function showEquipmentStep(n) {
   equipmentStep1.style.display = n === 1 ? "block" : "none";
   equipmentStep2.style.display = n === 2 ? "block" : "none";
   equipmentStep3.style.display = n === 3 ? "block" : "none";
-  equipmentStepText.textContent   = `Step ${n} of 3`;
+  equipmentStepText.textContent   = `${editingEquipmentId ? "Editing · " : ""}Step ${n} of 3`;
   equipmentProgressFill.style.width = n === 1 ? "33%" : n === 2 ? "66%" : "100%";
   [eDot1, eDot2, eDot3].forEach((dot, i) => {
     if (!dot) return;
@@ -725,16 +772,17 @@ equipmentForm?.addEventListener("submit", async e => {
 
   const submitBtn = equipmentForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Publishing…`;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingEquipmentId ? "Saving…" : "Publishing…"}`;
 
   try {
-    let imageUrls = [];
+    /* In edit mode, keep the saved photos the owner didn't remove. */
+    let imageUrls = equipmentUploader ? equipmentUploader.getExisting() : [];
     if (equipmentUploader && equipmentUploader.getFiles().length) {
       showToast("Uploading images…", "warning");
-      imageUrls = await equipmentUploader.upload("equipment");
+      imageUrls = [...imageUrls, ...await equipmentUploader.upload("equipment")];
     }
 
-    await apiRequest("/equipment", "POST", {
+    const payload = {
       name:        document.getElementById("equipmentName").value.trim(),
       description: document.getElementById("equipmentDescription").value.trim(),
       category:    document.getElementById("equipmentCategory").value.trim(),
@@ -743,7 +791,16 @@ equipmentForm?.addEventListener("submit", async e => {
       dailyPrice:  Number(price),
       itemValue:   Number(itemValue),
       imageUrls
-    });
+    };
+
+    if (editingEquipmentId) {
+      await apiRequest(`/equipment/${editingEquipmentId}`, "PUT", payload);
+      showToast("Listing updated!");
+      window.location.href = `./equipment-details.html?id=${editingEquipmentId}`;
+      return;
+    }
+
+    await apiRequest("/equipment", "POST", payload);
     showToast("Equipment listed successfully!");
     equipmentForm.reset();
     if (equipmentUploader) equipmentUploader.reset();
@@ -757,7 +814,7 @@ equipmentForm?.addEventListener("submit", async e => {
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
-    submitBtn.innerHTML = `<i class="ti ti-send" aria-hidden="true"></i> Publish Listing`;
+    setEquipmentSubmitLabel();
   }
 });
 
@@ -768,3 +825,5 @@ loadEquipment();
 loadEquipmentHistory();
 
 const equipmentUploader = initImageUploader("equipmentUploadArea", "equipmentPreviewGrid");
+
+openEquipmentEditFromUrl();

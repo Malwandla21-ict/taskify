@@ -46,8 +46,14 @@ function renderEventDetails(event, hasRsvped) {
 
   let actionArea;
   if (isOwn) {
+    /* Editable only while upcoming — same rule as the server. */
+    const canEdit = event.status === "Upcoming" && new Date(event.event_date) >= new Date();
     actionArea = `
       <div class="badge navy" style="margin-bottom:10px;"><i class="ti ti-user" aria-hidden="true"></i> Organizing</div>
+      ${canEdit ? `
+      <a href="./events.html?edit=${event.id}" class="secondary-button" style="margin-bottom:10px;">
+        <i class="ti ti-edit" aria-hidden="true"></i> Edit Event
+      </a>` : ""}
       <button class="secondary-button" id="deleteEventButton" style="color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
         <i class="ti ti-trash" aria-hidden="true"></i> Delete Event
       </button>`;
@@ -80,6 +86,7 @@ function renderEventDetails(event, hasRsvped) {
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${event.category}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
           <div class="market-tag"><i class="ti ti-clock" aria-hidden="true"></i> ${formatEventDate(event.event_date)}</div>
+          ${eventFoodTags(event)}
           ${statusBadge(event.status)}
         </div>
         ${endorsementDetailBlock(event)}

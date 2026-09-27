@@ -146,6 +146,9 @@ function renderSaleDetails(item) {
   } else if (isOwn) {
     actionArea = `${orderPanel(item, order)}<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>
        ${item.status === "Available" ? `
+         <a href="./sales.html?edit=${item.id}" class="secondary-button" style="margin-top:10px;">
+           <i class="ti ti-edit" aria-hidden="true"></i> Edit Listing
+         </a>
          <button class="secondary-button mark-sold-btn" data-item-id="${item.id}" style="margin-top:10px;">
            <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
          </button>` : ""}

@@ -109,6 +109,9 @@ function renderEquipmentDetails(item) {
   let actionArea;
   if (isOwn) {
     actionArea = `<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your listing</div>
+                  <a href="./equipment.html?edit=${item.id}" class="secondary-button" style="margin-top:10px;">
+                    <i class="ti ti-edit" aria-hidden="true"></i> Edit Listing
+                  </a>
                   <button class="secondary-button delete-equipment-btn" data-equipment-id="${item.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
                     <i class="ti ti-trash" aria-hidden="true"></i> Delete Listing
                   </button>`;
