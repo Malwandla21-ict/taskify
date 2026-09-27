@@ -104,8 +104,19 @@ submitRentalPhotosBtn?.addEventListener("click", async () => {
   submitRentalPhotosBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
   try {
     const photoUrls = await rentalPhotoUploader.upload("equipment");
-    await apiRequest(`/equipment/bookings/${rentalPhotoBookingId.value}/${mode === "pickup" ? "pickup" : "return"}`, "PATCH", { photoUrls });
-    showToast(mode === "pickup" ? "Pickup confirmed. Enjoy the rental!" : "Equipment returned. The owner will check its condition.");
+    const res = await apiRequest(`/equipment/bookings/${rentalPhotoBookingId.value}/${mode === "pickup" ? "pickup" : "return"}`, "PATCH", { photoUrls });
+    /* The owner's rent is released on return (not pickup), so only a
+       return plays the "released" pop-up. The deposit stays held until
+       the owner checks the item's condition. */
+    const booking = res?.data || {};
+    if (mode === "return" && booking.payment_status === "Released") {
+      const isRenter = !!currentUser && Number(booking.renter_id) === Number(currentUser.id);
+      showPaymentMoment("released", isRenter
+        ? `Equipment returned. ${formatRand(booking.rental_amount)} sent to the owner, who will now check its condition.`
+        : `Equipment returned. ${formatRand(booking.rental_amount)} released to you. Please check its condition.`);
+    } else {
+      showToast(mode === "pickup" ? "Pickup confirmed. Enjoy the rental!" : "Equipment returned. The owner will check its condition.");
+    }
     closeRentalPhotoModal();
     await loadEquipment();
     await loadEquipmentHistory();
@@ -530,8 +541,15 @@ function attachReturnEquipmentButtonEvents(scope = document) {
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
       try {
-        await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/condition-ok`, "PATCH");
-        showToast("Condition confirmed. Deposit released (demo).");
+        const res = await apiRequest(`/equipment/bookings/${btn.dataset.bookingId}/condition-ok`, "PATCH");
+        /* The server marks a held deposit as "Refunded" here. If there
+           was no deposit ("None"), there's no money moment to show. */
+        const booking = res?.data || {};
+        if (booking.deposit_status === "Refunded" && Number(booking.deposit_amount) > 0) {
+          showPaymentMoment("released", `Condition confirmed. ${formatRand(booking.deposit_amount)} deposit returned to the renter.`, { title: "Deposit returned" });
+        } else {
+          showToast("Condition confirmed.");
+        }
         await loadEquipmentHistory();
       } catch (err) {
         showToast(err.message, "error");
