@@ -22,7 +22,10 @@ async function loadTaskDetails() {
 function renderTaskDetails(task) {
   const isOwn           = !!currentUser && Number(task.created_by)  === Number(currentUser.id);
   const isAcceptedByMe   = !!currentUser && Number(task.accepted_by) === Number(currentUser.id);
-  const canMessagePoster = !isOwn;
+  /* Messaging opens once the task is assigned to you (the server decides —
+     see conversation.service.js messagingAccess). Before that, price talk
+     goes through Make an offer. */
+  const canMessagePoster = !isOwn && !!task.can_message;
 
   let primaryAction;
   if (!isOwn && task.status === "Posted") {

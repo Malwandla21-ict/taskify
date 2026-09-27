@@ -332,14 +332,16 @@ function startNotificationPolling() {
 }
 
 /* ── Messages badge (sidebar link + topbar icon) ──
-   There's no "unread message" flag in the schema yet, so this shows the
-   total number of active conversations rather than an unread count. */
+   Number of chats with messages from the other person you haven't opened
+   yet. Starting a chat, or sending messages yourself, never counts.
+   messages.js / conversation.js call this again after opening a chat so
+   the badge drops straight away instead of on the next poll. */
 async function refreshMessagesBadge() {
   const token = localStorage.getItem("taskifyToken");
   if (!token) return;
   try {
-    const res = await apiRequest("/conversations/my");
-    const count = Array.isArray(res.data) ? res.data.length : 0;
+    const res = await apiRequest("/conversations/unread-count");
+    const count = Number(res.data?.count) || 0;
     const displayCount = count > 9 ? "9+" : String(count);
 
     const sideBadge = document.getElementById("navMessagesCount");

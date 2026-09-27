@@ -1,6 +1,19 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
 const { maskContactDetails } = require("../utils/contactMask");
+const { SALES } = require("../config/paymentSettings");
+
+/* messages.read_at comes from scripts/repair-message-read-tracking-schema.js.
+   Until that has been run, read tracking quietly switches off (unread
+   counts show 0) instead of breaking the Messages page. */
+const UNKNOWN_COLUMN = 1054;
+function readTrackingMissing(error) {
+  if (error && error.errno === UNKNOWN_COLUMN && /read_at/.test(error.message)) {
+    console.warn("[messages] messages.read_at missing — run scripts/repair-message-read-tracking-schema.js.");
+    return true;
+  }
+  return false;
+}
 
 const CONTEXT_TABLES = {
   task:      { table: "tasks",       titleCol: "title", ownerCol: "created_by" },
@@ -23,6 +36,56 @@ async function getContextListing(contextType, contextId) {
   return rows[0];
 }
 
+/* Messaging only opens once two people are actually doing a deal, so price
+   haggling happens through in-app offers instead of chat:
+     task      -> the task is assigned to you
+     sale      -> you have a Taskify Protection order (held or released),
+                  OR the item is a cheap cash sale (under the escrow
+                  threshold) that's still available — there's no in-app
+                  way to buy those, so messaging is how you arrange it
+     equipment -> you have a booking (pending, confirmed or returned)
+   The listing's owner never starts a chat from here — they reply from
+   the Messages page. userId null = a guest. Returns { allowed, reason }. */
+async function messagingAccess(contextType, contextId, userId) {
+  const listing = await getContextListing(contextType, contextId);
+  if (userId == null || Number(listing.owner_id) === Number(userId)) {
+    const cashSale = contextType === "sale" && await isOpenCashSale(contextId);
+    return { allowed: userId == null && cashSale, reason: null };
+  }
+
+  let rows = [];
+  if (contextType === "task") {
+    [rows] = await pool.execute(`SELECT 1 FROM tasks WHERE id = ? AND accepted_by = ? LIMIT 1`, [contextId, userId]);
+  } else if (contextType === "sale") {
+    if (await isOpenCashSale(contextId)) return { allowed: true, reason: null };
+    [rows] = await pool.execute(
+      `SELECT 1 FROM sale_orders WHERE sales_item_id = ? AND buyer_id = ? AND status IN ('Held','Released') LIMIT 1`,
+      [contextId, userId]
+    );
+  } else if (contextType === "equipment") {
+    [rows] = await pool.execute(
+      `SELECT 1 FROM equipment_bookings WHERE equipment_id = ? AND renter_id = ? AND status IN ('Pending','Confirmed','Returned') LIMIT 1`,
+      [contextId, userId]
+    );
+  }
+  if (rows.length) return { allowed: true, reason: null };
+
+  const reasons = {
+    task: "You can message the poster once the task is assigned to you. To discuss the price, make an offer.",
+    sale: "You can message the seller once you've bought the item through Taskify Protection. To discuss the price, make an offer.",
+    equipment: "You can message the owner once you've requested a booking."
+  };
+  return { allowed: false, reason: reasons[contextType] };
+}
+
+async function isOpenCashSale(itemId) {
+  const [rows] = await pool.execute(
+    `SELECT 1 FROM sales_items WHERE id = ? AND status = 'Available' AND price < ? LIMIT 1`,
+    [itemId, SALES.escrowThreshold]
+  );
+  return rows.length > 0;
+}
+
 async function startConversation({ contextType, contextId, initiatorId }) {
   const listing = await getContextListing(contextType, contextId);
   const recipientId = listing.owner_id;
@@ -39,7 +102,13 @@ async function startConversation({ contextType, contextId, initiatorId }) {
     [contextType, contextId, userA, userB]
   );
 
+  /* A chat that already exists can always be reopened. */
   if (existing.length > 0) return getConversationById(existing[0].id, initiatorId);
+
+  const access = await messagingAccess(contextType, contextId, initiatorId);
+  if (!access.allowed) {
+    const error = new Error(access.reason); error.statusCode = 403; throw error;
+  }
 
   const [result] = await pool.execute(
     `INSERT INTO conversations (context_type, context_id, user_a_id, user_b_id) VALUES (?, ?, ?, ?)`,
@@ -65,19 +134,30 @@ async function assertParticipant(conversationId, userId) {
 }
 
 async function getMyConversations(userId) {
-  const [rows] = await pool.execute(
+  const query = (withUnread) => pool.execute(
     `SELECT
        c.id, c.context_type, c.context_id, c.user_a_id, c.user_b_id, c.updated_at,
        other.id AS other_user_id, other.full_name AS other_user_name,
        other.profile_photo_url AS other_user_photo,
        (SELECT body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS last_message,
-       (SELECT created_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS last_message_at
+       (SELECT created_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.created_at DESC LIMIT 1) AS last_message_at,
+       ${withUnread
+         ? "(SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id AND m.sender_id <> ? AND m.read_at IS NULL)"
+         : "0"} AS unread_count
      FROM conversations c
      INNER JOIN users other ON other.id = IF(c.user_a_id = ?, c.user_b_id, c.user_a_id)
      WHERE c.user_a_id = ? OR c.user_b_id = ?
      ORDER BY c.updated_at DESC`,
-    [userId, userId, userId]
+    withUnread ? [userId, userId, userId, userId] : [userId, userId, userId]
   );
+
+  let rows;
+  try {
+    [rows] = await query(true);
+  } catch (error) {
+    if (!readTrackingMissing(error)) throw error;
+    [rows] = await query(false);
+  }
 
   for (const row of rows) {
     try {
@@ -109,8 +189,41 @@ async function getConversationById(conversationId, requestingUserId) {
   return conv;
 }
 
+/* Number of chats with at least one message from the other person that
+   you haven't opened yet — what the Messages badge shows. Starting a chat
+   (or sending messages yourself) never counts. */
+async function getUnreadConversationCount(userId) {
+  try {
+    const [rows] = await pool.execute(
+      `SELECT COUNT(DISTINCT m.conversation_id) AS count
+       FROM messages m
+       INNER JOIN conversations c ON c.id = m.conversation_id
+       WHERE (c.user_a_id = ? OR c.user_b_id = ?)
+         AND m.sender_id <> ?
+         AND m.read_at IS NULL`,
+      [userId, userId, userId]
+    );
+    return Number(rows[0].count);
+  } catch (error) {
+    if (readTrackingMissing(error)) return 0;
+    throw error;
+  }
+}
+
 async function getMessages(conversationId, requestingUserId) {
   await assertParticipant(conversationId, requestingUserId);
+
+  /* Opening a chat marks the other person's messages in it as read. */
+  try {
+    await pool.execute(
+      `UPDATE messages SET read_at = NOW()
+       WHERE conversation_id = ? AND sender_id <> ? AND read_at IS NULL`,
+      [conversationId, requestingUserId]
+    );
+  } catch (error) {
+    if (!readTrackingMissing(error)) throw error;
+  }
+
   const [rows] = await pool.execute(
     `SELECT m.id, m.conversation_id, m.sender_id, m.body, m.is_flagged, m.created_at,
             u.full_name AS sender_name
@@ -223,6 +336,8 @@ async function getMessagesForAdmin(conversationId) {
 
 module.exports = {
   startConversation,
+  messagingAccess,
+  getUnreadConversationCount,
   getMyConversations,
   getConversationById,
   getMessages,

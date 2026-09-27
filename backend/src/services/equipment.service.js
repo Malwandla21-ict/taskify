@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const notificationService = require("./notification.service");
+const { messagingAccess } = require("./conversation.service");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 const contentModerationService = require("./contentModeration.service");
 const trustService = require("./trust.service");
@@ -576,6 +577,10 @@ async function getEquipmentByIdForViewing(equipmentId, userId, viewerRole = null
     const [ownerRows] = await pool.execute(`SELECT phone_number FROM users WHERE id = ? LIMIT 1`, [item.owner_id]);
     item.owner_phone_number = ownerRows[0]?.phone_number || null;
   }
+
+  /* Whether this viewer may open a chat about it — the same rule
+     conversation.service's startConversation enforces. */
+  item.can_message = (await messagingAccess("equipment", item.id, userId ?? null)).allowed;
 
   return item;
 }

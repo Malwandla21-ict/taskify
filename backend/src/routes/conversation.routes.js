@@ -17,6 +17,9 @@ router.post(
 
 router.get("/my", controller.getMyConversations);
 
+/* Chats with messages from the other person you haven't opened yet. */
+router.get("/unread-count", controller.getUnreadCount);
+
 router.get(
   "/:id/messages",
   [ param("id").isInt({ min: 1 }).withMessage("Conversation ID must be a valid positive integer.") ],

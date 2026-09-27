@@ -23,6 +23,13 @@ async function getMyConversations(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function getUnreadCount(req, res, next) {
+  try {
+    const count = await conversationService.getUnreadConversationCount(req.user.id);
+    return res.status(200).json({ success: true, message: "Unread count fetched successfully.", data: { count } });
+  } catch (error) { next(error); }
+}
+
 async function getMessages(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -63,4 +70,4 @@ async function flagMessage(req, res, next) {
   } catch (error) { next(error); }
 }
 
-module.exports = { startConversation, getMyConversations, getMessages, sendMessage, flagMessage };
+module.exports = { startConversation, getMyConversations, getUnreadCount, getMessages, sendMessage, flagMessage };
