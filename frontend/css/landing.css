@@ -143,6 +143,15 @@
   padding: 90px clamp(20px, 6vw, 64px) 90px;
   color: white;
 }
+/* Animated logo (taskify-motion.js fills this in). aspect-ratio keeps its
+   space reserved before the script runs, so the heading doesn't jump down.
+   Left margin 0 lines it up with the left-aligned hero text. */
+.landing-hero-logo {
+  width: min(420px, 80vw);
+  aspect-ratio: 307.7 / 100;
+  margin: 0 0 20px;
+}
+
 .landing-hero-inner h1 {
   font-size: clamp(32px, 4.6vw, 50px);
   font-weight: 800;
