@@ -1133,6 +1133,38 @@ textarea { min-height: 110px; resize: vertical; }
 .logo-text { font-size: 26px; font-weight: 700; color: white; }
 .taskify-logo { width: 72px; height: 72px; object-fit: contain; }
 
+/* "Built for students of [UMP logo]". The UMP logo file has white
+   lettering, so it sits as-is on dark backgrounds (landing hero, the navy
+   login panel) and inside a navy chip on white ones (.on-light). */
+.ump-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  z-index: 2;
+}
+.ump-badge span {
+  max-width: 96px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: rgba(255,255,255,0.75);
+}
+.ump-badge img { height: 64px; width: auto; }
+.ump-badge.on-light {
+  background: var(--ump-navy);
+  padding: 8px 14px;
+  border-radius: var(--radius);
+}
+.ump-badge.on-light img { height: 48px; }
+
+/* The login page's navy side panel is hidden on narrow screens, so its UMP
+   badge gets a copy under the form that only shows there. */
+.auth-mobile-only { display: none; }
+@media (max-width: 1000px) {
+  .auth-mobile-only { display: inline-flex; }
+}
+
 .auth-left h1 {
   font-size: 40px;
   line-height: 1.1;
