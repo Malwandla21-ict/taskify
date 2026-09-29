@@ -110,7 +110,7 @@ function validateStep1() {
   }
 
   if (!email.toLowerCase().endsWith("@ump.ac.za")) {
-    showMessage("Please use your UMP email address (e.g. 2023123456@ump.ac.za).");
+    showMessage("Please use your UMP email address — students: 2023123456@ump.ac.za, staff and lecturers: name.surname@ump.ac.za.");
     return false;
   }
 
