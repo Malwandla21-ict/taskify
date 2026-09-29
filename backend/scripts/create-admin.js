@@ -57,7 +57,7 @@ Usage:
   node scripts/create-admin.js create <fullName> <email> <password> [phoneNumber]
 
 Examples:
-  node scripts/create-admin.js promote s202312345@ump.ac.za
+  node scripts/create-admin.js promote 2023123456@ump.ac.za
   node scripts/create-admin.js create "Site Admin" admin@ump.ac.za StrongPass123 0821234567
 `);
 }
