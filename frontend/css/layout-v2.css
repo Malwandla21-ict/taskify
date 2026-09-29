@@ -572,6 +572,16 @@ body.dashboard-body {
 .hero-v2-media { position: relative; }
 .hero-v2-media .media-placeholder img { width: 100%; height: 100%; object-fit: cover; }
 
+/* Phones: two columns squeezed the photo into a thin strip beside the
+   text. Stack them instead — the photo as a short banner on top, the
+   text underneath with a little less padding. */
+@media (max-width: 700px) {
+  .hero-section-v2 { grid-template-columns: 1fr; min-height: 0; }
+  .hero-v2-media { order: -1; height: 150px; }
+  .hero-v2-text { padding: 24px 22px 26px; }
+  .hero-v2-text h1 { font-size: 26px; }
+}
+
 /* ── Hero + spotlight carousel, merged into one banner ──
    Replaces the old two-piece hero (photo + CTAs) and separate carousel
    section below it — the tagline and the events/tasks/rentals spotlight
