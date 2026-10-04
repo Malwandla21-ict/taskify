@@ -46,6 +46,9 @@
             <i class="ti ti-search" aria-hidden="true"></i>
             <input type="text" id="eventSearch" placeholder="Search workshops, sports, societies..." />
           </div>
+          <select id="eventCategoryFilter" class="toolbar-select" aria-label="Filter by category">
+            <option value="All">All Categories</option>
+          </select>
           <select id="eventSortSelect" class="toolbar-select">
             <option value="upcoming">Sort by: Upcoming</option>
             <option value="popular">Sort by: Most Popular</option>
@@ -141,18 +144,10 @@
         <label for="eventTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Event Title</label>
         <input type="text" id="eventTitle" placeholder="e.g. Career Readiness Workshop" required />
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="eventCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
-          <input type="text" id="eventCategory" placeholder="e.g. Workshop, Sports, Society" required />
-        </div>
-        <div class="form-group">
-          <label for="eventSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
-          <select id="eventSection" required>
-            <option value="General">General</option>
-            <option value="Academic">Academic</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label for="eventCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+        <select id="eventCategory" required></select>
+        <small class="category-section-hint" id="eventCategoryHint"></small>
       </div>
       <button type="button" class="primary-button" id="nextEventStep2">Continue <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
     </div>

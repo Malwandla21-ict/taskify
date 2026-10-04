@@ -15,6 +15,7 @@ let cachedTasks     = [];
 let cachedEquipment = [];
 let cachedSales     = [];
 let activeType       = "All";
+let selectedCategory = null; // exact category from the buttons, or null for all
 
 function safeMap(items, builder, label) {
   return items.map(item => {
@@ -178,12 +179,16 @@ function matchesSearch(fields, q) {
   return fields.some(f => f?.toLowerCase().includes(q));
 }
 
+function matchesCategory(item) {
+  return !selectedCategory || item.category === selectedCategory;
+}
+
 function renderAll() {
   const q = sectionSearchInput?.value.trim().toLowerCase() || "";
 
-  const filteredTasks = cachedTasks.filter(t => matchesSearch([t.title, t.description, t.category, t.location], q));
-  const filteredEquipment = cachedEquipment.filter(i => matchesSearch([i.name, i.description, i.category], q));
-  const filteredSales = cachedSales.filter(i => matchesSearch([i.title, i.description, i.category], q));
+  const filteredTasks = cachedTasks.filter(t => matchesCategory(t) && matchesSearch([t.title, t.description, t.category, t.location], q));
+  const filteredEquipment = cachedEquipment.filter(i => matchesCategory(i) && matchesSearch([i.name, i.description, i.category], q));
+  const filteredSales = cachedSales.filter(i => matchesCategory(i) && matchesSearch([i.title, i.description, i.category], q));
 
   sectionTasksContainer.innerHTML = filteredTasks.length
     ? safeMap(filteredTasks, taskCard, "task")
@@ -222,18 +227,63 @@ document.querySelectorAll(".filters-row .filter-pill").forEach(btn => {
 
 sectionSearchInput?.addEventListener("input", renderAll);
 
-/* Category shortcut cards double as quick search filters — clicking one
-   fills the search box with that category name and jumps to results. */
-document.querySelectorAll("#categoryShortcuts .category-card").forEach(card => {
-  card.style.cursor = "pointer";
-  card.addEventListener("click", () => {
-    if (sectionSearchInput) {
-      sectionSearchInput.value = card.dataset.category;
-      renderAll();
+/* ── Category buttons ──
+   Built from the same fixed list the create forms use, so every button
+   is a category students can actually choose. A category used by more
+   than one listing type (e.g. "Calculators" for rentals AND sales) gets
+   ONE button that shows both — no repeated buttons. "Other" goes last. */
+const CATEGORY_ICON_COLORS = ["blue", "gold", "green", "navy", "red", "default"];
+const CATEGORY_TYPE_LABELS = { task: "Tasks", equipment: "Rentals", sales: "Sales" };
+
+function sectionCategories() {
+  const byName = new Map();
+  for (const type of ["task", "equipment", "sales"]) {
+    for (const name of TASKIFY_CATEGORIES[type][pageSection] || []) {
+      if (!byName.has(name)) byName.set(name, []);
+      byName.get(name).push(CATEGORY_TYPE_LABELS[type]);
     }
-    sectionTasksBlock?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  const isOther = name => name.startsWith("Other");
+  return [...byName.entries()]
+    .sort((a, b) => Number(isOther(a[0])) - Number(isOther(b[0])))
+    .map(([name, types]) => ({ name, types }));
+}
+
+function renderCategoryCards() {
+  const grid = document.getElementById("categoryShortcuts");
+  if (!grid) return;
+
+  const counts = {};
+  [...cachedTasks, ...cachedEquipment, ...cachedSales].forEach(item => {
+    counts[item.category] = (counts[item.category] || 0) + 1;
   });
-});
+
+  grid.innerHTML = sectionCategories().map(({ name, types }, i) => {
+    const details = CATEGORY_DETAILS[name] || { icon: "ti-tag", blurb: "" };
+    const count = counts[name] || 0;
+    const active = selectedCategory === name;
+    return `
+      <div class="category-card${active ? " active" : ""}" data-category="${name}" role="button" tabindex="0" aria-pressed="${active}">
+        <div class="category-icon ${CATEGORY_ICON_COLORS[i % CATEGORY_ICON_COLORS.length]}"><i class="ti ${details.icon}" aria-hidden="true"></i></div>
+        <h3>${name}</h3>
+        <p>${details.blurb}</p>
+        <p class="category-card-meta">${types.join(" · ")} · ${count} listing${count === 1 ? "" : "s"}</p>
+      </div>`;
+  }).join("");
+
+  grid.querySelectorAll(".category-card").forEach(card => {
+    const pick = () => {
+      selectedCategory = selectedCategory === card.dataset.category ? null : card.dataset.category;
+      renderCategoryCards();
+      renderAll();
+      if (selectedCategory) sectionTasksBlock?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    card.addEventListener("click", pick);
+    card.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
+}
+
+renderCategoryCards();
 
 async function loadSectionData() {
   try {
@@ -251,6 +301,7 @@ async function loadSectionData() {
     const searchParam = params.get("search");
     if (searchParam && sectionSearchInput) sectionSearchInput.value = searchParam;
 
+    renderCategoryCards(); // now with listing counts
     renderAll();
   } catch (err) {
     console.error("loadSectionData failed:", err);

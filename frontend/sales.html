@@ -151,18 +151,10 @@
         <label for="salesTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Item Title</label>
         <input type="text" id="salesTitle" placeholder="e.g. Engineering Toolkit" required />
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="salesCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
-          <input type="text" id="salesCategory" placeholder="Textbook, Uniform, Toolkit" required />
-        </div>
-        <div class="form-group">
-          <label for="salesSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
-          <select id="salesSection" required>
-            <option value="Academic">Academic</option>
-            <option value="General">General</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label for="salesCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+        <select id="salesCategory" required></select>
+        <small class="category-section-hint" id="salesCategoryHint"></small>
       </div>
       <button type="button" class="primary-button" id="nextSalesStep2">
         Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>

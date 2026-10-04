@@ -75,8 +75,7 @@ function openEventEditModal(event) {
   eventForm.reset();
   eventMessage.textContent = "";
   document.getElementById("eventTitle").value           = event.title || "";
-  document.getElementById("eventCategory").value        = event.category || "";
-  document.getElementById("eventSection").value         = event.section || "General";
+  fillCategorySelect(document.getElementById("eventCategory"), "event", event.category || "", document.getElementById("eventCategoryHint"));
   document.getElementById("eventDescription").value     = event.description || "";
   document.getElementById("eventLocation").value        = event.location || "";
   document.getElementById("eventDate").value            = toLocalDateTimeInput(event.event_date);
@@ -156,6 +155,7 @@ document.querySelectorAll(".filter-pill").forEach(btn => {
 });
 eventSearch?.addEventListener("input", renderEvents);
 eventSortSelect?.addEventListener("change", renderEvents);
+document.getElementById("eventCategoryFilter")?.addEventListener("change", renderEvents);
 
 function formatEventDate(iso) {
   return new Date(iso).toLocaleString("en-ZA", {
@@ -276,8 +276,10 @@ function myEventMiniCard(event) {
 
 function renderEvents() {
   const q = eventSearch?.value.trim().toLowerCase() || "";
+  const category = document.getElementById("eventCategoryFilter")?.value || "All";
   let filtered = cachedEvents.filter(e =>
     (selectedSection === "All" || e.section === selectedSection) &&
+    (category === "All" || e.category === category) &&
     [e.title, e.description, e.category, e.location].some(f => f?.toLowerCase().includes(q))
   );
 
@@ -321,7 +323,7 @@ function renderPopularCategories() {
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
   popularCategoriesContainer.innerHTML = top.length
     ? top.map(([cat, count], i) => `
-        <div class="popular-category-chip ${CHIP_COLORS[i % CHIP_COLORS.length]}">
+        <div class="popular-category-chip ${CHIP_COLORS[i % CHIP_COLORS.length]}" data-category="${cat}" role="button" tabindex="0" title="Show ${cat} events" style="cursor:pointer;">
           <i class="ti ti-tag" aria-hidden="true"></i>
           <div>
             <strong>${cat}</strong>
@@ -329,6 +331,20 @@ function renderPopularCategories() {
           </div>
         </div>`).join("")
     : `<p class="rail-loading">No categories yet.</p>`;
+
+  /* Tapping a popular category filters the list to it. */
+  popularCategoriesContainer.querySelectorAll(".popular-category-chip[data-category]").forEach(chip => {
+    const pick = () => {
+      const filter = document.getElementById("eventCategoryFilter");
+      if (!filter) return;
+      filter.value = chip.dataset.category;
+      if (filter.value !== chip.dataset.category) return; // not on the list
+      renderEvents();
+      eventsContainer?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    chip.addEventListener("click", pick);
+    chip.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
 }
 
 function attachEventButtonEvents(scope = document) {
@@ -467,7 +483,7 @@ eventForm?.addEventListener("submit", async e => {
       title:           document.getElementById("eventTitle").value.trim(),
       description:     document.getElementById("eventDescription").value.trim(),
       category:        document.getElementById("eventCategory").value.trim(),
-      section:         document.getElementById("eventSection").value,
+      section:         categorySection("event", document.getElementById("eventCategory").value),
       location:        document.getElementById("eventLocation").value.trim(),
       eventDate:       new Date(document.getElementById("eventDate").value).toISOString(),
       capacity:        capacityValue ? Number(capacityValue) : null,
@@ -502,6 +518,8 @@ eventForm?.addEventListener("submit", async e => {
 const eventPolicyNoticeEl = document.getElementById("eventPolicyNotice");
 if (eventPolicyNoticeEl) eventPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
+fillCategorySelect(document.getElementById("eventCategory"), "event", "", document.getElementById("eventCategoryHint"));
+fillCategoryFilter(document.getElementById("eventCategoryFilter"), "event");
 loadEvents();
 loadMyEvents();
 

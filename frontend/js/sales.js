@@ -50,7 +50,7 @@ function showSalesStep(n) {
 function updateSalesPreview() {
   const title     = document.getElementById("salesTitle").value.trim();
   const category  = document.getElementById("salesCategory").value.trim();
-  const section   = document.getElementById("salesSection").value;
+  const section   = categorySection("sales", category) || "General";
   const desc      = document.getElementById("salesDescription").value.trim();
   const condition = document.getElementById("salesCondition").value;
   const location  = document.getElementById("salesLocation").value.trim();
@@ -122,8 +122,7 @@ function openSalesEditModal(item) {
   salesForm?.reset();
   salesMessage.textContent = "";
   document.getElementById("salesTitle").value       = item.title || "";
-  document.getElementById("salesCategory").value    = item.category || "";
-  document.getElementById("salesSection").value     = item.section || "Academic";
+  fillCategorySelect(document.getElementById("salesCategory"), "sales", item.category || "", document.getElementById("salesCategoryHint"));
   document.getElementById("salesDescription").value = item.description || "";
   document.getElementById("salesCondition").value   = item.condition_status || "Good";
   document.getElementById("salesLocation").value    = item.location || "";
@@ -175,10 +174,10 @@ salesCategoryFilter?.addEventListener("change", renderSalesItems);
 salesPriceFilter?.addEventListener("change", renderSalesItems);
 salesSortSelect?.addEventListener("change", renderSalesItems);
 
-function populateCategoryFilter(items) {
-  const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
-  salesCategoryFilter.innerHTML = `<option value="All">All Categories</option>` +
-    cats.map(c => `<option value="${c}">${c}</option>`).join("");
+/* Fixed list (not built from whatever has been posted) so every
+   category shows up, even before anyone has used it. */
+function populateCategoryFilter() {
+  fillCategoryFilter(salesCategoryFilter, "sales");
 }
 
 /* ── Client-side-only "saved" heart toggle ── local per browser only;
@@ -488,7 +487,7 @@ salesForm?.addEventListener("submit", async e => {
       title:           document.getElementById("salesTitle").value.trim(),
       description:     document.getElementById("salesDescription").value.trim(),
       category:        document.getElementById("salesCategory").value.trim(),
-      section:         document.getElementById("salesSection").value,
+      section:         categorySection("sales", document.getElementById("salesCategory").value),
       price:           Number(document.getElementById("salesPrice").value.trim()),
       conditionStatus: document.getElementById("salesCondition").value,
       location:        document.getElementById("salesLocation").value.trim(),
@@ -523,6 +522,8 @@ salesForm?.addEventListener("submit", async e => {
 const salesPolicyNoticeEl = document.getElementById("salesPolicyNotice");
 if (salesPolicyNoticeEl) salesPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
+fillCategorySelect(document.getElementById("salesCategory"), "sales", "", document.getElementById("salesCategoryHint"));
+populateCategoryFilter();
 loadSalesItems();
 loadMySalesItems();
 

@@ -4,7 +4,7 @@ const taskService = require("../services/task.service");
 async function createTask(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.createTask({
       title: req.body.title, description: req.body.description,
@@ -21,7 +21,7 @@ async function createTask(req, res, next) {
 async function updateTask(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.updateTask(Number(req.params.id), req.user.id, {
       title: req.body.title, description: req.body.description,
@@ -44,7 +44,7 @@ async function getAllTasks(req, res, next) {
 async function getTaskById(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     /* req.user may be null here — this route allows guest viewing (see
        task.routes.js's optionalAuthenticate). getTaskByIdForViewing 404s a
@@ -57,7 +57,7 @@ async function getTaskById(req, res, next) {
 async function acceptTask(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.acceptTask(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Task accepted successfully.", data: task });
@@ -67,7 +67,7 @@ async function acceptTask(req, res, next) {
 async function updateTaskStatus(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.updateTaskStatus(Number(req.params.id), req.user.id, req.body.status);
     return res.status(200).json({ success: true, message: "Task status updated successfully.", data: task });
@@ -77,7 +77,7 @@ async function updateTaskStatus(req, res, next) {
 async function confirmTaskCompletion(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.confirmTaskCompletion(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Task completion confirmed and payment released.", data: task });
@@ -87,7 +87,7 @@ async function confirmTaskCompletion(req, res, next) {
 async function withdrawFromTask(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.withdrawFromTask(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "You have withdrawn from this task.", data: task });
@@ -97,7 +97,7 @@ async function withdrawFromTask(req, res, next) {
 async function cancelTask(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.cancelTask(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Task cancelled successfully.", data: task });
@@ -114,7 +114,7 @@ async function getUserTaskHistory(req, res, next) {
 async function deleteTask(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     await taskService.deleteTask(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Task deleted successfully." });
