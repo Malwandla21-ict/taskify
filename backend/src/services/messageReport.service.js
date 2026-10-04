@@ -1,9 +1,15 @@
 const pool = require("../config/db");
 const conversationService = require("./conversation.service");
+const notificationService = require("./notification.service");
+const reportService = require("./report.service");
 
+/* Flagging a chat message creates a report keyed by message_id (not by a
+   context type/id) with the 'harassment' category — a flagged message is
+   always an "abusive or inappropriate message" problem. It then shows up
+   in the admin Reports table like any other report. */
 async function flagMessage({ messageId, reporterId, reason }) {
   const [msgRows] = await pool.execute(
-    `SELECT id, conversation_id, sender_id FROM messages WHERE id = ? LIMIT 1`,
+    `SELECT id, conversation_id, sender_id, body FROM messages WHERE id = ? LIMIT 1`,
     [messageId]
   );
   if (msgRows.length === 0) {
@@ -19,12 +25,27 @@ async function flagMessage({ messageId, reporterId, reason }) {
 
   await pool.execute(`UPDATE messages SET is_flagged = 1 WHERE id = ?`, [messageId]);
 
-  const [result] = await pool.execute(
-    `INSERT INTO reports (reporter_id, reported_user_id, message_id, reason) VALUES (?, ?, ?, ?)`,
-    [reporterId, message.sender_id, messageId, reason.trim()]
-  );
+  const reportId = await reportService.recordReport({
+    reporterId,
+    reportedUserId: message.sender_id,
+    messageId,
+    reason,
+    category: "harassment"
+  });
 
-  const [rows] = await pool.execute(`SELECT * FROM reports WHERE id = ? LIMIT 1`, [result.insertId]);
+  /* recordReport doesn't notify, so tell admins here — otherwise a
+     flagged message never surfaces anywhere for a human to review. */
+  const [reporterRows] = await pool.execute(`SELECT full_name FROM users WHERE id = ? LIMIT 1`, [reporterId]);
+  const reporterName = reporterRows[0]?.full_name || "A student";
+  const body = String(message.body || "");
+  const preview = body.length > 100 ? `${body.slice(0, 100)}…` : body;
+
+  await notificationService.notifyAllAdmins({
+    title: "Message Flagged",
+    message: `${reporterName} flagged a message for review: "${preview}"`
+  });
+
+  const [rows] = await pool.execute(`SELECT * FROM reports WHERE id = ? LIMIT 1`, [reportId]);
   return rows[0];
 }
 

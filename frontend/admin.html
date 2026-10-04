@@ -213,7 +213,7 @@
         <div class="admin-page-header">
           <div>
             <h1>Reports</h1>
-            <p>Review and take action on user reports.</p>
+            <p>Problems students sent to admins about a specific task, equipment item, sale, event or chat message. Star-rating reviews are separate and show on profiles.</p>
           </div>
         </div>
         <div class="admin-table-card">
@@ -225,17 +225,39 @@
           <div class="admin-table-toolbar" style="border-top:1px solid var(--border);margin-top:14px;">
             <div class="admin-table-search">
               <i class="ti ti-search" aria-hidden="true"></i>
-              <input type="text" id="reportSearchInput" placeholder="Search reports…" />
+              <input type="text" id="reportSearchInput" placeholder="Search by item, student or details…" />
+            </div>
+            <div class="admin-table-filters">
+              <select id="reportTypeFilter" aria-label="Filter by what was reported">
+                <option value="All">All items</option>
+                <option value="task">Tasks</option>
+                <option value="equipment">Equipment / Uniforms</option>
+                <option value="sales_item">Sales</option>
+                <option value="event">Events</option>
+                <option value="message">Chat messages</option>
+              </select>
+              <select id="reportCategoryFilter" aria-label="Filter by type of problem">
+                <option value="All">All problems</option>
+                <option value="payment">Money / payment</option>
+                <option value="damaged_item">Broken or damaged item</option>
+                <option value="not_as_described">Not as described</option>
+                <option value="no_show">Didn't show up</option>
+                <option value="scam">Scam or fraud</option>
+                <option value="harassment">Harassment</option>
+                <option value="inappropriate">Inappropriate content</option>
+                <option value="other">Something else</option>
+              </select>
             </div>
           </div>
           <div class="admin-table-scroll">
             <table class="admin-table">
               <thead>
                 <tr>
+                  <th>Item</th>
+                  <th>Problem</th>
                   <th>Reported User</th>
-                  <th>Reason</th>
-                  <th>Status</th>
                   <th>Reported By</th>
+                  <th>Status</th>
                   <th>Date</th>
                   <th>Actions</th>
                 </tr>

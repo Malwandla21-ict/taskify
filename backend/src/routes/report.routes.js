@@ -1,13 +1,15 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const reportController = require("../controllers/report.controller");
+const { VALID_CONTEXT_TYPES, VALID_CATEGORIES } = require("../services/report.service");
 const { authenticate, authorize, requireTwoFactor } = require("../middleware/auth.middleware");
 
 const router = express.Router();
 
-/* Any logged-in user can file a report. contextType/contextId are optional,
-   but if either is present, both must be — a report can't be "about" a
-   context type with no id or vice versa. */
+/* Any logged-in user can file a report. category (what kind of problem)
+   is required so admins can filter. contextType/contextId (what item it's
+   about) are optional, but if either is present, both must be — a report
+   can't be "about" a context type with no id or vice versa. */
 router.post(
   "/",
   authenticate,
@@ -18,10 +20,14 @@ router.post(
     body("reason")
       .trim()
       .notEmpty().withMessage("Reason is required.")
-      .isLength({ min: 10 }).withMessage("Reason must be at least 10 characters."),
+      .isLength({ min: 10 }).withMessage("Please describe the problem in at least 10 characters.")
+      .isLength({ max: 1000 }).withMessage("Please keep the description under 1000 characters."),
+    body("category")
+      .notEmpty().withMessage("Please choose what kind of problem this is.")
+      .isIn(VALID_CATEGORIES).withMessage("Invalid problem type."),
     body("contextType")
       .optional({ nullable: true })
-      .isIn(["task", "equipment_booking", "sales_item", "event"]).withMessage("Invalid context type."),
+      .isIn(VALID_CONTEXT_TYPES).withMessage("Invalid context type."),
     body("contextId")
       .optional({ nullable: true })
       .isInt({ min: 1 }).withMessage("Invalid context ID."),

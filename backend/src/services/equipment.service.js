@@ -5,6 +5,7 @@ const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorse
 const contentModerationService = require("./contentModeration.service");
 const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
 const trustService = require("./trust.service");
+const reportService = require("./report.service");
 
 /* Before/after condition photos are stored as JSON arrays of image URLs
    (uploaded through the normal /api/upload endpoint first). */
@@ -494,8 +495,10 @@ async function confirmCondition(bookingId, ownerId) {
 
 /* Owner: item came back damaged — deposit stays held as "Disputed" and
    admins are told. The report also blocks the renter from the higher
-   trust levels (see trust.service.js). Resolving the dispute is an admin
-   job outside this simulation. */
+   trust levels (see trust.service.js). It's also written to the reports
+   table (category 'damaged_item', tied to this exact rental) so it shows
+   up in the admin Reports table next to every other problem. Resolving
+   the dispute is an admin job outside this simulation. */
 async function reportDamage(bookingId, ownerId, note) {
   const booking = await getBookingWithOwner(bookingId);
   assertOwnerCanCheckCondition(booking, ownerId);
@@ -512,6 +515,15 @@ async function reportDamage(bookingId, ownerId, note) {
      WHERE id = ?`,
     [cleanNote.slice(0, 1000), bookingId]
   );
+
+  await reportService.recordReport({
+    reporterId: ownerId,
+    reportedUserId: booking.renter_id,
+    contextType: "equipment_booking",
+    contextId: Number(bookingId),
+    reason: cleanNote.slice(0, 1000),
+    category: "damaged_item"
+  });
 
   await notificationService.createNotification({
     userId: booking.renter_id,
@@ -705,4 +717,4 @@ module.exports = {
   getMyEquipment,
   getEquipmentByIdForViewing,
   deleteEquipment
-};
+};

@@ -98,6 +98,11 @@ async function loadEquipmentDetails() {
 function renderEquipmentDetails(item) {
   const isOwn = !!currentUser && Number(item.owner_id) === Number(currentUser.id);
 
+  /* Anyone signed in, except the owner, can report this listing. */
+  const reportTarget = currentUser && !isOwn
+    ? { contextType: "equipment", contextId: item.id, itemTitle: item.name, reportedUserId: item.owner_id, reportedUserName: item.owner_name }
+    : null;
+
   /* Messaging the owner opens once you've requested a booking. The server
      decides (item.can_message, see conversation.service.js messagingAccess). */
   const messageOwnerButton = item.can_message
@@ -178,12 +183,16 @@ function renderEquipmentDetails(item) {
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Rentals
         </button>
+        ${reportTarget ? reportProblemButtonHtml() : ""}
       </div>
     </div>`;
 
   document.getElementById("backButtonBottom")?.addEventListener("click", () => goBack("./equipment.html"));
 
   attachProfileLinkEvents();
+
+  /* Report a problem about THIS item (goes to admins, not a review) */
+  document.getElementById("reportProblemButton")?.addEventListener("click", () => openReportModal(reportTarget));
 
   document.getElementById("openBookingButton")?.addEventListener("click", () => {
     if (!requireAuthAction("Sign in to book this equipment.")) return;

@@ -126,6 +126,11 @@ async function loadSaleDetails() {
 function renderSaleDetails(item) {
   const isOwn = !!currentUser && Number(item.seller_id) === Number(currentUser.id);
 
+  /* Anyone signed in, except the seller, can report this item. */
+  const reportTarget = currentUser && !isOwn
+    ? { contextType: "sales_item", contextId: item.id, itemTitle: item.title, reportedUserId: item.seller_id, reportedUserName: item.seller_name }
+    : null;
+
   const rules = item.payment_rules || { requiresProtection: false, escrowThreshold: 300 };
   const order = item.my_order;
   const activeOrder = order && order.status === "Held" ? order : null;
@@ -223,12 +228,16 @@ function renderSaleDetails(item) {
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Sales
         </button>
+        ${reportTarget ? reportProblemButtonHtml() : ""}
       </div>
     </div>`;
 
   document.getElementById("backButtonBottom")?.addEventListener("click", () => goBack("./sales.html"));
 
   attachProfileLinkEvents();
+
+  /* Report a problem about THIS item (goes to admins, not a review) */
+  document.getElementById("reportProblemButton")?.addEventListener("click", () => openReportModal(reportTarget));
 
   /* Owners get the Offers panel on protected items (their negotiations,
      even after the item is reserved); buyers only while it's available. */

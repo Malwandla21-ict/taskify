@@ -93,6 +93,8 @@ const PAGE_SIZE = 8;
 
 let userRoleFilterValue       = "All";
 let reportTabValue            = "All";
+let reportTypeFilterValue     = "All";
+let reportCategoryFilterValue = "All";
 let moderationTypeFilterValue = "All";
 
 /* Mirrors CONTENT_TABLES/CONTENT_LABELS in admin.service.js — every
@@ -313,8 +315,8 @@ async function loadPendingReportsPreview() {
           <div class="admin-feed-item">
             <div class="admin-feed-icon red"><i class="ti ti-flag" aria-hidden="true"></i></div>
             <div class="admin-feed-body">
-              <div class="admin-feed-title">${r.reason.length > 42 ? r.reason.slice(0, 42) + "…" : r.reason}</div>
-              <div class="admin-feed-sub">Reported user: ${r.reported_user_name}</div>
+              <div class="admin-feed-title">${escapeReportText(reportCategoryLabel(r.category))}</div>
+              <div class="admin-feed-sub">${r.context_title ? `${escapeReportText(reportItemTypeLabel(r))}: ${escapeReportText(r.context_title)} · ` : ""}Reported user: ${escapeReportText(r.reported_user_name)}</div>
             </div>
             <div class="admin-feed-item-right">
               <div class="admin-feed-time">${timeAgo(r.created_at)}</div>
@@ -717,10 +719,62 @@ document.querySelectorAll(".admin-table-tab[data-report-tab]").forEach(tab => {
 
 document.getElementById("reportSearchInput")?.addEventListener("input", () => { reportsPage = 1; renderReportsTable(); });
 
+/* Filters added after the panel review: what was reported (task,
+   equipment, sale, event, message) and what kind of problem it is. */
+document.getElementById("reportTypeFilter")?.addEventListener("change", (e) => {
+  reportTypeFilterValue = e.target.value;
+  reportsPage = 1;
+  renderReportsTable();
+});
+document.getElementById("reportCategoryFilter")?.addEventListener("change", (e) => {
+  reportCategoryFilterValue = e.target.value;
+  reportsPage = 1;
+  renderReportsTable();
+});
+
+/* Groups a report under one item type for the filter. A rental booking
+   and an equipment listing both count as "Equipment / Uniforms"; a
+   flagged chat message has no context type, only a message_id. */
+function reportItemType(report) {
+  if (report.message_id) return "message";
+  if (report.context_type === "equipment_booking") return "equipment";
+  return report.context_type || "none";
+}
+
+function reportItemTypeLabel(report) {
+  if (report.message_id) return REPORT_CONTEXT_LABELS.message;
+  return REPORT_CONTEXT_LABELS[report.context_type] || "General";
+}
+
+const REPORT_ITEM_ICONS = {
+  task: "ti-checklist",
+  equipment: "ti-tool",
+  sales_item: "ti-tag",
+  event: "ti-calendar-event",
+  message: "ti-message-circle",
+  none: "ti-user"
+};
+
+function reportCategoryBadge(category) {
+  const variant = {
+    payment: "gold",
+    damaged_item: "red",
+    scam: "red",
+    harassment: "red",
+    inappropriate: "red",
+    no_show: "blue",
+    not_as_described: "blue",
+    other: "navy"
+  }[category] || "navy";
+  const icon = (REPORT_CATEGORIES[category] || REPORT_CATEGORIES.other).icon;
+  return `<div class="badge ${variant}"><i class="ti ${icon}" aria-hidden="true"></i> ${escapeReportText(reportCategoryLabel(category))}</div>`;
+}
+
 function contextDetailUrl(report) {
   if (!report.context_type || !report.context_link_id) return null;
   const map = {
     task: `./task-details.html?id=${report.context_link_id}`,
+    equipment: `./equipment-details.html?id=${report.context_link_id}`,
     equipment_booking: `./equipment-details.html?id=${report.context_link_id}`,
     sales_item: `./sale-details.html?id=${report.context_link_id}`,
     event: `./event-details.html?id=${report.context_link_id}`
@@ -735,19 +789,22 @@ async function loadReports() {
     reportsPage = 1;
     renderReportsTable();
   } catch (err) {
-    document.getElementById("reportsTableBody").innerHTML = `<tr><td colspan="6">${errorState(err.message)}</td></tr>`;
+    document.getElementById("reportsTableBody").innerHTML = `<tr><td colspan="7">${errorState(err.message)}</td></tr>`;
   }
 }
 
 function getFilteredReports() {
   const q = document.getElementById("reportSearchInput").value.trim().toLowerCase();
   return cachedReports.filter(r => {
-    const matchesTab = reportTabValue === "All" || r.status === reportTabValue;
+    const matchesTab      = reportTabValue === "All" || r.status === reportTabValue;
+    const matchesType     = reportTypeFilterValue === "All" || reportItemType(r) === reportTypeFilterValue;
+    const matchesCategory = reportCategoryFilterValue === "All" || (r.category || "other") === reportCategoryFilterValue;
     const matchesSearch = !q ||
       r.reported_user_name.toLowerCase().includes(q) ||
       r.reporter_name.toLowerCase().includes(q) ||
-      r.reason.toLowerCase().includes(q);
-    return matchesTab && matchesSearch;
+      r.reason.toLowerCase().includes(q) ||
+      (r.context_title || "").toLowerCase().includes(q);
+    return matchesTab && matchesType && matchesCategory && matchesSearch;
   });
 }
 
@@ -766,12 +823,26 @@ function renderReportsTable() {
     ? pageItems.map(r => {
         const detailUrl = contextDetailUrl(r);
         const canRefund = r.context_type === "task" && r.status === "Pending";
+        const itemType = reportItemType(r);
+        const reasonShort = r.reason.length > 80 ? r.reason.slice(0, 80) + "…" : r.reason;
         return `
         <tr>
-          <td><span class="admin-table-name profile-link" data-user-id="${r.reported_user_id}">${r.reported_user_name}</span></td>
-          <td class="admin-table-muted" style="max-width:220px;">${r.reason.length > 60 ? r.reason.slice(0, 60) + "…" : r.reason}</td>
+          <td class="report-item-td">
+            <div class="report-item-cell">
+              <i class="ti ${REPORT_ITEM_ICONS[itemType] || "ti-user"}" aria-hidden="true"></i>
+              <div>
+                <div class="report-item-type">${escapeReportText(reportItemTypeLabel(r))}</div>
+                <div class="admin-table-name">${r.context_title ? escapeReportText(r.context_title) : `<span class="admin-table-muted">No specific item</span>`}</div>
+              </div>
+            </div>
+          </td>
+          <td class="report-problem-td">
+            ${reportCategoryBadge(r.category)}
+            <div class="admin-table-muted report-reason" title="${escapeReportText(r.reason)}">${escapeReportText(reasonShort)}</div>
+          </td>
+          <td><span class="admin-table-name profile-link" data-user-id="${r.reported_user_id}">${escapeReportText(r.reported_user_name)}</span></td>
+          <td><span class="admin-table-name profile-link" data-user-id="${r.reporter_id}">${escapeReportText(r.reporter_name)}</span></td>
           <td>${reportStatusBadge(r.status)}</td>
-          <td><span class="admin-table-name profile-link" data-user-id="${r.reporter_id}">${r.reporter_name}</span></td>
           <td class="admin-table-muted">${new Date(r.created_at).toLocaleDateString()}</td>
           <td>
             <div class="admin-table-actions">
@@ -794,7 +865,7 @@ function renderReportsTable() {
           </td>
         </tr>`;
       }).join("")
-    : `<tr><td colspan="6">${emptyState("ti-flag", "No reports", "Reports filed by students will appear here.")}</td></tr>`;
+    : `<tr><td colspan="7">${emptyState("ti-flag", "No reports", cachedReports.length ? "No reports match these filters." : "Reports filed by students will appear here.")}</td></tr>`;
 
   document.getElementById("reportsTableCount").textContent =
     filtered.length ? `Showing ${(reportsPage - 1) * PAGE_SIZE + 1} to ${Math.min(reportsPage * PAGE_SIZE, filtered.length)} of ${filtered.length} reports` : "";

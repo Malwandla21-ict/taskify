@@ -2678,6 +2678,68 @@ textarea { min-height: 110px; resize: vertical; }
   margin-bottom: 16px;
 }
 
+/* Shows exactly which item the report is about (panel feedback) */
+.report-modal-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: rgba(12,29,74,0.03);
+}
+
+.report-modal-item strong { font-size: 14px; color: var(--text); }
+
+.report-modal-item-type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ump-blue);
+}
+
+.report-modal-item-user { font-size: 12px; color: var(--muted); }
+
+.report-modal select { width: 100%; }
+
+.report-modal-note {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 12px;
+  color: var(--muted);
+  margin: -4px 0 16px;
+  line-height: 1.45;
+}
+
+.report-modal-note i { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
+
+/* Small "Report a problem" link under each detail page's summary card */
+.report-problem-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 6px;
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: color 0.15s, background 0.15s;
+}
+
+.report-problem-link:hover,
+.report-problem-link:focus-visible {
+  color: var(--ump-red);
+  background: rgba(224,58,62,0.06);
+}
+
 /* ==============================
    ADMIN DASHBOARD
 ============================== */
