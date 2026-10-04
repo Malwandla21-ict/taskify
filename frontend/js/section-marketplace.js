@@ -123,6 +123,7 @@ function equipmentCard(item) {
         <h3>${item.name}</h3>
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          ${conditionBadge(item.condition_status)}
           ${endorsementBadge(item)}
         </div>
         <div class="market-footer">

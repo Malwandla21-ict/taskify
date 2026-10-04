@@ -2715,6 +2715,19 @@ textarea { min-height: 110px; resize: vertical; }
 
 .report-modal-note i { font-size: 14px; margin-top: 1px; flex-shrink: 0; }
 
+/* "Last checked by …" under the equipment condition badge */
+.condition-checked-note {
+  display: flex;
+  gap: 5px;
+  align-items: flex-start;
+  margin-top: 6px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.condition-checked-note i { font-size: 13px; margin-top: 1px; flex-shrink: 0; }
+
 /* Small "Report a problem" link under each detail page's summary card */
 .report-problem-link {
   display: flex;

@@ -5,13 +5,13 @@ const trustService = require("../services/trust.service");
 async function createEquipment(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const equipment = await equipmentService.createEquipment({
       ownerId: req.user.id, name: req.body.name,
       description: req.body.description, category: req.body.category,
-      section: req.body.section, dailyPrice: req.body.dailyPrice,
-      itemValue: req.body.itemValue,
+      section: req.body.section, condition: req.body.condition,
+      dailyPrice: req.body.dailyPrice, itemValue: req.body.itemValue,
       imageUrls: req.body.imageUrls || []
     });
 
@@ -22,11 +22,12 @@ async function createEquipment(req, res, next) {
 async function updateEquipment(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const equipment = await equipmentService.updateEquipment(Number(req.params.id), req.user.id, {
       name: req.body.name, description: req.body.description,
       category: req.body.category, section: req.body.section,
+      condition: req.body.condition,
       dailyPrice: req.body.dailyPrice, itemValue: req.body.itemValue,
       imageUrls: req.body.imageUrls || []
     });
@@ -50,7 +51,7 @@ async function getAllAvailableEquipment(req, res, next) {
 async function getEquipmentById(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     /* req.user may be null here — this route allows guest viewing (see
        equipment.routes.js's optionalAuthenticate). getEquipmentByIdForViewing
@@ -66,7 +67,7 @@ async function getEquipmentById(req, res, next) {
 async function getRentalQuote(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const quote = await equipmentService.getRentalQuote({
       equipmentId: Number(req.params.id), renterId: req.user.id,
@@ -86,7 +87,7 @@ async function getMyTrust(req, res, next) {
 async function bookEquipment(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.bookEquipment({
       equipmentId: Number(req.params.id), renterId: req.user.id,
@@ -100,7 +101,7 @@ async function bookEquipment(req, res, next) {
 async function confirmBooking(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.confirmBooking(Number(req.params.bookingId), req.user.id);
     return res.status(200).json({ success: true, message: "Booking confirmed successfully.", data: booking });
@@ -110,7 +111,7 @@ async function confirmBooking(req, res, next) {
 async function declineBooking(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.declineBooking(Number(req.params.bookingId), req.user.id);
     return res.status(200).json({ success: true, message: "Booking declined.", data: booking });
@@ -120,7 +121,7 @@ async function declineBooking(req, res, next) {
 async function cancelBooking(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.cancelBookingByRenter(Number(req.params.bookingId), req.user.id);
     return res.status(200).json({ success: true, message: "Booking request cancelled.", data: booking });
@@ -130,7 +131,7 @@ async function cancelBooking(req, res, next) {
 async function returnEquipment(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.returnEquipment(Number(req.params.bookingId), req.user.id, req.body?.photoUrls);
     return res.status(200).json({ success: true, message: "Equipment returned successfully.", data: booking });
@@ -140,9 +141,9 @@ async function returnEquipment(req, res, next) {
 async function confirmPickup(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
-    const booking = await equipmentService.confirmPickup(Number(req.params.bookingId), req.user.id, req.body.photoUrls);
+    const booking = await equipmentService.confirmPickup(Number(req.params.bookingId), req.user.id, req.body.photoUrls, req.body.pickupCondition);
     return res.status(200).json({ success: true, message: "Pickup confirmed.", data: booking });
   } catch (error) { next(error); }
 }
@@ -150,7 +151,7 @@ async function confirmPickup(req, res, next) {
 async function confirmCondition(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.confirmCondition(Number(req.params.bookingId), req.user.id);
     return res.status(200).json({ success: true, message: "Condition confirmed. Deposit released (demo).", data: booking });
@@ -160,7 +161,7 @@ async function confirmCondition(req, res, next) {
 async function reportDamage(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.reportDamage(Number(req.params.bookingId), req.user.id, req.body.note);
     return res.status(200).json({ success: true, message: "Damage reported. An admin will review it.", data: booking });
@@ -184,7 +185,7 @@ async function getMyEquipment(req, res, next) {
 async function deleteEquipment(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     await equipmentService.deleteEquipment(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Equipment listing deleted successfully." });

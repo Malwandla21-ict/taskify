@@ -111,9 +111,35 @@ function sectionBadge(section) {
   return `<div class="badge ${cls}">${section}</div>`;
 }
 
+/* Sales use New/Excellent/Good/Fair/Used; equipment uses
+   Excellent/Functional/Damaged (panel feedback). An equipment listing made
+   before conditions were saved has none — callers decide what to show. */
 function conditionBadge(condition) {
-  const map = { New: "", Excellent: "", Good: "blue", Fair: "gold", Used: "gold" };
-  return `<div class="badge ${map[condition] ?? ""}">${condition}</div>`;
+  if (!condition) return "";
+  const map = { New: "", Excellent: "", Good: "blue", Functional: "blue", Fair: "gold", Used: "gold", Damaged: "red" };
+  const icon = condition === "Damaged" ? `<i class="ti ti-alert-triangle" aria-hidden="true"></i> ` : "";
+  return `<div class="badge ${map[condition] ?? ""}">${icon}${condition}</div>`;
+}
+
+/* Equipment condition — keep in sync with EQUIPMENT_CONDITIONS in
+   backend/src/services/equipment.service.js. */
+const EQUIPMENT_CONDITIONS = {
+  Excellent:  "Like new. No marks, everything works.",
+  Functional: "Works properly. May have small signs of use.",
+  Damaged:    "Has damage. Explain what's wrong in the description."
+};
+
+/* "Last checked by Rita (renter) on 2 Oct 2026" — the panel's
+   "Inspected by". The owner sets the condition when listing, the renter
+   confirms it at pickup, and the owner confirms it again at return. */
+function equipmentConditionCheckedText(item) {
+  if (!item.condition_status) return "The owner hasn't stated a condition for this item yet.";
+  if (!item.condition_checked_by_name) return "";
+  const role = Number(item.condition_checked_by) === Number(item.owner_id) ? "owner" : "renter";
+  const when = item.condition_checked_at
+    ? ` on ${new Date(item.condition_checked_at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" })}`
+    : "";
+  return `Last checked by ${item.condition_checked_by_name} (${role})${when}`;
 }
 
 function statusBadge(status) {
