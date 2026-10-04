@@ -22,6 +22,15 @@ async function loadTaskDetails() {
 function renderTaskDetails(task) {
   const isOwn           = !!currentUser && Number(task.created_by)  === Number(currentUser.id);
   const isAcceptedByMe   = !!currentUser && Number(task.accepted_by) === Number(currentUser.id);
+
+  /* Who a report from this page is about: a visitor or the worker reports
+     the poster; the poster reports the student who took the task. */
+  const reportTarget = !currentUser ? null
+    : !isOwn
+      ? { contextType: "task", contextId: task.id, itemTitle: task.title, reportedUserId: task.created_by, reportedUserName: task.created_by_name }
+      : task.accepted_by
+        ? { contextType: "task", contextId: task.id, itemTitle: task.title, reportedUserId: task.accepted_by, reportedUserName: task.accepted_by_name }
+        : null;
   /* Messaging opens once the task is assigned to you (the server decides —
      see conversation.service.js messagingAccess). Before that, price talk
      goes through Make an offer. */
@@ -143,6 +152,7 @@ function renderTaskDetails(task) {
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Tasks
         </button>
+        ${reportTarget ? reportProblemButtonHtml() : ""}
       </div>
     </div>`;
 
@@ -151,6 +161,9 @@ function renderTaskDetails(task) {
   attachTaskActionEvents();
   attachOwnerActionEvents();
   attachProfileLinkEvents();
+
+  /* Report a problem about THIS item (goes to admins, not a review) */
+  document.getElementById("reportProblemButton")?.addEventListener("click", () => openReportModal(reportTarget));
 
   /* Owners always get the Offers panel (their negotiations, even after the
      task is taken); anyone else only while the task is open. */

@@ -6,13 +6,15 @@ async function createReport(req, res, next) {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+      /* First message as the headline so the student sees what to fix,
+         not just "Validation failed." */
+      return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
     }
 
     const reporterId = req.user.id;
-    const { reportedUserId, contextType, contextId, reason } = req.body;
+    const { reportedUserId, contextType, contextId, reason, category } = req.body;
 
-    const report = await reportService.createReport({ reporterId, reportedUserId, contextType, contextId, reason });
+    const report = await reportService.createReport({ reporterId, reportedUserId, contextType, contextId, reason, category });
 
     return res.status(201).json({ success: true, message: "Report submitted successfully.", data: report });
   } catch (error) {

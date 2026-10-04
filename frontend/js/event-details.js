@@ -42,6 +42,11 @@ async function loadEventDetails() {
 
 function renderEventDetails(event, hasRsvped) {
   const isOwn  = !!currentUser && Number(event.organizer_id) === Number(currentUser.id);
+
+  /* Anyone signed in, except the organiser, can report this event. */
+  const reportTarget = currentUser && !isOwn
+    ? { contextType: "event", contextId: event.id, itemTitle: event.title, reportedUserId: event.organizer_id, reportedUserName: event.organizer_name }
+    : null;
   const isFull = event.capacity && event.rsvp_count >= event.capacity;
 
   let actionArea;
@@ -116,12 +121,16 @@ function renderEventDetails(event, hasRsvped) {
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
           <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Events
         </button>
+        ${reportTarget ? reportProblemButtonHtml() : ""}
       </div>
     </div>`;
 
   document.getElementById("backButtonBottom")?.addEventListener("click", () => goBack("./events.html"));
 
   attachProfileLinkEvents();
+
+  /* Report a problem about THIS item (goes to admins, not a review) */
+  document.getElementById("reportProblemButton")?.addEventListener("click", () => openReportModal(reportTarget));
 
   document.getElementById("rsvpButton")?.addEventListener("click", async (e) => {
     if (!requireAuthAction("Sign in to RSVP to this event.")) return;

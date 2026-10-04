@@ -801,3 +801,178 @@ function switchGalleryImage(url, thumbEl) {
 
   window.openLightbox = openLightbox;
 })();
+
+/* ==============================
+   REPORT A PROBLEM (shared by the task / equipment / sale / event pages)
+   A report is a problem sent to Taskify admins about ONE specific item.
+   It is NOT a review — reviews are star ratings shown on profiles.
+   Keep REPORT_CATEGORIES in sync with VALID_CATEGORIES in
+   backend/src/services/report.service.js.
+============================== */
+const REPORT_CATEGORIES = {
+  payment:          { label: "Money / payment problem",               icon: "ti-cash" },
+  damaged_item:     { label: "Broken or damaged item",                icon: "ti-tool" },
+  not_as_described: { label: "Not as described",                      icon: "ti-photo-x" },
+  no_show:          { label: "Didn't show up / didn't do the work",   icon: "ti-user-x" },
+  scam:             { label: "Scam or fraud",                         icon: "ti-alert-octagon" },
+  harassment:       { label: "Harassment or abusive messages",        icon: "ti-message-report" },
+  inappropriate:    { label: "Inappropriate or not-allowed content",  icon: "ti-eye-off" },
+  other:            { label: "Something else",                        icon: "ti-dots" }
+};
+
+/* Which problem types make sense for each kind of item — e.g. an event
+   has no "broken item" or "payment" option. */
+const REPORT_CATEGORIES_BY_CONTEXT = {
+  task:       ["payment", "no_show", "not_as_described", "scam", "harassment", "inappropriate", "other"],
+  equipment:  ["damaged_item", "not_as_described", "payment", "no_show", "scam", "harassment", "inappropriate", "other"],
+  sales_item: ["not_as_described", "damaged_item", "payment", "no_show", "scam", "harassment", "inappropriate", "other"],
+  event:      ["inappropriate", "not_as_described", "scam", "harassment", "other"]
+};
+
+const REPORT_CONTEXT_LABELS = {
+  task: "Task",
+  equipment: "Equipment / Uniforms listing",
+  equipment_booking: "Equipment rental",
+  sales_item: "Item for sale",
+  event: "Event",
+  message: "Chat message"
+};
+
+function reportCategoryLabel(category) {
+  return (REPORT_CATEGORIES[category] || REPORT_CATEGORIES.other).label;
+}
+
+function escapeReportText(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+/* The small "Report a problem" button that sits at the bottom of each
+   detail page's summary card. */
+function reportProblemButtonHtml() {
+  return `
+    <button type="button" class="report-problem-link" id="reportProblemButton">
+      <i class="ti ti-flag" aria-hidden="true"></i> Report a problem
+    </button>`;
+}
+
+/* Builds the modal once, the first time it's needed, so no page has to
+   carry its markup in its HTML file. */
+function ensureReportModal() {
+  let modal = document.getElementById("reportProblemModal");
+  if (modal) return modal;
+
+  const overlay = document.createElement("div");
+  overlay.className = "report-modal-overlay";
+  overlay.id = "reportProblemOverlay";
+
+  modal = document.createElement("div");
+  modal.className = "report-modal";
+  modal.id = "reportProblemModal";
+  modal.setAttribute("role", "dialog");
+  modal.setAttribute("aria-modal", "true");
+  modal.setAttribute("aria-labelledby", "reportProblemTitle");
+  modal.innerHTML = `
+    <h2 id="reportProblemTitle"><i class="ti ti-flag" aria-hidden="true"></i> Report a problem</h2>
+    <div class="report-modal-target" id="reportProblemTarget"></div>
+    <form id="reportProblemForm">
+      <div class="form-group">
+        <label for="reportProblemCategory"><i class="ti ti-list-details" aria-hidden="true"></i> What's the problem?</label>
+        <select id="reportProblemCategory" required></select>
+      </div>
+      <div class="form-group">
+        <label for="reportProblemReason"><i class="ti ti-message" aria-hidden="true"></i> What happened?</label>
+        <textarea id="reportProblemReason" minlength="10" maxlength="1000" required
+          placeholder="Give the admin enough detail to understand it, e.g. what was agreed and what actually happened."></textarea>
+      </div>
+      <p class="report-modal-note">
+        <i class="ti ti-info-circle" aria-hidden="true"></i>
+        This goes to Taskify admins only, not to the other student. Want to rate someone instead?
+        Leave a review once the task or rental is finished.
+      </p>
+      <div class="form-row">
+        <button type="button" class="secondary-button" id="reportProblemCancel">
+          <i class="ti ti-x" aria-hidden="true"></i> Cancel
+        </button>
+        <button type="submit" class="primary-button" id="reportProblemSubmit" style="background:var(--ump-red);">
+          <i class="ti ti-send" aria-hidden="true"></i> Send report
+        </button>
+      </div>
+    </form>
+    <p id="reportProblemMessage" style="margin-top:12px;font-size:13px;font-weight:600;"></p>`;
+
+  document.body.appendChild(overlay);
+  document.body.appendChild(modal);
+
+  const close = () => {
+    modal.classList.remove("open");
+    overlay.classList.remove("open");
+  };
+  overlay.addEventListener("click", close);
+  modal.querySelector("#reportProblemCancel").addEventListener("click", close);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modal.classList.contains("open")) close();
+  });
+  modal._close = close;
+  return modal;
+}
+
+/* Opens the report form for ONE specific item. The item's name and type
+   are shown at the top so the student (and later the admin) knows exactly
+   what the report is about.
+     contextType:      "task" | "equipment" | "sales_item" | "event"
+     contextId:        the item's id
+     itemTitle:        the item's name, shown in the modal
+     reportedUserId:   who the problem is with
+     reportedUserName: their name, shown in the modal */
+function openReportModal({ contextType, contextId, itemTitle, reportedUserId, reportedUserName }) {
+  if (!requireAuthAction("Sign in to report a problem.")) return;
+
+  const modal   = ensureReportModal();
+  const overlay = document.getElementById("reportProblemOverlay");
+  const form    = modal.querySelector("#reportProblemForm");
+  const select  = modal.querySelector("#reportProblemCategory");
+  const message = modal.querySelector("#reportProblemMessage");
+  const submit  = modal.querySelector("#reportProblemSubmit");
+
+  const categories = REPORT_CATEGORIES_BY_CONTEXT[contextType] || Object.keys(REPORT_CATEGORIES);
+  select.innerHTML = `<option value="">Choose one…</option>` +
+    categories.map(c => `<option value="${c}">${REPORT_CATEGORIES[c].label}</option>`).join("");
+
+  modal.querySelector("#reportProblemTarget").innerHTML = `
+    <div class="report-modal-item">
+      <span class="report-modal-item-type">${escapeReportText(REPORT_CONTEXT_LABELS[contextType] || "Item")}</span>
+      <strong>${escapeReportText(itemTitle)}</strong>
+      ${reportedUserName ? `<span class="report-modal-item-user">Problem with: ${escapeReportText(reportedUserName)}</span>` : ""}
+    </div>`;
+
+  form.reset();
+  message.textContent = "";
+  submit.disabled = false;
+
+  form.onsubmit = async (e) => {
+    e.preventDefault();
+    submit.disabled = true;
+    message.textContent = "";
+    try {
+      await apiRequest("/reports", "POST", {
+        reportedUserId: Number(reportedUserId),
+        contextType,
+        contextId: Number(contextId),
+        category: select.value,
+        reason: modal.querySelector("#reportProblemReason").value.trim()
+      });
+      modal._close();
+      showToast("Report sent. An admin will look into it.");
+    } catch (err) {
+      message.textContent = err.message;
+      message.style.color = "var(--ump-red)";
+      submit.disabled = false;
+    }
+  };
+
+  overlay.classList.add("open");
+  modal.classList.add("open");
+  select.focus();
+}

@@ -850,3 +850,34 @@ table.admin-table tbody tr:hover { background: var(--background); }
 
   .admin-page-header h1 { font-size: 20px; }
 }
+/* ── Reports table: which item + what kind of problem (panel feedback) ── */
+.report-item-td { min-width: 190px; max-width: 240px; }
+.report-problem-td { min-width: 230px; max-width: 300px; }
+.report-problem-td .badge { white-space: nowrap; }
+.report-item-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.report-item-cell > i {
+  font-size: 16px;
+  color: var(--muted);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.report-item-type {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.report-reason {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+}
