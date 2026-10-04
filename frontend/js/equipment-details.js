@@ -143,7 +143,7 @@ function renderEquipmentDetails(item) {
         <p class="detail-description">${item.description}</p>
         <div class="market-tags" style="margin-top:18px;">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
-          ${conditionBadge(item.condition_status || "Good")}
+          ${conditionBadge(item.condition_status)}
           ${item.is_available
             ? `<div class="market-tag green"><i class="ti ti-circle-check" aria-hidden="true"></i> Available</div>`
             : `<div class="market-tag gold"><i class="ti ti-lock" aria-hidden="true"></i> Booked</div>`}
@@ -173,6 +173,15 @@ function renderEquipmentDetails(item) {
           </div>
           <div style="font-size:11px;color:var(--muted);margin-top:3px;">Your deposit depends on your renter trust level.</div>
         </div>` : ""}
+        <div style="margin-bottom:12px;">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Condition</div>
+          ${item.condition_status
+            ? conditionBadge(item.condition_status)
+            : `<div class="badge navy">Not stated</div>`}
+          <div class="condition-checked-note">
+            <i class="ti ti-user-check" aria-hidden="true"></i> ${equipmentConditionCheckedText(item)}
+          </div>
+        </div>
         <div style="margin-bottom:20px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Status</div>
           ${item.is_available

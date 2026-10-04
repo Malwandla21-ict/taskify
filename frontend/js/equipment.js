@@ -63,15 +63,28 @@ const submitRentalPhotosBtn   = document.getElementById("submitRentalPhotos");
 const submitRentalPhotosLabel = document.getElementById("submitRentalPhotosLabel");
 const rentalPhotoUploader     = initImageUploader("rentalPhotoUploadArea", "rentalPhotoPreviewGrid");
 
+const pickupConditionGroup = document.getElementById("pickupConditionGroup");
+const pickupConditionInput = document.getElementById("pickupCondition");
+const pickupConditionHint  = document.getElementById("pickupConditionHint");
+
 const damageModal   = document.getElementById("damageModal");
 const damageForm    = document.getElementById("damageForm");
 const damageMessage = document.getElementById("damageMessage");
 
-function openRentalPhotoModal(bookingId, mode) {
+/* listedCondition: what the owner's listing says, so the renter can
+   simply confirm it (or change it if the item isn't as described). */
+function openRentalPhotoModal(bookingId, mode, listedCondition = "") {
   rentalPhotoBookingId.value = bookingId;
   rentalPhotoMode.value = mode;
   rentalPhotoMessage.textContent = "";
   if (rentalPhotoUploader) rentalPhotoUploader.reset();
+  if (pickupConditionGroup) pickupConditionGroup.hidden = mode !== "pickup";
+  if (pickupConditionInput) pickupConditionInput.value = mode === "pickup" ? (listedCondition || "") : "";
+  if (pickupConditionHint) {
+    pickupConditionHint.textContent = listedCondition
+      ? `The listing says "${listedCondition}". Change it if that's not what you received. The owner will be told.`
+      : "The owner didn't state a condition, so yours will be the first on record.";
+  }
   if (mode === "pickup") {
     rentalPhotoTitle.innerHTML = `<i class="ti ti-camera" aria-hidden="true"></i> Confirm Pickup`;
     rentalPhotoIntro.textContent = "Take photos of the item right now, before you use it — front, back and any scratches it already has. These are your proof of the condition you received it in.";
@@ -99,12 +112,18 @@ submitRentalPhotosBtn?.addEventListener("click", async () => {
     return;
   }
   const mode = rentalPhotoMode.value;
+  if (mode === "pickup" && !pickupConditionInput?.value) {
+    rentalPhotoMessage.textContent = "Please confirm what condition the item is in.";
+    rentalPhotoMessage.style.color = "red";
+    return;
+  }
   const originalHtml = submitRentalPhotosBtn.innerHTML;
   submitRentalPhotosBtn.disabled = true;
   submitRentalPhotosBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
   try {
     const photoUrls = await rentalPhotoUploader.upload("equipment");
-    const res = await apiRequest(`/equipment/bookings/${rentalPhotoBookingId.value}/${mode === "pickup" ? "pickup" : "return"}`, "PATCH", { photoUrls });
+    const body = mode === "pickup" ? { photoUrls, pickupCondition: pickupConditionInput.value } : { photoUrls };
+    const res = await apiRequest(`/equipment/bookings/${rentalPhotoBookingId.value}/${mode === "pickup" ? "pickup" : "return"}`, "PATCH", body);
     /* The owner's rent is released on return (not pickup), so only a
        return plays the "released" pop-up. The deposit stays held until
        the owner checks the item's condition. */
@@ -186,6 +205,7 @@ function openEquipmentEditModal(item) {
   document.getElementById("equipmentCategory").value    = item.category || "";
   document.getElementById("equipmentSection").value     = item.section || "General";
   document.getElementById("equipmentDescription").value = item.description || "";
+  document.getElementById("equipmentCondition").value   = item.condition_status || "";
   document.getElementById("equipmentDailyPrice").value  = item.daily_price ?? "";
   document.getElementById("equipmentItemValue").value   = item.item_value ?? "";
   if (equipmentUploader) equipmentUploader.setExisting(item.image_urls || []);
@@ -266,6 +286,9 @@ function validateEquipmentStep1() {
 function validateEquipmentStep2() {
   if (!document.getElementById("equipmentDescription").value.trim()) {
     showToast("Please add an equipment description.", "error"); return false;
+  }
+  if (!document.getElementById("equipmentCondition").value) {
+    showToast("Please choose the item's condition.", "error"); return false;
   }
   return true;
 }
@@ -355,6 +378,7 @@ function equipmentCard(item) {
         <h3>${item.name}</h3>
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          ${conditionBadge(item.condition_status)}
           <div class="market-tag green"><i class="ti ti-circle-check" aria-hidden="true"></i> Available</div>
           ${endorsementBadge(item)}
         </div>
@@ -443,7 +467,7 @@ function bookingMoneyLine(booking, isOwner) {
   }[booking.payment_status] || "";
   const conditionText = {
     Pending: isOwner ? "Check the item and confirm its condition." : "Waiting for the owner to check the item.",
-    OK:      "Condition confirmed OK.",
+    OK:      "Owner confirmed it came back in the same condition.",
     Damaged: "Damage reported — an admin will review."
   }[booking.condition_status] || "";
 
@@ -451,6 +475,7 @@ function bookingMoneyLine(booking, isOwner) {
     <div class="booking-money-line">
       <div><i class="ti ti-receipt" aria-hidden="true"></i> Rent <strong>${formatRand(booking.rental_amount)}</strong> (${paymentText}) · Fee <strong>${formatRand(booking.protection_fee)}</strong></div>
       <div><i class="ti ti-shield-lock" aria-hidden="true"></i> Deposit <strong>${formatRand(booking.deposit_amount)}</strong> — ${depositText} <span style="opacity:.7;">(demo)</span></div>
+      ${booking.pickup_condition ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> Condition at pickup: <strong>${booking.pickup_condition}</strong> (confirmed by renter)</div>` : ""}
       ${conditionText ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> ${conditionText}</div>` : ""}
       ${booking.damage_note ? `<div style="color:var(--ump-red);"><i class="ti ti-alert-triangle" aria-hidden="true"></i> "${booking.damage_note}"</div>` : ""}
       ${booking.pickup_photos?.length ? `<div style="margin-top:6px;">Pickup photos</div>${conditionPhotoStrip(booking.pickup_photos, `pickup-${booking.id}`)}` : ""}
@@ -472,7 +497,7 @@ function historyCard(booking) {
   let footerAction;
   if (canPickup) {
     footerAction = `
-      <button class="market-action-btn pickup-equipment-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;justify-content:center;">
+      <button class="market-action-btn pickup-equipment-btn" data-booking-id="${booking.id}" data-listed-condition="${booking.equipment_condition || ""}" style="margin-top:14px;width:100%;justify-content:center;">
         <i class="ti ti-camera" aria-hidden="true"></i> Confirm Pickup (add photos)
       </button>`;
   } else if (canReturn) {
@@ -579,12 +604,12 @@ function attachDeleteEquipmentEvents() {
 
 function attachReturnEquipmentButtonEvents(scope = document) {
   scope.querySelectorAll(".pickup-equipment-btn").forEach(btn => {
-    btn.addEventListener("click", () => openRentalPhotoModal(btn.dataset.bookingId, "pickup"));
+    btn.addEventListener("click", () => openRentalPhotoModal(btn.dataset.bookingId, "pickup", btn.dataset.listedCondition || ""));
   });
 
   scope.querySelectorAll(".condition-ok-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
-      if (!confirm("Confirm the item came back in good condition? This releases the renter's deposit (demo).")) return;
+      if (!confirm("Confirm the item came back in the same condition it went out in? This releases the renter's deposit (demo).")) return;
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`;
       try {

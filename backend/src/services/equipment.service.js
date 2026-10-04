@@ -7,6 +7,22 @@ const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.servic
 const trustService = require("./trust.service");
 const reportService = require("./report.service");
 
+/* Equipment condition (panel feedback, 2026-10-04). Keep in sync with
+   EQUIPMENT_CONDITIONS in frontend/js/helpers.js and the ENUM in
+   scripts/repair-equipment-condition-schema.js. */
+const EQUIPMENT_CONDITIONS = ["Excellent", "Functional", "Damaged"];
+
+/* Records who last confirmed an item's condition, and when. Called by the
+   owner (listing, edit, return check) and the renter (pickup). */
+async function setEquipmentCondition(equipmentId, condition, checkedBy) {
+  await pool.execute(
+    `UPDATE equipment
+     SET condition_status = ?, condition_checked_by = ?, condition_checked_at = NOW()
+     WHERE id = ?`,
+    [condition, checkedBy, equipmentId]
+  );
+}
+
 /* Before/after condition photos are stored as JSON arrays of image URLs
    (uploaded through the normal /api/upload endpoint first). */
 function parseJsonArray(value) {
@@ -42,7 +58,7 @@ const BOOKING_PAYMENT_FIELDS = `
   eb.rental_days, eb.rental_amount, eb.protection_fee, eb.deposit_amount,
   eb.trust_level, eb.payment_status, eb.deposit_status, eb.condition_status,
   eb.pickup_photos, eb.picked_up_at, eb.return_photos, eb.returned_at,
-  eb.damage_note
+  eb.damage_note, eb.pickup_condition
 `;
 
 function parseImageUrls(row) {
@@ -60,6 +76,8 @@ const EQUIPMENT_SELECT_FIELDS = `
   e.id, e.owner_id, e.name, e.description, e.category,
   e.section, e.daily_price, e.is_available, e.created_at,
   e.image_urls, e.moderation_status, e.item_value,
+  e.condition_status, e.condition_checked_by, e.condition_checked_at,
+  (SELECT cu.full_name FROM users cu WHERE cu.id = e.condition_checked_by) AS condition_checked_by_name,
   u.full_name AS owner_name,
   u.profile_photo_url AS owner_profile_photo,
   u.member_type AS owner_member_type,
@@ -67,7 +85,7 @@ const EQUIPMENT_SELECT_FIELDS = `
 `;
 
 async function createEquipment({
-  ownerId, name, description, category, section, dailyPrice, itemValue, imageUrls = []
+  ownerId, name, description, category, section, condition, dailyPrice, itemValue, imageUrls = []
 }) {
   const moderation = await contentModerationService.evaluateListingContent({ title: name, description, imageUrls });
 
@@ -90,11 +108,13 @@ async function createEquipment({
   const [result] = await pool.execute(
     `INSERT INTO equipment (
        owner_id, name, description, category,
+       condition_status, condition_checked_by, condition_checked_at,
        section, daily_price, item_value, is_available, image_urls,
        moderation_status, moderation_flags
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)`,
+     ) VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, 1, ?, ?, ?)`,
     [
       ownerId, name.trim(), description.trim(), category.trim(),
+      condition, ownerId,
       section || "General", Number(dailyPrice),
       itemValue === undefined || itemValue === null || itemValue === "" ? null : Number(itemValue),
       imageUrls.length ? JSON.stringify(imageUrls) : null,
@@ -128,7 +148,7 @@ async function createEquipment({
    fee and deposit when it was made, so changing the price or item value
    here only affects new bookings. */
 async function updateEquipment(equipmentId, userId, {
-  name, description, category, section, dailyPrice, itemValue, imageUrls = []
+  name, description, category, section, condition, dailyPrice, itemValue, imageUrls = []
 }) {
   const [rows] = await pool.execute(
     `SELECT id, owner_id, moderation_status, moderation_flags FROM equipment WHERE id = ? LIMIT 1`, [equipmentId]
@@ -149,14 +169,25 @@ async function updateEquipment(equipmentId, userId, {
   });
 
   await pool.execute(
+    /* "Last checked by" only moves to the owner if they actually changed
+       the condition — editing the price shouldn't wipe out a renter's
+       pickup confirmation. MySQL applies SET left to right, so the two
+       IF()s read the OLD condition_status before it's overwritten. */
     `UPDATE equipment
      SET name = ?, description = ?, category = ?, section = ?,
+         condition_checked_by = IF(condition_status <=> ?, condition_checked_by, ?),
+         condition_checked_at = IF(condition_status <=> ?, condition_checked_at, NOW()),
+         condition_status = ?,
          daily_price = ?, item_value = ?, image_urls = ?,
          moderation_status = ?, moderation_flags = ?
      WHERE id = ?`,
     [
       name.trim(), description.trim(), category.trim(),
-      section || "General", Number(dailyPrice), Number(itemValue),
+      section || "General",
+      condition, userId,
+      condition,
+      condition,
+      Number(dailyPrice), Number(itemValue),
       imageUrls.length ? JSON.stringify(imageUrls) : null,
       moderation.moderationStatus, moderation.moderationFlags,
       equipmentId
@@ -356,9 +387,11 @@ async function cancelBookingByRenter(bookingId, renterId) {
   return getBookingById(bookingId);
 }
 
-/* Renter, when they collect the item: uploads "before" photos. This is
-   the evidence of the item's condition at handover. */
-async function confirmPickup(bookingId, renterId, photoUrls) {
+/* Renter, when they collect the item: uploads "before" photos AND says
+   what condition it's in. That confirmation becomes the listing's
+   "last checked by" (the renter), and the owner is told if it doesn't
+   match what the listing said. */
+async function confirmPickup(bookingId, renterId, photoUrls, pickupCondition) {
   const booking = await getBookingWithOwner(bookingId);
 
   if (Number(booking.renter_id) !== Number(renterId)) {
@@ -371,17 +404,27 @@ async function confirmPickup(bookingId, renterId, photoUrls) {
     const error = new Error("Pickup has already been confirmed for this booking."); error.statusCode = 400; throw error;
   }
 
+  if (!EQUIPMENT_CONDITIONS.includes(pickupCondition)) {
+    const error = new Error("Please confirm what condition the item is in."); error.statusCode = 400; throw error;
+  }
+
   const urls = cleanPhotoUrls(photoUrls);
 
   await pool.execute(
-    `UPDATE equipment_bookings SET pickup_photos = ?, picked_up_at = NOW() WHERE id = ?`,
-    [JSON.stringify(urls), bookingId]
+    `UPDATE equipment_bookings SET pickup_photos = ?, pickup_condition = ?, picked_up_at = NOW() WHERE id = ?`,
+    [JSON.stringify(urls), pickupCondition, bookingId]
   );
+  await setEquipmentCondition(booking.equipment_id, pickupCondition, renterId);
+
+  const listedCondition = booking.equipment_condition;
+  const mismatch = listedCondition && listedCondition !== pickupCondition
+    ? ` Note: the renter says it's "${pickupCondition}", but your listing said "${listedCondition}". The listing now shows "${pickupCondition}".`
+    : "";
 
   await notificationService.createNotification({
     userId: booking.owner_id,
-    title: "Equipment Picked Up",
-    message: `"${booking.equipment_name}" was collected. The renter added ${urls.length} condition photo${urls.length === 1 ? "" : "s"} — you can view them in your rental history.`,
+    title: mismatch ? "Picked Up: Condition Differs" : "Equipment Picked Up",
+    message: `"${booking.equipment_name}" was collected. The renter confirmed it's in ${pickupCondition} condition and added ${urls.length} photo${urls.length === 1 ? "" : "s"}. You can view them in your rental history.${mismatch}`,
     contextType: "equipment_booking",
     contextId: bookingId
   });
@@ -482,10 +525,15 @@ async function confirmCondition(bookingId, ownerId) {
     [bookingId]
   );
 
+  /* The owner has now checked it: the condition the renter confirmed
+     at pickup still stands, with the owner as the latest checker. */
+  const keptCondition = booking.pickup_condition || booking.equipment_condition;
+  if (keptCondition) await setEquipmentCondition(booking.equipment_id, keptCondition, ownerId);
+
   await notificationService.createNotification({
     userId: booking.renter_id,
     title: "Item Condition Confirmed",
-    message: `The owner confirmed "${booking.equipment_name}" came back in good condition.${booking.deposit_status === "Held" ? ` Your R${Number(booking.deposit_amount).toFixed(2)} deposit has been released (demo).` : ""} This counts towards your renter trust level.`,
+    message: `The owner confirmed "${booking.equipment_name}" came back in the same condition it went out in.${booking.deposit_status === "Held" ? ` Your R${Number(booking.deposit_amount).toFixed(2)} deposit has been released (demo).` : ""} This counts towards your renter trust level.`,
     contextType: "equipment_booking",
     contextId: bookingId
   });
@@ -515,6 +563,8 @@ async function reportDamage(bookingId, ownerId, note) {
      WHERE id = ?`,
     [cleanNote.slice(0, 1000), bookingId]
   );
+
+  await setEquipmentCondition(booking.equipment_id, "Damaged", ownerId);
 
   await reportService.recordReport({
     reporterId: ownerId,
@@ -565,6 +615,7 @@ async function getEquipmentHistory(userId) {
        ${BOOKING_PAYMENT_FIELDS},
        e.name AS equipment_name, e.category, e.section,
        e.daily_price, e.item_value, e.owner_id, e.image_urls,
+       e.condition_status AS equipment_condition,
        owner.full_name AS owner_name,
        owner.profile_photo_url AS owner_profile_photo,
        IF(eb.payment_status IN ('Held','Released'), owner.phone_number, NULL) AS owner_phone_number,
@@ -651,7 +702,7 @@ async function getBookingWithOwner(bookingId) {
   const [rows] = await pool.execute(
     `SELECT eb.id, eb.equipment_id, eb.renter_id, eb.status,
             ${BOOKING_PAYMENT_FIELDS},
-            e.owner_id, e.name AS equipment_name
+            e.owner_id, e.name AS equipment_name, e.condition_status AS equipment_condition
      FROM equipment_bookings eb
      INNER JOIN equipment e ON eb.equipment_id = e.id
      WHERE eb.id = ? LIMIT 1`,
@@ -701,6 +752,7 @@ async function deleteEquipment(equipmentId, userId) {
 }
 
 module.exports = {
+  EQUIPMENT_CONDITIONS,
   createEquipment,
   updateEquipment,
   getAllAvailableEquipment,

@@ -1,6 +1,7 @@
 const express = require("express");
 const { body, param, query } = require("express-validator");
 const equipmentController = require("../controllers/equipment.controller");
+const { EQUIPMENT_CONDITIONS } = require("../services/equipment.service");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
 const router = express.Router();
@@ -29,6 +30,8 @@ const equipmentFieldRules = [
     .isLength({ min: 2, max: 100 }).withMessage("Category must be between 2 and 100 characters."),
   body("section").optional().isIn(["Academic", "General"])
     .withMessage("Section must be either Academic or General."),
+  body("condition").notEmpty().withMessage("Please choose the item's condition.").bail()
+    .isIn(EQUIPMENT_CONDITIONS).withMessage("Condition must be Excellent, Functional or Damaged."),
   body("dailyPrice").notEmpty().withMessage("Daily price is required.")
     .isFloat({ min: 0 }).withMessage("Daily price must be a valid positive number."),
   body("itemValue").notEmpty().withMessage("Item value is required.").bail()
@@ -97,13 +100,16 @@ router.patch(
   equipmentController.cancelBooking
 );
 
-/* Renter: collected the item — "before" condition photos */
+/* Renter: collected the item — "before" condition photos, plus the
+   renter confirming what condition it's in */
 router.patch(
   "/bookings/:bookingId/pickup",
   authenticate,
   [
     param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer."),
-    photoUrlsValidator
+    photoUrlsValidator,
+    body("pickupCondition").notEmpty().withMessage("Please confirm what condition the item is in.").bail()
+      .isIn(EQUIPMENT_CONDITIONS).withMessage("Condition must be Excellent, Functional or Damaged.")
   ],
   equipmentController.confirmPickup
 );
