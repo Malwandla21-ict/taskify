@@ -1002,3 +1002,116 @@ function openReportModal({ contextType, contextId, itemTitle, reportedUserId, re
   modal.classList.add("open");
   select.focus();
 }
+
+
+/* ==============================
+   LISTING CATEGORIES (panel feedback, 2026-10-04)
+   One fixed list per listing type. The category decides the section
+   (Academic or General), so forms no longer ask for both. Names are
+   shared across types on purpose ("Calculators" for rentals AND sales)
+   so the Academic / General pages show one button per category.
+   Keep in sync with backend/src/config/categories.js.
+============================== */
+const TASKIFY_CATEGORIES = {
+  task: {
+    Academic: ["Tutoring & Study Help", "Programming & Tech Help", "Printing & Typing", "Other academic"],
+    General:  ["Errands & Deliveries", "Cleaning & Laundry", "Moving & Lifting", "Repairs & Fixes",
+               "Hair & Beauty", "Photography & Design", "Other"]
+  },
+  equipment: {
+    Academic: ["Equipment / Uniforms", "Calculators", "Laptops & Tablets", "Textbooks", "Other academic"],
+    General:  ["Electronics & Gadgets", "Cameras & Audio", "Sports & Outdoor", "Kitchen & Appliances",
+               "Party & Event Gear", "Other"]
+  },
+  sales: {
+    Academic: ["Textbooks", "Equipment / Uniforms", "Calculators", "Laptops & Tablets", "Stationery", "Other academic"],
+    General:  ["Electronics & Gadgets", "Clothing & Shoes", "Furniture & Room Items", "Kitchen & Appliances",
+               "Sports & Outdoor", "Other"]
+  },
+  event: {
+    Academic: ["Workshop & Training", "Study Group / Revision", "Careers & Info Session",
+               "Guest Lecture / Seminar", "Other academic"],
+    General:  ["Sports & Fitness", "Society & Club Meeting", "Social & Entertainment", "Arts & Culture",
+               "Community & Outreach", "Other"]
+  }
+};
+
+/* Icon + one-line blurb for the category buttons on the Academic and
+   General pages. */
+const CATEGORY_DETAILS = {
+  "Tutoring & Study Help":   { icon: "ti-school",          blurb: "Get help with a module" },
+  "Programming & Tech Help": { icon: "ti-code",            blurb: "Coding and tech support" },
+  "Printing & Typing":       { icon: "ti-printer",         blurb: "Print, type and bind" },
+  "Equipment / Uniforms":    { icon: "ti-shirt",           blurb: "Lab coats, boots, PPE, toolkits" },
+  "Calculators":             { icon: "ti-calculator",      blurb: "Scientific and graphing" },
+  "Laptops & Tablets":       { icon: "ti-device-laptop",   blurb: "For classes and projects" },
+  "Textbooks":               { icon: "ti-book",            blurb: "Prescribed books and guides" },
+  "Stationery":              { icon: "ti-pencil",          blurb: "Pens, files, notebooks" },
+  "Other academic":          { icon: "ti-dots",            blurb: "Anything else for your studies" },
+  "Errands & Deliveries":    { icon: "ti-walk",            blurb: "Pick-ups and drop-offs" },
+  "Cleaning & Laundry":      { icon: "ti-wash-machine",    blurb: "Rooms and washing" },
+  "Moving & Lifting":        { icon: "ti-truck",           blurb: "Move in, move out" },
+  "Repairs & Fixes":         { icon: "ti-tool",            blurb: "Small fixes around res" },
+  "Hair & Beauty":           { icon: "ti-scissors",        blurb: "Hair, nails and more" },
+  "Photography & Design":    { icon: "ti-camera",          blurb: "Photos, posters, logos" },
+  "Electronics & Gadgets":   { icon: "ti-device-mobile",   blurb: "Phones, chargers, consoles" },
+  "Cameras & Audio":         { icon: "ti-headphones",      blurb: "Cameras, speakers, mics" },
+  "Sports & Outdoor":        { icon: "ti-ball-football",   blurb: "Balls, bikes, gym gear" },
+  "Kitchen & Appliances":    { icon: "ti-tools-kitchen-2", blurb: "Kettles, microwaves, pots" },
+  "Party & Event Gear":      { icon: "ti-confetti",        blurb: "Decor and sound" },
+  "Clothing & Shoes":        { icon: "ti-hanger",          blurb: "Everyday wear" },
+  "Furniture & Room Items":  { icon: "ti-armchair",        blurb: "Desks, chairs, shelves" },
+  "Other":                   { icon: "ti-dots",            blurb: "Anything else" }
+};
+
+/* "Academic" or "General" for a category on the list, otherwise null. */
+function categorySection(type, category) {
+  const groups = TASKIFY_CATEGORIES[type];
+  if (!groups || !category) return null;
+  if (groups.Academic.includes(category)) return "Academic";
+  if (groups.General.includes(category)) return "General";
+  return null;
+}
+
+function categoryOptgroupsHtml(type, selected = "") {
+  const groups = TASKIFY_CATEGORIES[type] || { Academic: [], General: [] };
+  return ["Academic", "General"].map(section => `
+    <optgroup label="${section}">
+      ${groups[section].map(c => `<option value="${c}"${c === selected ? " selected" : ""}>${c}</option>`).join("")}
+    </optgroup>`).join("");
+}
+
+/* Fills a create/edit form's category dropdown. A listing whose old
+   category isn't on the list starts on "Choose…" so the owner picks a
+   new one. hintEl (optional) shows which section it will appear under. */
+function fillCategorySelect(selectEl, type, selected = "", hintEl = null) {
+  if (!selectEl) return;
+  const valid = categorySection(type, selected) ? selected : "";
+  selectEl.innerHTML = `<option value="">Choose a category…</option>` + categoryOptgroupsHtml(type, valid);
+  selectEl.value = valid;
+
+  if (!hintEl) return;
+  const updateHint = () => {
+    const section = categorySection(type, selectEl.value);
+    hintEl.innerHTML = section
+      ? `<i class="ti ti-layout-grid" aria-hidden="true"></i> Shows on the <strong>${section}</strong> page`
+      : "";
+  };
+  if (!selectEl.dataset.hintBound) {
+    selectEl.addEventListener("change", updateHint);
+    /* form.reset() (used when the create modal reopens) doesn't fire
+       "change", so refresh the hint after a reset too. */
+    selectEl.form?.addEventListener("reset", () => setTimeout(updateHint, 0));
+    selectEl.dataset.hintBound = "1";
+  }
+  updateHint();
+}
+
+/* Fills a list page's "All Categories" filter from the fixed list, so
+   every category is there even before anyone has posted in it. */
+function fillCategoryFilter(selectEl, type) {
+  if (!selectEl) return;
+  const current = selectEl.value || "All";
+  selectEl.innerHTML = `<option value="All">All Categories</option>` + categoryOptgroupsHtml(type);
+  selectEl.value = categorySection(type, current) ? current : "All";
+}

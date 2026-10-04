@@ -151,18 +151,10 @@
         <label for="equipmentName"><i class="ti ti-package" aria-hidden="true"></i> Equipment Name</label>
         <input type="text" id="equipmentName" placeholder="e.g. HP Laptop" required />
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="equipmentCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
-          <input type="text" id="equipmentCategory" placeholder="e.g. Laptop, Toolkit, Camera" required />
-        </div>
-        <div class="form-group">
-          <label for="equipmentSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
-          <select id="equipmentSection" required>
-            <option value="General">General</option>
-            <option value="Academic">Academic</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label for="equipmentCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+        <select id="equipmentCategory" required></select>
+        <small class="category-section-hint" id="equipmentCategoryHint"></small>
       </div>
       <button type="button" class="primary-button" id="nextEquipmentStep2">
         Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>

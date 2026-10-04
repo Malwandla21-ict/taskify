@@ -2,6 +2,7 @@ const express = require("express");
 const { body, param, query } = require("express-validator");
 const equipmentController = require("../controllers/equipment.controller");
 const { EQUIPMENT_CONDITIONS } = require("../services/equipment.service");
+const { categoriesFor, applyCategorySection } = require("../config/categories");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
 const router = express.Router();
@@ -26,16 +27,16 @@ const equipmentFieldRules = [
     .isLength({ min: 2, max: 150 }).withMessage("Name must be between 2 and 150 characters."),
   body("description").trim().notEmpty().withMessage("Description is required.")
     .isLength({ min: 5 }).withMessage("Description must be at least 5 characters."),
-  body("category").trim().notEmpty().withMessage("Category is required.")
-    .isLength({ min: 2, max: 100 }).withMessage("Category must be between 2 and 100 characters."),
-  body("section").optional().isIn(["Academic", "General"])
-    .withMessage("Section must be either Academic or General."),
+  body("category").trim().notEmpty().withMessage("Please choose a category.").bail()
+    .isIn(categoriesFor("equipment")).withMessage("Please choose a category from the list."),
+  /* section is worked out from the category (applyCategorySection below) */
   body("condition").notEmpty().withMessage("Please choose the item's condition.").bail()
     .isIn(EQUIPMENT_CONDITIONS).withMessage("Condition must be Excellent, Functional or Damaged."),
   body("dailyPrice").notEmpty().withMessage("Daily price is required.")
     .isFloat({ min: 0 }).withMessage("Daily price must be a valid positive number."),
   body("itemValue").notEmpty().withMessage("Item value is required.").bail()
-    .isFloat({ min: 1, max: 1000000 }).withMessage("Item value must be a valid amount in Rand.")
+    .isFloat({ min: 1, max: 1000000 }).withMessage("Item value must be a valid amount in Rand."),
+  applyCategorySection("equipment")
 ];
 
 router.post("/", authenticate, equipmentFieldRules, equipmentController.createEquipment);

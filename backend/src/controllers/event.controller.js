@@ -4,7 +4,7 @@ const eventService = require("../services/event.service");
 async function createEvent(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const event = await eventService.createEvent({
       organizerId: req.user.id, title: req.body.title,
@@ -22,7 +22,7 @@ async function createEvent(req, res, next) {
 async function updateEvent(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const event = await eventService.updateEvent(Number(req.params.id), req.user.id, {
       title: req.body.title, description: req.body.description,
@@ -78,7 +78,7 @@ async function getEventById(req, res, next) {
 async function rsvpToEvent(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const event = await eventService.rsvpToEvent(Number(req.params.id), req.user.id);
     return res.status(201).json({ success: true, message: "RSVP confirmed.", data: event });
@@ -88,7 +88,7 @@ async function rsvpToEvent(req, res, next) {
 async function cancelRsvp(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const event = await eventService.cancelRsvp(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "RSVP cancelled.", data: event });
@@ -98,7 +98,7 @@ async function cancelRsvp(req, res, next) {
 async function deleteEvent(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     await eventService.deleteEvent(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Event deleted successfully." });

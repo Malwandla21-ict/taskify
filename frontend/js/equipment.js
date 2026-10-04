@@ -202,8 +202,7 @@ function openEquipmentEditModal(item) {
   equipmentForm?.reset();
   equipmentMessage.textContent = "";
   document.getElementById("equipmentName").value        = item.name || "";
-  document.getElementById("equipmentCategory").value    = item.category || "";
-  document.getElementById("equipmentSection").value     = item.section || "General";
+  fillCategorySelect(document.getElementById("equipmentCategory"), "equipment", item.category || "", document.getElementById("equipmentCategoryHint"));
   document.getElementById("equipmentDescription").value = item.description || "";
   document.getElementById("equipmentCondition").value   = item.condition_status || "";
   document.getElementById("equipmentDailyPrice").value  = item.daily_price ?? "";
@@ -257,7 +256,7 @@ function showEquipmentStep(n) {
 function updateEquipmentPreview() {
   const name       = document.getElementById("equipmentName").value.trim();
   const category   = document.getElementById("equipmentCategory").value.trim();
-  const section    = document.getElementById("equipmentSection").value;
+  const section    = categorySection("equipment", category) || "General";
   const desc       = document.getElementById("equipmentDescription").value.trim();
   const condition  = document.getElementById("equipmentCondition").value;
   const dailyPrice = document.getElementById("equipmentDailyPrice").value.trim();
@@ -313,10 +312,10 @@ equipmentCategoryFilter?.addEventListener("change", renderEquipment);
 equipmentPriceFilter?.addEventListener("change", renderEquipment);
 equipmentSortSelect?.addEventListener("change", renderEquipment);
 
-function populateCategoryFilter(items) {
-  const cats = [...new Set(items.map(i => i.category).filter(Boolean))].sort();
-  equipmentCategoryFilter.innerHTML = `<option value="All">All Categories</option>` +
-    cats.map(c => `<option value="${c}">${c}</option>`).join("");
+/* Fixed list (not built from whatever has been posted) so every
+   category shows up, even before anyone has used it. */
+function populateCategoryFilter() {
+  fillCategoryFilter(equipmentCategoryFilter, "equipment");
 }
 
 /* ── Client-side-only "saved" heart toggle ── local per browser only;
@@ -811,7 +810,7 @@ equipmentForm?.addEventListener("submit", async e => {
       name:        document.getElementById("equipmentName").value.trim(),
       description: document.getElementById("equipmentDescription").value.trim(),
       category:    document.getElementById("equipmentCategory").value.trim(),
-      section:     document.getElementById("equipmentSection").value,
+      section:     categorySection("equipment", document.getElementById("equipmentCategory").value),
       condition:   document.getElementById("equipmentCondition").value,
       dailyPrice:  Number(price),
       itemValue:   Number(itemValue),
@@ -846,6 +845,8 @@ equipmentForm?.addEventListener("submit", async e => {
 const equipmentPolicyNoticeEl = document.getElementById("equipmentPolicyNotice");
 if (equipmentPolicyNoticeEl) equipmentPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
+fillCategorySelect(document.getElementById("equipmentCategory"), "equipment", "", document.getElementById("equipmentCategoryHint"));
+populateCategoryFilter();
 loadEquipment();
 loadEquipmentHistory();
 

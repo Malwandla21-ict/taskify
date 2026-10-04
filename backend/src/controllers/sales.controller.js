@@ -4,7 +4,7 @@ const salesService = require("../services/sales.service");
 async function createSalesItem(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const item = await salesService.createSalesItem({
       sellerId: req.user.id, title: req.body.title,
@@ -21,7 +21,7 @@ async function createSalesItem(req, res, next) {
 async function updateSalesItem(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const item = await salesService.updateSalesItem(Number(req.params.id), req.user.id, {
       title: req.body.title, description: req.body.description,
@@ -51,7 +51,7 @@ async function getMySalesItems(req, res, next) {
 async function getSalesItemById(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     /* req.user may be null here — this route allows guest viewing (see
        sales.routes.js's optionalAuthenticate). getSalesItemByIdForViewing
@@ -64,7 +64,7 @@ async function getSalesItemById(req, res, next) {
 async function markSalesItemAsSold(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const item = await salesService.markSalesItemAsSold(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Sales item marked as sold.", data: item });
@@ -74,7 +74,7 @@ async function markSalesItemAsSold(req, res, next) {
 async function deleteSalesItem(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     await salesService.deleteSalesItem(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Sales item deleted successfully." });
@@ -85,7 +85,7 @@ async function deleteSalesItem(req, res, next) {
 async function buySalesItem(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const { order } = await salesService.buySalesItem(Number(req.params.id), req.user.id);
     return res.status(201).json({ success: true, message: "Payment held (demo). Show your handover code only once you have the item.", data: order });
@@ -95,7 +95,7 @@ async function buySalesItem(req, res, next) {
 async function releaseSaleOrder(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const order = await salesService.releaseSaleOrder(Number(req.params.orderId), req.user.id, req.body.code);
     return res.status(200).json({ success: true, message: "Code accepted. Payment released (demo).", data: order });
@@ -105,7 +105,7 @@ async function releaseSaleOrder(req, res, next) {
 async function cancelSaleOrder(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const order = await salesService.cancelSaleOrder(Number(req.params.orderId), req.user.id);
     return res.status(200).json({ success: true, message: "Order cancelled and refunded (demo).", data: order });

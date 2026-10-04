@@ -82,8 +82,7 @@ function openTaskEditModal(task) {
   taskForm?.reset();
   taskMessage.textContent = "";
   document.getElementById("title").value       = task.title || "";
-  document.getElementById("category").value    = task.category || "";
-  document.getElementById("taskSection").value = task.section || "General";
+  fillCategorySelect(document.getElementById("category"), "task", task.category || "", document.getElementById("taskCategoryHint"));
   document.getElementById("urgent").checked    = !!Number(task.urgent);
   document.getElementById("description").value = task.description || "";
   document.getElementById("location").value    = task.location || "";
@@ -138,7 +137,7 @@ function showTaskStep(n) {
 function updateTaskPreview() {
   const title    = document.getElementById("title").value.trim();
   const category = document.getElementById("category").value.trim();
-  const section  = document.getElementById("taskSection").value;
+  const section  = categorySection("task", category) || "General";
   const desc     = document.getElementById("description").value.trim();
   const location = document.getElementById("location").value.trim();
   const price    = document.getElementById("price").value.trim();
@@ -194,10 +193,10 @@ taskCategoryFilter?.addEventListener("change", renderTasks);
 taskPriceFilter?.addEventListener("change", renderTasks);
 taskSortSelect?.addEventListener("change", renderTasks);
 
-function populateCategoryFilter(tasks) {
-  const cats = [...new Set(tasks.map(t => t.category).filter(Boolean))].sort();
-  taskCategoryFilter.innerHTML = `<option value="All">All Categories</option>` +
-    cats.map(c => `<option value="${c}">${c}</option>`).join("");
+/* Fixed list (not built from whatever has been posted) so every
+   category shows up, even before anyone has used it. */
+function populateCategoryFilter() {
+  fillCategoryFilter(taskCategoryFilter, "task");
 }
 
 /* ── Client-side-only "saved" heart toggle ── local per browser only;
@@ -577,7 +576,7 @@ taskForm?.addEventListener("submit", async e => {
       title:       document.getElementById("title").value.trim(),
       description: document.getElementById("description").value.trim(),
       category:    document.getElementById("category").value.trim(),
-      section:     document.getElementById("taskSection").value,
+      section:     categorySection("task", document.getElementById("category").value),
       price:       Number(price),
       location:    document.getElementById("location").value.trim(),
       urgent:      document.getElementById("urgent").checked,
@@ -612,6 +611,8 @@ taskForm?.addEventListener("submit", async e => {
 const taskPolicyNoticeEl = document.getElementById("taskPolicyNotice");
 if (taskPolicyNoticeEl) taskPolicyNoticeEl.innerHTML = contentPolicyNotice();
 
+fillCategorySelect(document.getElementById("category"), "task", "", document.getElementById("taskCategoryHint"));
+populateCategoryFilter();
 loadTasks();
 loadTaskHistory();
 

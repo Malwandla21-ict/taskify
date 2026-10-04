@@ -2,6 +2,7 @@ const express = require("express");
 const { body, param } = require("express-validator");
 const eventController = require("../controllers/event.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
+const { categoriesFor, applyCategorySection } = require("../config/categories");
 
 const router = express.Router();
 
@@ -16,8 +17,9 @@ const eventFieldRules = [
     .isLength({ min: 3, max: 150 }).withMessage("Title must be between 3 and 150 characters."),
   body("description").trim().notEmpty().withMessage("Description is required.")
     .isLength({ min: 10 }).withMessage("Description must be at least 10 characters."),
-  body("category").trim().notEmpty().withMessage("Category is required."),
-  body("section").optional().isIn(["Academic", "General"]).withMessage("Section must be Academic or General."),
+  body("category").trim().notEmpty().withMessage("Please choose a category.").bail()
+    .isIn(categoriesFor("event")).withMessage("Please choose a category from the list."),
+  /* section is worked out from the category (applyCategorySection below) */
   body("location").trim().notEmpty().withMessage("Location is required."),
   body("eventDate").notEmpty().withMessage("Event date is required.")
     .isISO8601().withMessage("Event date must be a valid date/time.")
@@ -27,7 +29,8 @@ const eventFieldRules = [
     }),
   body("capacity").optional({ nullable: true }).isInt({ min: 1 }).withMessage("Capacity must be a positive number."),
   body("hasFood").optional().isBoolean().withMessage("Food must be true or false."),
-  body("hasRefreshments").optional().isBoolean().withMessage("Refreshments must be true or false.")
+  body("hasRefreshments").optional().isBoolean().withMessage("Refreshments must be true or false."),
+  applyCategorySection("event")
 ];
 
 router.post("/", authenticate, eventFieldRules, eventController.createEvent);

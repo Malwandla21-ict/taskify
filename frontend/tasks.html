@@ -158,18 +158,10 @@
         <label for="title"><i class="ti ti-pencil" aria-hidden="true"></i> Task Title</label>
         <input type="text" id="title" placeholder="e.g. Need help with Java assignment" required />
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label for="category"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
-          <input type="text" id="category" placeholder="e.g. Programming, Tutoring" required />
-        </div>
-        <div class="form-group">
-          <label for="taskSection"><i class="ti ti-layout-grid" aria-hidden="true"></i> Section</label>
-          <select id="taskSection" required>
-            <option value="General">General</option>
-            <option value="Academic">Academic</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label for="category"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
+        <select id="category" required></select>
+        <small class="category-section-hint" id="taskCategoryHint"></small>
       </div>
       <label class="checkbox-row">
         <input type="checkbox" id="urgent" />
