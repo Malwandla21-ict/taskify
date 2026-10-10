@@ -89,6 +89,15 @@ test("a booking request is the owner's to approve, and then the renter's to coll
 
   assert.equal((await api(owner, "PATCH", request.action.endpoint)).status, 200);
   r = await activity(renter);
+  o = await activity(owner);
+  const toPay = find(r.needsYou, key);
+  assert.equal(toPay.status, "Approved — pay to confirm");
+  assert.ok(toPay.deadline, "the renter sees when they must pay by");
+  assert.equal(find(o.waitingOnOthers, key).status, "Waiting for payment");
+
+  const version = require("../src/config/rentalPolicy").version;
+  assert.equal((await api(renter, "POST", `/equipment/bookings/${booking.id}/pay`, { acceptedPolicyVersion: version })).status, 200);
+  r = await activity(renter);
   assert.equal(find(r.needsYou, key).action.label, "Confirm pickup");
 });
 

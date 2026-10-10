@@ -194,7 +194,7 @@ async function loadContextCard(conv) {
       statusLabel = item.status; statusColor = item.status === "Posted" ? "green" : item.status === "Completed" ? "navy" : "gold";
     } else if (conv.context_type === "equipment") {
       title = item.name; categoryLabel = item.category; priceLabel = `R${item.daily_price} / day`;
-      statusLabel = item.is_available ? "Available" : "Booked"; statusColor = item.is_available ? "green" : "gold";
+      statusLabel = item.is_available ? "Taking bookings" : "Paused"; statusColor = item.is_available ? "green" : "gold";
     } else {
       title = item.title; categoryLabel = item.category; priceLabel = `R${item.price}`;
       statusLabel = item.status; statusColor = item.status === "Available" ? "green" : "navy";

@@ -1,6 +1,6 @@
 const pool = require("../config/db");
 const { SALES, RENTALS } = require("../config/paymentSettings");
-const { expireStaleBookingRequests, todayInTaskifyTimezone } = require("./equipment.service");
+const { expireStaleBookingRequests } = require("./equipment.service");
 
 /*
   Action Centre ("Waiting for you") — every open transaction the user is
@@ -27,13 +27,6 @@ function prettyDate(dateText) {
   const d = new Date(`${dateText}T12:00:00Z`);
   if (Number.isNaN(d.getTime())) return dateText;
   return d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).replace(",", "");
-}
-
-/* "YYYY-MM-DD" (Taskify's timezone) + n days. */
-function addDays(dateText, n) {
-  const d = new Date(`${dateText}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + n);
-  return d.toISOString().slice(0, 10);
 }
 
 async function taskItems(userId) {
@@ -226,19 +219,23 @@ async function rentalItems(userId) {
             DATE_FORMAT(eb.start_date, '%Y-%m-%d') AS start_text,
             DATE_FORMAT(eb.end_date, '%Y-%m-%d') AS end_text,
             eb.picked_up_at, eb.condition_status, eb.payment_status, eb.payment_status IS NULL AS legacy,
+            eb.payment_due_at, eb.return_due_at,
             eb.rental_amount, eb.protection_fee, eb.deposit_amount,
+            x.status AS extension_status, DATE_FORMAT(x.new_end_date, '%Y-%m-%d') AS extension_end,
+            x.extra_amount AS extension_amount, x.extra_fee AS extension_fee, x.payment_due_at AS extension_due_at,
             e.name, e.owner_id, renter.full_name AS renter_name, owner.full_name AS owner_name
      FROM equipment_bookings eb
      INNER JOIN equipment e ON e.id = eb.equipment_id
      LEFT JOIN users renter ON renter.id = eb.renter_id
      LEFT JOIN users owner ON owner.id = e.owner_id
+     LEFT JOIN booking_extensions x ON x.booking_id = eb.id AND x.status IN ('Requested', 'Awaiting Payment')
      WHERE (e.owner_id = ? OR eb.renter_id = ?)
-       AND (eb.status IN ('Pending', 'Confirmed')
+       AND (eb.status IN ('Pending', 'Awaiting Payment', 'Confirmed')
             OR (eb.status = 'Returned' AND eb.condition_status = 'Pending'))`,
     [userId, userId]
   );
 
-  const today = todayInTaskifyTimezone();
+  const now = new Date();
   const historyHref = "./equipment.html#history";
 
   return rows.map((b) => {
@@ -247,11 +244,14 @@ async function rentalItems(userId) {
     const owner = b.owner_name || "The owner";
     const total = b.rental_amount == null ? null
       : Number(b.rental_amount) + Number(b.protection_fee || 0) + Number(b.deposit_amount || 0);
+    const paymentText = {
+      Unpaid: "Not paid yet", Held: "Payment held (demo)", Released: "Payment released (demo)", Refunded: "Refunded (demo)"
+    }[b.payment_status] || null;
     const base = {
       key: `rental-${b.id}`, kind: "rental", title: b.name, href: historyHref,
       role: isOwner ? "Your equipment" : "Equipment you're renting",
       amount: isOwner ? money(b.rental_amount) : total,
-      payment: b.payment_status ? `Payment ${b.payment_status.toLowerCase()} (demo)` : null,
+      payment: paymentText,
       deadline: null, deadlineLabel: null, overdue: false,
       updatedAt: b.updated_at,
       dates: { start: b.start_text, end: b.end_text }
@@ -259,18 +259,30 @@ async function rentalItems(userId) {
 
     if (b.status === "Pending") {
       const expires = new Date(new Date(b.created_at).getTime() + RENTALS.requestExpiryHours * 3600 * 1000).toISOString();
+      const paidUpFront = b.payment_status === "Held";
       return isOwner
         ? { ...base, status: "Booking request", tone: "action", nextBy: "you",
-            step: `${renter} wants it from ${prettyDate(b.start_text)} to ${prettyDate(b.end_text)}. Approve or decline before the request expires.`,
+            step: `${renter} wants it from ${prettyDate(b.start_text)} to ${prettyDate(b.end_text)}. ${paidUpFront ? "Approve or decline" : "Approve and they'll be asked to pay, or decline"} before the request expires.`,
             deadline: expires, deadlineLabel: "Respond by",
             action: { type: "api", label: "Approve booking", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/confirm`,
-                      success: `Booking approved. ${renter} has been told.` },
+                      success: paidUpFront ? `Booking confirmed. ${renter} has been told.` : `Approved. ${renter} has been asked to pay.` },
             secondaryAction: { type: "api", label: "Decline", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/decline`,
-                               success: "Booking declined. The renter has been refunded (demo).",
-                               confirm: "Decline this booking request? The renter will be refunded (demo)." } }
+                               success: "Booking declined. The renter has been told.",
+                               confirm: "Decline this booking request?" } }
         : { ...base, status: "Waiting for approval", tone: "waiting", nextBy: owner,
-            step: `Waiting for ${owner} to approve your booking. It expires if they don't respond in time.`,
+            step: `Waiting for ${owner} to approve your request. You'll pay only once it's approved.`,
             deadline: expires, deadlineLabel: "Expires" };
+    }
+
+    if (b.status === "Awaiting Payment") {
+      return isOwner
+        ? { ...base, status: "Waiting for payment", tone: "waiting", nextBy: renter,
+            step: `You approved it. Waiting for ${renter} to pay (demo) — if they don't in time, the dates are released.`,
+            deadline: b.payment_due_at, deadlineLabel: "Pay by" }
+        : { ...base, status: "Approved — pay to confirm", tone: "action", nextBy: "you",
+            step: `${owner} approved your request. Review the terms and pay (demo) to confirm the booking.`,
+            deadline: b.payment_due_at, deadlineLabel: "Pay by",
+            action: { type: "link", label: "Review & pay", href: historyHref } };
     }
 
     if (b.status === "Confirmed" && !b.picked_up_at && !b.legacy) {
@@ -285,21 +297,43 @@ async function rentalItems(userId) {
     }
 
     if (b.status === "Confirmed") {
-      /* Picked up (or a legacy booking): out on rent until it's returned. */
-      const overdue = b.end_text < today;
-      const dueSoon = !overdue && b.end_text <= addDays(today, 1);
+      /* Out on rent (collected, or a legacy booking) until it's returned. */
+      const due = b.return_due_at ? new Date(b.return_due_at) : null;
+      const overdue = !!due && due < now;
+      const dueSoon = !overdue && !!due && due - now <= RENTALS.returnReminderHours * 3600 * 1000;
+      const deadlineBits = { deadline: b.return_due_at, deadlineLabel: "Return by", overdue };
+
+      if (b.extension_status === "Requested") {
+        return isOwner
+          ? { ...base, ...deadlineBits, status: "Extension request", tone: "action", nextBy: "you",
+              step: `${renter} would like to keep it until ${prettyDate(b.extension_end)} (R${Number(b.extension_amount).toFixed(2)} more). Approve and they'll pay the extra, or decline.`,
+              action: { type: "api", label: "Approve extension", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/extension/approve`,
+                        success: `Extension approved. ${renter} has been asked to pay.` },
+              secondaryAction: { type: "api", label: "Decline", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/extension/decline`,
+                                 success: "Extension declined. The renter has been told.", confirm: "Decline this extension request?" } }
+          : { ...base, ...deadlineBits, status: "Extension requested", tone: "waiting", nextBy: owner,
+              step: `You asked to keep it until ${prettyDate(b.extension_end)}. Until ${owner} approves and you pay, the current deadline still applies.` };
+      }
+      if (b.extension_status === "Awaiting Payment") {
+        return isOwner
+          ? { ...base, ...deadlineBits, status: "Extension approved", tone: "waiting", nextBy: renter,
+              step: `You approved keeping it until ${prettyDate(b.extension_end)}. Waiting for ${renter} to pay the extra.` }
+          : { ...base, ...deadlineBits, status: "Pay for extension", tone: "action", nextBy: "you",
+              step: `${owner} agreed you can keep it until ${prettyDate(b.extension_end)}. Pay R${(Number(b.extension_amount) + Number(b.extension_fee || 0)).toFixed(2)} (demo) to confirm — until then the current deadline applies.`,
+              deadline: b.extension_due_at, deadlineLabel: "Pay by", overdue: false,
+              action: { type: "link", label: "Pay for extension", href: historyHref } };
+      }
+
       return isOwner
-        ? { ...base, status: overdue ? "Overdue" : "Out on rent", tone: overdue ? "problem" : "waiting", nextBy: renter,
+        ? { ...base, ...deadlineBits, status: overdue ? "Overdue" : "Out on rent", tone: overdue ? "problem" : "waiting", nextBy: renter,
             step: overdue
-              ? `${renter} should have returned it by ${prettyDate(b.end_text)}. Message them to arrange the return.`
-              : `${renter} has it until ${prettyDate(b.end_text)}.`,
-            deadline: b.end_text, deadlineLabel: "Return by", overdue }
-        : { ...base, status: overdue ? "Overdue" : dueSoon ? "Return due" : "Rental active",
+              ? `${renter} hasn't returned it yet. Message them to arrange the return, or report a problem if they don't respond.`
+              : `${renter} has it until the return deadline.` }
+        : { ...base, ...deadlineBits, status: overdue ? "Overdue" : dueSoon ? "Return due" : "Rental active",
             tone: overdue ? "problem" : "action", nextBy: "you",
             step: overdue
-              ? `This was due back on ${prettyDate(b.end_text)}. Return it to ${owner} as soon as possible.`
-              : `Return it to ${owner} by ${prettyDate(b.end_text)}, with photos of its condition.`,
-            deadline: b.end_text, deadlineLabel: "Return by", overdue,
+              ? `This is past its return deadline. Return it to ${owner} as soon as possible.`
+              : `Return it to ${owner} with photos of its condition, or ask for an extension before the deadline.`,
             action: { type: "link", label: "Return item", href: historyHref } };
     }
 

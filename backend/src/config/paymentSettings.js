@@ -53,7 +53,25 @@ module.exports = {
        viewed or booked (there's no scheduled job on the free hosting). */
     requestExpiryHours: 48,
     /* Booking dates are checked against today's date in this timezone. */
-    timeZone: "Africa/Johannesburg"
+    timeZone: "Africa/Johannesburg",
+    /* The same timezone as a fixed offset, for MySQL's CONVERT_TZ (South
+       Africa has no daylight saving, so this never changes). */
+    utcOffset: "+02:00",
+    /* Once the owner approves a request, the renter has this long to pay
+       (demo) — or until the end of the start day, whichever is sooner.
+       After that the approval lapses and the dates are freed. */
+    paymentWindowHours: 24,
+    /* The item is due back at this time (SAST) on the last rental day. */
+    returnTime: "18:00",
+    /* The renter is reminded this many hours before the return deadline. */
+    returnReminderHours: 24,
+    /* Still not returned this many hours after the deadline: admins are
+       asked to follow up. */
+    overdueEscalationHours: 72,
+    /* Security deposits are OFF for new bookings until the deposit policy
+       is approved (see config/rentalPolicy.js). Bookings made before keep
+       whatever deposit they already had. */
+    depositsEnabled: false
   },
 
   SALES: {

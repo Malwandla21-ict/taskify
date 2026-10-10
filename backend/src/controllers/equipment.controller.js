@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const equipmentService = require("../services/equipment.service");
 const trustService = require("../services/trust.service");
+const rentalExtensionService = require("../services/rentalExtension.service");
 
 async function createEquipment(req, res, next) {
   try {
@@ -94,7 +95,7 @@ async function bookEquipment(req, res, next) {
       startDate: req.body.startDate, endDate: req.body.endDate
     });
 
-    return res.status(201).json({ success: true, message: "Booking request sent.", data: booking });
+    return res.status(201).json({ success: true, message: "Booking request sent. Nothing is paid until the owner approves.", data: booking });
   } catch (error) { next(error); }
 }
 
@@ -104,7 +105,7 @@ async function confirmBooking(req, res, next) {
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.confirmBooking(Number(req.params.bookingId), req.user.id);
-    return res.status(200).json({ success: true, message: "Booking confirmed successfully.", data: booking });
+    return res.status(200).json({ success: true, message: booking.status === "Confirmed" ? "Booking confirmed." : "Booking approved. The renter has been asked to pay.", data: booking });
   } catch (error) { next(error); }
 }
 
@@ -124,7 +125,7 @@ async function cancelBooking(req, res, next) {
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.cancelBookingByRenter(Number(req.params.bookingId), req.user.id);
-    return res.status(200).json({ success: true, message: "Booking request cancelled.", data: booking });
+    return res.status(200).json({ success: true, message: "Booking cancelled.", data: booking });
   } catch (error) { next(error); }
 }
 
@@ -192,7 +193,68 @@ async function deleteEquipment(req, res, next) {
   } catch (error) { next(error); }
 }
 
+/* The newer rental actions (pay, cancel, problems, extensions) all have
+   the same shape: validate, call the service, answer 200. */
+function bookingAction(serviceCall, message) {
+  return async (req, res, next) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+      const data = await serviceCall(req);
+      return res.status(200).json({ success: true, message, data });
+    } catch (error) { next(error); }
+  };
+}
+
+const bookingId = (req) => Number(req.params.bookingId);
+
+const payBooking = bookingAction(
+  (req) => equipmentService.payBooking(bookingId(req), req.user.id, { acceptedPolicyVersion: req.body.acceptedPolicyVersion }),
+  "Payment held (demo). Your booking is confirmed."
+);
+const ownerCancelBooking = bookingAction(
+  (req) => equipmentService.ownerCancelBooking(bookingId(req), req.user.id, req.body.note),
+  "Booking cancelled. The renter has been refunded (demo)."
+);
+const refusePickup = bookingAction(
+  (req) => equipmentService.refusePickup(bookingId(req), req.user.id, req.body.note),
+  "Booking cancelled and refunded (demo). The owner and admins have been told."
+);
+const reportRentalProblem = bookingAction(
+  (req) => equipmentService.reportRentalProblem(bookingId(req), req.user.id, { category: req.body.category, note: req.body.note }),
+  "Problem reported. A Taskify admin will look at it."
+);
+const requestExtension = bookingAction(
+  (req) => rentalExtensionService.requestExtension(bookingId(req), req.user.id, req.body.newEndDate),
+  "Extension requested. The owner has been asked."
+);
+const approveExtension = bookingAction(
+  (req) => rentalExtensionService.respondToExtension(bookingId(req), req.user.id, true),
+  "Extension approved. The renter has been asked to pay."
+);
+const declineExtension = bookingAction(
+  (req) => rentalExtensionService.respondToExtension(bookingId(req), req.user.id, false),
+  "Extension declined."
+);
+const cancelExtension = bookingAction(
+  (req) => rentalExtensionService.cancelExtension(bookingId(req), req.user.id),
+  "Extension request withdrawn."
+);
+const payExtension = bookingAction(
+  (req) => rentalExtensionService.payExtension(bookingId(req), req.user.id),
+  "Extension paid (demo). Your new return deadline is confirmed."
+);
+
 module.exports = {
+  payBooking,
+  ownerCancelBooking,
+  refusePickup,
+  reportRentalProblem,
+  requestExtension,
+  approveExtension,
+  declineExtension,
+  cancelExtension,
+  payExtension,
   createEquipment,
   updateEquipment,
   getAllAvailableEquipment,

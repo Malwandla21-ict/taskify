@@ -460,106 +460,194 @@ function bookingMoneyLine(booking, isOwner) {
     Disputed: "on hold — damage reported"
   }[booking.deposit_status] || "";
   const paymentText = {
+    Unpaid:   "not paid yet",
     Held:     "held by Taskify",
     Released: isOwner ? "released to you" : "released to owner",
     Refunded: "refunded"
   }[booking.payment_status] || "";
   const conditionText = {
     Pending: isOwner ? "Check the item and confirm its condition." : "Waiting for the owner to check the item.",
-    OK:      "Owner confirmed it came back in the same condition.",
-    Damaged: "Damage reported — an admin will review."
+    OK:      booking.damage_outcome === "renter_not_at_fault"
+      ? "An admin found the renter wasn't at fault for the reported damage."
+      : "Owner confirmed it came back in the same condition.",
+    Damaged: booking.damage_outcome === "damage_confirmed"
+      ? "Damage confirmed by an admin. Nothing was charged."
+      : "Damage reported — an admin will review."
   }[booking.condition_status] || "";
 
   return `
     <div class="booking-money-line">
       <div><i class="ti ti-receipt" aria-hidden="true"></i> Rent <strong>${formatRand(booking.rental_amount)}</strong> (${paymentText}) · Fee <strong>${formatRand(booking.protection_fee)}</strong></div>
-      <div><i class="ti ti-shield-lock" aria-hidden="true"></i> Deposit <strong>${formatRand(booking.deposit_amount)}</strong> — ${depositText} <span style="opacity:.7;">(demo)</span></div>
+      ${Number(booking.deposit_amount) > 0
+        ? `<div><i class="ti ti-shield-lock" aria-hidden="true"></i> Deposit <strong>${formatRand(booking.deposit_amount)}</strong> — ${depositText} <span style="opacity:.7;">(demo)</span></div>`
+        : `<div><i class="ti ti-shield-lock" aria-hidden="true"></i> No deposit</div>`}
       ${booking.pickup_condition ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> Condition at pickup: <strong>${booking.pickup_condition}</strong> (confirmed by renter)</div>` : ""}
       ${conditionText ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> ${conditionText}</div>` : ""}
-      ${booking.damage_note ? `<div style="color:var(--ump-red);"><i class="ti ti-alert-triangle" aria-hidden="true"></i> "${booking.damage_note}"</div>` : ""}
+      ${booking.damage_note ? `<div style="color:var(--ump-red);"><i class="ti ti-alert-triangle" aria-hidden="true"></i> "${escapeReportText(booking.damage_note)}"</div>` : ""}
       ${booking.pickup_photos?.length ? `<div style="margin-top:6px;">Pickup photos</div>${conditionPhotoStrip(booking.pickup_photos, `pickup-${booking.id}`)}` : ""}
       ${booking.return_photos?.length ? `<div style="margin-top:6px;">Return photos</div>${conditionPhotoStrip(booking.return_photos, `return-${booking.id}`)}` : ""}
     </div>`;
 }
 
-function historyCard(booking) {
-  const isOwner   = !!currentUser && Number(booking.owner_id)  === Number(currentUser.id);
-  const isRenter  = !!currentUser && Number(booking.renter_id) === Number(currentUser.id);
-  const isNewFlow = !!booking.payment_status;
-  const canPickup = isNewFlow && isRenter && booking.status === "Confirmed" && !booking.picked_up_at;
-  const canReturn = booking.status === "Confirmed" && (isOwner || isRenter) && (!isNewFlow || !!booking.picked_up_at);
-  const canCheckCondition = isNewFlow && isOwner && booking.status === "Returned" && booking.condition_status === "Pending";
-  const canReview = booking.status === "Returned" && (isOwner || isRenter);
-  const roleLabel = isOwner ? "You own this" : "You rented this";
-  const imageUrl  = Array.isArray(booking.image_urls) && booking.image_urls.length ? booking.image_urls[0] : null;
+const CANCEL_REASON_TEXT = {
+  declined: "The owner declined this request.",
+  renter_cancelled: "Cancelled by the renter.",
+  owner_cancelled: "Cancelled by the owner.",
+  request_expired: "The request expired without an answer.",
+  payment_expired: "Not paid in time, so the approval lapsed.",
+  dates_taken: "Those dates were booked by someone else.",
+  defective_at_pickup: "The renter refused the item at pickup."
+};
 
-  let footerAction;
-  if (canPickup) {
-    footerAction = `
-      <button class="market-action-btn pickup-equipment-btn" data-booking-id="${booking.id}" data-listed-condition="${booking.equipment_condition || ""}" style="margin-top:14px;width:100%;justify-content:center;">
-        <i class="ti ti-camera" aria-hidden="true"></i> Confirm Pickup (add photos)
-      </button>`;
-  } else if (canReturn) {
-    footerAction = `
-      <button class="market-action-btn return-equipment-btn" data-booking-id="${booking.id}" data-new-flow="${isNewFlow ? "1" : ""}" style="margin-top:14px;width:100%;">
-        <i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment${isNewFlow ? " (add photos)" : ""}
-      </button>`;
-  } else if (canCheckCondition) {
-    footerAction = `
-      <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="market-action-btn condition-ok-btn" data-booking-id="${booking.id}" style="flex:1;justify-content:center;">
-          <i class="ti ti-circle-check" aria-hidden="true"></i> Condition OK
-        </button>
-        <button class="market-action-btn outline report-damage-btn" data-booking-id="${booking.id}" style="flex:1;justify-content:center;background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
-          <i class="ti ti-alert-triangle" aria-hidden="true"></i> Report Damage
-        </button>
-      </div>`;
-  } else if (canReview) {
-    footerAction = booking.my_review_id
-      ? `<div style="display:flex;gap:8px;margin-top:14px;">
-           <button class="market-action-btn outline edit-review-btn" data-review-id="${booking.my_review_id}" data-rating="${booking.my_review_rating ?? ""}" data-comment="${(booking.my_review_comment ?? "").replace(/"/g, "&quot;")}" style="flex:1;justify-content:center;">
-             <i class="ti ti-edit" aria-hidden="true"></i> Edit Review
-           </button>
-           <button class="market-action-btn outline delete-review-btn" data-review-id="${booking.my_review_id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
-             <i class="ti ti-trash" aria-hidden="true"></i>
-           </button>
-         </div>`
-      : `<button class="market-action-btn review-booking-btn" data-booking-id="${booking.id}" style="margin-top:14px;width:100%;justify-content:center;">
-           <i class="ti ti-star" aria-hidden="true"></i> Leave Review
-         </button>`;
-  } else {
-    const waitingNote = isNewFlow && isOwner && booking.status === "Confirmed" && !booking.picked_up_at
-      ? `<div class="booking-money-line"><i class="ti ti-clock" aria-hidden="true"></i> Waiting for the renter to collect it and add pickup photos.</div>`
-      : "";
-    footerAction = `${waitingNote}
-      <a href="./equipment-details.html?id=${booking.equipment_id}" class="market-action-btn outline" style="margin-top:14px;width:100%;justify-content:center;">
-        <i class="ti ti-eye" aria-hidden="true"></i> View Equipment
-      </a>`;
+/* What stage a booking is at, in plain words. */
+function rentalStage(b) {
+  if (b.status === "Pending") return { label: "Requested", tone: "gold" };
+  if (b.status === "Awaiting Payment") return { label: "Awaiting payment", tone: "gold" };
+  if (b.status === "Confirmed" && !b.out_on_rent) return { label: "Ready for collection", tone: "blue" };
+  if (b.status === "Confirmed") return b.is_overdue ? { label: "Overdue", tone: "red" } : { label: "Out on rent", tone: "blue" };
+  if (b.status === "Returned" && b.condition_status === "Pending") return { label: "Return check", tone: "gold" };
+  if (b.status === "Returned" && b.condition_status === "Damaged" && !b.damage_outcome) return { label: "Damage reported", tone: "red" };
+  if (b.status === "Returned") return { label: "Completed", tone: "" };
+  return { label: "Cancelled", tone: "red" };
+}
+
+function lateLabel(minutes) {
+  if (!minutes) return "on time";
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (days >= 1) return `${days} day${days === 1 ? "" : "s"} late`;
+  if (hours >= 1) return `${hours} hour${hours === 1 ? "" : "s"} late`;
+  return `${minutes} min late`;
+}
+
+/* Deadlines, extension progress, problem reports and the NON-BINDING
+   early/late estimates for one booking. */
+function rentalTimeline(b, isOwner) {
+  const lines = [];
+  const line = (icon, html, cls = "") => lines.push(`<div class="rental-line ${cls}"><i class="ti ${icon}" aria-hidden="true"></i> <span>${html}</span></div>`);
+
+  if (b.status === "Awaiting Payment" && b.payment_due_at) {
+    line("ti-credit-card", `${isOwner ? "Renter must pay" : "Pay"} by <strong>${rentalDeadline(b.payment_due_at)}</strong> or the dates are released.`);
+  }
+  if (["Confirmed", "Awaiting Payment", "Pending"].includes(b.status) && b.return_due_at) {
+    line("ti-clock", `Due back by <strong>${rentalDeadline(b.return_due_at)}</strong>`, b.is_overdue ? "overdue" : "");
+  }
+  if (b.status === "Returned" && b.return_minutes_late != null) {
+    line("ti-clock-check", `Returned ${lateLabel(b.return_minutes_late)}${b.return_minutes_late > 0 ? " — no late fee is charged (not in effect)" : ""}.`);
+  }
+  if (b.status === "Cancelled") {
+    line("ti-circle-x", `${CANCEL_REASON_TEXT[b.cancel_reason] || "Cancelled."}${b.cancel_note ? ` "${escapeReportText(b.cancel_note)}"` : ""}`);
   }
 
+  const x = b.extension;
+  if (x && b.status === "Confirmed") {
+    const extra = formatRand(Number(x.extra_amount) + Number(x.extra_fee || 0));
+    if (x.status === "Requested") line("ti-calendar-plus", `Extension to <strong>${rentalDate(x.new_end_date)}</strong> requested (${extra}). ${isOwner ? "Waiting for your answer." : "Waiting for the owner."}`);
+    if (x.status === "Awaiting Payment") line("ti-calendar-plus", `Extension to <strong>${rentalDate(x.new_end_date)}</strong> approved — ${isOwner ? "waiting for the renter to pay" : `pay ${extra} by ${rentalDeadline(x.payment_due_at)}`}. Until then the current deadline applies.`);
+    if (x.status === "Declined") line("ti-calendar-x", `Extension to ${rentalDate(x.new_end_date)} was declined.`);
+    if (x.status === "Expired") line("ti-calendar-x", `Extension to ${rentalDate(x.new_end_date)} expired.`);
+  }
+
+  if (b.problem_reported_at) {
+    line("ti-alert-triangle", `${b.problem_reported_by === (isOwner ? "owner" : "renter") ? "You" : (isOwner ? "The renter" : "The owner")} reported: ${escapeReportText(b.problem_label || "a problem")}${b.problem_note ? ` — "${escapeReportText(b.problem_note)}"` : ""}. An admin is looking at it.`, "problem");
+  }
+
+  const est = b.estimates;
+  if (est && b.status === "Confirmed") {
+    if (est.lateReturn.minutesLate > 0) {
+      line("ti-calendar-exclamation", `Late by ${lateLabel(est.lateReturn.minutesLate).replace(" late", "")}. Under the proposed late-fee rule this would be about <strong>${formatRand(est.lateReturn.amount)}</strong> — <em>an estimate only: late fees are not in effect and nothing will be charged.</em>`, "estimate");
+    } else if (!isOwner && est.earlyReturn.unusedDays > 0) {
+      line("ti-calendar-minus", `Returning today leaves ${est.earlyReturn.unusedDays} unused day${est.earlyReturn.unusedDays === 1 ? "" : "s"}. A refund of about <strong>${formatRand(est.earlyReturn.amount)}</strong> is being proposed — <em>an estimate only: it's not in effect, so no refund is made automatically.</em>`, "estimate");
+    }
+  }
+  return lines.length ? `<div class="rental-timeline">${lines.join("")}</div>` : "";
+}
+
+const rentalBtn = (action, id, icon, label, variant = "") =>
+  `<button type="button" class="market-action-btn rental-action-btn ${variant}" data-action="${action}" data-booking-id="${id}">
+     <i class="ti ${icon}" aria-hidden="true"></i> ${label}
+   </button>`;
+
+/* The buttons for this person at this stage. */
+function rentalActions(b, isOwner, isRenter) {
+  const id = b.id;
+  const buttons = [];
+  const x = b.extension && ["Requested", "Awaiting Payment"].includes(b.extension.status) ? b.extension : null;
+  const legacy = !b.payment_status;
+
+  if (b.status === "Pending") {
+    if (isOwner) buttons.push(rentalBtn("approve", id, "ti-check", "Approve"), rentalBtn("decline", id, "ti-x", "Decline", "outline danger"));
+    if (isRenter) buttons.push(rentalBtn("cancel", id, "ti-x", "Cancel request", "outline danger"));
+  } else if (b.status === "Awaiting Payment") {
+    if (isRenter) buttons.push(rentalBtn("pay", id, "ti-credit-card", "Review terms & pay"), rentalBtn("cancel", id, "ti-x", "Cancel", "outline danger"));
+    if (isOwner) buttons.push(rentalBtn("owner-cancel", id, "ti-ban", "Can't go ahead", "outline danger"));
+  } else if (b.status === "Confirmed" && !b.out_on_rent) {
+    if (isRenter) buttons.push(
+      `<button type="button" class="market-action-btn pickup-equipment-btn" data-booking-id="${id}" data-listed-condition="${b.equipment_condition || ""}"><i class="ti ti-camera" aria-hidden="true"></i> Confirm pickup (add photos)</button>`,
+      rentalBtn("refuse", id, "ti-alert-triangle", "Item faulty? Don't take it", "outline danger"),
+      rentalBtn("cancel", id, "ti-x", "Cancel (full refund)", "outline danger")
+    );
+    if (isOwner) buttons.push(rentalBtn("owner-cancel", id, "ti-ban", "Can't hand it over", "outline danger"));
+  } else if (b.status === "Confirmed") {
+    if (isRenter) {
+      buttons.push(`<button type="button" class="market-action-btn return-equipment-btn" data-booking-id="${id}" data-new-flow="${legacy ? "" : "1"}"><i class="ti ti-package-export" aria-hidden="true"></i> Return item${legacy ? "" : " (add photos)"}</button>`);
+      if (!legacy && !x && !b.is_overdue) buttons.push(rentalBtn("extend", id, "ti-calendar-plus", "Ask for more days", "outline"));
+      if (x?.status === "Awaiting Payment") buttons.push(rentalBtn("pay-extension", id, "ti-credit-card", "Pay for extension"));
+      if (x) buttons.push(rentalBtn("withdraw-extension", id, "ti-arrow-back-up", "Withdraw extension", "outline"));
+    }
+    if (isOwner) {
+      if (x?.status === "Requested") buttons.push(rentalBtn("approve-extension", id, "ti-check", "Approve extension"), rentalBtn("decline-extension", id, "ti-x", "Decline extension", "outline danger"));
+      if (legacy) buttons.push(`<button type="button" class="market-action-btn return-equipment-btn" data-booking-id="${id}" data-new-flow=""><i class="ti ti-package-export" aria-hidden="true"></i> Mark returned</button>`);
+    }
+    if (!legacy) buttons.push(rentalBtn("problem", id, "ti-alert-triangle", "Report a problem", "outline"));
+  } else if (b.status === "Returned" && b.condition_status === "Pending" && isOwner && !legacy) {
+    buttons.push(
+      `<button type="button" class="market-action-btn condition-ok-btn" data-booking-id="${id}"><i class="ti ti-circle-check" aria-hidden="true"></i> Condition OK</button>`,
+      `<button type="button" class="market-action-btn outline danger report-damage-btn" data-booking-id="${id}"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Report damage</button>`
+    );
+  } else if (b.status === "Returned" && (isOwner || isRenter)) {
+    buttons.push(b.my_review_id
+      ? `<button class="market-action-btn outline edit-review-btn" data-review-id="${b.my_review_id}" data-rating="${b.my_review_rating ?? ""}" data-comment="${escapeReportText(b.my_review_comment ?? "")}"><i class="ti ti-edit" aria-hidden="true"></i> Edit review</button>
+         <button class="market-action-btn outline danger delete-review-btn" data-review-id="${b.my_review_id}" aria-label="Delete review"><i class="ti ti-trash" aria-hidden="true"></i></button>`
+      : `<button class="market-action-btn review-booking-btn" data-booking-id="${id}"><i class="ti ti-star" aria-hidden="true"></i> Leave review</button>`);
+  }
+
+  if (!buttons.length) {
+    buttons.push(`<a href="./equipment-details.html?id=${b.equipment_id}" class="market-action-btn outline"><i class="ti ti-eye" aria-hidden="true"></i> View equipment</a>`);
+  }
+  return `<div class="rental-actions">${buttons.join("")}</div>`;
+}
+
+function historyCard(booking) {
+  const isOwner  = !!currentUser && Number(booking.owner_id)  === Number(currentUser.id);
+  const isRenter = !!currentUser && Number(booking.renter_id) === Number(currentUser.id);
+  const roleLabel = isOwner ? `You own this · ${escapeReportText(booking.renter_name || "renter")} is renting` : `You're renting from ${escapeReportText(booking.owner_name || "the owner")}`;
+  const imageUrl  = Array.isArray(booking.image_urls) && booking.image_urls.length ? booking.image_urls[0] : null;
+  const stage = rentalStage(booking);
+
   return `
-    <div class="market-card">
+    <div class="market-card" id="booking-${booking.id}">
       <div class="market-image" style="position:relative;">
         ${imageUrl
-          ? `<img src="${imageUrl}" alt="${booking.equipment_name}" class="lightbox-img" data-gallery="equip-history-${booking.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${imageUrl}" alt="${escapeReportText(booking.equipment_name)}" class="lightbox-img" data-gallery="equip-history-${booking.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
       </div>
       <div class="market-content">
         <div class="market-top">
           ${sectionBadge(booking.section || "General")}
-          ${statusBadge(booking.status)}
+          <div class="badge ${stage.tone}">${stage.label}</div>
         </div>
-        <h3>${booking.equipment_name}</h3>
+        <h3>${escapeReportText(booking.equipment_name)}</h3>
         <div class="market-tags" style="margin:10px 0;">
           <div class="market-tag"><i class="ti ti-user" aria-hidden="true"></i> ${roleLabel}</div>
           <div class="market-tag"><i class="ti ti-currency-dollar" aria-hidden="true"></i> R${booking.daily_price}/day</div>
         </div>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${booking.start_date}</div>
-          <div class="market-tag"><i class="ti ti-calendar-off" aria-hidden="true"></i> ${booking.end_date}</div>
+          <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${rentalDate(booking.start_date)} → ${rentalDate(booking.end_date)}</div>
         </div>
+        ${rentalTimeline(booking, isOwner)}
         ${bookingMoneyLine(booking, isOwner)}
-        ${footerAction}
+        ${rentalActions(booking, isOwner, isRenter)}
       </div>
     </div>`;
 }
@@ -574,9 +662,9 @@ function historyMiniCard(booking) {
       <div class="mini-history-info">
         <div class="mini-history-top">
           ${sectionBadge(booking.section || "General")}
-          ${statusBadge(booking.status)}
+          <div class="badge ${rentalStage(booking).tone}">${rentalStage(booking).label}</div>
         </div>
-        <div class="mini-history-title">${booking.equipment_name}</div>
+        <div class="mini-history-title">${escapeReportText(booking.equipment_name)}</div>
         <div class="mini-history-meta">${isOwner ? "You own this" : "You rented this"} &middot; R${booking.daily_price}/day</div>
       </div>
     </a>`;
@@ -735,6 +823,248 @@ reviewForm?.addEventListener("submit", async e => {
   }
 });
 
+/* ── Rental actions (history cards) ──
+   One pop-up (#rentalActionModal) for the steps that need input or a
+   careful look first: paying, asking for more days, reporting a problem,
+   cancelling as the owner, refusing a faulty item. One-click steps use a
+   plain confirm. Every step is checked again on the server. */
+let cachedHistory = [];
+const rentalActionModal   = document.getElementById("rentalActionModal");
+const rentalActionForm    = document.getElementById("rentalActionForm");
+const rentalActionTitle   = document.getElementById("rentalActionTitle");
+const rentalActionBody    = document.getElementById("rentalActionBody");
+const rentalActionMessage = document.getElementById("rentalActionMessage");
+const submitRentalAction  = document.getElementById("submitRentalAction");
+let rentalActionSubmit = null;
+
+function openRentalAction({ title, icon, body, submitLabel, danger = false, onSubmit }) {
+  rentalActionTitle.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i> ${title}`;
+  rentalActionBody.innerHTML = body;
+  rentalActionMessage.textContent = "";
+  submitRentalAction.innerHTML = submitLabel;
+  submitRentalAction.style.background = danger ? "var(--ump-red)" : "";
+  submitRentalAction.disabled = false;
+  rentalActionSubmit = onSubmit;
+  openModal(rentalActionModal);
+}
+
+function closeRentalAction() {
+  closeModal(rentalActionModal);
+  rentalActionSubmit = null;
+}
+
+document.getElementById("closeRentalActionModal")?.addEventListener("click", closeRentalAction);
+document.getElementById("overlay")?.addEventListener("click", closeRentalAction);
+
+rentalActionForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!rentalActionSubmit) return;
+  const originalHtml = submitRentalAction.innerHTML;
+  submitRentalAction.disabled = true;
+  submitRentalAction.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Working…`;
+  try {
+    const done = await rentalActionSubmit();
+    closeRentalAction();
+    if (done) done();
+    await loadEquipmentHistory();
+  } catch (err) {
+    rentalActionMessage.textContent = err.message;
+    showToast(err.message, "error");
+    submitRentalAction.disabled = false;
+    submitRentalAction.innerHTML = originalHtml;
+  }
+});
+
+const RENTAL_PROBLEM_OPTIONS = {
+  renter: [
+    ["owner_unavailable", "The owner isn't available to take it back"],
+    ["item_faulty", "The item stopped working or is faulty"],
+    ["other", "Something else"]
+  ],
+  owner: [
+    ["renter_unreachable", "The renter isn't responding about the return"],
+    ["other", "Something else"]
+  ]
+};
+
+const noteField = (id, label, placeholder, min) => `
+  <div class="form-group">
+    <label for="${id}">${label}</label>
+    <textarea id="${id}" rows="3" minlength="${min}" maxlength="500" required placeholder="${placeholder}"></textarea>
+  </div>`;
+
+async function openPayModal(b) {
+  /* The terms shown are the CURRENT ones; the server refuses payment if
+     they change before the renter presses Pay. */
+  const item = (await apiRequest(`/equipment/${b.equipment_id}`)).data;
+  const terms = item.terms;
+  const total = Number(b.rental_amount) + Number(b.protection_fee || 0) + Number(b.deposit_amount || 0);
+  openRentalAction({
+    title: "Review & pay",
+    icon: "ti-credit-card",
+    submitLabel: `<i class="ti ti-shield-check" aria-hidden="true"></i> Pay ${formatRand(total)} (demo)`,
+    body: `
+      ${demoPaymentBanner("No real payment gateway is connected. This simulates Taskify holding your payment until you return the item.")}
+      <p class="pay-note"><strong>${escapeReportText(b.equipment_name)}</strong> from ${rentalDate(b.start_date)} to ${rentalDate(b.end_date)}.
+        Due back by <strong>${rentalDeadline(b.return_due_at)}</strong>.</p>
+      <div class="money-breakdown">
+        ${moneyRow(`Rent (${b.rental_days} day${b.rental_days === 1 ? "" : "s"})`, b.rental_amount)}
+        ${moneyRow("Protection fee", b.protection_fee)}
+        ${moneyRow("Deposit", b.deposit_amount, { hint: Number(b.deposit_amount) > 0 ? "" : "none" })}
+        ${moneyRow("Total", total, { strong: true })}
+      </div>
+      <details class="rental-terms-box" open><summary>Rental terms</summary>${rentalTermsHtml(terms)}</details>
+      <label class="rental-accept"><input type="checkbox" id="acceptRentalTerms" required /> I've read these terms and agree to them.</label>
+      <p class="pay-note">Pay by ${rentalDeadline(b.payment_due_at)}, or the owner's approval lapses.</p>`,
+    onSubmit: async () => {
+      if (!document.getElementById("acceptRentalTerms").checked) throw new Error("Please tick the box to accept the terms.");
+      await apiRequest(`/equipment/bookings/${b.id}/pay`, "POST", { acceptedPolicyVersion: terms.policyVersion });
+      return () => showPaymentMoment("held", `${formatRand(total)} is held until you return the item. Your booking is confirmed.`);
+    }
+  });
+}
+
+function openExtendModal(b) {
+  const next = new Date(`${b.end_date}T12:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  const minDate = next.toISOString().slice(0, 10);
+  openRentalAction({
+    title: "Ask for more days",
+    icon: "ti-calendar-plus",
+    submitLabel: `<i class="ti ti-send" aria-hidden="true"></i> Send request`,
+    body: `
+      <p class="pay-note">It's due back by <strong>${rentalDeadline(b.return_due_at)}</strong>. Ask before then. The owner has to approve, then you pay the extra (demo) — only then does the deadline change.</p>
+      <div class="form-group">
+        <label for="extensionEndDate">Keep it until</label>
+        <input type="date" id="extensionEndDate" min="${minDate}" value="${minDate}" required />
+      </div>
+      <p class="pay-note" id="extensionPreview"></p>`,
+    onSubmit: async () => {
+      const newEndDate = document.getElementById("extensionEndDate").value;
+      await apiRequest(`/equipment/bookings/${b.id}/extension`, "POST", { newEndDate });
+      return () => showToast("Extension requested. The owner has been asked.");
+    }
+  });
+  const input = document.getElementById("extensionEndDate");
+  const preview = () => {
+    const days = Math.round((new Date(`${input.value}T12:00:00Z`) - new Date(`${b.end_date}T12:00:00Z`)) / 86400000);
+    document.getElementById("extensionPreview").innerHTML = days > 0
+      ? `${days} more day${days === 1 ? "" : "s"} × R${b.daily_price} = about <strong>${formatRand(days * Number(b.daily_price))}</strong> plus a small protection fee. Taskify works out the exact amount.`
+      : "";
+  };
+  input.addEventListener("change", preview);
+  preview();
+}
+
+function openProblemModal(b, isOwner) {
+  const options = RENTAL_PROBLEM_OPTIONS[isOwner ? "owner" : "renter"];
+  openRentalAction({
+    title: "Report a problem",
+    icon: "ti-alert-triangle",
+    danger: true,
+    submitLabel: `<i class="ti ti-send" aria-hidden="true"></i> Report problem`,
+    body: `
+      <p class="pay-note">The ${isOwner ? "renter" : "owner"} is told and a Taskify admin will look at it. Nothing is charged or refunded automatically.</p>
+      <div class="form-group">
+        <label for="rentalProblemCategory">What's wrong?</label>
+        <select id="rentalProblemCategory">${options.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>
+      </div>
+      ${noteField("rentalProblemNote", "Describe what happened", "e.g. I waited at the library at 17:30 but they didn't come.", 10)}`,
+    onSubmit: async () => {
+      await apiRequest(`/equipment/bookings/${b.id}/problem`, "POST", {
+        category: document.getElementById("rentalProblemCategory").value,
+        note: document.getElementById("rentalProblemNote").value.trim()
+      });
+      return () => showToast("Problem reported. An admin will look at it.");
+    }
+  });
+}
+
+function openOwnerCancelModal(b) {
+  openRentalAction({
+    title: "Can't go ahead",
+    icon: "ti-ban",
+    danger: true,
+    submitLabel: `<i class="ti ti-ban" aria-hidden="true"></i> Cancel booking`,
+    body: `
+      <p class="pay-note">The booking is cancelled and the renter is refunded in full (demo). Please tell them why.</p>
+      ${noteField("ownerCancelNote", "Reason", "e.g. The tripod head broke this morning.", 5)}`,
+    onSubmit: async () => {
+      await apiRequest(`/equipment/bookings/${b.id}/owner-cancel`, "PATCH", { note: document.getElementById("ownerCancelNote").value.trim() });
+      return () => showToast("Booking cancelled. The renter has been refunded (demo).");
+    }
+  });
+}
+
+function openRefuseModal(b) {
+  openRentalAction({
+    title: "Don't take a faulty item",
+    icon: "ti-alert-triangle",
+    danger: true,
+    submitLabel: `<i class="ti ti-ban" aria-hidden="true"></i> Refuse & get refund`,
+    body: `
+      <p class="pay-note">If the item is broken or isn't what was listed, don't take it. The booking is cancelled, you're refunded in full (demo), and the owner and admins are told.</p>
+      ${noteField("refuseNote", "What's wrong with it?", "e.g. The lens is cracked right across.", 10)}`,
+    onSubmit: async () => {
+      await apiRequest(`/equipment/bookings/${b.id}/refuse-pickup`, "PATCH", { note: document.getElementById("refuseNote").value.trim() });
+      return () => showToast("Booking cancelled and refunded (demo).");
+    }
+  });
+}
+
+/* One-click steps: [confirm text or null, method, path, success text, payment moment?] */
+const SIMPLE_RENTAL_ACTIONS = {
+  approve: [null, "PATCH", "confirm", "Approved. The renter has been asked to pay."],
+  decline: ["Decline this booking request?", "PATCH", "decline", "Request declined."],
+  cancel: ["Cancel this booking? Anything you've paid is refunded in full (demo).", "PATCH", "cancel", "Booking cancelled."],
+  "approve-extension": [null, "PATCH", "extension/approve", "Extension approved. The renter has been asked to pay."],
+  "decline-extension": ["Decline this extension? The current deadline stays.", "PATCH", "extension/decline", "Extension declined."],
+  "withdraw-extension": ["Withdraw your extension request? The current deadline stays.", "PATCH", "extension/cancel", "Extension request withdrawn."],
+  "pay-extension": ["Pay for the extension now (demo)? Your return deadline moves once it's paid.", "POST", "extension/pay", null]
+};
+
+equipmentHistoryContainer?.addEventListener("click", async (e) => {
+  const btn = e.target.closest(".rental-action-btn");
+  if (!btn) return;
+  const b = cachedHistory.find((row) => String(row.id) === btn.dataset.bookingId);
+  if (!b) return;
+  const isOwner = !!currentUser && Number(b.owner_id) === Number(currentUser.id);
+  const action = btn.dataset.action;
+
+  try {
+    if (action === "pay") return await openPayModal(b);
+    if (action === "extend") return openExtendModal(b);
+    if (action === "problem") return openProblemModal(b, isOwner);
+    if (action === "owner-cancel") return openOwnerCancelModal(b);
+    if (action === "refuse") return openRefuseModal(b);
+
+    const simple = SIMPLE_RENTAL_ACTIONS[action];
+    if (!simple) return;
+    const [question, method, path, success] = simple;
+    if (question && !confirm(question)) return;
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Working…`;
+    try {
+      const res = await apiRequest(`/equipment/bookings/${b.id}/${path}`, method);
+      if (action === "pay-extension") {
+        showPaymentMoment("held", `Extension paid. It's now due back by ${rentalDeadline(res.data?.return_due_at)}.`);
+      } else if (action === "approve" && res.data?.status === "Confirmed") {
+        showToast("Booking confirmed.");
+      } else {
+        showToast(success);
+      }
+      await loadEquipmentHistory();
+    } catch (err) {
+      showToast(err.message, "error");
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  } catch (err) {
+    showToast(err.message, "error");
+  }
+});
+
 async function loadEquipment() {
   try {
     const res = await apiRequest("/equipment");
@@ -763,6 +1093,7 @@ async function loadEquipmentHistory() {
   try {
     const res   = await apiRequest("/equipment/history");
     const items = Array.isArray(res.data) ? res.data : [];
+    cachedHistory = items;
 
     equipmentHistoryContainer.innerHTML = items.length
       ? safeMap(items, historyCard, "equipment history")

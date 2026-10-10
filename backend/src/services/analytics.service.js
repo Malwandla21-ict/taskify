@@ -232,7 +232,7 @@ async function speed(range) {
   );
   const bookings = await one(
     `SELECT COUNT(*) AS requested,
-            SUM(status IN ('Confirmed', 'Returned')) AS approved
+            SUM(approved_at IS NOT NULL OR status IN ('Confirmed', 'Returned')) AS approved
      FROM equipment_bookings WHERE ${within("created_at")}`, p
   );
   const expired = await one(
@@ -312,7 +312,7 @@ async function funnels(range) {
      FROM sales_items WHERE ${within("created_at")}`, p
   );
   const rentals = await one(
-    `SELECT COUNT(*) AS requested, SUM(status IN ('Confirmed', 'Returned')) AS approved,
+    `SELECT COUNT(*) AS requested, SUM(approved_at IS NOT NULL OR status IN ('Confirmed', 'Returned')) AS approved,
             SUM(status = 'Returned') AS completed, SUM(status = 'Cancelled') AS cancelled
      FROM equipment_bookings WHERE ${within("created_at")}`, p
   );

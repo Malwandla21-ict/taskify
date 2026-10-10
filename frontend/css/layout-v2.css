@@ -1920,3 +1920,29 @@ body.dashboard-body {
 }
 .sale-dispute-note strong { display: flex; align-items: center; gap: 6px; color: var(--ump-red); font-size: 13px; }
 .sale-dispute-note p { margin: 6px 0 0; color: var(--text); }
+
+/* ── Rentals: stages, deadlines, terms (equipment.js / equipment-details.js) ── */
+.rental-timeline { margin: 10px 0 4px; display: flex; flex-direction: column; gap: 6px; }
+.rental-line { display: flex; gap: 7px; align-items: flex-start; font-size: 12px; line-height: 1.45; color: var(--text); }
+.rental-line i { margin-top: 2px; color: var(--muted); }
+.rental-line.overdue, .rental-line.overdue i { color: var(--ump-red); font-weight: 600; }
+.rental-line.problem i { color: var(--ump-red); }
+.rental-line.estimate { background: rgba(245, 180, 0, 0.10); border-radius: var(--radius); padding: 6px 8px; }
+.rental-line.estimate i { color: #8a6a00; }
+.rental-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.rental-actions .market-action-btn { flex: 1 1 170px; justify-content: center; white-space: normal; text-align: center; }
+.market-action-btn.outline.danger { background: rgba(224, 58, 62, 0.08); color: var(--ump-red); border-color: rgba(224, 58, 62, 0.20); }
+.market-action-btn.outline.danger:hover { background: var(--ump-red); color: white; border-color: var(--ump-red); }
+
+.rental-terms { list-style: none; margin: 8px 0 4px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rental-terms li { display: flex; gap: 8px; font-size: 12px; line-height: 1.5; }
+.rental-terms li i { margin-top: 2px; color: var(--ump-blue); }
+.rental-rule-status { font-style: normal; font-size: 10.5px; font-weight: 700; background: rgba(245, 180, 0, 0.18); color: #8a6a00; padding: 1px 7px; border-radius: 999px; margin-left: 4px; }
+.rental-rule-status.on { background: rgba(0, 155, 114, 0.14); color: var(--ump-green); }
+.rental-terms-box { border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 12px; margin: 10px 0; }
+.rental-terms-box summary { cursor: pointer; font-size: 13px; font-weight: 700; }
+.rental-accept { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 600; margin: 10px 0; }
+
+.booked-ranges { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.booked-ranges-title { width: 100%; font-size: 12px; font-weight: 700; color: var(--muted); }
+.booked-range { font-size: 12px; background: rgba(224, 58, 62, 0.08); color: var(--ump-red); border-radius: 999px; padding: 3px 10px; }

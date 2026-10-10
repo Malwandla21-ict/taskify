@@ -216,7 +216,7 @@ async function loadMyListings() {
       ...myEquipment.map(item => `
         <div class="market-card">
           <div class="market-content">
-            <div class="market-top">${sectionBadge(item.section)}<div class="badge ${item.is_available ? "green" : "gold"}">${item.is_available ? "Available" : "Booked"}</div></div>
+            <div class="market-top">${sectionBadge(item.section)}<div class="badge ${item.is_available ? "green" : "gold"}">${item.is_available ? "Taking bookings" : "Paused"}</div></div>
             <h3>${item.name}</h3>
             <div class="market-footer">
               <div class="market-price">R${item.daily_price}/day</div>
