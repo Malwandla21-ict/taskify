@@ -33,6 +33,19 @@ module.exports = {
      protection pot, instead of asking for a big deposit. */
   RENTAL_PROTECTION_FEE: { percent: 5, min: 5, max: 50 },
 
+  TASKS: {
+    /* After the worker marks a task done, the poster is reminded (once) to
+       review it after this many hours... */
+    reviewReminderHours: 48,
+    /* ...and after this many hours admins are asked to follow up (once).
+       Nothing is ever paid out automatically — releasing the payment always
+       needs the poster's confirmation or an admin's decision. */
+    reviewEscalationHours: 168
+  },
+
+  /* How often the server checks for reminders that are due (jobs/scheduler.js). */
+  JOBS: { intervalMinutes: 15 },
+
   RENTALS: {
     /* A booking request the owner hasn't confirmed or declined within this
        many hours expires: the (demo) payment is refunded and the item

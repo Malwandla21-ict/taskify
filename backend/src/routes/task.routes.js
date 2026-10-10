@@ -2,6 +2,7 @@ const express = require("express");
 const { body, param } = require("express-validator");
 const taskController = require("../controllers/task.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
+const { TASK_DISPUTE_CATEGORIES } = require("../services/task.service");
 const { categoriesFor, applyCategorySection } = require("../config/categories");
 
 const router = express.Router();
@@ -52,6 +53,20 @@ router.patch(
   authenticate,
   [ param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer.") ],
   taskController.confirmTaskCompletion
+);
+
+/* Poster-only, instead of confirming: report a problem with the work. The
+   task becomes 'Disputed' and the payment stays held until an admin decides. */
+router.post(
+  "/:id/dispute",
+  authenticate,
+  [
+    param("id").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer."),
+    body("reason").trim().notEmpty().withMessage("Please describe what went wrong.")
+      .isLength({ min: 10, max: 500 }).withMessage("Please describe what went wrong in 10 to 500 characters."),
+    body("category").optional().isIn(TASK_DISPUTE_CATEGORIES).withMessage("Please choose what kind of problem this is.")
+  ],
+  taskController.disputeTask
 );
 
 /* Worker-only: back out before starting work */

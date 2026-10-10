@@ -876,7 +876,10 @@ function renderReportsTable() {
   tbody.innerHTML = pageItems.length
     ? pageItems.map(r => {
         const detailUrl = contextDetailUrl(r);
-        const canRefund = r.context_type === "task" && r.status === "Pending";
+        /* A disputed task (the poster reported a problem instead of
+           confirming) gets the three dispute outcomes instead of a plain refund. */
+        const isDisputedTask = r.context_type === "task" && r.context_status === "Disputed";
+        const canRefund = r.context_type === "task" && r.status === "Pending" && !isDisputedTask;
         const itemType = reportItemType(r);
         const reasonShort = r.reason.length > 80 ? r.reason.slice(0, 80) + "…" : r.reason;
         return `
@@ -915,6 +918,16 @@ function renderReportsTable() {
                   <button type="button" class="table-icon-btn refund-report-task-btn" data-task-id="${r.context_id}" title="Refund task payment">
                     <i class="ti ti-receipt-refund" aria-hidden="true"></i>
                   </button>` : ""}` : ""}
+              ${isDisputedTask ? `
+                <button type="button" class="table-icon-btn success dispute-outcome-btn" data-task-id="${r.context_id}" data-outcome="release" title="Release payment to the worker">
+                  <i class="ti ti-cash" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="table-icon-btn dispute-outcome-btn" data-task-id="${r.context_id}" data-outcome="refund" title="Refund the poster (cancels the task)">
+                  <i class="ti ti-receipt-refund" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="table-icon-btn dispute-outcome-btn" data-task-id="${r.context_id}" data-outcome="rework" title="Send back to the worker to finish">
+                  <i class="ti ti-arrow-back-up" aria-hidden="true"></i>
+                </button>` : ""}
             </div>
           </td>
         </tr>`;
@@ -930,7 +943,28 @@ function renderReportsTable() {
   attachReportRowEvents();
 }
 
+const DISPUTE_OUTCOME_TEXT = {
+  release: { title: "Release the payment to the worker?", label: "Release payment", done: "Payment released to the worker." },
+  refund:  { title: "Refund the poster and cancel the task?", label: "Refund poster", done: "Poster refunded and task cancelled." },
+  rework:  { title: "Send the task back to the worker to finish?", label: "Send back", done: "Task sent back to the worker." }
+};
+
 function attachReportRowEvents() {
+  document.querySelectorAll(".dispute-outcome-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = DISPUTE_OUTCOME_TEXT[btn.dataset.outcome];
+      openActionModal({
+        title: text.title,
+        confirmLabel: text.label,
+        onConfirm: async (note) => {
+          await apiRequest(`/admin/tasks/${btn.dataset.taskId}/resolve-dispute`, "PATCH", { outcome: btn.dataset.outcome, note });
+          showToast(`${text.done} Both people have been told.`);
+          await Promise.all([loadReports(), loadStats(), loadPendingReportsPreview()]);
+        }
+      });
+    });
+  });
+
   document.querySelectorAll(".resolve-report-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
       if (!confirm("Mark this report as resolved?")) return;

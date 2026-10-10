@@ -18,6 +18,10 @@ async function startServer() {
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
     });
+
+    /* Review reminders etc. — see jobs/scheduler.js. Started here (not in
+       app.js) so the automated tests never run it in the background. */
+    require("./jobs/scheduler").startScheduler();
   } catch (error) {
     console.error("Database connection failed:", error.message);
   }

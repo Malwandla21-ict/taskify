@@ -50,9 +50,24 @@ function renderTaskDetails(task) {
                         <i class="ti ti-circle-check" aria-hidden="true"></i> Mark Complete
                       </button>`;
   } else if (task.status === "Awaiting Confirmation" && isOwn) {
-    primaryAction = `<button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${task.price}" style="background:var(--ump-green);">
+    /* Review step: confirm (releases the payment) or report a problem
+       (task becomes Disputed, payment stays held, an admin decides). */
+    primaryAction = `<p class="pay-note" style="margin-bottom:10px;">${escapeTaskText(task.accepted_by_name || "The worker")} marked this as done. Check the work, then confirm, or report a problem if it isn't done properly.</p>
+                      <button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${task.price}" style="background:var(--ump-green);">
                         <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion
+                      </button>
+                      <button class="secondary-button" id="reportTaskProblemButton" data-task-id="${task.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+                        <i class="ti ti-alert-triangle" aria-hidden="true"></i> Report a Problem
                       </button>`;
+  } else if (task.status === "Disputed" && (isOwn || isAcceptedByMe)) {
+    primaryAction = `<div class="pay-panel" style="border-color:var(--ump-red);">
+                        <h4><i class="ti ti-alert-triangle" aria-hidden="true" style="color:var(--ump-red);"></i> Problem reported</h4>
+                        <p class="pay-note">${isOwn ? "You" : escapeTaskText(task.created_by_name || "The poster")} said: "${escapeTaskText(task.dispute_reason || "")}"</p>
+                        <p class="pay-note" style="margin-bottom:${isOwn ? "10px" : "0"};">The payment stays held while a Taskify admin looks at it. They can release it to the worker, refund the poster, or send the task back to be finished.${isOwn ? " If it gets sorted out, you can still confirm." : " Message the poster to sort it out."}</p>
+                        ${isOwn ? `<button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${task.price}" style="background:var(--ump-green);">
+                          <i class="ti ti-circle-check" aria-hidden="true"></i> It's sorted: Confirm Completion
+                        </button>` : ""}
+                      </div>`;
   } else {
     primaryAction = statusBadge(task.status);
   }
@@ -185,7 +200,62 @@ function renderTaskDetails(task) {
   });
 }
 
+/* Text people typed (names, the problem reason) goes into the page as text,
+   never as HTML. */
+function escapeTaskText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+/* ── Report a problem (poster, instead of confirming) ── */
+const taskProblemModal   = document.getElementById("taskProblemModal");
+const taskProblemForm    = document.getElementById("taskProblemForm");
+const taskProblemMessage = document.getElementById("taskProblemMessage");
+
+function openTaskProblemModal() {
+  taskProblemForm?.reset();
+  if (taskProblemMessage) taskProblemMessage.textContent = "";
+  openModal(taskProblemModal);
+  document.getElementById("taskProblemReason")?.focus();
+}
+
+document.getElementById("cancelTaskProblem")?.addEventListener("click", () => closeModal(taskProblemModal));
+document.getElementById("overlay")?.addEventListener("click", () => closeModal(taskProblemModal));
+
+taskProblemForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const reason = document.getElementById("taskProblemReason").value.trim();
+  if (reason.length < 10) {
+    taskProblemMessage.textContent = "Please describe the problem in at least 10 characters.";
+    return;
+  }
+  const submitBtn = document.getElementById("submitTaskProblem");
+  const originalHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Reporting…`;
+  try {
+    await apiRequest(`/tasks/${taskId}/dispute`, "POST", {
+      reason, category: document.getElementById("taskProblemCategory").value
+    });
+    closeModal(taskProblemModal);
+    showToast("Problem reported. The payment stays held while an admin looks at it.");
+    await loadTaskDetails();
+  } catch (err) {
+    taskProblemMessage.textContent = err.message;
+    showToast(err.message, "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalHtml;
+  }
+});
+
 function attachTaskActionEvents() {
+  document.getElementById("reportTaskProblemButton")?.addEventListener("click", openTaskProblemModal);
+  /* Arrived from the dashboard's "Report a problem" button. */
+  if (window.location.hash === "#report-problem" && document.getElementById("reportTaskProblemButton")) {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    openTaskProblemModal();
+  }
+
   const accept   = document.getElementById("acceptTaskButton");
   const start    = document.getElementById("startTaskButton");
   const complete = document.getElementById("completeTaskButton");

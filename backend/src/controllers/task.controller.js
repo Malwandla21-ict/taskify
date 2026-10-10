@@ -34,6 +34,18 @@ async function updateTask(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function disputeTask(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const task = await taskService.disputeTask(Number(req.params.id), req.user.id, {
+      reason: req.body.reason, category: req.body.category
+    });
+    return res.status(200).json({ success: true, message: "Problem reported. An admin will look at it; the payment stays held.", data: task });
+  } catch (error) { next(error); }
+}
+
 async function getAllTasks(req, res, next) {
   try {
     const tasks = await taskService.getAllTasks();
@@ -124,6 +136,7 @@ async function deleteTask(req, res, next) {
 module.exports = {
   createTask,
   updateTask,
+  disputeTask,
   getAllTasks,
   getTaskById,
   acceptTask,

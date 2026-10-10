@@ -198,8 +198,8 @@ async function enrichReportsWithContext(rows) {
 
   const taskMap = new Map();
   if (taskIds.length) {
-    const [taskRows] = await pool.query(`SELECT id, title FROM tasks WHERE id IN (?)`, [taskIds]);
-    taskRows.forEach(t => taskMap.set(t.id, { title: t.title, linkId: t.id }));
+    const [taskRows] = await pool.query(`SELECT id, title, status FROM tasks WHERE id IN (?)`, [taskIds]);
+    taskRows.forEach(t => taskMap.set(t.id, { title: t.title, linkId: t.id, status: t.status }));
   }
 
   const equipmentMap = new Map();
@@ -261,7 +261,9 @@ async function enrichReportsWithContext(rows) {
       category: row.category || "other",
       category_label: CATEGORY_LABELS[row.category] || CATEGORY_LABELS.other,
       context_title: context ? context.title : null,
-      context_link_id: context ? context.linkId : null
+      context_link_id: context ? context.linkId : null,
+      /* Tasks only: lets the admin Reports table offer dispute outcomes. */
+      context_status: context && context.status ? context.status : null
     };
   });
 }
