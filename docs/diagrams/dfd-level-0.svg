@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1500 898" width="1500" height="898" font-family="Poppins, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0C1D4A"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #0C1D4A; }
+      .subtitle { font-size: 12.5px; fill: #4B5563; }
+      .flow { fill: none; stroke: #0C1D4A; stroke-width: 1.4; marker-end: url(#arrow); }
+      .flow2 { fill: none; stroke: #0C1D4A; stroke-width: 1.4; marker-end: url(#arrow); marker-start: url(#arrow); }
+      .flabel { font-size: 11px; fill: #111827; }
+      .proc { fill: #EEF4FF; stroke: #0C1D4A; stroke-width: 1.6; }
+      .proc-id { font-size: 12px; font-weight: 700; fill: #0072CE; }
+      .proc-name { font-size: 13.5px; font-weight: 700; fill: #0C1D4A; }
+      .proc-code { font-size: 9.5px; fill: #687280; font-style: italic; }
+      .ent { fill: #F3F4F6; stroke: #0C1D4A; stroke-width: 1.6; }
+      .ent-shadow { fill: #0C1D4A; opacity: 0.18; }
+      .ent-name { font-size: 13px; font-weight: 700; fill: #0C1D4A; }
+      .ent-sub { font-size: 10px; fill: #4B5563; }
+      .store-line { fill: none; stroke: #009B72; stroke-width: 1.6; }
+      .store-fill { fill: #E6F6F0; }
+      .store-id { font-size: 12px; font-weight: 700; fill: #007A5A; }
+      .store-name { font-size: 12px; font-weight: 600; fill: #0C1D4A; }
+      .legend { font-size: 11px; fill: #374151; }
+      .legend-b { font-size: 11px; font-weight: 700; fill: #0C1D4A; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="1500" height="898" fill="#FFFFFF"/>
+  <text class="title" x="40" y="44">Taskify — Data flow diagram, Level 0 (context diagram)</text>
+  <text class="subtitle" x="40" y="66">The whole system as one process, with every outside entity and the data that flows between them.</text>
+  
+  <rect class="proc" x="620" y="130" width="280" height="462" rx="14"/>
+  <line x1="620" y1="156" x2="900" y2="156" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="760" y="148" text-anchor="middle">0</text>
+  <text class="proc-name" x="760" y="366" text-anchor="middle">Taskify system</text>
+  <text class="proc-code" x="760" y="386" text-anchor="middle">web pages + Node/Express API + MySQL database</text>
+  
+  <rect class="ent-shadow" x="1185" y="137" width="280" height="152"/>
+  <rect class="ent" x="1180" y="132" width="280" height="152"/>
+  <text class="ent-name" x="1320" y="206" text-anchor="middle">Azure AI Content Safety</text>
+  <text class="ent-sub" x="1320" y="221" text-anchor="middle">text and image checks</text>
+  <path class="flow" d="M900,155 L1178,155"/>
+  <text class="flabel" x="1040" y="149" text-anchor="middle">images to check</text>
+  <path class="flow" d="M900,196 L1178,196"/>
+  <text class="flabel" x="1040" y="190" text-anchor="middle">listing text &amp; images to check</text>
+  <path class="flow" d="M1180,237 L902,237"/>
+  <text class="flabel" x="1040" y="231" text-anchor="middle">image check results</text>
+  <path class="flow" d="M1180,278 L902,278"/>
+  <text class="flabel" x="1040" y="272" text-anchor="middle">listing check results</text>
+  
+  <rect class="ent-shadow" x="1185" y="327" width="280" height="70"/>
+  <rect class="ent" x="1180" y="322" width="280" height="70"/>
+  <text class="ent-name" x="1320" y="355" text-anchor="middle">Cloudinary</text>
+  <text class="ent-sub" x="1320" y="370" text-anchor="middle">image storage</text>
+  <path class="flow" d="M900,345 L1178,345"/>
+  <text class="flabel" x="1040" y="339" text-anchor="middle">accepted images</text>
+  <path class="flow" d="M1180,386 L902,386"/>
+  <text class="flabel" x="1040" y="380" text-anchor="middle">image URLs</text>
+  
+  <rect class="ent-shadow" x="1185" y="435" width="280" height="85"/>
+  <rect class="ent" x="1180" y="430" width="280" height="85"/>
+  <text class="ent-name" x="1320" y="470.5" text-anchor="middle">Email service</text>
+  <text class="ent-sub" x="1320" y="485.5" text-anchor="middle">Brevo or SMTP</text>
+  <path class="flow" d="M900,468 L1178,468"/>
+  <text class="flabel" x="1040" y="447" text-anchor="middle">verification, sign-in &amp; password-reset</text>
+  <text class="flabel" x="1040" y="462" text-anchor="middle">   codes</text>
+  <path class="flow" d="M900,509 L1178,509"/>
+  <text class="flabel" x="1040" y="503" text-anchor="middle">notification emails</text>
+  
+  <rect class="ent-shadow" x="1185" y="558" width="280" height="50"/>
+  <rect class="ent" x="1180" y="553" width="280" height="50"/>
+  <text class="ent-name" x="1320" y="576" text-anchor="middle">Web push service</text>
+  <text class="ent-sub" x="1320" y="591" text-anchor="middle">browser push</text>
+  <path class="flow" d="M900,576 L1178,576"/>
+  <text class="flabel" x="1040" y="570" text-anchor="middle">push notifications</text>
+  
+  <rect class="ent-shadow" x="45" y="316" width="200" height="100"/>
+  <rect class="ent" x="40" y="311" width="200" height="100"/>
+  <text class="ent-name" x="140" y="359" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="374" text-anchor="middle">student, lecturer or staff</text>
+  <path class="flow" d="M240,343 L618,343"/>
+  <path class="flow" d="M620,379 L242,379"/>
+  <text class="flabel" x="256" y="223">• registration, sign-in, two-factor &amp; profile details</text>
+  <text class="flabel" x="256" y="237">• photos (listings, rental condition, profile)</text>
+  <text class="flabel" x="256" y="251">• listings &amp; edits (with image URLs)</text>
+  <text class="flabel" x="256" y="265">• applications, offers, bookings, demo payments,</text>
+  <text class="flabel" x="266" y="279">handover codes &amp; problem reports</text>
+  <text class="flabel" x="256" y="293">• messages</text>
+  <text class="flabel" x="256" y="307">• push subscription &amp; read status</text>
+  <text class="flabel" x="256" y="321">• reviews &amp; endorsements</text>
+  <text class="flabel" x="256" y="335">• reports (users, listings, messages)</text>
+  <text class="flabel" x="256" y="397">• session, profile &amp; account status</text>
+  <text class="flabel" x="256" y="411">• image URLs or rejection</text>
+  <text class="flabel" x="256" y="425">• listings, search results, booked dates &amp; terms</text>
+  <text class="flabel" x="256" y="439">• transaction status, terms, deadlines &amp; handover code</text>
+  <text class="flabel" x="266" y="453">(buyer only)</text>
+  <text class="flabel" x="256" y="467">• conversations</text>
+  <text class="flabel" x="256" y="481">• notifications &amp; reminders</text>
+  <text class="flabel" x="256" y="495">• ratings &amp; endorsements</text>
+  
+  <rect class="ent-shadow" x="665" y="727" width="200" height="70"/>
+  <rect class="ent" x="660" y="722" width="200" height="70"/>
+  <text class="ent-name" x="760" y="755" text-anchor="middle">Administrator</text>
+  <text class="ent-sub" x="760" y="770" text-anchor="middle">signed in with 2FA</text>
+  <path class="flow" d="M710,592 L710,720"/>
+  <path class="flow" d="M810,722 L810,594"/>
+  <text class="flabel" x="700" y="622" text-anchor="end">• admin alerts</text>
+  <text class="flabel" x="700" y="636" text-anchor="end">• reports, flagged content &amp; conversations</text>
+  <text class="flabel" x="700" y="650" text-anchor="end">• analytics, CSV reports &amp; audit log</text>
+  <text class="flabel" x="820" y="622">• moderation, account, dispute, damage &amp; refund</text>
+  <text class="flabel" x="830" y="636">decisions</text>
+  <text class="flabel" x="820" y="650">• report requests (date range, report type)</text>
+  <text class="legend-b" x="40" y="842">Notation (Gane &amp; Sarson):</text>
+  <text class="legend" x="230" y="842">shaded rectangle = external entity · rounded rectangle = process (0 = the whole system) · arrow = data flow.</text>
+  <text class="legend" x="40" y="860">Each label lists the data flows that cross the system boundary; the Level 1 diagram shows the same flows, by process. Payments are a demo — no payment provider is connected.</text>
+  <text class="legend" x="40" y="878">Generated by docs/diagrams/build-dfd.js from the same flow list as Level 1, so the two levels always balance.</text>
+</svg>

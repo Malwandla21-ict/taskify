@@ -1,0 +1,523 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 2413" width="1440" height="2413" font-family="Poppins, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0C1D4A"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #0C1D4A; }
+      .subtitle { font-size: 12.5px; fill: #4B5563; }
+      .flow { fill: none; stroke: #0C1D4A; stroke-width: 1.4; marker-end: url(#arrow); }
+      .flow2 { fill: none; stroke: #0C1D4A; stroke-width: 1.4; marker-end: url(#arrow); marker-start: url(#arrow); }
+      .flabel { font-size: 11px; fill: #111827; }
+      .proc { fill: #EEF4FF; stroke: #0C1D4A; stroke-width: 1.6; }
+      .proc-id { font-size: 12px; font-weight: 700; fill: #0072CE; }
+      .proc-name { font-size: 13.5px; font-weight: 700; fill: #0C1D4A; }
+      .proc-code { font-size: 9.5px; fill: #687280; font-style: italic; }
+      .ent { fill: #F3F4F6; stroke: #0C1D4A; stroke-width: 1.6; }
+      .ent-shadow { fill: #0C1D4A; opacity: 0.18; }
+      .ent-name { font-size: 13px; font-weight: 700; fill: #0C1D4A; }
+      .ent-sub { font-size: 10px; fill: #4B5563; }
+      .store-line { fill: none; stroke: #009B72; stroke-width: 1.6; }
+      .store-fill { fill: #E6F6F0; }
+      .store-id { font-size: 12px; font-weight: 700; fill: #007A5A; }
+      .store-name { font-size: 12px; font-weight: 600; fill: #0C1D4A; }
+      .legend { font-size: 11px; fill: #374151; }
+      .legend-b { font-size: 11px; font-weight: 700; fill: #0C1D4A; }
+    </style>
+  </defs>
+  <rect x="0" y="0" width="1440" height="2413" fill="#FFFFFF"/>
+  <text class="title" x="40" y="44">Taskify — Data flow diagram, Level 1</text>
+  <text class="subtitle" x="40" y="66">The Taskify system (process 0 on the context diagram) broken into its main processes. Each row is one process with everything it exchanges data with.</text>
+  <text class="subtitle" x="40" y="84">Outside entities are on the left (people) and right (services); data stores are on the right.</text>
+  
+  <rect class="proc" x="520" y="120" width="260" height="120" rx="14"/>
+  <line x1="520" y1="146" x2="780" y2="146" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="138" text-anchor="middle">1.0</text>
+  <text class="proc-name" x="650" y="185" text-anchor="middle">Manage accounts and security</text>
+  <text class="proc-code" x="650" y="205" text-anchor="middle">auth, user, twoFactor, securityLog</text>
+  <path class="flow" d="M240,177.5 L518,177.5"/>
+  <text class="flabel" x="380" y="156.5" text-anchor="middle">registration, sign-in, two-factor &amp;</text>
+  <text class="flabel" x="380" y="171.5" text-anchor="middle">profile details</text>
+  <path class="flow" d="M520,210.5 L242,210.5"/>
+  <text class="flabel" x="380" y="204.5" text-anchor="middle">session, profile &amp; account status</text>
+  
+  <rect class="ent-shadow" x="45" y="148.5" width="200" height="73"/>
+  <rect class="ent" x="40" y="143.5" width="200" height="73"/>
+  <text class="ent-name" x="140" y="178" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="193" text-anchor="middle">student, lecturer or staff</text>
+  <path class="flow2" d="M782,143.5 L1078,143.5"/>
+  <text class="flabel" x="930" y="137.5" text-anchor="middle">user &amp; security records</text>
+  
+  <rect class="store-fill" x="1080" y="124.5" width="300" height="34"/>
+  <path class="store-line" d="M1380,124.5 L1080,124.5 L1080,158.5 L1380,158.5 M1124,124.5 L1124,158.5"/>
+  <text class="store-id" x="1102" y="145.5" text-anchor="middle">D1</text>
+  <text class="store-name" x="1134" y="145.5">Users &amp; security</text>
+  <path class="flow" d="M780,186.5 L1078,186.5"/>
+  <text class="flabel" x="930" y="180.5" text-anchor="middle">notifications (lecturer to verify)</text>
+  
+  <rect class="store-fill" x="1080" y="167.5" width="300" height="34"/>
+  <path class="store-line" d="M1380,167.5 L1080,167.5 L1080,201.5 L1380,201.5 M1124,167.5 L1124,201.5"/>
+  <text class="store-id" x="1102" y="188.5" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="188.5">Notifications</text>
+  <path class="flow" d="M780,229.5 L1078,229.5"/>
+  <text class="flabel" x="930" y="223.5" text-anchor="middle">verification, sign-in &amp; password-reset codes</text>
+  
+  <rect class="ent-shadow" x="1085" y="215.5" width="300" height="44"/>
+  <rect class="ent" x="1080" y="210.5" width="300" height="44"/>
+  <text class="ent-name" x="1230" y="230.5" text-anchor="middle">Email service</text>
+  <text class="ent-sub" x="1230" y="245.5" text-anchor="middle">Brevo or SMTP</text>
+  <line x1="40" y1="270" x2="1400" y2="270" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="282" width="260" height="185" rx="14"/>
+  <line x1="520" y1="308" x2="780" y2="308" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="300" text-anchor="middle">2.0</text>
+  <text class="proc-name" x="650" y="379.5" text-anchor="middle">Check and store images</text>
+  <text class="proc-code" x="650" y="399.5" text-anchor="middle">upload controller, contentModeration</text>
+  <path class="flow" d="M240,372 L518,372"/>
+  <text class="flabel" x="380" y="351" text-anchor="middle">photos (listings, rental condition,</text>
+  <text class="flabel" x="380" y="366" text-anchor="middle">profile)</text>
+  <path class="flow" d="M520,405 L242,405"/>
+  <text class="flabel" x="380" y="399" text-anchor="middle">image URLs or rejection</text>
+  
+  <rect class="ent-shadow" x="45" y="343" width="200" height="73"/>
+  <rect class="ent" x="40" y="338" width="200" height="73"/>
+  <text class="ent-name" x="140" y="372.5" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="387.5" text-anchor="middle">student, lecturer or staff</text>
+  <line x1="226" y1="411" x2="240" y2="397" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M780,305 L1078,305"/>
+  <text class="flabel" x="930" y="299" text-anchor="middle">flagged uploads</text>
+  
+  <rect class="store-fill" x="1080" y="286" width="300" height="34"/>
+  <path class="store-line" d="M1380,286 L1080,286 L1080,320 L1380,320 M1124,286 L1124,320"/>
+  <text class="store-id" x="1102" y="307" text-anchor="middle">D6</text>
+  <text class="store-name" x="1134" y="307">Reports &amp; moderation</text>
+  <path class="flow" d="M780,348 L1078,348"/>
+  <text class="flabel" x="930" y="342" text-anchor="middle">images to check</text>
+  <path class="flow" d="M1080,381 L782,381"/>
+  <text class="flabel" x="930" y="375" text-anchor="middle">image check results</text>
+  
+  <rect class="ent-shadow" x="1085" y="334" width="300" height="58"/>
+  <rect class="ent" x="1080" y="329" width="300" height="58"/>
+  <text class="ent-name" x="1230" y="356" text-anchor="middle">Azure AI Content Safety</text>
+  <text class="ent-sub" x="1230" y="371" text-anchor="middle">text and image checks</text>
+  <path class="flow" d="M780,424 L1078,424"/>
+  <text class="flabel" x="930" y="418" text-anchor="middle">accepted images</text>
+  <path class="flow" d="M1080,457 L782,457"/>
+  <text class="flabel" x="930" y="451" text-anchor="middle">image URLs</text>
+  
+  <rect class="ent-shadow" x="1085" y="410" width="300" height="58"/>
+  <rect class="ent" x="1080" y="405" width="300" height="58"/>
+  <text class="ent-name" x="1230" y="432" text-anchor="middle">Cloudinary</text>
+  <text class="ent-sub" x="1230" y="447" text-anchor="middle">image storage</text>
+  <line x1="40" y1="497" x2="1400" y2="497" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="509" width="260" height="195" rx="14"/>
+  <line x1="520" y1="535" x2="780" y2="535" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="527" text-anchor="middle">3.0</text>
+  <text class="proc-name" x="650" y="611.5" text-anchor="middle">Manage listings</text>
+  <text class="proc-code" x="650" y="631.5" text-anchor="middle">task, sales, equipment, event, listingEdit</text>
+  <path class="flow" d="M240,589 L518,589"/>
+  <text class="flabel" x="380" y="583" text-anchor="middle">listings &amp; edits (with image URLs)</text>
+  <path class="flow" d="M520,637 L242,637"/>
+  <text class="flabel" x="380" y="616" text-anchor="middle">listings, search results, booked dates &amp;</text>
+  <text class="flabel" x="380" y="631" text-anchor="middle">terms</text>
+  
+  <rect class="ent-shadow" x="45" y="575" width="200" height="73"/>
+  <rect class="ent" x="40" y="570" width="200" height="73"/>
+  <text class="ent-name" x="140" y="604.5" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="619.5" text-anchor="middle">student, lecturer or staff</text>
+  <line x1="226" y1="643" x2="240" y2="629" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow2" d="M782,532 L1078,532"/>
+  <text class="flabel" x="930" y="526" text-anchor="middle">listing records</text>
+  
+  <rect class="store-fill" x="1080" y="513" width="300" height="34"/>
+  <path class="store-line" d="M1380,513 L1080,513 L1080,547 L1380,547 M1124,513 L1124,547"/>
+  <text class="store-id" x="1102" y="534" text-anchor="middle">D2</text>
+  <text class="store-name" x="1134" y="534">Listings, offers &amp; transactions</text>
+  <path class="flow" d="M780,575 L1078,575"/>
+  <text class="flabel" x="930" y="569" text-anchor="middle">notifications (held for review)</text>
+  
+  <rect class="store-fill" x="1080" y="556" width="300" height="34"/>
+  <path class="store-line" d="M1380,556 L1080,556 L1080,590 L1380,590 M1124,556 L1124,590"/>
+  <path class="store-line" d="M1087,556 L1087,590"/>
+  <text class="store-id" x="1105" y="577" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="577">Notifications</text>
+  <path class="flow" d="M780,618 L1078,618"/>
+  <text class="flabel" x="930" y="612" text-anchor="middle">blocked attempts</text>
+  
+  <rect class="store-fill" x="1080" y="599" width="300" height="34"/>
+  <path class="store-line" d="M1380,599 L1080,599 L1080,633 L1380,633 M1124,599 L1124,633"/>
+  <path class="store-line" d="M1087,599 L1087,633"/>
+  <text class="store-id" x="1105" y="620" text-anchor="middle">D6</text>
+  <text class="store-name" x="1134" y="620">Reports &amp; moderation</text>
+  <path class="flow" d="M780,661 L1078,661"/>
+  <text class="flabel" x="930" y="655" text-anchor="middle">listing text &amp; images to check</text>
+  <path class="flow" d="M1080,694 L782,694"/>
+  <text class="flabel" x="930" y="688" text-anchor="middle">listing check results</text>
+  
+  <rect class="ent-shadow" x="1085" y="647" width="300" height="58"/>
+  <rect class="ent" x="1080" y="642" width="300" height="58"/>
+  <text class="ent-name" x="1230" y="669" text-anchor="middle">Azure AI Content Safety</text>
+  <text class="ent-sub" x="1230" y="684" text-anchor="middle">text and image checks</text>
+  <line x1="1366" y1="700" x2="1380" y2="686" stroke="#0C1D4A" stroke-width="1.6"/>
+  <line x1="40" y1="734" x2="1400" y2="734" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="746" width="260" height="162" rx="14"/>
+  <line x1="520" y1="772" x2="780" y2="772" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="764" text-anchor="middle">4.0</text>
+  <text class="proc-name" x="650" y="832" text-anchor="middle">Process offers and transactions</text>
+  <text class="proc-code" x="650" y="852" text-anchor="middle">offer, task, sales, equipment, rentalExtension</text>
+  <path class="flow" d="M240,824.5 L518,824.5"/>
+  <text class="flabel" x="380" y="788.5" text-anchor="middle">applications, offers, bookings, demo</text>
+  <text class="flabel" x="380" y="803.5" text-anchor="middle">payments, handover codes &amp; problem</text>
+  <text class="flabel" x="380" y="818.5" text-anchor="middle">reports</text>
+  <path class="flow" d="M520,872.5 L242,872.5"/>
+  <text class="flabel" x="380" y="851.5" text-anchor="middle">transaction status, terms, deadlines &amp;</text>
+  <text class="flabel" x="380" y="866.5" text-anchor="middle">handover code (buyer only)</text>
+  
+  <rect class="ent-shadow" x="45" y="780.5" width="200" height="103"/>
+  <rect class="ent" x="40" y="775.5" width="200" height="103"/>
+  <text class="ent-name" x="140" y="825" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="840" text-anchor="middle">student, lecturer or staff</text>
+  <line x1="226" y1="878.5" x2="240" y2="864.5" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M1080,769 L782,769"/>
+  <text class="flabel" x="930" y="763" text-anchor="middle">trust levels &amp; contact details</text>
+  
+  <rect class="store-fill" x="1080" y="750" width="300" height="34"/>
+  <path class="store-line" d="M1380,750 L1080,750 L1080,784 L1380,784 M1124,750 L1124,784"/>
+  <path class="store-line" d="M1087,750 L1087,784"/>
+  <text class="store-id" x="1105" y="771" text-anchor="middle">D1</text>
+  <text class="store-name" x="1134" y="771">Users &amp; security</text>
+  <path class="flow2" d="M782,812 L1078,812"/>
+  <text class="flabel" x="930" y="806" text-anchor="middle">offer, order, booking &amp; payment records</text>
+  
+  <rect class="store-fill" x="1080" y="793" width="300" height="34"/>
+  <path class="store-line" d="M1380,793 L1080,793 L1080,827 L1380,827 M1124,793 L1124,827"/>
+  <path class="store-line" d="M1087,793 L1087,827"/>
+  <text class="store-id" x="1105" y="814" text-anchor="middle">D2</text>
+  <text class="store-name" x="1134" y="814">Listings, offers &amp; transactions</text>
+  <path class="flow" d="M780,855 L1078,855"/>
+  <text class="flabel" x="930" y="849" text-anchor="middle">notifications (transaction updates)</text>
+  
+  <rect class="store-fill" x="1080" y="836" width="300" height="34"/>
+  <path class="store-line" d="M1380,836 L1080,836 L1080,870 L1380,870 M1124,836 L1124,870"/>
+  <path class="store-line" d="M1087,836 L1087,870"/>
+  <text class="store-id" x="1105" y="857" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="857">Notifications</text>
+  <path class="flow" d="M780,898 L1078,898"/>
+  <text class="flabel" x="930" y="892" text-anchor="middle">problem reports</text>
+  
+  <rect class="store-fill" x="1080" y="879" width="300" height="34"/>
+  <path class="store-line" d="M1380,879 L1080,879 L1080,913 L1380,913 M1124,879 L1124,913"/>
+  <path class="store-line" d="M1087,879 L1087,913"/>
+  <text class="store-id" x="1105" y="900" text-anchor="middle">D6</text>
+  <text class="store-name" x="1134" y="900">Reports &amp; moderation</text>
+  <line x1="40" y1="938" x2="1400" y2="938" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="950" width="260" height="120" rx="14"/>
+  <line x1="520" y1="976" x2="780" y2="976" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="968" text-anchor="middle">5.0</text>
+  <text class="proc-name" x="650" y="1015" text-anchor="middle">Exchange messages</text>
+  <text class="proc-code" x="650" y="1035" text-anchor="middle">conversation</text>
+  <path class="flow" d="M240,1000 L518,1000"/>
+  <text class="flabel" x="380" y="994" text-anchor="middle">messages</text>
+  <path class="flow" d="M520,1033 L242,1033"/>
+  <text class="flabel" x="380" y="1027" text-anchor="middle">conversations</text>
+  
+  <rect class="ent-shadow" x="45" y="986" width="200" height="58"/>
+  <rect class="ent" x="40" y="981" width="200" height="58"/>
+  <text class="ent-name" x="140" y="1008" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="1023" text-anchor="middle">student, lecturer or staff</text>
+  <line x1="226" y1="1039" x2="240" y2="1025" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M1080,973.5 L782,973.5"/>
+  <text class="flabel" x="930" y="967.5" text-anchor="middle">transaction links (who may chat)</text>
+  
+  <rect class="store-fill" x="1080" y="954.5" width="300" height="34"/>
+  <path class="store-line" d="M1380,954.5 L1080,954.5 L1080,988.5 L1380,988.5 M1124,954.5 L1124,988.5"/>
+  <path class="store-line" d="M1087,954.5 L1087,988.5"/>
+  <text class="store-id" x="1105" y="975.5" text-anchor="middle">D2</text>
+  <text class="store-name" x="1134" y="975.5">Listings, offers &amp; transactions</text>
+  <path class="flow2" d="M782,1016.5 L1078,1016.5"/>
+  <text class="flabel" x="930" y="1010.5" text-anchor="middle">conversations &amp; messages</text>
+  
+  <rect class="store-fill" x="1080" y="997.5" width="300" height="34"/>
+  <path class="store-line" d="M1380,997.5 L1080,997.5 L1080,1031.5 L1380,1031.5 M1124,997.5 L1124,1031.5"/>
+  <text class="store-id" x="1102" y="1018.5" text-anchor="middle">D3</text>
+  <text class="store-name" x="1134" y="1018.5">Conversations &amp; messages</text>
+  <path class="flow" d="M780,1059.5 L1078,1059.5"/>
+  <text class="flabel" x="930" y="1053.5" text-anchor="middle">notifications (new message)</text>
+  
+  <rect class="store-fill" x="1080" y="1040.5" width="300" height="34"/>
+  <path class="store-line" d="M1380,1040.5 L1080,1040.5 L1080,1074.5 L1380,1074.5 M1124,1040.5 L1124,1074.5"/>
+  <path class="store-line" d="M1087,1040.5 L1087,1074.5"/>
+  <text class="store-id" x="1105" y="1061.5" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="1061.5">Notifications</text>
+  <line x1="40" y1="1100" x2="1400" y2="1100" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="1112" width="260" height="205" rx="14"/>
+  <line x1="520" y1="1138" x2="780" y2="1138" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="1130" text-anchor="middle">6.0</text>
+  <text class="proc-name" x="650" y="1219.5" text-anchor="middle">Deliver notifications and reminders</text>
+  <text class="proc-code" x="650" y="1239.5" text-anchor="middle">notification, push, mailer, jobs/scheduler</text>
+  <path class="flow" d="M240,1181 L518,1181"/>
+  <text class="flabel" x="380" y="1175" text-anchor="middle">push subscription &amp; read status</text>
+  <path class="flow" d="M520,1214 L242,1214"/>
+  <text class="flabel" x="380" y="1208" text-anchor="middle">notifications &amp; reminders</text>
+  
+  <rect class="ent-shadow" x="45" y="1167" width="200" height="58"/>
+  <rect class="ent" x="40" y="1162" width="200" height="58"/>
+  <text class="ent-name" x="140" y="1189" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="1204" text-anchor="middle">student, lecturer or staff</text>
+  <line x1="226" y1="1220" x2="240" y2="1206" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M520,1261 L242,1261"/>
+  <text class="flabel" x="380" y="1255" text-anchor="middle">admin alerts</text>
+  
+  <rect class="ent-shadow" x="45" y="1247" width="200" height="44"/>
+  <rect class="ent" x="40" y="1242" width="200" height="44"/>
+  <text class="ent-name" x="140" y="1262" text-anchor="middle">Administrator</text>
+  <text class="ent-sub" x="140" y="1277" text-anchor="middle">signed in with 2FA</text>
+  <path class="flow" d="M1080,1135 L782,1135"/>
+  <text class="flabel" x="930" y="1129" text-anchor="middle">email addresses</text>
+  
+  <rect class="store-fill" x="1080" y="1116" width="300" height="34"/>
+  <path class="store-line" d="M1380,1116 L1080,1116 L1080,1150 L1380,1150 M1124,1116 L1124,1150"/>
+  <path class="store-line" d="M1087,1116 L1087,1150"/>
+  <text class="store-id" x="1105" y="1137" text-anchor="middle">D1</text>
+  <text class="store-name" x="1134" y="1137">Users &amp; security</text>
+  <path class="flow2" d="M782,1178 L1078,1178"/>
+  <text class="flabel" x="930" y="1172" text-anchor="middle">due deadlines &amp; reminder flags</text>
+  
+  <rect class="store-fill" x="1080" y="1159" width="300" height="34"/>
+  <path class="store-line" d="M1380,1159 L1080,1159 L1080,1193 L1380,1193 M1124,1159 L1124,1193"/>
+  <path class="store-line" d="M1087,1159 L1087,1193"/>
+  <text class="store-id" x="1105" y="1180" text-anchor="middle">D2</text>
+  <text class="store-name" x="1134" y="1180">Listings, offers &amp; transactions</text>
+  <path class="flow2" d="M782,1221 L1078,1221"/>
+  <text class="flabel" x="930" y="1215" text-anchor="middle">notifications &amp; push subscriptions</text>
+  
+  <rect class="store-fill" x="1080" y="1202" width="300" height="34"/>
+  <path class="store-line" d="M1380,1202 L1080,1202 L1080,1236 L1380,1236 M1124,1202 L1124,1236"/>
+  <path class="store-line" d="M1087,1202 L1087,1236"/>
+  <text class="store-id" x="1105" y="1223" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="1223">Notifications</text>
+  <path class="flow" d="M780,1264 L1078,1264"/>
+  <text class="flabel" x="930" y="1258" text-anchor="middle">notification emails</text>
+  
+  <rect class="ent-shadow" x="1085" y="1250" width="300" height="44"/>
+  <rect class="ent" x="1080" y="1245" width="300" height="44"/>
+  <text class="ent-name" x="1230" y="1265" text-anchor="middle">Email service</text>
+  <text class="ent-sub" x="1230" y="1280" text-anchor="middle">Brevo or SMTP</text>
+  <line x1="1366" y1="1289" x2="1380" y2="1275" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M780,1307 L1078,1307"/>
+  <text class="flabel" x="930" y="1301" text-anchor="middle">push notifications</text>
+  
+  <rect class="ent-shadow" x="1085" y="1293" width="300" height="44"/>
+  <rect class="ent" x="1080" y="1288" width="300" height="44"/>
+  <text class="ent-name" x="1230" y="1308" text-anchor="middle">Web push service</text>
+  <text class="ent-sub" x="1230" y="1323" text-anchor="middle">browser push</text>
+  <line x1="40" y1="1347" x2="1400" y2="1347" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="1359" width="260" height="162" rx="14"/>
+  <line x1="520" y1="1385" x2="780" y2="1385" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="1377" text-anchor="middle">7.0</text>
+  <text class="proc-name" x="650" y="1445" text-anchor="middle">Manage reviews and endorsements</text>
+  <text class="proc-code" x="650" y="1465" text-anchor="middle">review, lecturer</text>
+  <path class="flow" d="M240,1430 L518,1430"/>
+  <text class="flabel" x="380" y="1424" text-anchor="middle">reviews &amp; endorsements</text>
+  <path class="flow" d="M520,1463 L242,1463"/>
+  <text class="flabel" x="380" y="1457" text-anchor="middle">ratings &amp; endorsements</text>
+  
+  <rect class="ent-shadow" x="45" y="1416" width="200" height="58"/>
+  <rect class="ent" x="40" y="1411" width="200" height="58"/>
+  <text class="ent-name" x="140" y="1438" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="1453" text-anchor="middle">student, lecturer or staff</text>
+  <line x1="226" y1="1469" x2="240" y2="1455" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M780,1382 L1078,1382"/>
+  <text class="flabel" x="930" y="1376" text-anchor="middle">rating averages</text>
+  
+  <rect class="store-fill" x="1080" y="1363" width="300" height="34"/>
+  <path class="store-line" d="M1380,1363 L1080,1363 L1080,1397 L1380,1397 M1124,1363 L1124,1397"/>
+  <path class="store-line" d="M1087,1363 L1087,1397"/>
+  <text class="store-id" x="1105" y="1384" text-anchor="middle">D1</text>
+  <text class="store-name" x="1134" y="1384">Users &amp; security</text>
+  <path class="flow" d="M1080,1425 L782,1425"/>
+  <text class="flabel" x="930" y="1419" text-anchor="middle">completed tasks &amp; returned rentals</text>
+  
+  <rect class="store-fill" x="1080" y="1406" width="300" height="34"/>
+  <path class="store-line" d="M1380,1406 L1080,1406 L1080,1440 L1380,1440 M1124,1406 L1124,1440"/>
+  <path class="store-line" d="M1087,1406 L1087,1440"/>
+  <text class="store-id" x="1105" y="1427" text-anchor="middle">D2</text>
+  <text class="store-name" x="1134" y="1427">Listings, offers &amp; transactions</text>
+  <path class="flow" d="M780,1468 L1078,1468"/>
+  <text class="flabel" x="930" y="1462" text-anchor="middle">notifications (new review)</text>
+  
+  <rect class="store-fill" x="1080" y="1449" width="300" height="34"/>
+  <path class="store-line" d="M1380,1449 L1080,1449 L1080,1483 L1380,1483 M1124,1449 L1124,1483"/>
+  <path class="store-line" d="M1087,1449 L1087,1483"/>
+  <text class="store-id" x="1105" y="1470" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="1470">Notifications</text>
+  <path class="flow2" d="M782,1511 L1078,1511"/>
+  <text class="flabel" x="930" y="1505" text-anchor="middle">review &amp; endorsement records</text>
+  
+  <rect class="store-fill" x="1080" y="1492" width="300" height="34"/>
+  <path class="store-line" d="M1380,1492 L1080,1492 L1080,1526 L1380,1526 M1124,1492 L1124,1526"/>
+  <text class="store-id" x="1102" y="1513" text-anchor="middle">D5</text>
+  <text class="store-name" x="1134" y="1513">Reviews &amp; endorsements</text>
+  <line x1="40" y1="1551" x2="1400" y2="1551" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="1563" width="260" height="263" rx="14"/>
+  <line x1="520" y1="1589" x2="780" y2="1589" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="1581" text-anchor="middle">8.0</text>
+  <text class="proc-name" x="650" y="1699.5" text-anchor="middle">Moderate and resolve</text>
+  <text class="proc-code" x="650" y="1719.5" text-anchor="middle">report, moderation, admin, messageReport</text>
+  <path class="flow" d="M240,1653.5 L518,1653.5"/>
+  <text class="flabel" x="380" y="1647.5" text-anchor="middle">reports (users, listings, messages)</text>
+  
+  <rect class="ent-shadow" x="45" y="1639.5" width="200" height="44"/>
+  <rect class="ent" x="40" y="1634.5" width="200" height="44"/>
+  <text class="ent-name" x="140" y="1654.5" text-anchor="middle">User</text>
+  <text class="ent-sub" x="140" y="1669.5" text-anchor="middle">student, lecturer or staff</text>
+  <line x1="226" y1="1678.5" x2="240" y2="1664.5" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M240,1715.5 L518,1715.5"/>
+  <text class="flabel" x="380" y="1694.5" text-anchor="middle">moderation, account, dispute, damage &amp;</text>
+  <text class="flabel" x="380" y="1709.5" text-anchor="middle">refund decisions</text>
+  <path class="flow" d="M520,1748.5 L242,1748.5"/>
+  <text class="flabel" x="380" y="1742.5" text-anchor="middle">reports, flagged content &amp; conversations</text>
+  
+  <rect class="ent-shadow" x="45" y="1686.5" width="200" height="73"/>
+  <rect class="ent" x="40" y="1681.5" width="200" height="73"/>
+  <text class="ent-name" x="140" y="1716" text-anchor="middle">Administrator</text>
+  <text class="ent-sub" x="140" y="1731" text-anchor="middle">signed in with 2FA</text>
+  <line x1="226" y1="1754.5" x2="240" y2="1740.5" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow2" d="M782,1586 L1078,1586"/>
+  <text class="flabel" x="930" y="1580" text-anchor="middle">account status &amp; admin allow-list</text>
+  
+  <rect class="store-fill" x="1080" y="1567" width="300" height="34"/>
+  <path class="store-line" d="M1380,1567 L1080,1567 L1080,1601 L1380,1601 M1124,1567 L1124,1601"/>
+  <path class="store-line" d="M1087,1567 L1087,1601"/>
+  <text class="store-id" x="1105" y="1588" text-anchor="middle">D1</text>
+  <text class="store-name" x="1134" y="1588">Users &amp; security</text>
+  <path class="flow2" d="M782,1644 L1078,1644"/>
+  <text class="flabel" x="930" y="1623" text-anchor="middle">listing visibility, dispute outcomes &amp;</text>
+  <text class="flabel" x="930" y="1638" text-anchor="middle">refunds</text>
+  
+  <rect class="store-fill" x="1080" y="1610" width="300" height="40"/>
+  <path class="store-line" d="M1380,1610 L1080,1610 L1080,1650 L1380,1650 M1124,1610 L1124,1650"/>
+  <path class="store-line" d="M1087,1610 L1087,1650"/>
+  <text class="store-id" x="1105" y="1634" text-anchor="middle">D2</text>
+  <text class="store-name" x="1134" y="1634">Listings, offers &amp; transactions</text>
+  <path class="flow2" d="M782,1687 L1078,1687"/>
+  <text class="flabel" x="930" y="1681" text-anchor="middle">messages &amp; message flags</text>
+  
+  <rect class="store-fill" x="1080" y="1668" width="300" height="34"/>
+  <path class="store-line" d="M1380,1668 L1080,1668 L1080,1702 L1380,1702 M1124,1668 L1124,1702"/>
+  <path class="store-line" d="M1087,1668 L1087,1702"/>
+  <text class="store-id" x="1105" y="1689" text-anchor="middle">D3</text>
+  <text class="store-name" x="1134" y="1689">Conversations &amp; messages</text>
+  <path class="flow" d="M780,1730 L1078,1730"/>
+  <text class="flabel" x="930" y="1724" text-anchor="middle">notifications (decisions)</text>
+  
+  <rect class="store-fill" x="1080" y="1711" width="300" height="34"/>
+  <path class="store-line" d="M1380,1711 L1080,1711 L1080,1745 L1380,1745 M1124,1711 L1124,1745"/>
+  <path class="store-line" d="M1087,1711 L1087,1745"/>
+  <text class="store-id" x="1105" y="1732" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="1732">Notifications</text>
+  <path class="flow2" d="M782,1773 L1078,1773"/>
+  <text class="flabel" x="930" y="1767" text-anchor="middle">report &amp; moderation records</text>
+  
+  <rect class="store-fill" x="1080" y="1754" width="300" height="34"/>
+  <path class="store-line" d="M1380,1754 L1080,1754 L1080,1788 L1380,1788 M1124,1754 L1124,1788"/>
+  <path class="store-line" d="M1087,1754 L1087,1788"/>
+  <text class="store-id" x="1105" y="1775" text-anchor="middle">D6</text>
+  <text class="store-name" x="1134" y="1775">Reports &amp; moderation</text>
+  <path class="flow" d="M780,1816 L1078,1816"/>
+  <text class="flabel" x="930" y="1810" text-anchor="middle">audit entries</text>
+  
+  <rect class="store-fill" x="1080" y="1797" width="300" height="34"/>
+  <path class="store-line" d="M1380,1797 L1080,1797 L1080,1831 L1380,1831 M1124,1797 L1124,1831"/>
+  <text class="store-id" x="1102" y="1818" text-anchor="middle">D7</text>
+  <text class="store-name" x="1134" y="1818">Admin audit log</text>
+  <line x1="40" y1="1856" x2="1400" y2="1856" stroke="#EEF0F3" stroke-width="1"/>
+  
+  <rect class="proc" x="520" y="1868" width="260" height="205" rx="14"/>
+  <line x1="520" y1="1894" x2="780" y2="1894" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="650" y="1886" text-anchor="middle">9.0</text>
+  <text class="proc-name" x="650" y="1975.5" text-anchor="middle">Produce analytics and reports</text>
+  <text class="proc-code" x="650" y="1995.5" text-anchor="middle">analytics, reportExport, auditlog</text>
+  <path class="flow" d="M240,1960.5 L518,1960.5"/>
+  <text class="flabel" x="380" y="1954.5" text-anchor="middle">report requests (date range, report type)</text>
+  <path class="flow" d="M520,1993.5 L242,1993.5"/>
+  <text class="flabel" x="380" y="1987.5" text-anchor="middle">analytics, CSV reports &amp; audit log</text>
+  
+  <rect class="ent-shadow" x="45" y="1946.5" width="200" height="58"/>
+  <rect class="ent" x="40" y="1941.5" width="200" height="58"/>
+  <text class="ent-name" x="140" y="1968.5" text-anchor="middle">Administrator</text>
+  <text class="ent-sub" x="140" y="1983.5" text-anchor="middle">signed in with 2FA</text>
+  <line x1="226" y1="1999.5" x2="240" y2="1985.5" stroke="#0C1D4A" stroke-width="1.6"/>
+  <path class="flow" d="M1080,1891 L782,1891"/>
+  <text class="flabel" x="930" y="1885" text-anchor="middle">user &amp; sign-in records</text>
+  
+  <rect class="store-fill" x="1080" y="1872" width="300" height="34"/>
+  <path class="store-line" d="M1380,1872 L1080,1872 L1080,1906 L1380,1906 M1124,1872 L1124,1906"/>
+  <path class="store-line" d="M1087,1872 L1087,1906"/>
+  <text class="store-id" x="1105" y="1893" text-anchor="middle">D1</text>
+  <text class="store-name" x="1134" y="1893">Users &amp; security</text>
+  <path class="flow" d="M1080,1934 L782,1934"/>
+  <text class="flabel" x="930" y="1928" text-anchor="middle">listing &amp; transaction records</text>
+  
+  <rect class="store-fill" x="1080" y="1915" width="300" height="34"/>
+  <path class="store-line" d="M1380,1915 L1080,1915 L1080,1949 L1380,1949 M1124,1915 L1124,1949"/>
+  <path class="store-line" d="M1087,1915 L1087,1949"/>
+  <text class="store-id" x="1105" y="1936" text-anchor="middle">D2</text>
+  <text class="store-name" x="1134" y="1936">Listings, offers &amp; transactions</text>
+  <path class="flow" d="M1080,1977 L782,1977"/>
+  <text class="flabel" x="930" y="1971" text-anchor="middle">notification records</text>
+  
+  <rect class="store-fill" x="1080" y="1958" width="300" height="34"/>
+  <path class="store-line" d="M1380,1958 L1080,1958 L1080,1992 L1380,1992 M1124,1958 L1124,1992"/>
+  <path class="store-line" d="M1087,1958 L1087,1992"/>
+  <text class="store-id" x="1105" y="1979" text-anchor="middle">D4</text>
+  <text class="store-name" x="1134" y="1979">Notifications</text>
+  <path class="flow" d="M1080,2020 L782,2020"/>
+  <text class="flabel" x="930" y="2014" text-anchor="middle">report &amp; moderation records</text>
+  
+  <rect class="store-fill" x="1080" y="2001" width="300" height="34"/>
+  <path class="store-line" d="M1380,2001 L1080,2001 L1080,2035 L1380,2035 M1124,2001 L1124,2035"/>
+  <path class="store-line" d="M1087,2001 L1087,2035"/>
+  <text class="store-id" x="1105" y="2022" text-anchor="middle">D6</text>
+  <text class="store-name" x="1134" y="2022">Reports &amp; moderation</text>
+  <path class="flow2" d="M782,2063 L1078,2063"/>
+  <text class="flabel" x="930" y="2057" text-anchor="middle">audit log &amp; export entries</text>
+  
+  <rect class="store-fill" x="1080" y="2044" width="300" height="34"/>
+  <path class="store-line" d="M1380,2044 L1080,2044 L1080,2078 L1380,2078 M1124,2044 L1124,2078"/>
+  <path class="store-line" d="M1087,2044 L1087,2078"/>
+  <text class="store-id" x="1105" y="2065" text-anchor="middle">D7</text>
+  <text class="store-name" x="1134" y="2065">Admin audit log</text>
+  <line x1="40" y1="2103" x2="1400" y2="2103" stroke="#EEF0F3" stroke-width="1"/>
+  <text class="legend-b" x="40" y="2129">Notation (Gane &amp; Sarson)</text>
+  
+  <rect class="ent-shadow" x="45" y="2152" width="120" height="40"/>
+  <rect class="ent" x="40" y="2147" width="120" height="40"/>
+  <text class="ent-name" x="100" y="2165" text-anchor="middle">External entity</text>
+  
+  <rect class="proc" x="200" y="2141" width="150" height="56" rx="14"/>
+  <line x1="200" y1="2167" x2="350" y2="2167" stroke="#0C1D4A" stroke-width="1.2"/>
+  <text class="proc-id" x="275" y="2159" text-anchor="middle">n.0</text>
+  <text class="proc-name" x="275" y="2180" text-anchor="middle">Process</text>
+  <rect class="store-fill" x="390" y="2151" width="160" height="32"/><path class="store-line" d="M550,2151 L390,2151 L390,2183 L550,2183 M434,2151 L434,2183"/><text class="store-id" x="412" y="2171" text-anchor="middle">Dn</text><text class="store-name" x="444" y="2171">Data store</text>
+  <path class="flow legend-flow" d="M590,2159 L660,2159"/><text class="legend" x="668" y="2163">data flow</text>
+  <path class="flow2 legend-flow" d="M590,2179 L660,2179"/><text class="legend" x="668" y="2183">read and write (two flows drawn as one line)</text>
+  <text class="legend" x="960" y="2163">A store with an extra stripe, or an entity with a</text><text class="legend" x="960" y="2177">corner mark, is a repeat of one drawn above.</text>
+  <text class="legend-b" x="40" y="2217">Data stores (MySQL tables)</text>
+  <text class="legend" x="40" y="2236">D1 Users &amp; security: users, trusted_devices, security_events, admin_allowlist</text>
+  <text class="legend" x="40" y="2251">D2 Listings, offers &amp; transactions: tasks, sales_items, equipment, events, event_rsvps, offers, offer_history, payments, sale_orders, equipment_bookings, booking_extensions</text>
+  <text class="legend" x="40" y="2266">D3 Conversations &amp; messages: conversations, messages</text>
+  <text class="legend" x="40" y="2281">D4 Notifications: notifications, push_subscriptions</text>
+  <text class="legend" x="40" y="2296">D5 Reviews &amp; endorsements: reviews, lecturer_endorsements</text>
+  <text class="legend" x="40" y="2311">D6 Reports &amp; moderation: reports, blocked_content_attempts, flagged_uploads</text>
+  <text class="legend" x="40" y="2326">D7 Admin audit log: admin_audit_logs</text>
+  <text class="legend" x="40" y="2348">Payments are a demo: "payment" flows record statuses (held, released, refunded) — no money moves and no payment provider is connected.</text>
+  <text class="legend" x="40" y="2363">Process 4 also expires lapsed booking requests and approvals; it runs whenever rentals are viewed and from the same 15-minute timed job that triggers process 6's reminders.</text>
+  <text class="legend" x="40" y="2378">Process names list the backend services that implement them (backend/src/services). Generated by docs/diagrams/build-dfd.js from the same flow list as the Level 0 diagram.</text>
+</svg>

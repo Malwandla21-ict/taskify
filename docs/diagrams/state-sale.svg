@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1540 800" width="1540" height="800" font-family="Poppins, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0C1D4A"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #0C1D4A; }
+      .subtitle { font-size: 12.5px; fill: #4B5563; }
+      .panel { font-size: 15px; font-weight: 700; fill: #0C1D4A; }
+      .panel-sub { font-size: 11px; fill: #4B5563; }
+      .state { fill: #EEF4FF; stroke: #0C1D4A; stroke-width: 1.6; }
+      .state-done { fill: #E6F6F0; stroke: #009B72; stroke-width: 1.8; }
+      .state-bad { fill: #FDECEC; stroke: #E03A3E; stroke-width: 1.8; }
+      .name { font-size: 14.5px; font-weight: 700; fill: #0C1D4A; text-anchor: middle; }
+      .db { font-size: 10.5px; fill: #4B5563; text-anchor: middle; }
+      .edge { fill: none; stroke: #0C1D4A; stroke-width: 1.5; marker-end: url(#arrow); }
+      .label { font-size: 11px; fill: #111827; }
+      .guard { font-size: 11px; fill: #0072CE; }
+      .effect { font-size: 11px; fill: #009B72; }
+      .legend { font-size: 11px; fill: #374151; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1540" height="800" fill="#FFFFFF"/>
+  <text class="title" x="40" y="44">Taskify — Sales state transition diagram</text>
+  <text class="subtitle" x="40" y="66">UML state machines. A. one Taskify Protection order (sale_orders.status, demo payment). B. the item listing it changes (sales_items.status).</text>
+
+  <text class="panel" x="40" y="104">A. Sale order</text>
+  <text class="panel-sub" x="40" y="121">Items priced from R300, or agreed through an in-app offer. The 4-digit handover code is shown to the buyer only.</text>
+  <line x1="1062" y1="90" x2="1062" y2="690" stroke="#D1D5DB" stroke-width="1.2" stroke-dasharray="6,5"/>
+  <text class="panel" x="1090" y="104">B. Sale item</text>
+  <text class="panel-sub" x="1090" y="121">The listing itself.</text>
+
+  <!-- A. order states -->
+  <rect class="state" x="260" y="190" width="230" height="64" rx="14"/>
+  <text class="name" x="375" y="218">Held</text>
+  <text class="db" x="375" y="236">money held · code with buyer</text>
+
+  <rect class="state-done" x="760" y="190" width="230" height="64" rx="14"/>
+  <text class="name" x="875" y="218">Released</text>
+  <text class="db" x="875" y="236">seller paid (demo)</text>
+
+  <rect class="state-bad" x="260" y="470" width="230" height="64" rx="14"/>
+  <text class="name" x="375" y="498">Disputed</text>
+  <text class="db" x="375" y="516">problem reported · money held</text>
+
+  <rect class="state-bad" x="760" y="470" width="230" height="64" rx="14"/>
+  <text class="name" x="875" y="498">Refunded</text>
+  <text class="db" x="875" y="516">buyer refunded (demo)</text>
+
+  <circle cx="375" cy="140" r="10" fill="#0C1D4A"/>
+  <circle cx="875" cy="150" r="12" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="2"/>
+  <circle cx="875" cy="150" r="7" fill="#0C1D4A"/>
+  <circle cx="875" cy="572" r="12" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="2"/>
+  <circle cx="875" cy="572" r="7" fill="#0C1D4A"/>
+
+  <!-- create -->
+  <path class="edge" d="M375,150 L375,188"/>
+  <text class="label" x="386" y="166">buyer pays (demo), or buyer and seller agree on an offer</text>
+  <text class="effect" x="386" y="180">/ item Reserved; code shown to the buyer only</text>
+
+  <!-- Held self-loop: wrong code -->
+  <path class="edge" d="M260,206 L222,206 L222,238 L258,238"/>
+  <text class="label" x="214" y="204" text-anchor="end">seller enters a wrong code</text>
+  <text class="guard" x="214" y="218" text-anchor="end">[fewer than 5 tries]</text>
+  <text class="effect" x="214" y="232" text-anchor="end">/ tries + 1 (5 tries = locked)</text>
+
+  <!-- Disputed self-loop: wrong code -->
+  <path class="edge" d="M260,486 L222,486 L222,518 L258,518"/>
+  <text class="label" x="214" y="484" text-anchor="end">seller enters a wrong code</text>
+  <text class="guard" x="214" y="498" text-anchor="end">[fewer than 5 tries]</text>
+  <text class="effect" x="214" y="512" text-anchor="end">/ tries + 1 (5 tries = locked)</text>
+
+  <!-- Held -> Released -->
+  <path class="edge" d="M490,212 L758,212"/>
+  <text class="label" x="624" y="204" text-anchor="middle">seller enters the buyer's code <tspan fill="#0072CE">[not locked]</tspan></text>
+  <text class="effect" x="624" y="232" text-anchor="middle">/ item Sold; payment released to seller</text>
+
+  <!-- Held -> Refunded -->
+  <path class="edge" d="M470,254 L780,468"/>
+  <text class="label" x="650" y="334">buyer or seller cancels</text>
+  <text class="effect" x="650" y="348">/ buyer refunded; item Available</text>
+
+  <!-- Held -> Disputed -->
+  <path class="edge" d="M345,254 L345,468"/>
+  <text class="label" x="335" y="348" text-anchor="end">buyer or seller</text>
+  <text class="label" x="335" y="362" text-anchor="end">reports a problem</text>
+  <text class="effect" x="335" y="376" text-anchor="end">/ money stays held</text>
+
+  <!-- Disputed -> Held -->
+  <path class="edge" d="M405,470 L405,256"/>
+  <text class="label" x="415" y="410">admin: try the</text>
+  <text class="label" x="415" y="424">handover again</text>
+  <text class="effect" x="415" y="438">/ new code; tries reset</text>
+
+  <!-- Disputed -> Refunded -->
+  <path class="edge" d="M490,502 L758,502"/>
+  <text class="label" x="624" y="494" text-anchor="middle">seller refunds the buyer, or admin refunds</text>
+  <text class="effect" x="624" y="520" text-anchor="middle">/ item Available</text>
+
+  <!-- Disputed -> Released -->
+  <path class="edge" d="M375,534 L375,620 L1030,620 L1030,222 L992,222"/>
+  <text class="label" x="700" y="612" text-anchor="middle">seller enters the buyer's code <tspan fill="#0072CE">[not locked]</tspan>, or admin pays the seller</text>
+  <text class="effect" x="700" y="636" text-anchor="middle">/ item Sold; payment released to seller</text>
+
+  <!-- finals -->
+  <path class="edge" d="M875,190 L875,164"/>
+  <path class="edge" d="M875,534 L875,558"/>
+
+  <!-- B. item states -->
+  <rect class="state" x="1200" y="190" width="200" height="64" rx="14"/>
+  <text class="name" x="1300" y="218">Available</text>
+  <text class="db" x="1300" y="236">on sale · can be edited</text>
+
+  <rect class="state" x="1200" y="360" width="200" height="64" rx="14"/>
+  <text class="name" x="1300" y="388">Reserved</text>
+  <text class="db" x="1300" y="406">a buyer's money is held</text>
+
+  <rect class="state-done" x="1200" y="530" width="200" height="64" rx="14"/>
+  <text class="name" x="1300" y="558">Sold</text>
+  <text class="db" x="1300" y="576">sale finished</text>
+
+  <circle cx="1300" cy="140" r="10" fill="#0C1D4A"/>
+  <circle cx="1470" cy="392" r="12" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="2"/>
+  <circle cx="1470" cy="392" r="7" fill="#0C1D4A"/>
+
+  <path class="edge" d="M1300,150 L1300,188"/>
+  <text class="label" x="1310" y="174">seller lists it</text>
+
+  <!-- Available -> Reserved -->
+  <path class="edge" d="M1330,254 L1330,358"/>
+  <text class="label" x="1340" y="300">order Held</text>
+  <text class="guard" x="1340" y="314">[R300+ or offer]</text>
+
+  <!-- Reserved -> Available -->
+  <path class="edge" d="M1270,360 L1270,256"/>
+  <text class="label" x="1262" y="312" text-anchor="end">order Refunded</text>
+
+  <!-- Reserved -> Sold -->
+  <path class="edge" d="M1300,424 L1300,528"/>
+  <text class="label" x="1310" y="480">order Released</text>
+
+  <!-- Available -> Sold (cash) -->
+  <path class="edge" d="M1200,222 L1150,222 L1150,562 L1198,562"/>
+  <text class="label" x="1158" y="470">seller marks</text>
+  <text class="label" x="1158" y="484">it sold</text>
+  <text class="label" x="1158" y="498">(paid in</text>
+  <text class="label" x="1158" y="512">person)</text>
+
+  <!-- deletes -->
+  <path class="edge" d="M1400,222 L1470,222 L1470,378"/>
+  <path class="edge" d="M1400,562 L1470,562 L1470,406"/>
+  <text class="label" x="1478" y="300">seller</text>
+  <text class="label" x="1478" y="314">deletes</text>
+  <text class="label" x="1478" y="480">seller</text>
+  <text class="label" x="1478" y="494">deletes</text>
+
+  <!-- Legend -->
+  <line x1="40" y1="690" x2="1500" y2="690" stroke="#E5E7EB" stroke-width="1"/>
+  <circle cx="52" cy="716" r="7" fill="#0C1D4A"/>
+  <text class="legend" x="66" y="720">initial state</text>
+  <circle cx="172" cy="716" r="9" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="2"/>
+  <circle cx="172" cy="716" r="5" fill="#0C1D4A"/>
+  <text class="legend" x="188" y="720">final state</text>
+  <path d="M290,716 L340,716" class="edge"/>
+  <text class="legend" x="348" y="720"><tspan fill="#111827">event</tspan> <tspan fill="#0072CE">[guard]</tspan> <tspan fill="#009B72">/ effect</tspan></text>
+  <text class="legend" x="40" y="752">Items under R300 with no agreed offer are paid in cash when buyer and seller meet: no sale order is created and the seller marks the item sold. A Reserved item can't be edited, deleted or marked sold.</text>
+  <text class="legend" x="40" y="770">While a problem is open (Disputed) the buyer can't cancel for an instant refund; the seller can still refund them. Every transition is checked on the server and happens once even if clicked twice.</text>
+</svg>
