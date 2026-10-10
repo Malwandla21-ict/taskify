@@ -309,7 +309,18 @@ async function updateTaskStatus(taskId, userId, newStatus) {
     const error = new Error("Only tasks in progress can be marked as done."); error.statusCode = 400; throw error;
   }
 
-  await pool.execute(`UPDATE tasks SET status = ? WHERE id = ?`, [newStatus, taskId]);
+  /* Only moves the task on if it's still at the step checked above, so a
+     double click (or two tabs) can't apply the same step twice. */
+  const expectedStatus = newStatus === "In Progress" ? "Accepted" : "In Progress";
+  const [result] = await pool.execute(
+    `UPDATE tasks SET status = ? WHERE id = ? AND status = ? AND accepted_by = ?`,
+    [newStatus, taskId, expectedStatus, userId]
+  );
+  if (result.affectedRows === 0) {
+    const error = new Error("This task has already moved on. Refresh the page to see its current status.");
+    error.statusCode = 409;
+    throw error;
+  }
 
   if (newStatus === "In Progress") {
     await notificationService.createNotification({

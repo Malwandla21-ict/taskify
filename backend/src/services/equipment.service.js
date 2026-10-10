@@ -6,6 +6,82 @@ const contentModerationService = require("./contentModeration.service");
 const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
 const trustService = require("./trust.service");
 const reportService = require("./report.service");
+const { RENTALS } = require("../config/paymentSettings");
+
+/* Today's date as "YYYY-MM-DD" in Taskify's timezone, so "can't start in
+   the past" means the same thing whatever timezone the server runs in. */
+function todayInTaskifyTimezone() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: RENTALS.timeZone }).format(new Date());
+}
+
+function assertBookingDates(startDate, endDate) {
+  const start = String(startDate || "").slice(0, 10);
+  const end = String(endDate || "").slice(0, 10);
+  if (start < todayInTaskifyTimezone()) {
+    const error = new Error("A booking can't start in the past."); error.statusCode = 400; throw error;
+  }
+  if (end < start) {
+    const error = new Error("End date cannot be before start date."); error.statusCode = 400; throw error;
+  }
+}
+
+/*
+  Booking requests the owner never answered expire after
+  RENTALS.requestExpiryHours: the (demo) payment is refunded, the item is
+  freed, and both people are told. There's no scheduled job on the free
+  hosting, so this runs lazily whenever equipment is listed, viewed or
+  booked — the same approach offers use for their expiry.
+  Pass an equipmentId to check one item, or nothing to check them all.
+*/
+async function expireStaleBookingRequests(equipmentId = null) {
+  const [stale] = await pool.execute(
+    `SELECT eb.id, eb.equipment_id, eb.renter_id, e.owner_id, e.name
+     FROM equipment_bookings eb
+     INNER JOIN equipment e ON e.id = eb.equipment_id
+     WHERE eb.status = 'Pending'
+       AND eb.created_at < NOW() - INTERVAL ? HOUR
+       ${equipmentId ? "AND eb.equipment_id = ?" : ""}`,
+    equipmentId ? [RENTALS.requestExpiryHours, equipmentId] : [RENTALS.requestExpiryHours]
+  );
+
+  for (const booking of stale) {
+    /* "AND status = 'Pending'" so an owner confirming at the same moment wins
+       cleanly instead of both happening. */
+    const [result] = await pool.execute(
+      `UPDATE equipment_bookings
+       SET status = 'Cancelled',
+           payment_status = IF(payment_status = 'Held', 'Refunded', payment_status),
+           deposit_status = IF(deposit_status = 'Held', 'Refunded', deposit_status)
+       WHERE id = ? AND status = 'Pending'`,
+      [booking.id]
+    );
+    if (!result.affectedRows) continue;
+
+    await pool.execute(
+      `UPDATE equipment SET is_available = 1
+       WHERE id = ? AND NOT EXISTS (
+         SELECT 1 FROM equipment_bookings WHERE equipment_id = ? AND status IN ('Pending', 'Confirmed')
+       )`,
+      [booking.equipment_id, booking.equipment_id]
+    );
+
+    const hours = RENTALS.requestExpiryHours;
+    await notificationService.createNotification({
+      userId: booking.renter_id,
+      title: "Booking Request Expired",
+      message: `The owner didn't respond to your request for "${booking.name}" within ${hours} hours, so it has expired and your payment was refunded (demo). You can book it again or look for something similar.`,
+      contextType: "equipment_booking",
+      contextId: booking.id
+    });
+    await notificationService.createNotification({
+      userId: booking.owner_id,
+      title: "Booking Request Expired",
+      message: `A booking request for "${booking.name}" expired because it wasn't confirmed or declined within ${hours} hours. The renter was refunded (demo) and the item is available again.`,
+      contextType: "equipment_booking",
+      contextId: booking.id
+    });
+  }
+}
 
 /* Equipment condition (panel feedback, 2026-10-04). Keep in sync with
    EQUIPMENT_CONDITIONS in frontend/js/helpers.js and the ENUM in
@@ -214,6 +290,7 @@ async function updateEquipment(equipmentId, userId, {
    (undefined for a guest, who never matches owner_id anyway). Removed
    items stay hidden from everyone, including the owner, same as before. */
 async function getAllAvailableEquipment(viewerId = null) {
+  await expireStaleBookingRequests();
   const [rows] = await pool.execute(
     `SELECT ${EQUIPMENT_SELECT_FIELDS}
      FROM equipment e
@@ -231,6 +308,7 @@ async function getAllAvailableEquipment(viewerId = null) {
 /* Loads the fields a quote/booking needs and runs the checks every
    booking path shares. */
 async function loadBookableEquipment(equipmentId, renterId) {
+  await expireStaleBookingRequests(equipmentId);
   const [equipmentRows] = await pool.execute(
     `SELECT id, owner_id, name, is_available, daily_price, item_value, moderation_status
      FROM equipment WHERE id = ? LIMIT 1`,
@@ -257,15 +335,13 @@ async function loadBookableEquipment(equipmentId, renterId) {
    booking modal before the renter presses "Simulate Payment". */
 async function getRentalQuote({ equipmentId, renterId, startDate, endDate }) {
   const equipment = await loadBookableEquipment(equipmentId, renterId);
+  assertBookingDates(startDate, endDate);
   return trustService.buildRentalQuote({ renterId, equipment, startDate, endDate });
 }
 
 async function bookEquipment({ equipmentId, renterId, startDate, endDate }) {
   const equipment = await loadBookableEquipment(equipmentId, renterId);
-
-  if (new Date(endDate) < new Date(startDate)) {
-    const error = new Error("End date cannot be before start date."); error.statusCode = 400; throw error;
-  }
+  assertBookingDates(startDate, endDate);
 
   /* The quote is always recalculated here on the server — the numbers the
      browser showed are never trusted as-is. */
@@ -274,22 +350,43 @@ async function bookEquipment({ equipmentId, renterId, startDate, endDate }) {
     const error = new Error(quote.reason || "You can't rent this item yet."); error.statusCode = 403; throw error;
   }
 
-  /* DEMO: "payment held" is only a status. The rental amount + protection
-     fee + deposit are recorded as held; nothing is actually charged. */
-  const [result] = await pool.execute(
-    `INSERT INTO equipment_bookings (
-       equipment_id, renter_id, start_date, end_date, status,
-       rental_days, rental_amount, protection_fee, deposit_amount, trust_level,
-       payment_status, deposit_status
-     ) VALUES (?, ?, ?, ?, 'Pending', ?, ?, ?, ?, ?, 'Held', ?)`,
-    [
-      equipmentId, renterId, startDate, endDate,
-      quote.days, quote.rentalAmount, quote.protectionFee, quote.depositAmount, quote.trust.level,
-      quote.depositAmount > 0 ? "Held" : "None"
-    ]
-  );
+  /* The equipment row is locked while the booking is made, so two renters
+     booking at the same moment can't both get it: the second one waits,
+     then sees it's no longer available. */
+  const connection = await pool.getConnection();
+  let result;
+  try {
+    await connection.beginTransaction();
+    const [lockedRows] = await connection.execute(
+      `SELECT is_available FROM equipment WHERE id = ? FOR UPDATE`, [equipmentId]
+    );
+    if (!lockedRows[0]?.is_available) {
+      const error = new Error("This equipment is not currently available."); error.statusCode = 400; throw error;
+    }
 
-  await pool.execute(`UPDATE equipment SET is_available = 0 WHERE id = ?`, [equipmentId]);
+    /* DEMO: "payment held" is only a status. The rental amount + protection
+       fee + deposit are recorded as held; nothing is actually charged. */
+    [result] = await connection.execute(
+      `INSERT INTO equipment_bookings (
+         equipment_id, renter_id, start_date, end_date, status,
+         rental_days, rental_amount, protection_fee, deposit_amount, trust_level,
+         payment_status, deposit_status
+       ) VALUES (?, ?, ?, ?, 'Pending', ?, ?, ?, ?, ?, 'Held', ?)`,
+      [
+        equipmentId, renterId, startDate, endDate,
+        quote.days, quote.rentalAmount, quote.protectionFee, quote.depositAmount, quote.trust.level,
+        quote.depositAmount > 0 ? "Held" : "None"
+      ]
+    );
+
+    await connection.execute(`UPDATE equipment SET is_available = 0 WHERE id = ?`, [equipmentId]);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
 
   const [renterRows] = await pool.execute(`SELECT full_name FROM users WHERE id = ? LIMIT 1`, [renterId]);
   const renterName = renterRows[0]?.full_name || "A student";
@@ -306,16 +403,33 @@ async function bookEquipment({ equipmentId, renterId, startDate, endDate }) {
 }
 
 async function confirmBooking(bookingId, ownerId) {
-  const booking = await getBookingWithOwner(bookingId);
+  let booking = await getBookingWithOwner(bookingId);
 
   if (Number(booking.owner_id) !== Number(ownerId)) {
     const error = new Error("Only the equipment owner can confirm this booking."); error.statusCode = 403; throw error;
   }
+
+  /* A request past its expiry window is expired first, so it can't be
+     confirmed after the renter has already been told it lapsed. */
+  await expireStaleBookingRequests(booking.equipment_id);
+  booking = await getBookingWithOwner(bookingId);
+
   if (booking.status !== "Pending") {
-    const error = new Error("Only pending bookings can be confirmed."); error.statusCode = 400; throw error;
+    const error = new Error(booking.status === "Cancelled"
+      ? "This request has expired or was cancelled, so it can't be confirmed."
+      : "Only pending bookings can be confirmed.");
+    error.statusCode = 400;
+    throw error;
   }
 
-  await pool.execute(`UPDATE equipment_bookings SET status = 'Confirmed' WHERE id = ?`, [bookingId]);
+  const [confirmed] = await pool.execute(
+    `UPDATE equipment_bookings SET status = 'Confirmed' WHERE id = ? AND status = 'Pending'`, [bookingId]
+  );
+  if (!confirmed.affectedRows) {
+    const error = new Error("This booking has already been updated. Refresh the page to see its current status.");
+    error.statusCode = 409;
+    throw error;
+  }
 
   await notificationService.createNotification({
     userId: booking.renter_id,
@@ -608,6 +722,7 @@ async function getMyEquipment(ownerId) {
 }
 
 async function getEquipmentHistory(userId) {
+  await expireStaleBookingRequests();
   const [rows] = await pool.execute(
     `SELECT
        eb.id, eb.equipment_id, eb.renter_id, eb.start_date,
@@ -650,6 +765,7 @@ async function getEquipmentById(equipmentId) {
 }
 
 async function getEquipmentByIdForViewing(equipmentId, userId, viewerRole = null) {
+  await expireStaleBookingRequests(equipmentId);
   const item = await getEquipmentById(equipmentId);
   if (!item) {
     const error = new Error("Equipment not found."); error.statusCode = 404; throw error;

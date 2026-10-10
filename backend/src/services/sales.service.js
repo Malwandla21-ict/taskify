@@ -372,21 +372,50 @@ async function releaseSaleOrder(orderId, sellerId, code) {
   if (Number(order.seller_id) !== Number(sellerId)) {
     const error = new Error("Only the seller can enter the handover code."); error.statusCode = 403; throw error;
   }
-  if (order.status !== "Held") {
-    const error = new Error("This order is no longer waiting for a handover code."); error.statusCode = 400; throw error;
-  }
-  if (Number(order.code_attempts) >= SALES.maxCodeAttempts) {
-    const error = new Error("Too many wrong codes were entered, so this order is locked. The buyer can cancel it for a refund."); error.statusCode = 423; throw error;
+
+  /* The order row is locked while the code is checked, so simultaneous
+     submissions are handled one at a time: the right code can only release
+     the payment once, and a burst of guesses can't get past the attempt
+     limit. */
+  const connection = await pool.getConnection();
+  let attempts;
+  try {
+    await connection.beginTransaction();
+    const [lockedRows] = await connection.execute(
+      `SELECT status, code_attempts, handover_code FROM sale_orders WHERE id = ? FOR UPDATE`, [orderId]
+    );
+    const locked = lockedRows[0];
+
+    if (locked.status !== "Held") {
+      const error = new Error("This order is no longer waiting for a handover code."); error.statusCode = 400; throw error;
+    }
+    if (Number(locked.code_attempts) >= SALES.maxCodeAttempts) {
+      const error = new Error("Too many wrong codes were entered, so this order is locked. The buyer can cancel it for a refund."); error.statusCode = 423; throw error;
+    }
+
+    const entered = String(code || "").trim();
+    const expected = String(locked.handover_code);
+    const matches = entered.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(entered), Buffer.from(expected));
+
+    if (matches) {
+      await connection.execute(
+        `UPDATE sale_orders SET status = 'Released', released_at = NOW() WHERE id = ? AND status = 'Held'`, [orderId]
+      );
+      await connection.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [order.sales_item_id]);
+    } else {
+      attempts = Number(locked.code_attempts) + 1;
+      await connection.execute(`UPDATE sale_orders SET code_attempts = ? WHERE id = ?`, [attempts, orderId]);
+    }
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
   }
 
-  const entered = String(code || "").trim();
-  const expected = String(order.handover_code);
-  const matches = entered.length === expected.length &&
-    crypto.timingSafeEqual(Buffer.from(entered), Buffer.from(expected));
-
-  if (!matches) {
-    const attempts = Number(order.code_attempts) + 1;
-    await pool.execute(`UPDATE sale_orders SET code_attempts = ? WHERE id = ?`, [attempts, orderId]);
+  if (attempts !== undefined) {
     const left = Math.max(0, SALES.maxCodeAttempts - attempts);
 
     if (left === 0) {
@@ -405,12 +434,6 @@ async function releaseSaleOrder(orderId, sellerId, code) {
       : "That code is wrong. This order is now locked — the buyer can cancel it for a refund.");
     error.statusCode = 400; throw error;
   }
-
-  await pool.execute(
-    `UPDATE sale_orders SET status = 'Released', released_at = NOW() WHERE id = ? AND status = 'Held'`,
-    [orderId]
-  );
-  await pool.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [order.sales_item_id]);
 
   await notificationService.createNotification({
     userId: order.seller_id,
