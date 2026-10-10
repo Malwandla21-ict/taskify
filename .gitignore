@@ -4,6 +4,10 @@ node_modules/
 # Environment variables (NEVER upload these)
 .env
 _env
+# Local test settings (point at a practice database on your own PC) —
+# made by backend/scripts/make-test-env.js
+.env.test
+.env.test-setup.sql
 
 # OS files
 .DS_Store
