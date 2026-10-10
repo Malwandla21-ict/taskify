@@ -1,6 +1,7 @@
 const path = require("path");
 const dotenv = require("dotenv");
 const mysql = require("mysql2/promise");
+const { widenEnum } = require("./lib/widen-enum");
 
 /* backend/.env — the running app is started from inside backend/, so
    that's the .env holding the real DB_* values. */
@@ -63,11 +64,7 @@ async function main() {
     }
 
     /* 2. Allow reporting an equipment listing directly */
-    await pool.execute(
-      `ALTER TABLE reports
-       MODIFY COLUMN context_type ENUM('task','equipment','equipment_booking','sales_item','event') NULL`
-    );
-    console.log("reports.context_type now includes 'equipment'.");
+    await widenEnum(pool, "reports", "context_type", ["task", "equipment", "equipment_booking", "sales_item", "event"], "NULL");
 
     /* 3. Flagged chat messages were always about abusive messages */
     if (await columnExists(pool, "reports", "message_id")) {

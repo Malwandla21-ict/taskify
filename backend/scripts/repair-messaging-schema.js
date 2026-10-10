@@ -72,15 +72,12 @@ async function repair() {
     }
 
     if (!(await tableExists(pool, "reports"))) {
-      throw new Error("'reports' table does not exist. Run schema.sql first.");
+      throw new Error("'reports' table does not exist. Load taskify-schema.sql first (node scripts/import-schema.js).");
     }
 
-    if (!(await columnExists(pool, "reports", "task_id"))) {
-      await pool.execute(`ALTER TABLE reports ADD COLUMN task_id INT DEFAULT NULL`);
-      console.log("Added missing 'task_id' column to 'reports' (schema drift detected).");
-    } else {
-      console.log("'reports.task_id' already exists — skipped.");
-    }
+    /* reports.task_id is NOT added here: it was replaced by
+       context_type + context_id, and repair-schema.js drops it. Adding it
+       back would undo that on every run. */
 
     if (!(await columnExists(pool, "reports", "message_id"))) {
       await pool.execute(`ALTER TABLE reports ADD COLUMN message_id INT DEFAULT NULL`);
