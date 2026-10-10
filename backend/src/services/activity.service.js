@@ -1,0 +1,299 @@
+const pool = require("../config/db");
+const { SALES, RENTALS } = require("../config/paymentSettings");
+const { expireStaleBookingRequests, todayInTaskifyTimezone } = require("./equipment.service");
+
+/*
+  Action Centre ("Waiting for you") — every open transaction the user is
+  part of (tasks, offers, sales orders, rentals), split into what needs
+  THEM next and what's waiting on someone else.
+
+  Read-only: nothing here changes data. Each item describes its one main
+  next step; the actual step still goes through its own endpoint, which
+  checks permissions and state on the server as before. Inline actions
+  ("api") are only offered for simple one-click steps; anything needing
+  more input (a handover code, photos, a counter-offer) links ("link") to
+  the page where that happens.
+
+  Item shape:
+    { key, kind, title, href, role, status, tone, nextBy, step,
+      deadline, deadlineLabel, overdue, amount, payment, action, secondaryAction }
+  tone: "action" (you) | "waiting" (someone else) | "problem"
+*/
+
+const money = (n) => (n == null ? null : Number(n));
+
+/* "2026-10-11" → "Sun 11 Oct" for the plain-language step text. */
+function prettyDate(dateText) {
+  const d = new Date(`${dateText}T12:00:00Z`);
+  if (Number.isNaN(d.getTime())) return dateText;
+  return d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).replace(",", "");
+}
+
+/* "YYYY-MM-DD" (Taskify's timezone) + n days. */
+function addDays(dateText, n) {
+  const d = new Date(`${dateText}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+async function taskItems(userId) {
+  const [rows] = await pool.execute(
+    `SELECT t.id, t.title, t.status, t.price, t.created_by, t.accepted_by, t.updated_at,
+            p.status AS payment_status,
+            poster.full_name AS poster_name, worker.full_name AS worker_name
+     FROM tasks t
+     LEFT JOIN payments p ON p.task_id = t.id
+     LEFT JOIN users poster ON poster.id = t.created_by
+     LEFT JOIN users worker ON worker.id = t.accepted_by
+     WHERE t.status IN ('Accepted', 'In Progress', 'Awaiting Confirmation')
+       AND (t.created_by = ? OR t.accepted_by = ?)`,
+    [userId, userId]
+  );
+
+  return rows.map((t) => {
+    const isPoster = Number(t.created_by) === Number(userId);
+    const base = {
+      key: `task-${t.id}`, kind: "task", title: t.title,
+      href: `./task-details.html?id=${t.id}`,
+      role: isPoster ? "Task you posted" : "Task you're doing",
+      amount: money(t.price),
+      payment: t.payment_status ? `Payment ${t.payment_status.toLowerCase()} (demo)` : null,
+      deadline: null, deadlineLabel: null, overdue: false,
+      updatedAt: t.updated_at
+    };
+    const worker = t.worker_name || "The worker";
+    const poster = t.poster_name || "The poster";
+
+    if (t.status === "Accepted") {
+      return isPoster
+        ? { ...base, status: "Assigned", tone: "waiting", nextBy: worker,
+            step: `${worker} accepted it. Waiting for them to start.` }
+        : { ...base, status: "Ready to start", tone: "action", nextBy: "you",
+            step: "Start the task when you begin the work.",
+            action: { type: "api", label: "Start task", method: "PATCH", endpoint: `/tasks/${t.id}/status`,
+                      body: { status: "In Progress" }, success: "Task started." } };
+    }
+    if (t.status === "In Progress") {
+      return isPoster
+        ? { ...base, status: "In progress", tone: "waiting", nextBy: worker,
+            step: `${worker} is working on it. You'll be asked to confirm once it's done.` }
+        : { ...base, status: "In progress", tone: "action", nextBy: "you",
+            step: "Mark it as done when you've finished, so the poster can review it.",
+            action: { type: "api", label: "Mark as done", method: "PATCH", endpoint: `/tasks/${t.id}/status`,
+                      body: { status: "Awaiting Confirmation" }, success: "Marked as done. The poster has been asked to confirm.",
+                      confirm: "Mark this task as done? The poster will be asked to check the work and confirm." } };
+    }
+    /* Awaiting Confirmation */
+    return isPoster
+      ? { ...base, status: "Awaiting your confirmation", tone: "action", nextBy: "you",
+          step: `${worker} marked it as done. Check the work, then confirm to release the payment.`,
+          action: { type: "api", label: "Confirm & release payment", method: "PATCH",
+                    endpoint: `/tasks/${t.id}/confirm-completion`, moment: "released",
+                    success: `Task completed. Payment released to ${worker}.`,
+                    confirm: "Confirm this task is complete? This releases the payment to the worker." },
+          secondaryAction: { type: "link", label: "Check details", href: base.href } }
+      : { ...base, status: "Awaiting confirmation", tone: "waiting", nextBy: poster,
+          step: `You marked it as done. Waiting for ${poster} to confirm and release your payment.` };
+  });
+}
+
+async function offerItems(userId) {
+  const [rows] = await pool.execute(
+    `SELECT o.id, o.context_type, o.context_id, o.offerer_id, o.owner_id, o.amount,
+            o.last_proposed_by, o.expires_at, o.updated_at,
+            offerer.full_name AS offerer_name, owner.full_name AS owner_name,
+            COALESCE(t.title, si.title) AS listing_title
+     FROM offers o
+     INNER JOIN users offerer ON offerer.id = o.offerer_id
+     INNER JOIN users owner ON owner.id = o.owner_id
+     LEFT JOIN tasks t ON o.context_type = 'task' AND t.id = o.context_id
+     LEFT JOIN sales_items si ON o.context_type = 'sales_item' AND si.id = o.context_id
+     WHERE o.status = 'Pending'
+       AND (o.expires_at IS NULL OR o.expires_at > NOW())
+       AND (o.offerer_id = ? OR o.owner_id = ?)`,
+    [userId, userId]
+  );
+
+  return rows.map((o) => {
+    const isOwner = Number(o.owner_id) === Number(userId);
+    const turn = o.last_proposed_by === "offerer" ? "owner" : "offerer";
+    const myTurn = (isOwner ? "owner" : "offerer") === turn;
+    const other = isOwner ? (o.offerer_name || "The other student") : (o.owner_name || "The other student");
+    const isTask = o.context_type === "task";
+    const href = isTask ? `./task-details.html?id=${o.context_id}` : `./sale-details.html?id=${o.context_id}`;
+    const amount = `R${Number(o.amount).toFixed(2)}`;
+    const base = {
+      key: `offer-${o.id}`, kind: "offer", title: o.listing_title || "Offer", href,
+      role: isOwner ? (isTask ? "Offer on your task" : "Offer on your item") : (isTask ? "Your offer on a task" : "Your offer on an item"),
+      amount: money(o.amount), payment: null,
+      deadline: o.expires_at, deadlineLabel: myTurn ? "Respond by" : "Expires", overdue: false,
+      updatedAt: o.updated_at
+    };
+    return myTurn
+      ? { ...base, status: "Your turn to respond", tone: "action", nextBy: "you",
+          step: `${other} proposed ${amount}. Accept, counter or decline.`,
+          action: { type: "link", label: "Respond to offer", href } }
+      : { ...base, status: "Waiting for a reply", tone: "waiting", nextBy: other,
+          step: `You proposed ${amount}. Waiting for ${other} to respond.` };
+  });
+}
+
+async function saleItems(userId) {
+  const [rows] = await pool.execute(
+    `SELECT so.id, so.sales_item_id, so.buyer_id, so.seller_id, so.item_price, so.total_amount,
+            so.code_attempts, so.updated_at, si.title,
+            buyer.full_name AS buyer_name, seller.full_name AS seller_name
+     FROM sale_orders so
+     INNER JOIN sales_items si ON si.id = so.sales_item_id
+     LEFT JOIN users buyer ON buyer.id = so.buyer_id
+     LEFT JOIN users seller ON seller.id = so.seller_id
+     WHERE so.status = 'Held' AND (so.buyer_id = ? OR so.seller_id = ?)`,
+    [userId, userId]
+  );
+
+  return rows.map((s) => {
+    const isBuyer = Number(s.buyer_id) === Number(userId);
+    const locked = Number(s.code_attempts) >= SALES.maxCodeAttempts;
+    const href = `./sale-details.html?id=${s.sales_item_id}`;
+    const base = {
+      key: `sale-${s.id}`, kind: "sale", title: s.title, href,
+      role: isBuyer ? "Item you're buying" : "Item you're selling",
+      amount: money(isBuyer ? s.total_amount : s.item_price),
+      payment: "Payment held (demo)",
+      deadline: null, deadlineLabel: null, overdue: false,
+      updatedAt: s.updated_at
+    };
+    const seller = s.seller_name || "The seller";
+    const buyer = s.buyer_name || "The buyer";
+
+    if (locked) {
+      return isBuyer
+        ? { ...base, status: "Handover locked", tone: "problem", nextBy: "you",
+            step: "Too many wrong codes were entered. If you didn't get the item, cancel the order for a refund.",
+            action: { type: "link", label: "Cancel & get refund", href } }
+        : { ...base, status: "Handover locked", tone: "problem", nextBy: buyer,
+            step: `Too many wrong codes were entered, so the order is locked. ${buyer} can cancel it for a refund.` };
+    }
+    return isBuyer
+      ? { ...base, status: "Meet the seller", tone: "action", nextBy: "you",
+          step: `Arrange a meetup with ${seller}. Check the item first, then show them your handover code.`,
+          action: { type: "link", label: "View handover code", href } }
+      : { ...base, status: "Meet the buyer", tone: "action", nextBy: "you",
+          step: `Arrange a meetup with ${buyer}. Once they've checked the item, enter their 4-digit code to get paid.`,
+          action: { type: "link", label: "Enter handover code", href } };
+  });
+}
+
+async function rentalItems(userId) {
+  await expireStaleBookingRequests();
+  const [rows] = await pool.execute(
+    `SELECT eb.id, eb.equipment_id, eb.renter_id, eb.status, eb.created_at, eb.updated_at,
+            DATE_FORMAT(eb.start_date, '%Y-%m-%d') AS start_text,
+            DATE_FORMAT(eb.end_date, '%Y-%m-%d') AS end_text,
+            eb.picked_up_at, eb.condition_status, eb.payment_status, eb.payment_status IS NULL AS legacy,
+            eb.rental_amount, eb.protection_fee, eb.deposit_amount,
+            e.name, e.owner_id, renter.full_name AS renter_name, owner.full_name AS owner_name
+     FROM equipment_bookings eb
+     INNER JOIN equipment e ON e.id = eb.equipment_id
+     LEFT JOIN users renter ON renter.id = eb.renter_id
+     LEFT JOIN users owner ON owner.id = e.owner_id
+     WHERE (e.owner_id = ? OR eb.renter_id = ?)
+       AND (eb.status IN ('Pending', 'Confirmed')
+            OR (eb.status = 'Returned' AND eb.condition_status = 'Pending'))`,
+    [userId, userId]
+  );
+
+  const today = todayInTaskifyTimezone();
+  const historyHref = "./equipment.html#history";
+
+  return rows.map((b) => {
+    const isOwner = Number(b.owner_id) === Number(userId);
+    const renter = b.renter_name || "The renter";
+    const owner = b.owner_name || "The owner";
+    const total = b.rental_amount == null ? null
+      : Number(b.rental_amount) + Number(b.protection_fee || 0) + Number(b.deposit_amount || 0);
+    const base = {
+      key: `rental-${b.id}`, kind: "rental", title: b.name, href: historyHref,
+      role: isOwner ? "Your equipment" : "Equipment you're renting",
+      amount: isOwner ? money(b.rental_amount) : total,
+      payment: b.payment_status ? `Payment ${b.payment_status.toLowerCase()} (demo)` : null,
+      deadline: null, deadlineLabel: null, overdue: false,
+      updatedAt: b.updated_at,
+      dates: { start: b.start_text, end: b.end_text }
+    };
+
+    if (b.status === "Pending") {
+      const expires = new Date(new Date(b.created_at).getTime() + RENTALS.requestExpiryHours * 3600 * 1000).toISOString();
+      return isOwner
+        ? { ...base, status: "Booking request", tone: "action", nextBy: "you",
+            step: `${renter} wants it from ${prettyDate(b.start_text)} to ${prettyDate(b.end_text)}. Approve or decline before the request expires.`,
+            deadline: expires, deadlineLabel: "Respond by",
+            action: { type: "api", label: "Approve booking", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/confirm`,
+                      success: `Booking approved. ${renter} has been told.` },
+            secondaryAction: { type: "api", label: "Decline", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/decline`,
+                               success: "Booking declined. The renter has been refunded (demo).",
+                               confirm: "Decline this booking request? The renter will be refunded (demo)." } }
+        : { ...base, status: "Waiting for approval", tone: "waiting", nextBy: owner,
+            step: `Waiting for ${owner} to approve your booking. It expires if they don't respond in time.`,
+            deadline: expires, deadlineLabel: "Expires" };
+    }
+
+    if (b.status === "Confirmed" && !b.picked_up_at && !b.legacy) {
+      return isOwner
+        ? { ...base, status: "Ready for collection", tone: "waiting", nextBy: renter,
+            step: `Hand the item to ${renter}. They'll confirm pickup with photos of its condition.`,
+            deadline: b.start_text, deadlineLabel: "Collection from" }
+        : { ...base, status: "Ready for collection", tone: "action", nextBy: "you",
+            step: `Collect it from ${owner}, then confirm pickup with photos of its condition.`,
+            deadline: b.start_text, deadlineLabel: "Collection from",
+            action: { type: "link", label: "Confirm pickup", href: historyHref } };
+    }
+
+    if (b.status === "Confirmed") {
+      /* Picked up (or a legacy booking): out on rent until it's returned. */
+      const overdue = b.end_text < today;
+      const dueSoon = !overdue && b.end_text <= addDays(today, 1);
+      return isOwner
+        ? { ...base, status: overdue ? "Overdue" : "Out on rent", tone: overdue ? "problem" : "waiting", nextBy: renter,
+            step: overdue
+              ? `${renter} should have returned it by ${prettyDate(b.end_text)}. Message them to arrange the return.`
+              : `${renter} has it until ${prettyDate(b.end_text)}.`,
+            deadline: b.end_text, deadlineLabel: "Return by", overdue }
+        : { ...base, status: overdue ? "Overdue" : dueSoon ? "Return due" : "Rental active",
+            tone: overdue ? "problem" : "action", nextBy: "you",
+            step: overdue
+              ? `This was due back on ${prettyDate(b.end_text)}. Return it to ${owner} as soon as possible.`
+              : `Return it to ${owner} by ${prettyDate(b.end_text)}, with photos of its condition.`,
+            deadline: b.end_text, deadlineLabel: "Return by", overdue,
+            action: { type: "link", label: "Return item", href: historyHref } };
+    }
+
+    /* Returned, waiting for the owner's condition check. */
+    return isOwner
+      ? { ...base, status: "Check condition", tone: "action", nextBy: "you",
+          step: `${renter} returned it. Compare the return photos with the pickup photos, then confirm its condition.`,
+          action: { type: "link", label: "Check condition", href: historyHref } }
+      : { ...base, status: "Being checked", tone: "waiting", nextBy: owner,
+          step: `You returned it. Waiting for ${owner} to check its condition.` };
+  });
+}
+
+/* Soonest deadline first; items without a deadline after, newest first. */
+function byUrgency(a, b) {
+  const da = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+  const db = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+  if (a.tone === "problem" && b.tone !== "problem") return -1;
+  if (b.tone === "problem" && a.tone !== "problem") return 1;
+  if (da !== db) return da - db;
+  return new Date(b.updatedAt || 0) - new Date(a.updatedAt || 0);
+}
+
+async function getMyActivity(userId) {
+  const groups = await Promise.all([taskItems(userId), offerItems(userId), saleItems(userId), rentalItems(userId)]);
+  const all = groups.flat();
+  const needsYou = all.filter((i) => i.nextBy === "you").sort(byUrgency);
+  const waitingOnOthers = all.filter((i) => i.nextBy !== "you").sort(byUrgency);
+  return { needsYou, waitingOnOthers, counts: { needsYou: needsYou.length, waitingOnOthers: waitingOnOthers.length } };
+}
+
+module.exports = { getMyActivity };

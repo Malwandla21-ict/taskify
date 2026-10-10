@@ -17,6 +17,7 @@ async function loadNavbar() {
     setupTopbarSearch();
     startNotificationPolling();
     startMessagesBadgePolling();
+    startActionBadgePolling();
     setupPushNotifications();
     setupLogout();
     attachProfileLinkEvents();
@@ -52,7 +53,7 @@ function ensureProfileModal() {
 function highlightActiveLink() {
   const currentPage = window.location.pathname.split("/").pop() || "dashboard.html";
   document.querySelectorAll(".nav-link").forEach(link => {
-    const href = link.getAttribute("href");
+    const href = (link.getAttribute("href") || "").split("#")[0];
     if (href === `./${currentPage}` || href === currentPage) {
       link.classList.add("active");
     }
@@ -361,6 +362,27 @@ async function refreshMessagesBadge() {
 function startMessagesBadgePolling() {
   refreshMessagesBadge();
   window.setInterval(refreshMessagesBadge, 30000);
+}
+
+/* ── "Waiting for you" badge (sidebar Dashboard link) ──
+   How many open tasks, offers, sales and rentals need this user's next
+   step (the dashboard's Action Centre). action-centre.js calls this again
+   right after an inline action so the number drops straight away. */
+async function refreshActionBadge() {
+  if (!localStorage.getItem("taskifyToken")) return;
+  try {
+    const res = await apiRequest("/activity");
+    const count = Number(res.data?.counts?.needsYou) || 0;
+    const el = document.getElementById("navActionCount");
+    if (!el) return;
+    el.textContent = count > 9 ? "9+" : String(count);
+    el.style.display = count > 0 ? "flex" : "none";
+  } catch (_) { /* non-critical */ }
+}
+
+function startActionBadgePolling() {
+  refreshActionBadge();
+  window.setInterval(refreshActionBadge, 60000);
 }
 
 function setupLogout() {

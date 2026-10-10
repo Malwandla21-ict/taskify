@@ -751,6 +751,7 @@ async function loadEquipment() {
     equipmentContainer.innerHTML = errorState(err.message);
     showToast(err.message, "error");
   }
+  historyJumpLoadDone();
 }
 
 async function loadEquipmentHistory() {
@@ -772,6 +773,8 @@ async function loadEquipmentHistory() {
     equipmentHistoryMiniContainer.innerHTML = items.length
       ? items.slice(0, 4).map(historyMiniCard).join("")
       : `<p class="rail-loading">No history yet.</p>`;
+
+    historyJumpLoadDone();
   } catch (err) {
     console.error("loadEquipmentHistory failed:", err);
     equipmentHistoryContainer.innerHTML = errorState(err.message);
@@ -780,12 +783,37 @@ async function loadEquipmentHistory() {
   }
 }
 
+function showFullEquipmentHistory(behavior = "smooth") {
+  const section = document.getElementById("fullEquipmentHistorySection");
+  if (!section) return;
+  section.style.display = "block";
+  section.scrollIntoView({ behavior, block: "start" });
+}
+
+/* Arriving from the dashboard's "Waiting for you" list (equipment.html#history):
+   jump to the history once BOTH the listings and the history have loaded
+   for the first time — otherwise the listings finishing later push it
+   back down the page. Then drop the #history so later reloads of the
+   lists don't jump again. */
+let historyJumpPending = window.location.hash === "#history" ? 2 : 0;
+function historyJumpLoadDone() {
+  if (historyJumpPending <= 0) return;
+  historyJumpPending -= 1;
+  if (historyJumpPending === 0) {
+    showFullEquipmentHistory("auto");
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+  }
+}
+
 document.getElementById("viewAllEquipmentHistoryLink")?.addEventListener("click", (e) => {
   e.preventDefault();
-  const section = document.getElementById("fullEquipmentHistorySection");
-  section.style.display = "block";
-  section.scrollIntoView({ behavior: "smooth", block: "start" });
+  showFullEquipmentHistory();
 });
+
+/* equipment.html#history (used by the dashboard's "Waiting for you" list)
+   opens the history straight away, since that's where the pickup, return
+   and condition-check buttons live. */
+if (window.location.hash === "#history") showFullEquipmentHistory();
 
 equipmentForm?.addEventListener("submit", async e => {
   e.preventDefault();
