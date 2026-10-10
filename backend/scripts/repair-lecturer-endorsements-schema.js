@@ -6,6 +6,7 @@
 const path = require("path");
 const dotenv = require("dotenv");
 const mysql = require("mysql2/promise");
+const { widenEnum } = require("./lib/widen-enum");
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
@@ -37,12 +38,8 @@ async function repair() {
   });
 
   try {
-    /* member_type: widen enum to include Lecturer. Safe to re-run — MODIFY
-       COLUMN with the same target definition is a no-op on repeat runs. */
-    await pool.execute(
-      `ALTER TABLE users MODIFY COLUMN member_type ENUM('Student','Lecturer','Staff') NOT NULL DEFAULT 'Student'`
-    );
-    console.log("users.member_type now includes 'Lecturer'");
+    /* member_type: widen enum to include Lecturer (never removes a value). */
+    await widenEnum(pool, "users", "member_type", ["Student", "Lecturer", "Staff"], "NOT NULL DEFAULT 'Student'");
 
     const newUserColumns = [
       ["bio", "TEXT NULL"],

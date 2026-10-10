@@ -1,13 +1,14 @@
 const path = require("path");
 const dotenv = require("dotenv");
 const mysql = require("mysql2/promise");
+const { widenEnum } = require("./lib/widen-enum");
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 /*
   Idempotent schema repair for AI-assisted content moderation (tasks, sales
-  items, equipment listings, events, and their images) via OpenAI's
-  Moderation endpoint. Safe to run any number of times — every change is
+  items, equipment listings, events, and their images) via Azure AI
+  Content Safety. Safe to run any number of times — every change is
   guarded by an information_schema check first.
 
   Usage: node scripts/repair-content-moderation-schema.js
@@ -63,17 +64,8 @@ async function main() {
     /* Reports and notifications could previously only be tagged against a
        task, equipment booking, or sales item — events had no way to be
        reported, or referenced by a notification's context. */
-    await pool.execute(
-      `ALTER TABLE reports
-       MODIFY COLUMN context_type ENUM('task','equipment_booking','sales_item','event') NULL`
-    );
-    console.log("Widened reports.context_type to include 'event'.");
-
-    await pool.execute(
-      `ALTER TABLE notifications
-       MODIFY COLUMN context_type ENUM('task','equipment_booking','sales_item','event') NULL`
-    );
-    console.log("Widened notifications.context_type to include 'event'.");
+    await widenEnum(pool, "reports", "context_type", ["task", "equipment_booking", "sales_item", "event"], "NULL");
+    await widenEnum(pool, "notifications", "context_type", ["task", "equipment_booking", "sales_item", "event"], "NULL");
 
     /* Images are moderated at upload time, before they're attached to any
        listing — a soft-flagged image still gets uploaded (so the create

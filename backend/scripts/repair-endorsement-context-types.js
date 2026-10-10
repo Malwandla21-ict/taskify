@@ -1,11 +1,12 @@
 // backend/scripts/repair-endorsement-context-types.js
 // Widens lecturer_endorsements.context_type to also cover tasks and events.
-// Idempotent — MODIFY COLUMN is safe to re-run.
+// Idempotent — only adds missing values, never removes any.
 // Usage: node scripts/repair-endorsement-context-types.js
 
 const path = require("path");
 const dotenv = require("dotenv");
 const mysql = require("mysql2/promise");
+const { widenEnum } = require("./lib/widen-enum");
 
 dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
@@ -19,10 +20,7 @@ async function repair() {
   });
 
   try {
-    await pool.execute(
-      `ALTER TABLE lecturer_endorsements MODIFY COLUMN context_type ENUM('sales_item','equipment','task','event') NULL`
-    );
-    console.log("lecturer_endorsements.context_type now includes 'task' and 'event'.");
+    await widenEnum(pool, "lecturer_endorsements", "context_type", ["sales_item", "equipment", "task", "event"], "NULL");
   } finally {
     await pool.end();
   }

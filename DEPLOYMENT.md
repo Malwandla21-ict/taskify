@@ -31,37 +31,22 @@ from there.
 
 ---
 
-## 0. One gap to close first: no single file has the full current schema
+## 0. The database structure: two files, two jobs
 
-`backend/schema.sql` exists but is an early snapshot (last touched mid-
-August) — it only covers `users`, `tasks`, `payments`, `reviews`,
-`reports`, `equipment`, `equipment_bookings`, `notifications`, `events`,
-`event_rsvps`, `admin_audit_logs`, and `admin_allowlist`. Everything added
-since then is missing from it: the `sales`, `conversations`, and
-`messages` tables (created ad hoc, never captured in a SQL file), plus
-every column the `backend/migrations/*.sql` + `backend/scripts/repair-*.js`
-pairs added on top for auth security, content moderation, 2FA, trusted
-devices, and the review generalization work — those scripts only `ALTER`
-an existing table, they don't create one from scratch. So no combination
-of committed files fully describes your database as it exists today — only
-your actual local MySQL database does. A fresh Aiven database starts
-completely empty, so you need to export your local structure directly.
+| File | Use it for |
+|---|---|
+| `taskify-schema.sql` (project root) | Setting up an **empty** database. It holds every table, column, key and index (no rows), exported from the live database. Each statement is `CREATE TABLE IF NOT EXISTS`, so it never drops or changes an existing table. |
+| `backend/scripts/repair-all.js` | Bringing an **existing, older** database up to date. It runs all the `repair-*.js` scripts in the order the features were added. Each one only adds what's missing and never removes rows, so running it on an up-to-date database changes nothing. It stops at the first script that fails. |
 
-**Do this once, before anything else below:**
+`backend/schema.sql` is no longer used; it now only points to these two.
+
+When a new repair script is added, add it to the **end** of the list in `repair-all.js`. After running it, export `taskify-schema.sql` again so the two stay in step (from `backend/`; it only reads the database named in the root `.env`):
 
 ```bash
-# Structure only — no rows. Recommended: keeps whatever local test/demo
-# data you have off the public database, and keeps this quick.
-mysqldump -u root -p --no-data --routines --triggers taskify > taskify-schema.sql
+node scripts/export-schema.js
 ```
 
-(If you'd rather bring your existing users/tasks/etc. along too, drop
-`--no-data` — but think about whether any of that data is real student
-information before putting it on a publicly reachable database. For a demo
-deployment, starting empty and having a teammate or yourself sign up fresh
-is the safer default.)
-
-Keep `taskify-schema.sql` handy — you'll import it into Aiven in step 2.
+(Starting with an empty database is the safer choice for a public demo. Don't copy real student data onto a publicly reachable database.)
 
 ---
 
@@ -96,8 +81,10 @@ that no `.env` file is about to be committed before you push.)
    inside `backend/`. The app itself (`npm start`) reads the one inside
    `backend/` — leave that one alone, pointed at your local database, so
    local development keeps working unaffected by everything below. The
-   scripts in this section (`import-schema.js`, every `repair-*.js`, and
-   `create-admin.js`) all read the **root** one instead. So: open the
+   scripts in this section (`import-schema.js`, `repair-all.js` and
+   `create-admin.js`) read the **root** one instead. (Run the repair
+   scripts through `repair-all.js` rather than one by one: a few older
+   ones look for `backend/.env` when run on their own.) So: open the
    `.env` file directly inside `Taskify` (not `Taskify\backend\.env`) and
    set `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` to your
    Aiven values from step 2, and set `DB_SSL=true`.
@@ -112,29 +99,24 @@ that no `.env` file is about to be committed before you push.)
    problem. From the `backend/` folder:
 
    ```bash
-   node scripts/import-schema.js "..\taskify-schema.sql"
+   node scripts/import-schema.js
    ```
 
-   (adjust the path if `taskify-schema.sql` isn't in the project root —
-   it just needs to point at the file from step 0). You should see
-   `Success — executed ~N statement(s) against defaultdb.`
+   (With no path it uses `taskify-schema.sql` from the project root.)
+   You should see `Success — executed ~N statement(s) against defaultdb.`
 
-5. Bring the schema fully up to date by running every repair script
-   against Aiven, **in this order** (they're all idempotent, so
-   re-running any of them is harmless if you're not sure which ones your
-   dump already had). `.env` is already pointed at Aiven from step 3, so
-   just run these from the `backend/` folder:
+5. Run every repair script once, to be sure nothing is missing. It
+   prints which database it's about to change, so check that line says
+   `defaultdb` on your Aiven host. From the `backend/` folder:
 
    ```bash
-   node scripts/repair-schema.js
-   node scripts/repair-auth-security-schema.js
-   node scripts/repair-content-moderation-schema.js
-   node scripts/repair-login-email-otp-schema.js
-   node scripts/repair-two-factor-method-schema.js
-   node scripts/repair-trusted-devices-schema.js
-   node scripts/repair-review-generalization-schema.js
-   node scripts/repair-onboarding-schema.js
+   node scripts/repair-all.js
    ```
+
+   On a database freshly made from `taskify-schema.sql` every script
+   just reports that there's nothing to add. The runner loads the root `.env`
+   before any script runs, so all 28 scripts aim at the same database,
+   including the few that look for `backend/.env` themselves.
 
 6. Create your first admin account directly on Aiven, still with the root
    `.env` pointed at it:
@@ -147,7 +129,7 @@ that no `.env` file is about to be committed before you push.)
    itself reads `backend/.env` (untouched, still local) rather than the
    root one, there's no urgency — but it's tidy to set the root `.env`'s
    `DB_*` values back to your local ones once you're finished with this
-   section, so a future `node scripts/repair-*.js` run doesn't
+   section, so a future `node scripts/repair-all.js` run doesn't
    accidentally target Aiven again by surprise.
 
 ---
@@ -231,19 +213,30 @@ couple of weeks for Google to actually show the pages in search results.
 
 ---
 
-## About the payment step
+## About payments, money rules and feature switches
 
 There's no real payment gateway wired up (Stripe, PayFast, etc. all need a
 registered business/merchant account, which the project doesn't have yet).
-So "Accept Task" now shows a clearly labeled **demo payment simulation**
-step instead of silently marking payment as held — it tells the user
-plainly that no real money moves, then proceeds with the existing
-held/released escrow-status logic in the database. This is a placeholder
-for a real integration once/if the university registers and funds the
-project — swapping in a real gateway later means replacing the contents of
-`openPaymentSimulationModal()` in `frontend/js/task-details.js` with an
-actual checkout flow, without needing to change the accept/confirm-
-completion backend logic it currently calls.
+Every payment, hold, release and refund in Taskify is a **demo**: a status
+value in the database, labelled "Demo" on screen. No money moves.
+
+- **Rentals** work as request → owner approves → renter pays (demo).
+  Security deposits, refunds for unused days and late fees are written
+  down as proposals in `backend/src/config/rentalPolicy.js` and are **not
+  in effect**. One check (`isEnforceable` in `rentalPolicy.service.js`)
+  keeps them off until each is approved, dated, in effect and supported
+  by a real payment provider.
+- **Feature switches** for things the university hasn't decided yet
+  (lecturer endorsements: off; institutional marketplace listings: on,
+  with an admin check) are in `backend/src/config/features.js` and
+  `backend/src/config/marketplace.js`. The server enforces them, so
+  changing one needs a redeploy.
+
+All the numbers (fees, time limits) are in
+`backend/src/config/paymentSettings.js`. The full explanation, including
+where a real provider would plug in, is in `docs/money-rules.md`. The
+questions to settle with legal, the university and a payment provider
+first are in `docs/open-questions.md`.
 
 ---
 
@@ -252,7 +245,10 @@ completion backend logic it currently calls.
 - **Render free web services sleep after 15 minutes of no traffic.** The
   first request after that takes 30–60 seconds to wake back up — normal
   and expected, not a bug. There's no free way around this; Render's paid
-  tier ($7/mo) removes it if that's ever worth paying for.
+  tier ($7/mo) removes it if that's ever worth paying for. Reminders
+  (return deadlines, unconfirmed tasks) are checked every 15 minutes
+  while the server is awake, so after a sleep they go out late rather
+  than not at all.
 - **Aiven's free MySQL tier caps out at 1GB storage and 76 connections** —
   plenty for coursework/demo traffic, not for real production load.
 - **No custom domain is required** for Google indexing or public access —

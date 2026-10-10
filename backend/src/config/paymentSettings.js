@@ -47,10 +47,11 @@ module.exports = {
   JOBS: { intervalMinutes: 15 },
 
   RENTALS: {
-    /* A booking request the owner hasn't confirmed or declined within this
-       many hours expires: the (demo) payment is refunded and the item
-       becomes bookable again. Checked lazily whenever equipment is listed,
-       viewed or booked (there's no scheduled job on the free hosting). */
+    /* A booking request the owner hasn't approved or declined within this
+       many hours expires and the dates are free again. Nothing has been
+       paid at that point (the renter pays only after approval); an old
+       booking that was paid up front is refunded (demo). Checked whenever
+       equipment is listed, viewed or booked, and by jobs/scheduler.js. */
     requestExpiryHours: 48,
     /* Booking dates are checked against today's date in this timezone. */
     timeZone: "Africa/Johannesburg",
