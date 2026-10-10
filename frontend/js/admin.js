@@ -30,6 +30,7 @@ function switchSection(sectionKey) {
   /* Lazy-load section data the first time it's opened, so the initial
      page load doesn't have to fetch everything up front. */
   if (sectionKey === "allowlist" && !allowlistLoaded) loadAllowlist();
+  if (sectionKey === "analytics" && typeof loadAnalyticsOnce === "function") loadAnalyticsOnce();
 
   /* On mobile the sidebar is a slide-in panel — picking a section should
      close it, same as any mobile nav drawer. No-op on desktop since it's
