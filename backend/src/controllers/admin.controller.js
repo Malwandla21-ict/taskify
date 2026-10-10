@@ -30,6 +30,26 @@ async function promoteUser(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function verifyLecturer(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const user = await adminService.setLecturerVerified(Number(req.params.userId), true, req.user.id);
+    return res.status(200).json({ success: true, message: "Lecturer verified.", data: user });
+  } catch (error) { next(error); }
+}
+
+async function unverifyLecturer(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const user = await adminService.setLecturerVerified(Number(req.params.userId), false, req.user.id);
+    return res.status(200).json({ success: true, message: "Lecturer verification removed.", data: user });
+  } catch (error) { next(error); }
+}
+
 async function demoteAdmin(req, res, next) {
   try {
     const errors = validationResult(req);
@@ -124,6 +144,8 @@ async function getAuditLogs(req, res, next) {
 module.exports = {
   getDashboardStats,
   listUsers,
+  verifyLecturer,
+  unverifyLecturer,
   promoteUser,
   demoteAdmin,
   unsuspendUser,

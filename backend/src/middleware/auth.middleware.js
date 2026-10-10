@@ -26,7 +26,7 @@ async function authenticate(req, res, next) {
       password that "backs" it changes.
     */
     const [rows] = await pool.execute(
-      `SELECT role, member_type, suspension_reason, ban_reason, token_version, totp_enabled FROM users WHERE id = ? LIMIT 1`,
+      `SELECT role, member_type, suspension_reason, ban_reason, token_version, totp_enabled, lecturer_verified FROM users WHERE id = ? LIMIT 1`,
       [decoded.id]
     );
 
@@ -34,7 +34,7 @@ async function authenticate(req, res, next) {
       return res.status(401).json({ success: false, message: "Unauthorized. Account no longer exists." });
     }
 
-    const { role: currentRole, member_type: currentMemberType, suspension_reason, ban_reason, token_version, totp_enabled } = rows[0];
+    const { role: currentRole, member_type: currentMemberType, suspension_reason, ban_reason, token_version, totp_enabled, lecturer_verified } = rows[0];
 
     if ((decoded.tv || 0) !== token_version) {
       return res.status(401).json({ success: false, message: "Your session has expired. Please log in again." });
@@ -49,7 +49,10 @@ async function authenticate(req, res, next) {
       return res.status(403).json({ success: false, message: `Your account has been banned.${reasonText}` });
     }
 
-    req.user = { ...decoded, role: currentRole, memberType: currentMemberType, totpEnabled: !!totp_enabled };
+    req.user = {
+      ...decoded, role: currentRole, memberType: currentMemberType, totpEnabled: !!totp_enabled,
+      lecturerVerified: !!lecturer_verified
+    };
     next();
   } catch (error) {
     return res.status(401).json({
@@ -122,9 +125,17 @@ function authorize(...roles) {
 /* New: gate lecturer-only endpoints (giving endorsements, searching
    students, etc.) on the account's member_type rather than role, since
    lecturers are ordinary 'user' role for moderation purposes. */
+/* Lecturer-only features need a lecturer account that an admin has
+   verified — choosing "Lecturer" at sign-up isn't enough on its own. */
 function requireLecturer(req, res, next) {
   if (req.user.memberType !== "Lecturer") {
     return res.status(403).json({ success: false, message: "This action is only available to lecturer accounts." });
+  }
+  if (!req.user.lecturerVerified) {
+    return res.status(403).json({
+      success: false,
+      message: "Your lecturer account is waiting for an admin to verify it. Lecturer features unlock once it's verified."
+    });
   }
   next();
 }
