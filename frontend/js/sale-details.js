@@ -284,7 +284,7 @@ function renderSaleDetails(item) {
         <div class="detail-media">
           ${renderImageGallery(item.image_urls, "ti-shopping-bag")}
           ${endorsementCornerBadge(item)}
-          ${lecturerPostedCornerBadge(item.seller_member_type)}
+          ${lecturerPostedCornerBadge(item.seller_member_type, item.seller_lecturer_verified)}
         </div>
         ${sectionBadge(item.section || "General")}
         <h1 class="detail-title">${item.title}</h1>

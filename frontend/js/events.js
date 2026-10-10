@@ -222,7 +222,7 @@ function eventCard(event) {
           ? `<img src="${event.image_urls[0]}" alt="${event.title}" class="lightbox-img" data-gallery="event-${event.id}" data-full="${event.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light green"><i class="ti ti-building-store" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(event)}
-        ${lecturerPostedCornerBadge(event.organizer_member_type)}
+        ${lecturerPostedCornerBadge(event.organizer_member_type, event.organizer_lecturer_verified)}
       </div>
       <div class="market-content">
         <div class="market-top">

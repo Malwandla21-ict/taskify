@@ -231,7 +231,7 @@ function saleCard(item) {
           ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="sale-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
-        ${lecturerPostedCornerBadge(item.seller_member_type)}
+        ${lecturerPostedCornerBadge(item.seller_member_type, item.seller_lecturer_verified)}
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${item.id}" aria-label="Save item">
           <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
         </button>

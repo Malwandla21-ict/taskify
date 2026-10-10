@@ -1954,3 +1954,6 @@ body.dashboard-body {
 .marketplace-guide li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.45; }
 .marketplace-guide li i { margin-top: 2px; color: var(--ump-blue); }
 .marketplace-guide a { color: var(--ump-blue); }
+
+/* ── Feature switches (helpers.js applyFeatureSwitches) ── */
+[data-feature]:not(.feature-on) { display: none !important; }

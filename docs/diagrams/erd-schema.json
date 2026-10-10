@@ -789,6 +789,59 @@
       ],
       "unique": []
     },
+    "feedback": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "kind",
+          "type": "enum('idea','problem','consultation','testing')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "message",
+          "type": "varchar(2000)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('New','Reviewed')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "reviewed_by",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "reviewed_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
     "flagged_uploads": {
       "columns": [
         {
@@ -2141,6 +2194,18 @@
     {
       "table": "events",
       "column": "organizer_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "feedback",
+      "column": "reviewed_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "feedback",
+      "column": "user_id",
       "refTable": "users",
       "refColumn": "id"
     },

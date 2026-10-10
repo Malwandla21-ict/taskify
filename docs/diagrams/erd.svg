@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2262 2315" width="2262" height="2315" font-family="Poppins, 'Segoe UI', Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2284 2462" width="2284" height="2462" font-family="Poppins, 'Segoe UI', Arial, sans-serif">
   <style>
     .title { font-size: 26px; font-weight: 700; fill: #0C1D4A; }
     .subtitle { font-size: 13px; fill: #4B5563; }
@@ -13,1354 +13,1392 @@
     .lh { font-size: 14px; font-weight: 700; fill: #0C1D4A; }
     .lt { font-size: 11.5px; fill: #374151; }
   </style>
-  <rect x="0" y="0" width="2262" height="2315" fill="#FFFFFF"/>
+  <rect x="0" y="0" width="2284" height="2462" fill="#FFFFFF"/>
   <text x="40" y="52" class="title">Taskify — Entity-relationship diagram</text>
   <text x="40" y="76" class="subtitle">Every table, column and foreign key in the live MySQL database. Lines are foreign keys; most tables refer to users, which sits across the top.</text>
   <text x="40" y="96" class="subtitle">Payments are a demo: payments, sale_orders and equipment_bookings record statuses only — no money moves.</text>
-  <path class="rel" data-fk="admin_allowlist.added_by" d="M1892,1295 L1825,1295 L1825,475 L1410,475 L1410,426"/>
-  <path d="M1880,1295 L1892,1302 M1880,1295 L1892,1295 M1880,1295 L1892,1288" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1873" cy="1295" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1416" y1="433" x2="1404" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="1410" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="admin_audit_logs.admin_id" d="M1892,1441 L1814,1441 L1814,484 L1386,484 L1386,426"/>
-  <path d="M1880,1441 L1892,1448 M1880,1441 L1892,1441 M1880,1441 L1892,1434" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1873" cy="1441" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1392" y1="432" x2="1380" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1392" y1="437" x2="1380" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="booking_extensions.booking_id" d="M877,1773 L922,1773 L922,1659 L877,1659"/>
-  <path d="M889,1773 L877,1766 M889,1773 L877,1773 M889,1773 L877,1780" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="896" cy="1773" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="883" y1="1653" x2="883" y2="1665" stroke="#0C1D4A" stroke-width="1.4"/><line x1="888" y1="1653" x2="888" y2="1665" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="conversations.user_a_id" d="M1468,697 L1434,697 L1434,493 L1362,493 L1362,426"/>
-  <path d="M1456,697 L1468,704 M1456,697 L1468,697 M1456,697 L1468,690" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="697" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1368" y1="432" x2="1356" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1368" y1="437" x2="1356" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="conversations.user_b_id" d="M1468,713 L1423,713 L1423,502 L1338,502 L1338,426"/>
-  <path d="M1456,713 L1468,720 M1456,713 L1468,713 M1456,713 L1468,706" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="713" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1344" y1="432" x2="1332" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1344" y1="437" x2="1332" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="equipment.condition_checked_by" d="M587,729 L542,729 L542,511 L948,511 L948,426"/>
-  <path d="M575,729 L587,736 M575,729 L587,729 M575,729 L587,722" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="568" cy="729" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="954" y1="433" x2="942" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="948" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="equipment.owner_id" d="M587,665 L553,665 L553,520 L972,520 L972,426"/>
-  <path d="M575,665 L587,672 M575,665 L587,665 M575,665 L587,658" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="568" cy="665" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="978" y1="432" x2="966" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="978" y1="437" x2="966" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="equipment_bookings.equipment_id" d="M877,1019 L911,1019 L911,905 L877,905"/>
-  <path d="M889,1019 L877,1012 M889,1019 L877,1019 M889,1019 L877,1026" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="896" cy="1019" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="883" y1="899" x2="883" y2="911" stroke="#0C1D4A" stroke-width="1.4"/><line x1="888" y1="899" x2="888" y2="911" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="equipment_bookings.renter_id" d="M587,1035 L531,1035 L531,502 L924,502 L924,426"/>
-  <path d="M575,1035 L587,1042 M575,1035 L587,1035 M575,1035 L587,1028" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="568" cy="1035" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="930" y1="432" x2="918" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="930" y1="437" x2="918" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="event_rsvps.event_id" d="M1301,1743 L1346,1743 L1346,1629 L1301,1629"/>
-  <path d="M1313,1743 L1301,1736 M1313,1743 L1301,1743 M1313,1743 L1301,1750" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1320" cy="1743" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1307" y1="1623" x2="1307" y2="1635" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1312" y1="1623" x2="1312" y2="1635" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="event_rsvps.user_id" d="M1011,1759 L933,1759 L933,529 L996,529 L996,426"/>
-  <path d="M999,1759 L1011,1766 M999,1759 L1011,1759 M999,1759 L1011,1752" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="1759" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1002" y1="432" x2="990" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1002" y1="437" x2="990" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="events.organizer_id" d="M1011,1373 L944,1373 L944,538 L1020,538 L1020,426"/>
-  <path d="M999,1373 L1011,1380 M999,1373 L1011,1373 M999,1373 L1011,1366" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="1373" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1026" y1="432" x2="1014" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1026" y1="437" x2="1014" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="lecturer_endorsements.endorsed_user_id" d="M1468,1521 L1357,1521 L1357,556 L1194,556 L1194,426"/>
-  <path d="M1456,1521 L1468,1528 M1456,1521 L1468,1521 M1456,1521 L1468,1514" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1521" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="admin_allowlist.added_by" d="M1914,1304 L1847,1304 L1847,475 L1424,475 L1424,426"/>
+  <path d="M1902,1304 L1914,1311 M1902,1304 L1914,1304 M1902,1304 L1914,1297" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1895" cy="1304" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1430" y1="433" x2="1418" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="1424" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="admin_audit_logs.admin_id" d="M1914,1450 L1836,1450 L1836,484 L1401,484 L1401,426"/>
+  <path d="M1902,1450 L1914,1457 M1902,1450 L1914,1450 M1902,1450 L1914,1443" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1895" cy="1450" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1407" y1="432" x2="1395" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1407" y1="437" x2="1395" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="booking_extensions.booking_id" d="M877,1782 L922,1782 L922,1668 L877,1668"/>
+  <path d="M889,1782 L877,1775 M889,1782 L877,1782 M889,1782 L877,1789" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="896" cy="1782" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="883" y1="1662" x2="883" y2="1674" stroke="#0C1D4A" stroke-width="1.4"/><line x1="888" y1="1662" x2="888" y2="1674" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="conversations.user_a_id" d="M1468,706 L1434,706 L1434,511 L1332,511 L1332,426"/>
+  <path d="M1456,706 L1468,713 M1456,706 L1468,706 M1456,706 L1468,699" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="706" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1338" y1="432" x2="1326" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1338" y1="437" x2="1326" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="conversations.user_b_id" d="M1468,722 L1423,722 L1423,520 L1309,520 L1309,426"/>
+  <path d="M1456,722 L1468,729 M1456,722 L1468,722 M1456,722 L1468,715" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="722" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1315" y1="432" x2="1303" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1315" y1="437" x2="1303" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="equipment.condition_checked_by" d="M587,738 L542,738 L542,511 L952,511 L952,426"/>
+  <path d="M575,738 L587,745 M575,738 L587,738 M575,738 L587,731" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="568" cy="738" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="958" y1="433" x2="946" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="952" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="equipment.owner_id" d="M587,674 L553,674 L553,520 L975,520 L975,426"/>
+  <path d="M575,674 L587,681 M575,674 L587,674 M575,674 L587,667" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="568" cy="674" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="981" y1="432" x2="969" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="981" y1="437" x2="969" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="equipment_bookings.equipment_id" d="M877,1028 L911,1028 L911,914 L877,914"/>
+  <path d="M889,1028 L877,1021 M889,1028 L877,1028 M889,1028 L877,1035" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="896" cy="1028" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="883" y1="908" x2="883" y2="920" stroke="#0C1D4A" stroke-width="1.4"/><line x1="888" y1="908" x2="888" y2="920" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="equipment_bookings.renter_id" d="M587,1044 L531,1044 L531,502 L929,502 L929,426"/>
+  <path d="M575,1044 L587,1051 M575,1044 L587,1044 M575,1044 L587,1037" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="568" cy="1044" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="935" y1="432" x2="923" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="935" y1="437" x2="923" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="event_rsvps.event_id" d="M1301,1752 L1346,1752 L1346,1638 L1301,1638"/>
+  <path d="M1313,1752 L1301,1745 M1313,1752 L1301,1752 M1313,1752 L1301,1759" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1320" cy="1752" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1307" y1="1632" x2="1307" y2="1644" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1312" y1="1632" x2="1312" y2="1644" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="event_rsvps.user_id" d="M1011,1768 L933,1768 L933,529 L998,529 L998,426"/>
+  <path d="M999,1768 L1011,1775 M999,1768 L1011,1768 M999,1768 L1011,1761" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="1768" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1004" y1="432" x2="992" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1004" y1="437" x2="992" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="events.organizer_id" d="M1011,1382 L944,1382 L944,538 L1021,538 L1021,426"/>
+  <path d="M999,1382 L1011,1389 M999,1382 L1011,1382 M999,1382 L1011,1375" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="1382" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1027" y1="432" x2="1015" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1027" y1="437" x2="1015" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="feedback.reviewed_by" d="M1914,1724 L1814,1724 L1814,502 L1355,502 L1355,426"/>
+  <path d="M1902,1724 L1914,1731 M1902,1724 L1914,1724 M1902,1724 L1914,1717" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1895" cy="1724" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1361" y1="433" x2="1349" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="1355" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="feedback.user_id" d="M1914,1660 L1825,1660 L1825,493 L1378,493 L1378,426"/>
+  <path d="M1902,1660 L1914,1667 M1902,1660 L1914,1660 M1902,1660 L1914,1653" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1895" cy="1660" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1384" y1="432" x2="1372" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1384" y1="437" x2="1372" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="lecturer_endorsements.endorsed_user_id" d="M1468,1530 L1357,1530 L1357,574 L1171,574 L1171,426"/>
+  <path d="M1456,1530 L1468,1537 M1456,1530 L1468,1530 M1456,1530 L1468,1523" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1530" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1177" y1="432" x2="1165" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1177" y1="437" x2="1165" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="lecturer_endorsements.lecturer_id" d="M1468,1514 L1368,1514 L1368,565 L1194,565 L1194,426"/>
+  <path d="M1456,1514 L1468,1521 M1456,1514 L1468,1514 M1456,1514 L1468,1507" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1514" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
   <line x1="1200" y1="432" x2="1188" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1200" y1="437" x2="1188" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="lecturer_endorsements.lecturer_id" d="M1468,1505 L1368,1505 L1368,547 L1218,547 L1218,426"/>
-  <path d="M1456,1505 L1468,1512 M1456,1505 L1468,1505 M1456,1505 L1468,1498" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1505" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1224" y1="432" x2="1212" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1224" y1="437" x2="1212" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="messages.conversation_id" d="M1758,859 L1792,859 L1792,745 L1758,745"/>
-  <path d="M1770,859 L1758,852 M1770,859 L1758,859 M1770,859 L1758,866" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1777" cy="859" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1764" y1="739" x2="1764" y2="751" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1769" y1="739" x2="1769" y2="751" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="messages.sender_id" d="M1468,875 L1412,875 L1412,511 L1314,511 L1314,426"/>
-  <path d="M1456,875 L1468,882 M1456,875 L1468,875 M1456,875 L1468,868" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="875" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1320" y1="432" x2="1308" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1320" y1="437" x2="1308" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="notifications.user_id" d="M1468,1295 L1379,1295 L1379,538 L1242,538 L1242,426"/>
-  <path d="M1456,1295 L1468,1302 M1456,1295 L1468,1295 M1456,1295 L1468,1288" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1295" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1248" y1="432" x2="1236" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1248" y1="437" x2="1236" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="offer_history.offer_id" d="M453,1583 L487,1583 L487,1469 L453,1469"/>
-  <path d="M465,1583 L453,1576 M465,1583 L453,1583 M465,1583 L453,1590" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="472" cy="1583" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="459" y1="1463" x2="459" y2="1475" stroke="#0C1D4A" stroke-width="1.4"/><line x1="464" y1="1463" x2="464" y2="1475" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="offers.offerer_id" d="M163,1325 L107,1325 L107,475 L852,475 L852,426"/>
-  <path d="M151,1325 L163,1332 M151,1325 L163,1325 M151,1325 L163,1318" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1325" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="858" y1="432" x2="846" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="858" y1="437" x2="846" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="offers.owner_id" d="M163,1341 L96,1341 L96,466 L828,466 L828,426"/>
-  <path d="M151,1341 L163,1348 M151,1341 L163,1341 M151,1341 L163,1334" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1341" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="834" y1="432" x2="822" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="834" y1="437" x2="822" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="payments.task_id" d="M453,1115 L498,1115 L498,1001 L453,1001"/>
-  <line x1="460" y1="1109" x2="460" y2="1121" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="470" cy="1115" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="459" y1="995" x2="459" y2="1007" stroke="#0C1D4A" stroke-width="1.4"/><line x1="464" y1="995" x2="464" y2="1007" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="push_subscriptions.user_id" d="M1892,665 L1858,665 L1858,448 L1482,448 L1482,426"/>
-  <path d="M1880,665 L1892,672 M1880,665 L1892,665 M1880,665 L1892,658" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1873" cy="665" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1488" y1="432" x2="1476" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1488" y1="437" x2="1476" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="reports.message_id" d="M1758,1181 L1803,1181 L1803,939 L1758,939"/>
-  <path d="M1770,1181 L1758,1174 M1770,1181 L1758,1181 M1770,1181 L1758,1188" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1777" cy="1181" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1765" y1="933" x2="1765" y2="945" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="1775" cy="939" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="reports.reported_user_id" d="M1468,1069 L1390,1069 L1390,529 L1266,529 L1266,426"/>
-  <path d="M1456,1069 L1468,1076 M1456,1069 L1468,1069 M1456,1069 L1468,1062" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1069" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1272" y1="432" x2="1260" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1272" y1="437" x2="1260" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="reports.reporter_id" d="M1468,1053 L1401,1053 L1401,520 L1290,520 L1290,426"/>
-  <path d="M1456,1053 L1468,1060 M1456,1053 L1468,1053 M1456,1053 L1468,1046" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1053" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1296" y1="432" x2="1284" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1296" y1="437" x2="1284" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="reviews.booking_id" d="M453,1777 L520,1777 L520,1659 L587,1659"/>
-  <path d="M465,1777 L453,1770 M465,1777 L453,1777 M465,1777 L453,1784" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="472" cy="1777" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="580" y1="1665" x2="580" y2="1653" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="570" cy="1659" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="reviews.reviewee_id" d="M163,1809 L74,1809 L74,448 L780,448 L780,426"/>
-  <path d="M151,1809 L163,1816 M151,1809 L163,1809 M151,1809 L163,1802" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1809" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="786" y1="432" x2="774" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="786" y1="437" x2="774" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="reviews.reviewer_id" d="M163,1793 L85,1793 L85,457 L804,457 L804,426"/>
-  <path d="M151,1793 L163,1800 M151,1793 L163,1793 M151,1793 L163,1786" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1793" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="810" y1="432" x2="798" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="810" y1="437" x2="798" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="reviews.task_id" d="M453,1761 L509,1761 L509,985 L453,985"/>
-  <path d="M465,1761 L453,1754 M465,1761 L453,1761 M465,1761 L453,1768" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="472" cy="1761" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="460" y1="979" x2="460" y2="991" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="470" cy="985" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="sale_orders.buyer_id" d="M1011,987 L966,987 L966,556 L1068,556 L1068,426"/>
-  <path d="M999,987 L1011,994 M999,987 L1011,987 M999,987 L1011,980" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="987" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1074" y1="432" x2="1062" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1074" y1="437" x2="1062" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="sale_orders.sales_item_id" d="M1301,971 L1335,971 L1335,857 L1301,857"/>
-  <path d="M1313,971 L1301,964 M1313,971 L1301,971 M1313,971 L1301,978" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1320" cy="971" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1307" y1="851" x2="1307" y2="863" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1312" y1="851" x2="1312" y2="863" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="sale_orders.seller_id" d="M1011,1003 L955,1003 L955,547 L1044,547 L1044,426"/>
-  <path d="M999,1003 L1011,1010 M999,1003 L1011,1003 M999,1003 L1011,996" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="1003" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="messages.conversation_id" d="M1758,868 L1792,868 L1792,754 L1758,754"/>
+  <path d="M1770,868 L1758,861 M1770,868 L1758,868 M1770,868 L1758,875" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1777" cy="868" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1764" y1="748" x2="1764" y2="760" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1769" y1="748" x2="1769" y2="760" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="messages.sender_id" d="M1468,884 L1412,884 L1412,529 L1286,529 L1286,426"/>
+  <path d="M1456,884 L1468,891 M1456,884 L1468,884 M1456,884 L1468,877" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="884" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1292" y1="432" x2="1280" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1292" y1="437" x2="1280" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="notifications.user_id" d="M1468,1304 L1379,1304 L1379,556 L1217,556 L1217,426"/>
+  <path d="M1456,1304 L1468,1311 M1456,1304 L1468,1304 M1456,1304 L1468,1297" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1304" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1223" y1="432" x2="1211" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1223" y1="437" x2="1211" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="offer_history.offer_id" d="M453,1592 L487,1592 L487,1478 L453,1478"/>
+  <path d="M465,1592 L453,1585 M465,1592 L453,1592 M465,1592 L453,1599" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="472" cy="1592" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="459" y1="1472" x2="459" y2="1484" stroke="#0C1D4A" stroke-width="1.4"/><line x1="464" y1="1472" x2="464" y2="1484" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="offers.offerer_id" d="M163,1334 L107,1334 L107,475 L860,475 L860,426"/>
+  <path d="M151,1334 L163,1341 M151,1334 L163,1334 M151,1334 L163,1327" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1334" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="866" y1="432" x2="854" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="866" y1="437" x2="854" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="offers.owner_id" d="M163,1350 L96,1350 L96,466 L837,466 L837,426"/>
+  <path d="M151,1350 L163,1357 M151,1350 L163,1350 M151,1350 L163,1343" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1350" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="843" y1="432" x2="831" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="843" y1="437" x2="831" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="payments.task_id" d="M453,1124 L498,1124 L498,1010 L453,1010"/>
+  <line x1="460" y1="1118" x2="460" y2="1130" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="470" cy="1124" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="459" y1="1004" x2="459" y2="1016" stroke="#0C1D4A" stroke-width="1.4"/><line x1="464" y1="1004" x2="464" y2="1016" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="push_subscriptions.user_id" d="M1914,674 L1880,674 L1880,448 L1493,448 L1493,426"/>
+  <path d="M1902,674 L1914,681 M1902,674 L1914,674 M1902,674 L1914,667" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1895" cy="674" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1499" y1="432" x2="1487" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1499" y1="437" x2="1487" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="reports.message_id" d="M1758,1190 L1803,1190 L1803,948 L1758,948"/>
+  <path d="M1770,1190 L1758,1183 M1770,1190 L1758,1190 M1770,1190 L1758,1197" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1777" cy="1190" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1765" y1="942" x2="1765" y2="954" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="1775" cy="948" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="reports.reported_user_id" d="M1468,1078 L1390,1078 L1390,547 L1240,547 L1240,426"/>
+  <path d="M1456,1078 L1468,1085 M1456,1078 L1468,1078 M1456,1078 L1468,1071" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1078" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1246" y1="432" x2="1234" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1246" y1="437" x2="1234" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="reports.reporter_id" d="M1468,1062 L1401,1062 L1401,538 L1263,538 L1263,426"/>
+  <path d="M1456,1062 L1468,1069 M1456,1062 L1468,1062 M1456,1062 L1468,1055" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1449" cy="1062" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1269" y1="432" x2="1257" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1269" y1="437" x2="1257" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="reviews.booking_id" d="M453,1786 L520,1786 L520,1668 L587,1668"/>
+  <path d="M465,1786 L453,1779 M465,1786 L453,1786 M465,1786 L453,1793" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="472" cy="1786" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="580" y1="1674" x2="580" y2="1662" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="570" cy="1668" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="reviews.reviewee_id" d="M163,1818 L74,1818 L74,448 L791,448 L791,426"/>
+  <path d="M151,1818 L163,1825 M151,1818 L163,1818 M151,1818 L163,1811" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1818" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="797" y1="432" x2="785" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="797" y1="437" x2="785" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="reviews.reviewer_id" d="M163,1802 L85,1802 L85,457 L814,457 L814,426"/>
+  <path d="M151,1802 L163,1809 M151,1802 L163,1802 M151,1802 L163,1795" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="1802" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="820" y1="432" x2="808" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="820" y1="437" x2="808" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="reviews.task_id" d="M453,1770 L509,1770 L509,994 L453,994"/>
+  <path d="M465,1770 L453,1763 M465,1770 L453,1770 M465,1770 L453,1777" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="472" cy="1770" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="460" y1="988" x2="460" y2="1000" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="470" cy="994" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="sale_orders.buyer_id" d="M1011,996 L966,996 L966,556 L1067,556 L1067,426"/>
+  <path d="M999,996 L1011,1003 M999,996 L1011,996 M999,996 L1011,989" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="996" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1073" y1="432" x2="1061" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1073" y1="437" x2="1061" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="sale_orders.sales_item_id" d="M1301,980 L1335,980 L1335,866 L1301,866"/>
+  <path d="M1313,980 L1301,973 M1313,980 L1301,980 M1313,980 L1301,987" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1320" cy="980" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1307" y1="860" x2="1307" y2="872" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1312" y1="860" x2="1312" y2="872" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="sale_orders.seller_id" d="M1011,1012 L955,1012 L955,547 L1044,547 L1044,426"/>
+  <path d="M999,1012 L1011,1019 M999,1012 L1011,1012 M999,1012 L1011,1005" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="1012" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
   <line x1="1050" y1="432" x2="1038" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1050" y1="437" x2="1038" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="sales_items.seller_id" d="M1011,665 L977,665 L977,565 L1092,565 L1092,426"/>
-  <path d="M999,665 L1011,672 M999,665 L1011,665 M999,665 L1011,658" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="665" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1098" y1="432" x2="1086" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1098" y1="437" x2="1086" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="security_events.user_id" d="M1892,1069 L1836,1069 L1836,466 L1434,466 L1434,426"/>
-  <path d="M1880,1069 L1892,1076 M1880,1069 L1892,1069 M1880,1069 L1892,1062" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1873" cy="1069" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1440" y1="433" x2="1428" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="1434" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="tasks.accepted_by" d="M163,809 L118,809 L118,484 L876,484 L876,426"/>
-  <path d="M151,809 L163,816 M151,809 L163,809 M151,809 L163,802" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="809" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="882" y1="433" x2="870" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="876" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="tasks.created_by" d="M163,793 L129,793 L129,493 L900,493 L900,426"/>
-  <path d="M151,793 L163,800 M151,793 L163,793 M151,793 L163,786" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="793" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="906" y1="432" x2="894" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="906" y1="437" x2="894" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <path class="rel" data-fk="trusted_devices.user_id" d="M1892,859 L1847,859 L1847,457 L1458,457 L1458,426"/>
-  <path d="M1880,859 L1892,866 M1880,859 L1892,859 M1880,859 L1892,852" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1873" cy="859" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="1464" y1="432" x2="1452" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1464" y1="437" x2="1452" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
-  <rect x="760" y="154" width="750" height="276" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="756" y="150" width="750" height="276" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M756,180 L756,158 Q756,150 764,150 L1498,150 Q1506,150 1506,158 L1506,180 Z" fill="#0C1D4A"/>
-  <text x="1131" y="170" class="tname">users</text>
-  <text x="764" y="192" class="key" fill="#B38900">PK</text>
-  <text x="796" y="192" class="cname pk">id</text>
-  <text x="998" y="192" class="ctype">int</text>
-  <rect x="757" y="196" width="248" height="16" fill="#F7F8FB"/>
-  <text x="764" y="208" class="key" fill="#6B7280"></text>
-  <text x="796" y="208" class="cname">full_name</text>
-  <text x="998" y="208" class="ctype">varchar(100)</text>
-  <text x="764" y="224" class="key" fill="#6B7280">UQ</text>
-  <text x="796" y="224" class="cname">email</text>
-  <text x="998" y="224" class="ctype">varchar(120)</text>
-  <rect x="757" y="228" width="248" height="16" fill="#F7F8FB"/>
-  <text x="764" y="240" class="key" fill="#6B7280"></text>
-  <text x="796" y="240" class="cname">phone_number</text>
-  <text x="998" y="240" class="ctype">varchar(20)</text>
-  <text x="764" y="256" class="key" fill="#6B7280"></text>
-  <text x="796" y="256" class="cname">profile_photo_url</text>
-  <text x="998" y="256" class="ctype">varchar(500) ?</text>
-  <rect x="757" y="260" width="248" height="16" fill="#F7F8FB"/>
-  <text x="764" y="272" class="key" fill="#6B7280"></text>
-  <text x="796" y="272" class="cname">password_hash</text>
-  <text x="998" y="272" class="ctype">varchar(255)</text>
-  <text x="764" y="288" class="key" fill="#6B7280"></text>
-  <text x="796" y="288" class="cname">role</text>
-  <text x="998" y="288" class="ctype">enum</text>
-  <rect x="757" y="292" width="248" height="16" fill="#F7F8FB"/>
-  <text x="764" y="304" class="key" fill="#6B7280"></text>
-  <text x="796" y="304" class="cname">suspension_reason</text>
-  <text x="998" y="304" class="ctype">varchar(500) ?</text>
-  <text x="764" y="320" class="key" fill="#6B7280"></text>
-  <text x="796" y="320" class="cname">suspended_at</text>
-  <text x="998" y="320" class="ctype">timestamp ?</text>
-  <rect x="757" y="324" width="248" height="16" fill="#F7F8FB"/>
-  <text x="764" y="336" class="key" fill="#6B7280"></text>
-  <text x="796" y="336" class="cname">ban_reason</text>
-  <text x="998" y="336" class="ctype">varchar(500) ?</text>
-  <text x="764" y="352" class="key" fill="#6B7280"></text>
-  <text x="796" y="352" class="cname">banned_at</text>
-  <text x="998" y="352" class="ctype">timestamp ?</text>
-  <rect x="757" y="356" width="248" height="16" fill="#F7F8FB"/>
-  <text x="764" y="368" class="key" fill="#6B7280"></text>
-  <text x="796" y="368" class="cname">is_verified</text>
-  <text x="998" y="368" class="ctype">boolean</text>
-  <text x="764" y="384" class="key" fill="#6B7280"></text>
-  <text x="796" y="384" class="cname">rating_average</text>
-  <text x="998" y="384" class="ctype">decimal(3,2)</text>
-  <rect x="757" y="388" width="248" height="16" fill="#F7F8FB"/>
-  <text x="764" y="400" class="key" fill="#6B7280"></text>
-  <text x="796" y="400" class="cname">total_reviews</text>
-  <text x="998" y="400" class="ctype">int</text>
-  <text x="764" y="416" class="key" fill="#6B7280"></text>
-  <text x="796" y="416" class="cname">created_at</text>
-  <text x="998" y="416" class="ctype">timestamp</text>
-  <text x="1014" y="192" class="key" fill="#6B7280"></text>
-  <text x="1046" y="192" class="cname">updated_at</text>
-  <text x="1248" y="192" class="ctype">timestamp</text>
-  <rect x="1007" y="196" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1014" y="208" class="key" fill="#6B7280"></text>
-  <text x="1046" y="208" class="cname">student_number</text>
-  <text x="1248" y="208" class="ctype">varchar(50) ?</text>
-  <text x="1014" y="224" class="key" fill="#6B7280"></text>
-  <text x="1046" y="224" class="cname">member_type</text>
-  <text x="1248" y="224" class="ctype">enum</text>
-  <rect x="1007" y="228" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1014" y="240" class="key" fill="#6B7280"></text>
-  <text x="1046" y="240" class="cname">faculty</text>
-  <text x="1248" y="240" class="ctype">varchar(150) ?</text>
-  <text x="1014" y="256" class="key" fill="#6B7280"></text>
-  <text x="1046" y="256" class="cname">academic_year</text>
-  <text x="1248" y="256" class="ctype">varchar(50) ?</text>
-  <rect x="1007" y="260" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1014" y="272" class="key" fill="#6B7280"></text>
-  <text x="1046" y="272" class="cname">account_role</text>
-  <text x="1248" y="272" class="ctype">enum</text>
-  <text x="1014" y="288" class="key" fill="#6B7280"></text>
-  <text x="1046" y="288" class="cname">bio</text>
-  <text x="1248" y="288" class="ctype">text ?</text>
-  <rect x="1007" y="292" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1014" y="304" class="key" fill="#6B7280"></text>
-  <text x="1046" y="304" class="cname">skills</text>
-  <text x="1248" y="304" class="ctype">longtext ?</text>
-  <text x="1014" y="320" class="key" fill="#6B7280"></text>
-  <text x="1046" y="320" class="cname">services</text>
-  <text x="1248" y="320" class="ctype">longtext ?</text>
-  <rect x="1007" y="324" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1014" y="336" class="key" fill="#6B7280"></text>
-  <text x="1046" y="336" class="cname">lecturer_title</text>
-  <text x="1248" y="336" class="ctype">varchar(20) ?</text>
-  <text x="1014" y="352" class="key" fill="#6B7280"></text>
-  <text x="1046" y="352" class="cname">years_experience</text>
-  <text x="1248" y="352" class="ctype">int ?</text>
-  <rect x="1007" y="356" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1014" y="368" class="key" fill="#6B7280"></text>
-  <text x="1046" y="368" class="cname">office_location</text>
-  <text x="1248" y="368" class="ctype">varchar(150) ?</text>
-  <text x="1014" y="384" class="key" fill="#6B7280"></text>
-  <text x="1046" y="384" class="cname">consultation_mode</text>
-  <text x="1248" y="384" class="ctype">varchar(150) ?</text>
-  <rect x="1007" y="388" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1014" y="400" class="key" fill="#6B7280"></text>
-  <text x="1046" y="400" class="cname">availability_note</text>
-  <text x="1248" y="400" class="ctype">text ?</text>
-  <text x="1014" y="416" class="key" fill="#6B7280"></text>
-  <text x="1046" y="416" class="cname">email_verification_token_hash</text>
-  <text x="1248" y="416" class="ctype">varchar(255) ?</text>
-  <text x="1264" y="192" class="key" fill="#6B7280"></text>
-  <text x="1296" y="192" class="cname">email_verification_expires</text>
-  <text x="1498" y="192" class="ctype">timestamp ?</text>
-  <rect x="1257" y="196" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1264" y="208" class="key" fill="#6B7280"></text>
-  <text x="1296" y="208" class="cname">password_reset_token_hash</text>
-  <text x="1498" y="208" class="ctype">varchar(255) ?</text>
-  <text x="1264" y="224" class="key" fill="#6B7280"></text>
-  <text x="1296" y="224" class="cname">password_reset_expires</text>
-  <text x="1498" y="224" class="ctype">timestamp ?</text>
-  <rect x="1257" y="228" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1264" y="240" class="key" fill="#6B7280"></text>
-  <text x="1296" y="240" class="cname">totp_secret_encrypted</text>
-  <text x="1498" y="240" class="ctype">varchar(500) ?</text>
-  <text x="1264" y="256" class="key" fill="#6B7280"></text>
-  <text x="1296" y="256" class="cname">totp_enabled</text>
-  <text x="1498" y="256" class="ctype">boolean</text>
-  <rect x="1257" y="260" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1264" y="272" class="key" fill="#6B7280"></text>
-  <text x="1296" y="272" class="cname">totp_backup_codes</text>
-  <text x="1498" y="272" class="ctype">longtext ?</text>
-  <text x="1264" y="288" class="key" fill="#6B7280"></text>
-  <text x="1296" y="288" class="cname">token_version</text>
-  <text x="1498" y="288" class="ctype">int</text>
-  <rect x="1257" y="292" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1264" y="304" class="key" fill="#6B7280"></text>
-  <text x="1296" y="304" class="cname">failed_login_attempts</text>
-  <text x="1498" y="304" class="ctype">int</text>
-  <text x="1264" y="320" class="key" fill="#6B7280"></text>
-  <text x="1296" y="320" class="cname">lockout_until</text>
-  <text x="1498" y="320" class="ctype">timestamp ?</text>
-  <rect x="1257" y="324" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1264" y="336" class="key" fill="#6B7280"></text>
-  <text x="1296" y="336" class="cname">login_email_otp_hash</text>
-  <text x="1498" y="336" class="ctype">varchar(255) ?</text>
-  <text x="1264" y="352" class="key" fill="#6B7280"></text>
-  <text x="1296" y="352" class="cname">login_email_otp_expires</text>
-  <text x="1498" y="352" class="ctype">timestamp ?</text>
-  <rect x="1257" y="356" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1264" y="368" class="key" fill="#6B7280"></text>
-  <text x="1296" y="368" class="cname">login_email_otp_requested_at</text>
-  <text x="1498" y="368" class="ctype">timestamp ?</text>
-  <text x="1264" y="384" class="key" fill="#6B7280"></text>
-  <text x="1296" y="384" class="cname">totp_method</text>
-  <text x="1498" y="384" class="ctype">varchar(10) ?</text>
-  <rect x="1257" y="388" width="248" height="16" fill="#F7F8FB"/>
-  <text x="1264" y="400" class="key" fill="#6B7280"></text>
-  <text x="1296" y="400" class="cname">has_seen_onboarding</text>
-  <text x="1498" y="400" class="ctype">boolean</text>
-  <text x="1264" y="416" class="key" fill="#6B7280"></text>
-  <text x="1296" y="416" class="cname">lecturer_verified</text>
-  <text x="1498" y="416" class="ctype">boolean</text>
-  <line x1="1006" y1="180" x2="1006" y2="426" stroke="#E5E7EB"/>
-  <line x1="1256" y1="180" x2="1256" y2="426" stroke="#E5E7EB"/>
-  <rect x="167" y="616" width="290" height="404" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="163" y="612" width="290" height="404" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M163,642 L163,620 Q163,612 171,612 L445,612 Q453,612 453,620 L453,642 Z" fill="#0C1D4A"/>
-  <text x="308" y="632" class="tname">tasks</text>
-  <text x="171" y="654" class="key" fill="#B38900">PK</text>
-  <text x="203" y="654" class="cname pk">id</text>
-  <text x="445" y="654" class="ctype">int</text>
-  <rect x="164" y="658" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="670" class="key" fill="#6B7280"></text>
-  <text x="203" y="670" class="cname">title</text>
-  <text x="445" y="670" class="ctype">varchar(150)</text>
-  <text x="171" y="686" class="key" fill="#6B7280"></text>
-  <text x="203" y="686" class="cname">description</text>
-  <text x="445" y="686" class="ctype">text</text>
-  <rect x="164" y="690" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="702" class="key" fill="#6B7280"></text>
-  <text x="203" y="702" class="cname">category</text>
-  <text x="445" y="702" class="ctype">varchar(50)</text>
-  <text x="171" y="718" class="key" fill="#6B7280"></text>
-  <text x="203" y="718" class="cname">section</text>
-  <text x="445" y="718" class="ctype">enum</text>
-  <rect x="164" y="722" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="734" class="key" fill="#6B7280"></text>
-  <text x="203" y="734" class="cname">price</text>
-  <text x="445" y="734" class="ctype">decimal(10,2)</text>
-  <text x="171" y="750" class="key" fill="#6B7280"></text>
-  <text x="203" y="750" class="cname">location</text>
-  <text x="445" y="750" class="ctype">varchar(100)</text>
-  <rect x="164" y="754" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="766" class="key" fill="#6B7280"></text>
-  <text x="203" y="766" class="cname">status</text>
-  <text x="445" y="766" class="ctype">enum</text>
-  <text x="171" y="782" class="key" fill="#6B7280"></text>
-  <text x="203" y="782" class="cname">urgent</text>
-  <text x="445" y="782" class="ctype">boolean</text>
-  <rect x="164" y="786" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="798" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="798" class="cname fk">created_by</text>
-  <text x="445" y="798" class="ctype">int</text>
-  <text x="171" y="814" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="814" class="cname fk">accepted_by</text>
-  <text x="445" y="814" class="ctype">int ?</text>
-  <rect x="164" y="818" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="830" class="key" fill="#6B7280"></text>
-  <text x="203" y="830" class="cname">created_at</text>
-  <text x="445" y="830" class="ctype">timestamp</text>
-  <text x="171" y="846" class="key" fill="#6B7280"></text>
-  <text x="203" y="846" class="cname">updated_at</text>
-  <text x="445" y="846" class="ctype">timestamp</text>
-  <rect x="164" y="850" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="862" class="key" fill="#6B7280"></text>
-  <text x="203" y="862" class="cname">image_urls</text>
-  <text x="445" y="862" class="ctype">longtext ?</text>
-  <text x="171" y="878" class="key" fill="#6B7280"></text>
-  <text x="203" y="878" class="cname">moderation_status</text>
-  <text x="445" y="878" class="ctype">enum</text>
-  <rect x="164" y="882" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="894" class="key" fill="#6B7280"></text>
-  <text x="203" y="894" class="cname">moderation_flags</text>
-  <text x="445" y="894" class="ctype">longtext ?</text>
-  <text x="171" y="910" class="key" fill="#6B7280"></text>
-  <text x="203" y="910" class="cname">awaiting_confirmation_at</text>
-  <text x="445" y="910" class="ctype">timestamp ?</text>
-  <rect x="164" y="914" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="926" class="key" fill="#6B7280"></text>
-  <text x="203" y="926" class="cname">review_reminder_sent_at</text>
-  <text x="445" y="926" class="ctype">timestamp ?</text>
-  <text x="171" y="942" class="key" fill="#6B7280"></text>
-  <text x="203" y="942" class="cname">review_escalated_at</text>
-  <text x="445" y="942" class="ctype">timestamp ?</text>
-  <rect x="164" y="946" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="958" class="key" fill="#6B7280"></text>
-  <text x="203" y="958" class="cname">disputed_at</text>
-  <text x="445" y="958" class="ctype">timestamp ?</text>
-  <text x="171" y="974" class="key" fill="#6B7280"></text>
-  <text x="203" y="974" class="cname">dispute_reason</text>
-  <text x="445" y="974" class="ctype">varchar(500) ?</text>
-  <rect x="164" y="978" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="990" class="key" fill="#6B7280"></text>
-  <text x="203" y="990" class="cname">dispute_outcome</text>
-  <text x="445" y="990" class="ctype">enum ?</text>
-  <text x="171" y="1006" class="key" fill="#6B7280"></text>
-  <text x="203" y="1006" class="cname">dispute_resolved_at</text>
-  <text x="445" y="1006" class="ctype">timestamp ?</text>
-  <rect x="167" y="1066" width="290" height="132" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="163" y="1062" width="290" height="132" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M163,1092 L163,1070 Q163,1062 171,1062 L445,1062 Q453,1062 453,1070 L453,1092 Z" fill="#0C1D4A"/>
-  <text x="308" y="1082" class="tname">payments</text>
-  <text x="171" y="1104" class="key" fill="#B38900">PK</text>
-  <text x="203" y="1104" class="cname pk">id</text>
-  <text x="445" y="1104" class="ctype">int</text>
-  <rect x="164" y="1108" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1120" class="key" fill="#0072CE">FK,UQ</text>
-  <text x="203" y="1120" class="cname fk">task_id</text>
-  <text x="445" y="1120" class="ctype">int</text>
-  <text x="171" y="1136" class="key" fill="#6B7280"></text>
-  <text x="203" y="1136" class="cname">amount</text>
-  <text x="445" y="1136" class="ctype">decimal(10,2)</text>
-  <rect x="164" y="1140" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1152" class="key" fill="#6B7280"></text>
-  <text x="203" y="1152" class="cname">status</text>
-  <text x="445" y="1152" class="ctype">enum</text>
-  <text x="171" y="1168" class="key" fill="#6B7280"></text>
-  <text x="203" y="1168" class="cname">created_at</text>
-  <text x="445" y="1168" class="ctype">timestamp</text>
-  <rect x="164" y="1172" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1184" class="key" fill="#6B7280"></text>
-  <text x="203" y="1184" class="cname">updated_at</text>
-  <text x="445" y="1184" class="ctype">timestamp</text>
-  <rect x="167" y="1244" width="290" height="244" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="163" y="1240" width="290" height="244" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M163,1270 L163,1248 Q163,1240 171,1240 L445,1240 Q453,1240 453,1248 L453,1270 Z" fill="#0C1D4A"/>
-  <text x="308" y="1260" class="tname">offers</text>
-  <text x="171" y="1282" class="key" fill="#B38900">PK</text>
-  <text x="203" y="1282" class="cname pk">id</text>
-  <text x="445" y="1282" class="ctype">int</text>
-  <rect x="164" y="1286" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1298" class="key" fill="#6B7280"></text>
-  <text x="203" y="1298" class="cname">context_type</text>
-  <text x="445" y="1298" class="ctype">enum</text>
-  <text x="171" y="1314" class="key" fill="#6B7280"></text>
-  <text x="203" y="1314" class="cname">context_id</text>
-  <text x="445" y="1314" class="ctype">int</text>
-  <rect x="164" y="1318" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1330" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="1330" class="cname fk">offerer_id</text>
-  <text x="445" y="1330" class="ctype">int</text>
-  <text x="171" y="1346" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="1346" class="cname fk">owner_id</text>
-  <text x="445" y="1346" class="ctype">int</text>
-  <rect x="164" y="1350" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1362" class="key" fill="#6B7280"></text>
-  <text x="203" y="1362" class="cname">amount</text>
-  <text x="445" y="1362" class="ctype">decimal(10,2)</text>
-  <text x="171" y="1378" class="key" fill="#6B7280"></text>
-  <text x="203" y="1378" class="cname">message</text>
-  <text x="445" y="1378" class="ctype">varchar(300) ?</text>
-  <rect x="164" y="1382" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1394" class="key" fill="#6B7280"></text>
-  <text x="203" y="1394" class="cname">last_proposed_by</text>
-  <text x="445" y="1394" class="ctype">enum</text>
-  <text x="171" y="1410" class="key" fill="#6B7280"></text>
-  <text x="203" y="1410" class="cname">counter_rounds</text>
-  <text x="445" y="1410" class="ctype">int</text>
-  <rect x="164" y="1414" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1426" class="key" fill="#6B7280"></text>
-  <text x="203" y="1426" class="cname">status</text>
-  <text x="445" y="1426" class="ctype">enum</text>
-  <text x="171" y="1442" class="key" fill="#6B7280"></text>
-  <text x="203" y="1442" class="cname">expires_at</text>
-  <text x="445" y="1442" class="ctype">timestamp ?</text>
-  <rect x="164" y="1446" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1458" class="key" fill="#6B7280"></text>
-  <text x="203" y="1458" class="cname">created_at</text>
-  <text x="445" y="1458" class="ctype">timestamp</text>
-  <text x="171" y="1474" class="key" fill="#6B7280"></text>
-  <text x="203" y="1474" class="cname">updated_at</text>
-  <text x="445" y="1474" class="ctype">timestamp</text>
-  <rect x="167" y="1534" width="290" height="132" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="163" y="1530" width="290" height="132" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M163,1560 L163,1538 Q163,1530 171,1530 L445,1530 Q453,1530 453,1538 L453,1560 Z" fill="#0C1D4A"/>
-  <text x="308" y="1550" class="tname">offer_history</text>
-  <text x="171" y="1572" class="key" fill="#B38900">PK</text>
-  <text x="203" y="1572" class="cname pk">id</text>
-  <text x="445" y="1572" class="ctype">int</text>
-  <rect x="164" y="1576" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1588" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="1588" class="cname fk">offer_id</text>
-  <text x="445" y="1588" class="ctype">int</text>
-  <text x="171" y="1604" class="key" fill="#6B7280"></text>
-  <text x="203" y="1604" class="cname">amount</text>
-  <text x="445" y="1604" class="ctype">decimal(10,2)</text>
-  <rect x="164" y="1608" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1620" class="key" fill="#6B7280"></text>
-  <text x="203" y="1620" class="cname">proposed_by</text>
-  <text x="445" y="1620" class="ctype">enum</text>
-  <text x="171" y="1636" class="key" fill="#6B7280"></text>
-  <text x="203" y="1636" class="cname">message</text>
-  <text x="445" y="1636" class="ctype">varchar(300) ?</text>
-  <rect x="164" y="1640" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1652" class="key" fill="#6B7280"></text>
-  <text x="203" y="1652" class="cname">created_at</text>
-  <text x="445" y="1652" class="ctype">timestamp</text>
-  <rect x="167" y="1712" width="290" height="180" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="163" y="1708" width="290" height="180" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M163,1738 L163,1716 Q163,1708 171,1708 L445,1708 Q453,1708 453,1716 L453,1738 Z" fill="#0C1D4A"/>
-  <text x="308" y="1728" class="tname">reviews</text>
-  <text x="171" y="1750" class="key" fill="#B38900">PK</text>
-  <text x="203" y="1750" class="cname pk">id</text>
-  <text x="445" y="1750" class="ctype">int</text>
-  <rect x="164" y="1754" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1766" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="1766" class="cname fk">task_id</text>
-  <text x="445" y="1766" class="ctype">int ?</text>
-  <text x="171" y="1782" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="1782" class="cname fk">booking_id</text>
-  <text x="445" y="1782" class="ctype">int ?</text>
-  <rect x="164" y="1786" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1798" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="1798" class="cname fk">reviewer_id</text>
-  <text x="445" y="1798" class="ctype">int</text>
-  <text x="171" y="1814" class="key" fill="#0072CE">FK</text>
-  <text x="203" y="1814" class="cname fk">reviewee_id</text>
-  <text x="445" y="1814" class="ctype">int</text>
-  <rect x="164" y="1818" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1830" class="key" fill="#6B7280"></text>
-  <text x="203" y="1830" class="cname">rating</text>
-  <text x="445" y="1830" class="ctype">int</text>
-  <text x="171" y="1846" class="key" fill="#6B7280"></text>
-  <text x="203" y="1846" class="cname">comment</text>
-  <text x="445" y="1846" class="ctype">text ?</text>
-  <rect x="164" y="1850" width="288" height="16" fill="#F7F8FB"/>
-  <text x="171" y="1862" class="key" fill="#6B7280"></text>
-  <text x="203" y="1862" class="cname">created_at</text>
-  <text x="445" y="1862" class="ctype">timestamp</text>
-  <text x="171" y="1878" class="key" fill="#6B7280"></text>
-  <text x="203" y="1878" class="cname">updated_at</text>
-  <text x="445" y="1878" class="ctype">timestamp ?</text>
-  <rect x="591" y="616" width="290" height="308" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="587" y="612" width="290" height="308" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M587,642 L587,620 Q587,612 595,612 L869,612 Q877,612 877,620 L877,642 Z" fill="#0C1D4A"/>
-  <text x="732" y="632" class="tname">equipment</text>
-  <text x="595" y="654" class="key" fill="#B38900">PK</text>
-  <text x="627" y="654" class="cname pk">id</text>
-  <text x="869" y="654" class="ctype">int</text>
-  <rect x="588" y="658" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="670" class="key" fill="#0072CE">FK</text>
-  <text x="627" y="670" class="cname fk">owner_id</text>
-  <text x="869" y="670" class="ctype">int</text>
-  <text x="595" y="686" class="key" fill="#6B7280"></text>
-  <text x="627" y="686" class="cname">name</text>
-  <text x="869" y="686" class="ctype">varchar(150)</text>
-  <rect x="588" y="690" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="702" class="key" fill="#6B7280"></text>
-  <text x="627" y="702" class="cname">description</text>
-  <text x="869" y="702" class="ctype">text</text>
-  <text x="595" y="718" class="key" fill="#6B7280"></text>
-  <text x="627" y="718" class="cname">condition_status</text>
-  <text x="869" y="718" class="ctype">enum ?</text>
-  <rect x="588" y="722" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="734" class="key" fill="#0072CE">FK</text>
-  <text x="627" y="734" class="cname fk">condition_checked_by</text>
-  <text x="869" y="734" class="ctype">int ?</text>
-  <text x="595" y="750" class="key" fill="#6B7280"></text>
-  <text x="627" y="750" class="cname">condition_checked_at</text>
-  <text x="869" y="750" class="ctype">timestamp ?</text>
-  <rect x="588" y="754" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="766" class="key" fill="#6B7280"></text>
-  <text x="627" y="766" class="cname">category</text>
-  <text x="869" y="766" class="ctype">varchar(100)</text>
-  <text x="595" y="782" class="key" fill="#6B7280"></text>
-  <text x="627" y="782" class="cname">section</text>
-  <text x="869" y="782" class="ctype">enum</text>
-  <rect x="588" y="786" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="798" class="key" fill="#6B7280"></text>
-  <text x="627" y="798" class="cname">daily_price</text>
-  <text x="869" y="798" class="ctype">decimal(10,2)</text>
-  <text x="595" y="814" class="key" fill="#6B7280"></text>
-  <text x="627" y="814" class="cname">item_value</text>
-  <text x="869" y="814" class="ctype">decimal(10,2) ?</text>
-  <rect x="588" y="818" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="830" class="key" fill="#6B7280"></text>
-  <text x="627" y="830" class="cname">is_available</text>
-  <text x="869" y="830" class="ctype">boolean</text>
-  <text x="595" y="846" class="key" fill="#6B7280"></text>
-  <text x="627" y="846" class="cname">created_at</text>
-  <text x="869" y="846" class="ctype">timestamp</text>
-  <rect x="588" y="850" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="862" class="key" fill="#6B7280"></text>
-  <text x="627" y="862" class="cname">updated_at</text>
-  <text x="869" y="862" class="ctype">timestamp</text>
-  <text x="595" y="878" class="key" fill="#6B7280"></text>
-  <text x="627" y="878" class="cname">image_urls</text>
-  <text x="869" y="878" class="ctype">longtext ?</text>
-  <rect x="588" y="882" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="894" class="key" fill="#6B7280"></text>
-  <text x="627" y="894" class="cname">moderation_status</text>
-  <text x="869" y="894" class="ctype">enum</text>
-  <text x="595" y="910" class="key" fill="#6B7280"></text>
-  <text x="627" y="910" class="cname">moderation_flags</text>
-  <text x="869" y="910" class="ctype">longtext ?</text>
-  <rect x="591" y="970" width="290" height="708" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="587" y="966" width="290" height="708" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M587,996 L587,974 Q587,966 595,966 L869,966 Q877,966 877,974 L877,996 Z" fill="#0C1D4A"/>
-  <text x="732" y="986" class="tname">equipment_bookings</text>
-  <text x="595" y="1008" class="key" fill="#B38900">PK</text>
-  <text x="627" y="1008" class="cname pk">id</text>
-  <text x="869" y="1008" class="ctype">int</text>
-  <rect x="588" y="1012" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1024" class="key" fill="#0072CE">FK</text>
-  <text x="627" y="1024" class="cname fk">equipment_id</text>
-  <text x="869" y="1024" class="ctype">int</text>
-  <text x="595" y="1040" class="key" fill="#0072CE">FK</text>
-  <text x="627" y="1040" class="cname fk">renter_id</text>
-  <text x="869" y="1040" class="ctype">int</text>
-  <rect x="588" y="1044" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1056" class="key" fill="#6B7280"></text>
-  <text x="627" y="1056" class="cname">start_date</text>
-  <text x="869" y="1056" class="ctype">date</text>
-  <text x="595" y="1072" class="key" fill="#6B7280"></text>
-  <text x="627" y="1072" class="cname">end_date</text>
-  <text x="869" y="1072" class="ctype">date</text>
-  <rect x="588" y="1076" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1088" class="key" fill="#6B7280"></text>
-  <text x="627" y="1088" class="cname">status</text>
-  <text x="869" y="1088" class="ctype">enum</text>
-  <text x="595" y="1104" class="key" fill="#6B7280"></text>
-  <text x="627" y="1104" class="cname">created_at</text>
-  <text x="869" y="1104" class="ctype">timestamp</text>
-  <rect x="588" y="1108" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1120" class="key" fill="#6B7280"></text>
-  <text x="627" y="1120" class="cname">updated_at</text>
-  <text x="869" y="1120" class="ctype">timestamp</text>
-  <text x="595" y="1136" class="key" fill="#6B7280"></text>
-  <text x="627" y="1136" class="cname">rental_days</text>
-  <text x="869" y="1136" class="ctype">int ?</text>
-  <rect x="588" y="1140" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1152" class="key" fill="#6B7280"></text>
-  <text x="627" y="1152" class="cname">rental_amount</text>
-  <text x="869" y="1152" class="ctype">decimal(10,2) ?</text>
-  <text x="595" y="1168" class="key" fill="#6B7280"></text>
-  <text x="627" y="1168" class="cname">protection_fee</text>
-  <text x="869" y="1168" class="ctype">decimal(10,2) ?</text>
-  <rect x="588" y="1172" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1184" class="key" fill="#6B7280"></text>
-  <text x="627" y="1184" class="cname">deposit_amount</text>
-  <text x="869" y="1184" class="ctype">decimal(10,2) ?</text>
-  <text x="595" y="1200" class="key" fill="#6B7280"></text>
-  <text x="627" y="1200" class="cname">trust_level</text>
-  <text x="869" y="1200" class="ctype">varchar(20) ?</text>
-  <rect x="588" y="1204" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1216" class="key" fill="#6B7280"></text>
-  <text x="627" y="1216" class="cname">payment_status</text>
-  <text x="869" y="1216" class="ctype">enum ?</text>
-  <text x="595" y="1232" class="key" fill="#6B7280"></text>
-  <text x="627" y="1232" class="cname">deposit_status</text>
-  <text x="869" y="1232" class="ctype">enum ?</text>
-  <rect x="588" y="1236" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1248" class="key" fill="#6B7280"></text>
-  <text x="627" y="1248" class="cname">condition_status</text>
-  <text x="869" y="1248" class="ctype">enum ?</text>
-  <text x="595" y="1264" class="key" fill="#6B7280"></text>
-  <text x="627" y="1264" class="cname">pickup_photos</text>
-  <text x="869" y="1264" class="ctype">longtext ?</text>
-  <rect x="588" y="1268" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1280" class="key" fill="#6B7280"></text>
-  <text x="627" y="1280" class="cname">picked_up_at</text>
-  <text x="869" y="1280" class="ctype">timestamp ?</text>
-  <text x="595" y="1296" class="key" fill="#6B7280"></text>
-  <text x="627" y="1296" class="cname">return_photos</text>
-  <text x="869" y="1296" class="ctype">longtext ?</text>
-  <rect x="588" y="1300" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1312" class="key" fill="#6B7280"></text>
-  <text x="627" y="1312" class="cname">returned_at</text>
-  <text x="869" y="1312" class="ctype">timestamp ?</text>
-  <text x="595" y="1328" class="key" fill="#6B7280"></text>
-  <text x="627" y="1328" class="cname">damage_note</text>
-  <text x="869" y="1328" class="ctype">text ?</text>
-  <rect x="588" y="1332" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1344" class="key" fill="#6B7280"></text>
-  <text x="627" y="1344" class="cname">pickup_condition</text>
-  <text x="869" y="1344" class="ctype">enum ?</text>
-  <text x="595" y="1360" class="key" fill="#6B7280"></text>
-  <text x="627" y="1360" class="cname">approved_at</text>
-  <text x="869" y="1360" class="ctype">timestamp ?</text>
-  <rect x="588" y="1364" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1376" class="key" fill="#6B7280"></text>
-  <text x="627" y="1376" class="cname">payment_due_at</text>
-  <text x="869" y="1376" class="ctype">timestamp ?</text>
-  <text x="595" y="1392" class="key" fill="#6B7280"></text>
-  <text x="627" y="1392" class="cname">paid_at</text>
-  <text x="869" y="1392" class="ctype">timestamp ?</text>
-  <rect x="588" y="1396" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1408" class="key" fill="#6B7280"></text>
-  <text x="627" y="1408" class="cname">return_due_at</text>
-  <text x="869" y="1408" class="ctype">timestamp ?</text>
-  <text x="595" y="1424" class="key" fill="#6B7280"></text>
-  <text x="627" y="1424" class="cname">return_minutes_late</text>
-  <text x="869" y="1424" class="ctype">int ?</text>
-  <rect x="588" y="1428" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1440" class="key" fill="#6B7280"></text>
-  <text x="627" y="1440" class="cname">cancelled_at</text>
-  <text x="869" y="1440" class="ctype">timestamp ?</text>
-  <text x="595" y="1456" class="key" fill="#6B7280"></text>
-  <text x="627" y="1456" class="cname">cancel_reason</text>
-  <text x="869" y="1456" class="ctype">varchar(30) ?</text>
-  <rect x="588" y="1460" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1472" class="key" fill="#6B7280"></text>
-  <text x="627" y="1472" class="cname">cancel_note</text>
-  <text x="869" y="1472" class="ctype">varchar(500) ?</text>
-  <text x="595" y="1488" class="key" fill="#6B7280"></text>
-  <text x="627" y="1488" class="cname">policy_version</text>
-  <text x="869" y="1488" class="ctype">varchar(40) ?</text>
-  <rect x="588" y="1492" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1504" class="key" fill="#6B7280"></text>
-  <text x="627" y="1504" class="cname">terms_snapshot</text>
-  <text x="869" y="1504" class="ctype">text ?</text>
-  <text x="595" y="1520" class="key" fill="#6B7280"></text>
-  <text x="627" y="1520" class="cname">return_reminder_sent_at</text>
-  <text x="869" y="1520" class="ctype">timestamp ?</text>
-  <rect x="588" y="1524" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1536" class="key" fill="#6B7280"></text>
-  <text x="627" y="1536" class="cname">overdue_notified_at</text>
-  <text x="869" y="1536" class="ctype">timestamp ?</text>
-  <text x="595" y="1552" class="key" fill="#6B7280"></text>
-  <text x="627" y="1552" class="cname">overdue_escalated_at</text>
-  <text x="869" y="1552" class="ctype">timestamp ?</text>
-  <rect x="588" y="1556" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1568" class="key" fill="#6B7280"></text>
-  <text x="627" y="1568" class="cname">problem_reported_at</text>
-  <text x="869" y="1568" class="ctype">timestamp ?</text>
-  <text x="595" y="1584" class="key" fill="#6B7280"></text>
-  <text x="627" y="1584" class="cname">problem_reported_by</text>
-  <text x="869" y="1584" class="ctype">enum ?</text>
-  <rect x="588" y="1588" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1600" class="key" fill="#6B7280"></text>
-  <text x="627" y="1600" class="cname">problem_category</text>
-  <text x="869" y="1600" class="ctype">varchar(40) ?</text>
-  <text x="595" y="1616" class="key" fill="#6B7280"></text>
-  <text x="627" y="1616" class="cname">problem_note</text>
-  <text x="869" y="1616" class="ctype">varchar(500) ?</text>
-  <rect x="588" y="1620" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1632" class="key" fill="#6B7280"></text>
-  <text x="627" y="1632" class="cname">return_attempted_at</text>
-  <text x="869" y="1632" class="ctype">timestamp ?</text>
-  <text x="595" y="1648" class="key" fill="#6B7280"></text>
-  <text x="627" y="1648" class="cname">damage_outcome</text>
-  <text x="869" y="1648" class="ctype">enum ?</text>
-  <rect x="588" y="1652" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1664" class="key" fill="#6B7280"></text>
-  <text x="627" y="1664" class="cname">damage_resolved_at</text>
-  <text x="869" y="1664" class="ctype">timestamp ?</text>
-  <rect x="591" y="1724" width="290" height="244" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="587" y="1720" width="290" height="244" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M587,1750 L587,1728 Q587,1720 595,1720 L869,1720 Q877,1720 877,1728 L877,1750 Z" fill="#0C1D4A"/>
-  <text x="732" y="1740" class="tname">booking_extensions</text>
-  <text x="595" y="1762" class="key" fill="#B38900">PK</text>
-  <text x="627" y="1762" class="cname pk">id</text>
-  <text x="869" y="1762" class="ctype">int</text>
-  <rect x="588" y="1766" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1778" class="key" fill="#0072CE">FK</text>
-  <text x="627" y="1778" class="cname fk">booking_id</text>
-  <text x="869" y="1778" class="ctype">int</text>
-  <text x="595" y="1794" class="key" fill="#6B7280"></text>
-  <text x="627" y="1794" class="cname">old_end_date</text>
-  <text x="869" y="1794" class="ctype">date</text>
-  <rect x="588" y="1798" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1810" class="key" fill="#6B7280"></text>
-  <text x="627" y="1810" class="cname">new_end_date</text>
-  <text x="869" y="1810" class="ctype">date</text>
-  <text x="595" y="1826" class="key" fill="#6B7280"></text>
-  <text x="627" y="1826" class="cname">extra_days</text>
-  <text x="869" y="1826" class="ctype">int</text>
-  <rect x="588" y="1830" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1842" class="key" fill="#6B7280"></text>
-  <text x="627" y="1842" class="cname">extra_amount</text>
-  <text x="869" y="1842" class="ctype">decimal(10,2)</text>
-  <text x="595" y="1858" class="key" fill="#6B7280"></text>
-  <text x="627" y="1858" class="cname">extra_fee</text>
-  <text x="869" y="1858" class="ctype">decimal(10,2)</text>
-  <rect x="588" y="1862" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1874" class="key" fill="#6B7280"></text>
-  <text x="627" y="1874" class="cname">status</text>
-  <text x="869" y="1874" class="ctype">enum</text>
-  <text x="595" y="1890" class="key" fill="#6B7280"></text>
-  <text x="627" y="1890" class="cname">payment_due_at</text>
-  <text x="869" y="1890" class="ctype">timestamp ?</text>
-  <rect x="588" y="1894" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1906" class="key" fill="#6B7280"></text>
-  <text x="627" y="1906" class="cname">responded_at</text>
-  <text x="869" y="1906" class="ctype">timestamp ?</text>
-  <text x="595" y="1922" class="key" fill="#6B7280"></text>
-  <text x="627" y="1922" class="cname">paid_at</text>
-  <text x="869" y="1922" class="ctype">timestamp ?</text>
-  <rect x="588" y="1926" width="288" height="16" fill="#F7F8FB"/>
-  <text x="595" y="1938" class="key" fill="#6B7280"></text>
-  <text x="627" y="1938" class="cname">created_at</text>
-  <text x="869" y="1938" class="ctype">timestamp</text>
-  <text x="595" y="1954" class="key" fill="#6B7280"></text>
-  <text x="627" y="1954" class="cname">updated_at</text>
-  <text x="869" y="1954" class="ctype">timestamp</text>
-  <rect x="1015" y="616" width="290" height="260" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1011" y="612" width="290" height="260" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1011,642 L1011,620 Q1011,612 1019,612 L1293,612 Q1301,612 1301,620 L1301,642 Z" fill="#0C1D4A"/>
-  <text x="1156" y="632" class="tname">sales_items</text>
-  <text x="1019" y="654" class="key" fill="#B38900">PK</text>
-  <text x="1051" y="654" class="cname pk">id</text>
-  <text x="1293" y="654" class="ctype">int</text>
-  <rect x="1012" y="658" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="670" class="key" fill="#0072CE">FK</text>
-  <text x="1051" y="670" class="cname fk">seller_id</text>
-  <text x="1293" y="670" class="ctype">int</text>
-  <text x="1019" y="686" class="key" fill="#6B7280"></text>
-  <text x="1051" y="686" class="cname">title</text>
-  <text x="1293" y="686" class="ctype">varchar(150)</text>
-  <rect x="1012" y="690" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="702" class="key" fill="#6B7280"></text>
-  <text x="1051" y="702" class="cname">description</text>
-  <text x="1293" y="702" class="ctype">text</text>
-  <text x="1019" y="718" class="key" fill="#6B7280"></text>
-  <text x="1051" y="718" class="cname">category</text>
-  <text x="1293" y="718" class="ctype">varchar(100)</text>
-  <rect x="1012" y="722" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="734" class="key" fill="#6B7280"></text>
-  <text x="1051" y="734" class="cname">section</text>
-  <text x="1293" y="734" class="ctype">enum</text>
-  <text x="1019" y="750" class="key" fill="#6B7280"></text>
-  <text x="1051" y="750" class="cname">price</text>
-  <text x="1293" y="750" class="ctype">decimal(10,2)</text>
-  <rect x="1012" y="754" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="766" class="key" fill="#6B7280"></text>
-  <text x="1051" y="766" class="cname">condition_status</text>
-  <text x="1293" y="766" class="ctype">enum</text>
-  <text x="1019" y="782" class="key" fill="#6B7280"></text>
-  <text x="1051" y="782" class="cname">location</text>
-  <text x="1293" y="782" class="ctype">varchar(150)</text>
-  <rect x="1012" y="786" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="798" class="key" fill="#6B7280"></text>
-  <text x="1051" y="798" class="cname">status</text>
-  <text x="1293" y="798" class="ctype">enum</text>
-  <text x="1019" y="814" class="key" fill="#6B7280"></text>
-  <text x="1051" y="814" class="cname">created_at</text>
-  <text x="1293" y="814" class="ctype">timestamp</text>
-  <rect x="1012" y="818" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="830" class="key" fill="#6B7280"></text>
-  <text x="1051" y="830" class="cname">image_urls</text>
-  <text x="1293" y="830" class="ctype">longtext ?</text>
-  <text x="1019" y="846" class="key" fill="#6B7280"></text>
-  <text x="1051" y="846" class="cname">moderation_status</text>
-  <text x="1293" y="846" class="ctype">enum</text>
-  <rect x="1012" y="850" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="862" class="key" fill="#6B7280"></text>
-  <text x="1051" y="862" class="cname">moderation_flags</text>
-  <text x="1293" y="862" class="ctype">longtext ?</text>
-  <rect x="1015" y="922" width="290" height="356" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1011" y="918" width="290" height="356" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1011,948 L1011,926 Q1011,918 1019,918 L1293,918 Q1301,918 1301,926 L1301,948 Z" fill="#0C1D4A"/>
-  <text x="1156" y="938" class="tname">sale_orders</text>
-  <text x="1019" y="960" class="key" fill="#B38900">PK</text>
-  <text x="1051" y="960" class="cname pk">id</text>
-  <text x="1293" y="960" class="ctype">int</text>
-  <rect x="1012" y="964" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="976" class="key" fill="#0072CE">FK</text>
-  <text x="1051" y="976" class="cname fk">sales_item_id</text>
-  <text x="1293" y="976" class="ctype">int</text>
-  <text x="1019" y="992" class="key" fill="#0072CE">FK</text>
-  <text x="1051" y="992" class="cname fk">buyer_id</text>
-  <text x="1293" y="992" class="ctype">int</text>
-  <rect x="1012" y="996" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1008" class="key" fill="#0072CE">FK</text>
-  <text x="1051" y="1008" class="cname fk">seller_id</text>
-  <text x="1293" y="1008" class="ctype">int</text>
-  <text x="1019" y="1024" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1024" class="cname">item_price</text>
-  <text x="1293" y="1024" class="ctype">decimal(10,2)</text>
-  <rect x="1012" y="1028" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1040" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1040" class="cname">protection_fee</text>
-  <text x="1293" y="1040" class="ctype">decimal(10,2)</text>
-  <text x="1019" y="1056" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1056" class="cname">total_amount</text>
-  <text x="1293" y="1056" class="ctype">decimal(10,2)</text>
-  <rect x="1012" y="1060" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1072" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1072" class="cname">handover_code</text>
-  <text x="1293" y="1072" class="ctype">char(4)</text>
-  <text x="1019" y="1088" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1088" class="cname">code_attempts</text>
-  <text x="1293" y="1088" class="ctype">int</text>
-  <rect x="1012" y="1092" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1104" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1104" class="cname">status</text>
-  <text x="1293" y="1104" class="ctype">enum</text>
-  <text x="1019" y="1120" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1120" class="cname">cancelled_by</text>
-  <text x="1293" y="1120" class="ctype">enum ?</text>
-  <rect x="1012" y="1124" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1136" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1136" class="cname">released_at</text>
-  <text x="1293" y="1136" class="ctype">timestamp ?</text>
-  <text x="1019" y="1152" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1152" class="cname">created_at</text>
-  <text x="1293" y="1152" class="ctype">timestamp</text>
-  <rect x="1012" y="1156" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1168" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1168" class="cname">updated_at</text>
-  <text x="1293" y="1168" class="ctype">timestamp</text>
-  <text x="1019" y="1184" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1184" class="cname">disputed_at</text>
-  <text x="1293" y="1184" class="ctype">timestamp ?</text>
-  <rect x="1012" y="1188" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1200" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1200" class="cname">disputed_by</text>
-  <text x="1293" y="1200" class="ctype">enum ?</text>
-  <text x="1019" y="1216" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1216" class="cname">dispute_category</text>
-  <text x="1293" y="1216" class="ctype">varchar(40) ?</text>
-  <rect x="1012" y="1220" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1232" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1232" class="cname">dispute_reason</text>
-  <text x="1293" y="1232" class="ctype">varchar(500) ?</text>
-  <text x="1019" y="1248" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1248" class="cname">dispute_outcome</text>
-  <text x="1293" y="1248" class="ctype">enum ?</text>
-  <rect x="1012" y="1252" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1264" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1264" class="cname">dispute_resolved_at</text>
-  <text x="1293" y="1264" class="ctype">timestamp ?</text>
-  <rect x="1015" y="1324" width="290" height="324" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1011" y="1320" width="290" height="324" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1011,1350 L1011,1328 Q1011,1320 1019,1320 L1293,1320 Q1301,1320 1301,1328 L1301,1350 Z" fill="#0C1D4A"/>
-  <text x="1156" y="1340" class="tname">events</text>
-  <text x="1019" y="1362" class="key" fill="#B38900">PK</text>
-  <text x="1051" y="1362" class="cname pk">id</text>
-  <text x="1293" y="1362" class="ctype">int</text>
-  <rect x="1012" y="1366" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1378" class="key" fill="#0072CE">FK</text>
-  <text x="1051" y="1378" class="cname fk">organizer_id</text>
-  <text x="1293" y="1378" class="ctype">int</text>
-  <text x="1019" y="1394" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1394" class="cname">title</text>
-  <text x="1293" y="1394" class="ctype">varchar(150)</text>
-  <rect x="1012" y="1398" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1410" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1410" class="cname">description</text>
-  <text x="1293" y="1410" class="ctype">text</text>
-  <text x="1019" y="1426" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1426" class="cname">category</text>
-  <text x="1293" y="1426" class="ctype">varchar(100)</text>
-  <rect x="1012" y="1430" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1442" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1442" class="cname">section</text>
-  <text x="1293" y="1442" class="ctype">enum</text>
-  <text x="1019" y="1458" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1458" class="cname">location</text>
-  <text x="1293" y="1458" class="ctype">varchar(150)</text>
-  <rect x="1012" y="1462" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1474" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1474" class="cname">event_date</text>
-  <text x="1293" y="1474" class="ctype">datetime</text>
-  <text x="1019" y="1490" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1490" class="cname">capacity</text>
-  <text x="1293" y="1490" class="ctype">int ?</text>
-  <rect x="1012" y="1494" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1506" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1506" class="cname">image_urls</text>
-  <text x="1293" y="1506" class="ctype">longtext ?</text>
-  <text x="1019" y="1522" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1522" class="cname">status</text>
-  <text x="1293" y="1522" class="ctype">enum</text>
-  <rect x="1012" y="1526" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1538" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1538" class="cname">created_at</text>
-  <text x="1293" y="1538" class="ctype">timestamp</text>
-  <text x="1019" y="1554" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1554" class="cname">updated_at</text>
-  <text x="1293" y="1554" class="ctype">timestamp</text>
-  <rect x="1012" y="1558" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1570" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1570" class="cname">moderation_status</text>
-  <text x="1293" y="1570" class="ctype">enum</text>
-  <text x="1019" y="1586" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1586" class="cname">moderation_flags</text>
-  <text x="1293" y="1586" class="ctype">longtext ?</text>
-  <rect x="1012" y="1590" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1602" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1602" class="cname">has_food</text>
-  <text x="1293" y="1602" class="ctype">boolean</text>
-  <text x="1019" y="1618" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1618" class="cname">has_refreshments</text>
-  <text x="1293" y="1618" class="ctype">boolean</text>
-  <rect x="1012" y="1622" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1634" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1634" class="cname">listing_authority</text>
-  <text x="1293" y="1634" class="ctype">varchar(300) ?</text>
-  <rect x="1015" y="1694" width="290" height="100" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1011" y="1690" width="290" height="100" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1011,1720 L1011,1698 Q1011,1690 1019,1690 L1293,1690 Q1301,1690 1301,1698 L1301,1720 Z" fill="#0C1D4A"/>
-  <text x="1156" y="1710" class="tname">event_rsvps</text>
-  <text x="1019" y="1732" class="key" fill="#B38900">PK</text>
-  <text x="1051" y="1732" class="cname pk">id</text>
-  <text x="1293" y="1732" class="ctype">int</text>
-  <rect x="1012" y="1736" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1748" class="key" fill="#0072CE">FK</text>
-  <text x="1051" y="1748" class="cname fk">event_id</text>
-  <text x="1293" y="1748" class="ctype">int</text>
-  <text x="1019" y="1764" class="key" fill="#0072CE">FK</text>
-  <text x="1051" y="1764" class="cname fk">user_id</text>
-  <text x="1293" y="1764" class="ctype">int</text>
-  <rect x="1012" y="1768" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1019" y="1780" class="key" fill="#6B7280"></text>
-  <text x="1051" y="1780" class="cname">created_at</text>
-  <text x="1293" y="1780" class="ctype">timestamp</text>
-  <rect x="1472" y="616" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1468" y="612" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1468,642 L1468,620 Q1468,612 1476,612 L1750,612 Q1758,612 1758,620 L1758,642 Z" fill="#0C1D4A"/>
-  <text x="1613" y="632" class="tname">conversations</text>
-  <text x="1476" y="654" class="key" fill="#B38900">PK</text>
-  <text x="1508" y="654" class="cname pk">id</text>
-  <text x="1750" y="654" class="ctype">int</text>
-  <rect x="1469" y="658" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="670" class="key" fill="#6B7280"></text>
-  <text x="1508" y="670" class="cname">context_type</text>
-  <text x="1750" y="670" class="ctype">enum</text>
-  <text x="1476" y="686" class="key" fill="#6B7280"></text>
-  <text x="1508" y="686" class="cname">context_id</text>
-  <text x="1750" y="686" class="ctype">int</text>
-  <rect x="1469" y="690" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="702" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="702" class="cname fk">user_a_id</text>
-  <text x="1750" y="702" class="ctype">int</text>
-  <text x="1476" y="718" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="718" class="cname fk">user_b_id</text>
-  <text x="1750" y="718" class="ctype">int</text>
-  <rect x="1469" y="722" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="734" class="key" fill="#6B7280"></text>
-  <text x="1508" y="734" class="cname">created_at</text>
-  <text x="1750" y="734" class="ctype">timestamp</text>
-  <text x="1476" y="750" class="key" fill="#6B7280"></text>
-  <text x="1508" y="750" class="cname">updated_at</text>
-  <text x="1750" y="750" class="ctype">timestamp</text>
-  <rect x="1472" y="810" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1468" y="806" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1468,836 L1468,814 Q1468,806 1476,806 L1750,806 Q1758,806 1758,814 L1758,836 Z" fill="#0C1D4A"/>
-  <text x="1613" y="826" class="tname">messages</text>
-  <text x="1476" y="848" class="key" fill="#B38900">PK</text>
-  <text x="1508" y="848" class="cname pk">id</text>
-  <text x="1750" y="848" class="ctype">int</text>
-  <rect x="1469" y="852" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="864" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="864" class="cname fk">conversation_id</text>
-  <text x="1750" y="864" class="ctype">int</text>
-  <text x="1476" y="880" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="880" class="cname fk">sender_id</text>
-  <text x="1750" y="880" class="ctype">int</text>
-  <rect x="1469" y="884" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="896" class="key" fill="#6B7280"></text>
-  <text x="1508" y="896" class="cname">body</text>
-  <text x="1750" y="896" class="ctype">text</text>
-  <text x="1476" y="912" class="key" fill="#6B7280"></text>
-  <text x="1508" y="912" class="cname">is_flagged</text>
-  <text x="1750" y="912" class="ctype">boolean</text>
-  <rect x="1469" y="916" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="928" class="key" fill="#6B7280"></text>
-  <text x="1508" y="928" class="cname">created_at</text>
-  <text x="1750" y="928" class="ctype">timestamp</text>
-  <text x="1476" y="944" class="key" fill="#6B7280"></text>
-  <text x="1508" y="944" class="cname">read_at</text>
-  <text x="1750" y="944" class="ctype">timestamp ?</text>
-  <rect x="1472" y="1004" width="290" height="196" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1468" y="1000" width="290" height="196" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1468,1030 L1468,1008 Q1468,1000 1476,1000 L1750,1000 Q1758,1000 1758,1008 L1758,1030 Z" fill="#0C1D4A"/>
-  <text x="1613" y="1020" class="tname">reports</text>
-  <text x="1476" y="1042" class="key" fill="#B38900">PK</text>
-  <text x="1508" y="1042" class="cname pk">id</text>
-  <text x="1750" y="1042" class="ctype">int</text>
-  <rect x="1469" y="1046" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1058" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="1058" class="cname fk">reporter_id</text>
-  <text x="1750" y="1058" class="ctype">int</text>
-  <text x="1476" y="1074" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="1074" class="cname fk">reported_user_id</text>
-  <text x="1750" y="1074" class="ctype">int</text>
-  <rect x="1469" y="1078" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1090" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1090" class="cname">context_type</text>
-  <text x="1750" y="1090" class="ctype">enum ?</text>
-  <text x="1476" y="1106" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1106" class="cname">context_id</text>
-  <text x="1750" y="1106" class="ctype">int ?</text>
-  <rect x="1469" y="1110" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1122" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1122" class="cname">reason</text>
-  <text x="1750" y="1122" class="ctype">text</text>
-  <text x="1476" y="1138" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1138" class="cname">category</text>
-  <text x="1750" y="1138" class="ctype">enum</text>
-  <rect x="1469" y="1142" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1154" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1154" class="cname">status</text>
-  <text x="1750" y="1154" class="ctype">enum</text>
-  <text x="1476" y="1170" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1170" class="cname">created_at</text>
-  <text x="1750" y="1170" class="ctype">timestamp</text>
-  <rect x="1469" y="1174" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1186" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="1186" class="cname fk">message_id</text>
-  <text x="1750" y="1186" class="ctype">int ?</text>
-  <rect x="1472" y="1246" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1468" y="1242" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1468,1272 L1468,1250 Q1468,1242 1476,1242 L1750,1242 Q1758,1242 1758,1250 L1758,1272 Z" fill="#0C1D4A"/>
-  <text x="1613" y="1262" class="tname">notifications</text>
-  <text x="1476" y="1284" class="key" fill="#B38900">PK</text>
-  <text x="1508" y="1284" class="cname pk">id</text>
-  <text x="1750" y="1284" class="ctype">int</text>
-  <rect x="1469" y="1288" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1300" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="1300" class="cname fk">user_id</text>
-  <text x="1750" y="1300" class="ctype">int</text>
-  <text x="1476" y="1316" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1316" class="cname">title</text>
-  <text x="1750" y="1316" class="ctype">varchar(150)</text>
-  <rect x="1469" y="1320" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1332" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1332" class="cname">message</text>
-  <text x="1750" y="1332" class="ctype">text</text>
-  <text x="1476" y="1348" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1348" class="cname">context_type</text>
-  <text x="1750" y="1348" class="ctype">enum ?</text>
-  <rect x="1469" y="1352" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1364" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1364" class="cname">context_id</text>
-  <text x="1750" y="1364" class="ctype">int ?</text>
-  <text x="1476" y="1380" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1380" class="cname">is_read</text>
-  <text x="1750" y="1380" class="ctype">boolean</text>
-  <rect x="1469" y="1384" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1396" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1396" class="cname">created_at</text>
-  <text x="1750" y="1396" class="ctype">timestamp</text>
-  <rect x="1472" y="1456" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1468" y="1452" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1468,1482 L1468,1460 Q1468,1452 1476,1452 L1750,1452 Q1758,1452 1758,1460 L1758,1482 Z" fill="#0C1D4A"/>
-  <text x="1613" y="1472" class="tname">lecturer_endorsements</text>
-  <text x="1476" y="1494" class="key" fill="#B38900">PK</text>
-  <text x="1508" y="1494" class="cname pk">id</text>
-  <text x="1750" y="1494" class="ctype">int</text>
-  <rect x="1469" y="1498" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1510" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="1510" class="cname fk">lecturer_id</text>
-  <text x="1750" y="1510" class="ctype">int</text>
-  <text x="1476" y="1526" class="key" fill="#0072CE">FK</text>
-  <text x="1508" y="1526" class="cname fk">endorsed_user_id</text>
-  <text x="1750" y="1526" class="ctype">int</text>
-  <rect x="1469" y="1530" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1542" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1542" class="cname">endorsement_type</text>
-  <text x="1750" y="1542" class="ctype">enum</text>
-  <text x="1476" y="1558" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1558" class="cname">context_type</text>
-  <text x="1750" y="1558" class="ctype">enum ?</text>
-  <rect x="1469" y="1562" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1574" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1574" class="cname">context_id</text>
-  <text x="1750" y="1574" class="ctype">int ?</text>
-  <text x="1476" y="1590" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1590" class="cname">message</text>
-  <text x="1750" y="1590" class="ctype">text ?</text>
-  <rect x="1469" y="1594" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1476" y="1606" class="key" fill="#6B7280"></text>
-  <text x="1508" y="1606" class="cname">created_at</text>
-  <text x="1750" y="1606" class="ctype">timestamp</text>
-  <rect x="1896" y="616" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1892" y="612" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1892,642 L1892,620 Q1892,612 1900,612 L2174,612 Q2182,612 2182,620 L2182,642 Z" fill="#0C1D4A"/>
-  <text x="2037" y="632" class="tname">push_subscriptions</text>
-  <text x="1900" y="654" class="key" fill="#B38900">PK</text>
-  <text x="1932" y="654" class="cname pk">id</text>
-  <text x="2174" y="654" class="ctype">int</text>
-  <rect x="1893" y="658" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="670" class="key" fill="#0072CE">FK</text>
-  <text x="1932" y="670" class="cname fk">user_id</text>
-  <text x="2174" y="670" class="ctype">int</text>
-  <text x="1900" y="686" class="key" fill="#6B7280"></text>
-  <text x="1932" y="686" class="cname">endpoint</text>
-  <text x="2174" y="686" class="ctype">text</text>
-  <rect x="1893" y="690" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="702" class="key" fill="#6B7280">UQ</text>
-  <text x="1932" y="702" class="cname">endpoint_hash</text>
-  <text x="2174" y="702" class="ctype">char(64)</text>
-  <text x="1900" y="718" class="key" fill="#6B7280"></text>
-  <text x="1932" y="718" class="cname">p256dh</text>
-  <text x="2174" y="718" class="ctype">varchar(255)</text>
-  <rect x="1893" y="722" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="734" class="key" fill="#6B7280"></text>
-  <text x="1932" y="734" class="cname">auth</text>
-  <text x="2174" y="734" class="ctype">varchar(255)</text>
-  <text x="1900" y="750" class="key" fill="#6B7280"></text>
-  <text x="1932" y="750" class="cname">created_at</text>
-  <text x="2174" y="750" class="ctype">timestamp ?</text>
-  <rect x="1896" y="810" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1892" y="806" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1892,836 L1892,814 Q1892,806 1900,806 L2174,806 Q2182,806 2182,814 L2182,836 Z" fill="#0C1D4A"/>
-  <text x="2037" y="826" class="tname">trusted_devices</text>
-  <text x="1900" y="848" class="key" fill="#B38900">PK</text>
-  <text x="1932" y="848" class="cname pk">id</text>
-  <text x="2174" y="848" class="ctype">int</text>
-  <rect x="1893" y="852" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="864" class="key" fill="#0072CE">FK</text>
-  <text x="1932" y="864" class="cname fk">user_id</text>
-  <text x="2174" y="864" class="ctype">int</text>
-  <text x="1900" y="880" class="key" fill="#6B7280">UQ</text>
-  <text x="1932" y="880" class="cname">token_hash</text>
-  <text x="2174" y="880" class="ctype">varchar(64)</text>
-  <rect x="1893" y="884" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="896" class="key" fill="#6B7280"></text>
-  <text x="1932" y="896" class="cname">device_label</text>
-  <text x="2174" y="896" class="ctype">varchar(150) ?</text>
-  <text x="1900" y="912" class="key" fill="#6B7280"></text>
-  <text x="1932" y="912" class="cname">ip_address</text>
-  <text x="2174" y="912" class="ctype">varchar(45) ?</text>
-  <rect x="1893" y="916" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="928" class="key" fill="#6B7280"></text>
-  <text x="1932" y="928" class="cname">created_at</text>
-  <text x="2174" y="928" class="ctype">timestamp</text>
-  <text x="1900" y="944" class="key" fill="#6B7280"></text>
-  <text x="1932" y="944" class="cname">expires_at</text>
-  <text x="2174" y="944" class="ctype">datetime</text>
-  <rect x="1893" y="948" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="960" class="key" fill="#6B7280"></text>
-  <text x="1932" y="960" class="cname">last_used_at</text>
-  <text x="2174" y="960" class="ctype">timestamp ?</text>
-  <rect x="1896" y="1020" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1892" y="1016" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1892,1046 L1892,1024 Q1892,1016 1900,1016 L2174,1016 Q2182,1016 2182,1024 L2182,1046 Z" fill="#0C1D4A"/>
-  <text x="2037" y="1036" class="tname">security_events</text>
-  <text x="1900" y="1058" class="key" fill="#B38900">PK</text>
-  <text x="1932" y="1058" class="cname pk">id</text>
-  <text x="2174" y="1058" class="ctype">int</text>
-  <rect x="1893" y="1062" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1074" class="key" fill="#0072CE">FK</text>
-  <text x="1932" y="1074" class="cname fk">user_id</text>
-  <text x="2174" y="1074" class="ctype">int ?</text>
-  <text x="1900" y="1090" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1090" class="cname">email</text>
-  <text x="2174" y="1090" class="ctype">varchar(120) ?</text>
-  <rect x="1893" y="1094" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1106" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1106" class="cname">event</text>
-  <text x="2174" y="1106" class="ctype">varchar(60)</text>
-  <text x="1900" y="1122" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1122" class="cname">ip_address</text>
-  <text x="2174" y="1122" class="ctype">varchar(45) ?</text>
-  <rect x="1893" y="1126" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1138" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1138" class="cname">user_agent</text>
-  <text x="2174" y="1138" class="ctype">varchar(255) ?</text>
-  <text x="1900" y="1154" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1154" class="cname">metadata</text>
-  <text x="2174" y="1154" class="ctype">longtext ?</text>
-  <rect x="1893" y="1158" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1170" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1170" class="cname">created_at</text>
-  <text x="2174" y="1170" class="ctype">timestamp</text>
-  <rect x="1896" y="1230" width="290" height="116" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1892" y="1226" width="290" height="116" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1892,1256 L1892,1234 Q1892,1226 1900,1226 L2174,1226 Q2182,1226 2182,1234 L2182,1256 Z" fill="#0C1D4A"/>
-  <text x="2037" y="1246" class="tname">admin_allowlist</text>
-  <text x="1900" y="1268" class="key" fill="#B38900">PK</text>
-  <text x="1932" y="1268" class="cname pk">id</text>
-  <text x="2174" y="1268" class="ctype">int</text>
-  <rect x="1893" y="1272" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1284" class="key" fill="#6B7280">UQ</text>
-  <text x="1932" y="1284" class="cname">email</text>
-  <text x="2174" y="1284" class="ctype">varchar(120)</text>
-  <text x="1900" y="1300" class="key" fill="#0072CE">FK</text>
-  <text x="1932" y="1300" class="cname fk">added_by</text>
-  <text x="2174" y="1300" class="ctype">int ?</text>
-  <rect x="1893" y="1304" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1316" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1316" class="cname">note</text>
-  <text x="2174" y="1316" class="ctype">varchar(255) ?</text>
-  <text x="1900" y="1332" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1332" class="cname">created_at</text>
-  <text x="2174" y="1332" class="ctype">timestamp</text>
-  <rect x="1896" y="1392" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1892" y="1388" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1892,1418 L1892,1396 Q1892,1388 1900,1388 L2174,1388 Q2182,1388 2182,1396 L2182,1418 Z" fill="#0C1D4A"/>
-  <text x="2037" y="1408" class="tname">admin_audit_logs</text>
-  <text x="1900" y="1430" class="key" fill="#B38900">PK</text>
-  <text x="1932" y="1430" class="cname pk">id</text>
-  <text x="2174" y="1430" class="ctype">int</text>
-  <rect x="1893" y="1434" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1446" class="key" fill="#0072CE">FK</text>
-  <text x="1932" y="1446" class="cname fk">admin_id</text>
-  <text x="2174" y="1446" class="ctype">int</text>
-  <text x="1900" y="1462" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1462" class="cname">action</text>
-  <text x="2174" y="1462" class="ctype">varchar(100)</text>
-  <rect x="1893" y="1466" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1478" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1478" class="cname">target_type</text>
-  <text x="2174" y="1478" class="ctype">varchar(50)</text>
-  <text x="1900" y="1494" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1494" class="cname">target_id</text>
-  <text x="2174" y="1494" class="ctype">int ?</text>
-  <rect x="1893" y="1498" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1510" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1510" class="cname">reason</text>
-  <text x="2174" y="1510" class="ctype">text ?</text>
-  <text x="1900" y="1526" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1526" class="cname">metadata</text>
-  <text x="2174" y="1526" class="ctype">longtext ?</text>
-  <rect x="1893" y="1530" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1542" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1542" class="cname">created_at</text>
-  <text x="2174" y="1542" class="ctype">timestamp</text>
-  <rect x="1896" y="1602" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1892" y="1598" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1892,1628 L1892,1606 Q1892,1598 1900,1598 L2174,1598 Q2182,1598 2182,1606 L2182,1628 Z" fill="#0C1D4A"/>
-  <text x="2037" y="1618" class="tname">blocked_content_attempts</text>
-  <text x="1900" y="1640" class="key" fill="#B38900">PK</text>
-  <text x="1932" y="1640" class="cname pk">id</text>
-  <text x="2174" y="1640" class="ctype">int</text>
-  <rect x="1893" y="1644" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1656" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1656" class="cname">content_type</text>
-  <text x="2174" y="1656" class="ctype">enum</text>
-  <text x="1900" y="1672" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1672" class="cname">user_id</text>
-  <text x="2174" y="1672" class="ctype">int ?</text>
-  <rect x="1893" y="1676" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1688" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1688" class="cname">title</text>
-  <text x="2174" y="1688" class="ctype">varchar(255) ?</text>
-  <text x="1900" y="1704" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1704" class="cname">description_snippet</text>
-  <text x="2174" y="1704" class="ctype">varchar(300) ?</text>
-  <rect x="1893" y="1708" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1720" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1720" class="cname">flagged_categories</text>
-  <text x="2174" y="1720" class="ctype">json ?</text>
-  <text x="1900" y="1736" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1736" class="cname">created_at</text>
-  <text x="2174" y="1736" class="ctype">timestamp ?</text>
-  <rect x="1896" y="1796" width="290" height="100" rx="8" fill="#0C1D4A" opacity="0.08"/>
-  <rect x="1892" y="1792" width="290" height="100" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
-  <path d="M1892,1822 L1892,1800 Q1892,1792 1900,1792 L2174,1792 Q2182,1792 2182,1800 L2182,1822 Z" fill="#0C1D4A"/>
-  <text x="2037" y="1812" class="tname">flagged_uploads</text>
-  <text x="1900" y="1834" class="key" fill="#B38900">PK</text>
-  <text x="1932" y="1834" class="cname pk">id</text>
-  <text x="2174" y="1834" class="ctype">int</text>
-  <rect x="1893" y="1838" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1850" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1850" class="cname">image_url</text>
-  <text x="2174" y="1850" class="ctype">varchar(500)</text>
-  <text x="1900" y="1866" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1866" class="cname">flagged_categories</text>
-  <text x="2174" y="1866" class="ctype">longtext ?</text>
-  <rect x="1893" y="1870" width="288" height="16" fill="#F7F8FB"/>
-  <text x="1900" y="1882" class="key" fill="#6B7280"></text>
-  <text x="1932" y="1882" class="cname">created_at</text>
-  <text x="2174" y="1882" class="ctype">timestamp</text>
-  <text x="308" y="598" class="group">Tasks, offers &amp; reviews</text>
-  <text x="732" y="598" class="group">Rentals</text>
-  <text x="1156" y="598" class="group">Sales &amp; Campus Marketplace</text>
-  <text x="1613" y="598" class="group">Messages, reports &amp; notifications</text>
-  <text x="2037" y="598" class="group">Security, admin &amp; moderation</text>
-  <text x="40" y="2014" class="lh">How to read it (crow's foot notation)</text>
-  <line x1="40" y1="2040" x2="110" y2="2040" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="110" y1="2030" x2="110" y2="2050" stroke="#0C1D4A" stroke-width="2"/>
-  <line x1="104" y1="2046" x2="104" y2="2034" stroke="#0C1D4A" stroke-width="1.4"/><line x1="99" y1="2046" x2="99" y2="2034" stroke="#0C1D4A" stroke-width="1.4"/>
-  <text x="124" y="2044" class="lt">exactly one (the foreign key is required)</text>
-  <line x1="460" y1="2040" x2="530" y2="2040" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="530" y1="2030" x2="530" y2="2050" stroke="#0C1D4A" stroke-width="2"/>
-  <line x1="523" y1="2046" x2="523" y2="2034" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="513" cy="2040" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <text x="544" y="2044" class="lt">zero or one (optional foreign key, or a unique one)</text>
-  <line x1="900" y1="2040" x2="970" y2="2040" stroke="#0C1D4A" stroke-width="1.4"/>
-  <line x1="970" y1="2030" x2="970" y2="2050" stroke="#0C1D4A" stroke-width="2"/>
-  <path d="M958,2040 L970,2047 M958,2040 L970,2040 M958,2040 L970,2033" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="951" cy="2040" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
-  <text x="984" y="2044" class="lt">zero or many</text>
-  <text x="40" y="2068" class="lt"><tspan fill="#B38900" font-weight="700">PK</tspan> primary key · <tspan fill="#0072CE" font-weight="700">FK</tspan> foreign key (a line to the table it refers to) · <tspan fill="#6B7280" font-weight="700">UQ</tspan> unique · "?" after a type = can be empty (NULL) · enum = one value from a fixed list · boolean = tinyint(1)</text>
-  <text x="40" y="2102" class="lh">References kept by the application, not by a foreign key (no line drawn)</text>
-  <text x="40" y="2119" class="lt"><tspan font-weight="700">offers</tspan>.context_type + context_id → tasks or sales_items</text>
-  <text x="40" y="2136" class="lt"><tspan font-weight="700">conversations</tspan>.context_type + context_id → tasks, equipment or sales_items ('sale')</text>
-  <text x="40" y="2153" class="lt"><tspan font-weight="700">notifications</tspan>.context_type + context_id → tasks, equipment_bookings, sales_items or events</text>
-  <text x="40" y="2170" class="lt"><tspan font-weight="700">reports</tspan>.context_type + context_id → tasks, equipment, equipment_bookings, sales_items or events</text>
-  <text x="40" y="2187" class="lt"><tspan font-weight="700">lecturer_endorsements</tspan>.context_type + context_id → sales_items, equipment, tasks or events</text>
-  <text x="40" y="2204" class="lt"><tspan font-weight="700">admin_audit_logs</tspan>.target_type + target_id → the user, task, report, sale order, booking … the action was about</text>
-  <text x="40" y="2221" class="lt"><tspan font-weight="700">blocked_content_attempts</tspan>.user_id → users (no foreign key; the blocked post itself is never saved, so there is nothing else to link to)</text>
-  <text x="40" y="2238" class="lt"><tspan font-weight="700">flagged_uploads</tspan>.image_url → matched against the image_urls lists in tasks, sales_items, equipment and events when a listing is posted</text>
-  <text x="40" y="2255" class="lt"><tspan font-weight="700">security_events</tspan>.email → the email typed at sign-in (may not be a user)</text>
-  <text x="40" y="2285" class="lt">Drawn from the live database structure on 2026-10-10: 25 tables, 317 columns, 37 foreign keys. Regenerate with: node docs/diagrams/build-erd.js</text>
+  <path class="rel" data-fk="sales_items.seller_id" d="M1011,674 L977,674 L977,565 L1090,565 L1090,426"/>
+  <path d="M999,674 L1011,681 M999,674 L1011,674 M999,674 L1011,667" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="992" cy="674" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1096" y1="432" x2="1084" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1096" y1="437" x2="1084" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="security_events.user_id" d="M1914,1078 L1858,1078 L1858,466 L1447,466 L1447,426"/>
+  <path d="M1902,1078 L1914,1085 M1902,1078 L1914,1078 M1902,1078 L1914,1071" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1895" cy="1078" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1453" y1="433" x2="1441" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="1447" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="tasks.accepted_by" d="M163,818 L118,818 L118,484 L883,484 L883,426"/>
+  <path d="M151,818 L163,825 M151,818 L163,818 M151,818 L163,811" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="818" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="889" y1="433" x2="877" y2="433" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="883" cy="443" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="tasks.created_by" d="M163,802 L129,802 L129,493 L906,493 L906,426"/>
+  <path d="M151,802 L163,809 M151,802 L163,802 M151,802 L163,795" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="144" cy="802" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="912" y1="432" x2="900" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="912" y1="437" x2="900" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <path class="rel" data-fk="trusted_devices.user_id" d="M1914,868 L1869,868 L1869,457 L1470,457 L1470,426"/>
+  <path d="M1902,868 L1914,875 M1902,868 L1914,868 M1902,868 L1914,861" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="1895" cy="868" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="1476" y1="432" x2="1464" y2="432" stroke="#0C1D4A" stroke-width="1.4"/><line x1="1476" y1="437" x2="1464" y2="437" stroke="#0C1D4A" stroke-width="1.4"/>
+  <rect x="771" y="154" width="750" height="276" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="767" y="150" width="750" height="276" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M767,180 L767,158 Q767,150 775,150 L1509,150 Q1517,150 1517,158 L1517,180 Z" fill="#0C1D4A"/>
+  <text x="1142" y="170" class="tname">users</text>
+  <text x="775" y="192" class="key" fill="#B38900">PK</text>
+  <text x="807" y="192" class="cname pk">id</text>
+  <text x="1009" y="192" class="ctype">int</text>
+  <rect x="768" y="196" width="248" height="16" fill="#F7F8FB"/>
+  <text x="775" y="208" class="key" fill="#6B7280"></text>
+  <text x="807" y="208" class="cname">full_name</text>
+  <text x="1009" y="208" class="ctype">varchar(100)</text>
+  <text x="775" y="224" class="key" fill="#6B7280">UQ</text>
+  <text x="807" y="224" class="cname">email</text>
+  <text x="1009" y="224" class="ctype">varchar(120)</text>
+  <rect x="768" y="228" width="248" height="16" fill="#F7F8FB"/>
+  <text x="775" y="240" class="key" fill="#6B7280"></text>
+  <text x="807" y="240" class="cname">phone_number</text>
+  <text x="1009" y="240" class="ctype">varchar(20)</text>
+  <text x="775" y="256" class="key" fill="#6B7280"></text>
+  <text x="807" y="256" class="cname">profile_photo_url</text>
+  <text x="1009" y="256" class="ctype">varchar(500) ?</text>
+  <rect x="768" y="260" width="248" height="16" fill="#F7F8FB"/>
+  <text x="775" y="272" class="key" fill="#6B7280"></text>
+  <text x="807" y="272" class="cname">password_hash</text>
+  <text x="1009" y="272" class="ctype">varchar(255)</text>
+  <text x="775" y="288" class="key" fill="#6B7280"></text>
+  <text x="807" y="288" class="cname">role</text>
+  <text x="1009" y="288" class="ctype">enum</text>
+  <rect x="768" y="292" width="248" height="16" fill="#F7F8FB"/>
+  <text x="775" y="304" class="key" fill="#6B7280"></text>
+  <text x="807" y="304" class="cname">suspension_reason</text>
+  <text x="1009" y="304" class="ctype">varchar(500) ?</text>
+  <text x="775" y="320" class="key" fill="#6B7280"></text>
+  <text x="807" y="320" class="cname">suspended_at</text>
+  <text x="1009" y="320" class="ctype">timestamp ?</text>
+  <rect x="768" y="324" width="248" height="16" fill="#F7F8FB"/>
+  <text x="775" y="336" class="key" fill="#6B7280"></text>
+  <text x="807" y="336" class="cname">ban_reason</text>
+  <text x="1009" y="336" class="ctype">varchar(500) ?</text>
+  <text x="775" y="352" class="key" fill="#6B7280"></text>
+  <text x="807" y="352" class="cname">banned_at</text>
+  <text x="1009" y="352" class="ctype">timestamp ?</text>
+  <rect x="768" y="356" width="248" height="16" fill="#F7F8FB"/>
+  <text x="775" y="368" class="key" fill="#6B7280"></text>
+  <text x="807" y="368" class="cname">is_verified</text>
+  <text x="1009" y="368" class="ctype">boolean</text>
+  <text x="775" y="384" class="key" fill="#6B7280"></text>
+  <text x="807" y="384" class="cname">rating_average</text>
+  <text x="1009" y="384" class="ctype">decimal(3,2)</text>
+  <rect x="768" y="388" width="248" height="16" fill="#F7F8FB"/>
+  <text x="775" y="400" class="key" fill="#6B7280"></text>
+  <text x="807" y="400" class="cname">total_reviews</text>
+  <text x="1009" y="400" class="ctype">int</text>
+  <text x="775" y="416" class="key" fill="#6B7280"></text>
+  <text x="807" y="416" class="cname">created_at</text>
+  <text x="1009" y="416" class="ctype">timestamp</text>
+  <text x="1025" y="192" class="key" fill="#6B7280"></text>
+  <text x="1057" y="192" class="cname">updated_at</text>
+  <text x="1259" y="192" class="ctype">timestamp</text>
+  <rect x="1018" y="196" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1025" y="208" class="key" fill="#6B7280"></text>
+  <text x="1057" y="208" class="cname">student_number</text>
+  <text x="1259" y="208" class="ctype">varchar(50) ?</text>
+  <text x="1025" y="224" class="key" fill="#6B7280"></text>
+  <text x="1057" y="224" class="cname">member_type</text>
+  <text x="1259" y="224" class="ctype">enum</text>
+  <rect x="1018" y="228" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1025" y="240" class="key" fill="#6B7280"></text>
+  <text x="1057" y="240" class="cname">faculty</text>
+  <text x="1259" y="240" class="ctype">varchar(150) ?</text>
+  <text x="1025" y="256" class="key" fill="#6B7280"></text>
+  <text x="1057" y="256" class="cname">academic_year</text>
+  <text x="1259" y="256" class="ctype">varchar(50) ?</text>
+  <rect x="1018" y="260" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1025" y="272" class="key" fill="#6B7280"></text>
+  <text x="1057" y="272" class="cname">account_role</text>
+  <text x="1259" y="272" class="ctype">enum</text>
+  <text x="1025" y="288" class="key" fill="#6B7280"></text>
+  <text x="1057" y="288" class="cname">bio</text>
+  <text x="1259" y="288" class="ctype">text ?</text>
+  <rect x="1018" y="292" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1025" y="304" class="key" fill="#6B7280"></text>
+  <text x="1057" y="304" class="cname">skills</text>
+  <text x="1259" y="304" class="ctype">longtext ?</text>
+  <text x="1025" y="320" class="key" fill="#6B7280"></text>
+  <text x="1057" y="320" class="cname">services</text>
+  <text x="1259" y="320" class="ctype">longtext ?</text>
+  <rect x="1018" y="324" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1025" y="336" class="key" fill="#6B7280"></text>
+  <text x="1057" y="336" class="cname">lecturer_title</text>
+  <text x="1259" y="336" class="ctype">varchar(20) ?</text>
+  <text x="1025" y="352" class="key" fill="#6B7280"></text>
+  <text x="1057" y="352" class="cname">years_experience</text>
+  <text x="1259" y="352" class="ctype">int ?</text>
+  <rect x="1018" y="356" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1025" y="368" class="key" fill="#6B7280"></text>
+  <text x="1057" y="368" class="cname">office_location</text>
+  <text x="1259" y="368" class="ctype">varchar(150) ?</text>
+  <text x="1025" y="384" class="key" fill="#6B7280"></text>
+  <text x="1057" y="384" class="cname">consultation_mode</text>
+  <text x="1259" y="384" class="ctype">varchar(150) ?</text>
+  <rect x="1018" y="388" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1025" y="400" class="key" fill="#6B7280"></text>
+  <text x="1057" y="400" class="cname">availability_note</text>
+  <text x="1259" y="400" class="ctype">text ?</text>
+  <text x="1025" y="416" class="key" fill="#6B7280"></text>
+  <text x="1057" y="416" class="cname">email_verification_token_hash</text>
+  <text x="1259" y="416" class="ctype">varchar(255) ?</text>
+  <text x="1275" y="192" class="key" fill="#6B7280"></text>
+  <text x="1307" y="192" class="cname">email_verification_expires</text>
+  <text x="1509" y="192" class="ctype">timestamp ?</text>
+  <rect x="1268" y="196" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1275" y="208" class="key" fill="#6B7280"></text>
+  <text x="1307" y="208" class="cname">password_reset_token_hash</text>
+  <text x="1509" y="208" class="ctype">varchar(255) ?</text>
+  <text x="1275" y="224" class="key" fill="#6B7280"></text>
+  <text x="1307" y="224" class="cname">password_reset_expires</text>
+  <text x="1509" y="224" class="ctype">timestamp ?</text>
+  <rect x="1268" y="228" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1275" y="240" class="key" fill="#6B7280"></text>
+  <text x="1307" y="240" class="cname">totp_secret_encrypted</text>
+  <text x="1509" y="240" class="ctype">varchar(500) ?</text>
+  <text x="1275" y="256" class="key" fill="#6B7280"></text>
+  <text x="1307" y="256" class="cname">totp_enabled</text>
+  <text x="1509" y="256" class="ctype">boolean</text>
+  <rect x="1268" y="260" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1275" y="272" class="key" fill="#6B7280"></text>
+  <text x="1307" y="272" class="cname">totp_backup_codes</text>
+  <text x="1509" y="272" class="ctype">longtext ?</text>
+  <text x="1275" y="288" class="key" fill="#6B7280"></text>
+  <text x="1307" y="288" class="cname">token_version</text>
+  <text x="1509" y="288" class="ctype">int</text>
+  <rect x="1268" y="292" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1275" y="304" class="key" fill="#6B7280"></text>
+  <text x="1307" y="304" class="cname">failed_login_attempts</text>
+  <text x="1509" y="304" class="ctype">int</text>
+  <text x="1275" y="320" class="key" fill="#6B7280"></text>
+  <text x="1307" y="320" class="cname">lockout_until</text>
+  <text x="1509" y="320" class="ctype">timestamp ?</text>
+  <rect x="1268" y="324" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1275" y="336" class="key" fill="#6B7280"></text>
+  <text x="1307" y="336" class="cname">login_email_otp_hash</text>
+  <text x="1509" y="336" class="ctype">varchar(255) ?</text>
+  <text x="1275" y="352" class="key" fill="#6B7280"></text>
+  <text x="1307" y="352" class="cname">login_email_otp_expires</text>
+  <text x="1509" y="352" class="ctype">timestamp ?</text>
+  <rect x="1268" y="356" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1275" y="368" class="key" fill="#6B7280"></text>
+  <text x="1307" y="368" class="cname">login_email_otp_requested_at</text>
+  <text x="1509" y="368" class="ctype">timestamp ?</text>
+  <text x="1275" y="384" class="key" fill="#6B7280"></text>
+  <text x="1307" y="384" class="cname">totp_method</text>
+  <text x="1509" y="384" class="ctype">varchar(10) ?</text>
+  <rect x="1268" y="388" width="248" height="16" fill="#F7F8FB"/>
+  <text x="1275" y="400" class="key" fill="#6B7280"></text>
+  <text x="1307" y="400" class="cname">has_seen_onboarding</text>
+  <text x="1509" y="400" class="ctype">boolean</text>
+  <text x="1275" y="416" class="key" fill="#6B7280"></text>
+  <text x="1307" y="416" class="cname">lecturer_verified</text>
+  <text x="1509" y="416" class="ctype">boolean</text>
+  <line x1="1017" y1="180" x2="1017" y2="426" stroke="#E5E7EB"/>
+  <line x1="1267" y1="180" x2="1267" y2="426" stroke="#E5E7EB"/>
+  <rect x="167" y="625" width="290" height="404" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="163" y="621" width="290" height="404" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M163,651 L163,629 Q163,621 171,621 L445,621 Q453,621 453,629 L453,651 Z" fill="#0C1D4A"/>
+  <text x="308" y="641" class="tname">tasks</text>
+  <text x="171" y="663" class="key" fill="#B38900">PK</text>
+  <text x="203" y="663" class="cname pk">id</text>
+  <text x="445" y="663" class="ctype">int</text>
+  <rect x="164" y="667" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="679" class="key" fill="#6B7280"></text>
+  <text x="203" y="679" class="cname">title</text>
+  <text x="445" y="679" class="ctype">varchar(150)</text>
+  <text x="171" y="695" class="key" fill="#6B7280"></text>
+  <text x="203" y="695" class="cname">description</text>
+  <text x="445" y="695" class="ctype">text</text>
+  <rect x="164" y="699" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="711" class="key" fill="#6B7280"></text>
+  <text x="203" y="711" class="cname">category</text>
+  <text x="445" y="711" class="ctype">varchar(50)</text>
+  <text x="171" y="727" class="key" fill="#6B7280"></text>
+  <text x="203" y="727" class="cname">section</text>
+  <text x="445" y="727" class="ctype">enum</text>
+  <rect x="164" y="731" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="743" class="key" fill="#6B7280"></text>
+  <text x="203" y="743" class="cname">price</text>
+  <text x="445" y="743" class="ctype">decimal(10,2)</text>
+  <text x="171" y="759" class="key" fill="#6B7280"></text>
+  <text x="203" y="759" class="cname">location</text>
+  <text x="445" y="759" class="ctype">varchar(100)</text>
+  <rect x="164" y="763" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="775" class="key" fill="#6B7280"></text>
+  <text x="203" y="775" class="cname">status</text>
+  <text x="445" y="775" class="ctype">enum</text>
+  <text x="171" y="791" class="key" fill="#6B7280"></text>
+  <text x="203" y="791" class="cname">urgent</text>
+  <text x="445" y="791" class="ctype">boolean</text>
+  <rect x="164" y="795" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="807" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="807" class="cname fk">created_by</text>
+  <text x="445" y="807" class="ctype">int</text>
+  <text x="171" y="823" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="823" class="cname fk">accepted_by</text>
+  <text x="445" y="823" class="ctype">int ?</text>
+  <rect x="164" y="827" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="839" class="key" fill="#6B7280"></text>
+  <text x="203" y="839" class="cname">created_at</text>
+  <text x="445" y="839" class="ctype">timestamp</text>
+  <text x="171" y="855" class="key" fill="#6B7280"></text>
+  <text x="203" y="855" class="cname">updated_at</text>
+  <text x="445" y="855" class="ctype">timestamp</text>
+  <rect x="164" y="859" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="871" class="key" fill="#6B7280"></text>
+  <text x="203" y="871" class="cname">image_urls</text>
+  <text x="445" y="871" class="ctype">longtext ?</text>
+  <text x="171" y="887" class="key" fill="#6B7280"></text>
+  <text x="203" y="887" class="cname">moderation_status</text>
+  <text x="445" y="887" class="ctype">enum</text>
+  <rect x="164" y="891" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="903" class="key" fill="#6B7280"></text>
+  <text x="203" y="903" class="cname">moderation_flags</text>
+  <text x="445" y="903" class="ctype">longtext ?</text>
+  <text x="171" y="919" class="key" fill="#6B7280"></text>
+  <text x="203" y="919" class="cname">awaiting_confirmation_at</text>
+  <text x="445" y="919" class="ctype">timestamp ?</text>
+  <rect x="164" y="923" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="935" class="key" fill="#6B7280"></text>
+  <text x="203" y="935" class="cname">review_reminder_sent_at</text>
+  <text x="445" y="935" class="ctype">timestamp ?</text>
+  <text x="171" y="951" class="key" fill="#6B7280"></text>
+  <text x="203" y="951" class="cname">review_escalated_at</text>
+  <text x="445" y="951" class="ctype">timestamp ?</text>
+  <rect x="164" y="955" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="967" class="key" fill="#6B7280"></text>
+  <text x="203" y="967" class="cname">disputed_at</text>
+  <text x="445" y="967" class="ctype">timestamp ?</text>
+  <text x="171" y="983" class="key" fill="#6B7280"></text>
+  <text x="203" y="983" class="cname">dispute_reason</text>
+  <text x="445" y="983" class="ctype">varchar(500) ?</text>
+  <rect x="164" y="987" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="999" class="key" fill="#6B7280"></text>
+  <text x="203" y="999" class="cname">dispute_outcome</text>
+  <text x="445" y="999" class="ctype">enum ?</text>
+  <text x="171" y="1015" class="key" fill="#6B7280"></text>
+  <text x="203" y="1015" class="cname">dispute_resolved_at</text>
+  <text x="445" y="1015" class="ctype">timestamp ?</text>
+  <rect x="167" y="1075" width="290" height="132" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="163" y="1071" width="290" height="132" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M163,1101 L163,1079 Q163,1071 171,1071 L445,1071 Q453,1071 453,1079 L453,1101 Z" fill="#0C1D4A"/>
+  <text x="308" y="1091" class="tname">payments</text>
+  <text x="171" y="1113" class="key" fill="#B38900">PK</text>
+  <text x="203" y="1113" class="cname pk">id</text>
+  <text x="445" y="1113" class="ctype">int</text>
+  <rect x="164" y="1117" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1129" class="key" fill="#0072CE">FK,UQ</text>
+  <text x="203" y="1129" class="cname fk">task_id</text>
+  <text x="445" y="1129" class="ctype">int</text>
+  <text x="171" y="1145" class="key" fill="#6B7280"></text>
+  <text x="203" y="1145" class="cname">amount</text>
+  <text x="445" y="1145" class="ctype">decimal(10,2)</text>
+  <rect x="164" y="1149" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1161" class="key" fill="#6B7280"></text>
+  <text x="203" y="1161" class="cname">status</text>
+  <text x="445" y="1161" class="ctype">enum</text>
+  <text x="171" y="1177" class="key" fill="#6B7280"></text>
+  <text x="203" y="1177" class="cname">created_at</text>
+  <text x="445" y="1177" class="ctype">timestamp</text>
+  <rect x="164" y="1181" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1193" class="key" fill="#6B7280"></text>
+  <text x="203" y="1193" class="cname">updated_at</text>
+  <text x="445" y="1193" class="ctype">timestamp</text>
+  <rect x="167" y="1253" width="290" height="244" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="163" y="1249" width="290" height="244" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M163,1279 L163,1257 Q163,1249 171,1249 L445,1249 Q453,1249 453,1257 L453,1279 Z" fill="#0C1D4A"/>
+  <text x="308" y="1269" class="tname">offers</text>
+  <text x="171" y="1291" class="key" fill="#B38900">PK</text>
+  <text x="203" y="1291" class="cname pk">id</text>
+  <text x="445" y="1291" class="ctype">int</text>
+  <rect x="164" y="1295" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1307" class="key" fill="#6B7280"></text>
+  <text x="203" y="1307" class="cname">context_type</text>
+  <text x="445" y="1307" class="ctype">enum</text>
+  <text x="171" y="1323" class="key" fill="#6B7280"></text>
+  <text x="203" y="1323" class="cname">context_id</text>
+  <text x="445" y="1323" class="ctype">int</text>
+  <rect x="164" y="1327" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1339" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="1339" class="cname fk">offerer_id</text>
+  <text x="445" y="1339" class="ctype">int</text>
+  <text x="171" y="1355" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="1355" class="cname fk">owner_id</text>
+  <text x="445" y="1355" class="ctype">int</text>
+  <rect x="164" y="1359" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1371" class="key" fill="#6B7280"></text>
+  <text x="203" y="1371" class="cname">amount</text>
+  <text x="445" y="1371" class="ctype">decimal(10,2)</text>
+  <text x="171" y="1387" class="key" fill="#6B7280"></text>
+  <text x="203" y="1387" class="cname">message</text>
+  <text x="445" y="1387" class="ctype">varchar(300) ?</text>
+  <rect x="164" y="1391" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1403" class="key" fill="#6B7280"></text>
+  <text x="203" y="1403" class="cname">last_proposed_by</text>
+  <text x="445" y="1403" class="ctype">enum</text>
+  <text x="171" y="1419" class="key" fill="#6B7280"></text>
+  <text x="203" y="1419" class="cname">counter_rounds</text>
+  <text x="445" y="1419" class="ctype">int</text>
+  <rect x="164" y="1423" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1435" class="key" fill="#6B7280"></text>
+  <text x="203" y="1435" class="cname">status</text>
+  <text x="445" y="1435" class="ctype">enum</text>
+  <text x="171" y="1451" class="key" fill="#6B7280"></text>
+  <text x="203" y="1451" class="cname">expires_at</text>
+  <text x="445" y="1451" class="ctype">timestamp ?</text>
+  <rect x="164" y="1455" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1467" class="key" fill="#6B7280"></text>
+  <text x="203" y="1467" class="cname">created_at</text>
+  <text x="445" y="1467" class="ctype">timestamp</text>
+  <text x="171" y="1483" class="key" fill="#6B7280"></text>
+  <text x="203" y="1483" class="cname">updated_at</text>
+  <text x="445" y="1483" class="ctype">timestamp</text>
+  <rect x="167" y="1543" width="290" height="132" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="163" y="1539" width="290" height="132" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M163,1569 L163,1547 Q163,1539 171,1539 L445,1539 Q453,1539 453,1547 L453,1569 Z" fill="#0C1D4A"/>
+  <text x="308" y="1559" class="tname">offer_history</text>
+  <text x="171" y="1581" class="key" fill="#B38900">PK</text>
+  <text x="203" y="1581" class="cname pk">id</text>
+  <text x="445" y="1581" class="ctype">int</text>
+  <rect x="164" y="1585" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1597" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="1597" class="cname fk">offer_id</text>
+  <text x="445" y="1597" class="ctype">int</text>
+  <text x="171" y="1613" class="key" fill="#6B7280"></text>
+  <text x="203" y="1613" class="cname">amount</text>
+  <text x="445" y="1613" class="ctype">decimal(10,2)</text>
+  <rect x="164" y="1617" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1629" class="key" fill="#6B7280"></text>
+  <text x="203" y="1629" class="cname">proposed_by</text>
+  <text x="445" y="1629" class="ctype">enum</text>
+  <text x="171" y="1645" class="key" fill="#6B7280"></text>
+  <text x="203" y="1645" class="cname">message</text>
+  <text x="445" y="1645" class="ctype">varchar(300) ?</text>
+  <rect x="164" y="1649" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1661" class="key" fill="#6B7280"></text>
+  <text x="203" y="1661" class="cname">created_at</text>
+  <text x="445" y="1661" class="ctype">timestamp</text>
+  <rect x="167" y="1721" width="290" height="180" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="163" y="1717" width="290" height="180" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M163,1747 L163,1725 Q163,1717 171,1717 L445,1717 Q453,1717 453,1725 L453,1747 Z" fill="#0C1D4A"/>
+  <text x="308" y="1737" class="tname">reviews</text>
+  <text x="171" y="1759" class="key" fill="#B38900">PK</text>
+  <text x="203" y="1759" class="cname pk">id</text>
+  <text x="445" y="1759" class="ctype">int</text>
+  <rect x="164" y="1763" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1775" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="1775" class="cname fk">task_id</text>
+  <text x="445" y="1775" class="ctype">int ?</text>
+  <text x="171" y="1791" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="1791" class="cname fk">booking_id</text>
+  <text x="445" y="1791" class="ctype">int ?</text>
+  <rect x="164" y="1795" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1807" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="1807" class="cname fk">reviewer_id</text>
+  <text x="445" y="1807" class="ctype">int</text>
+  <text x="171" y="1823" class="key" fill="#0072CE">FK</text>
+  <text x="203" y="1823" class="cname fk">reviewee_id</text>
+  <text x="445" y="1823" class="ctype">int</text>
+  <rect x="164" y="1827" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1839" class="key" fill="#6B7280"></text>
+  <text x="203" y="1839" class="cname">rating</text>
+  <text x="445" y="1839" class="ctype">int</text>
+  <text x="171" y="1855" class="key" fill="#6B7280"></text>
+  <text x="203" y="1855" class="cname">comment</text>
+  <text x="445" y="1855" class="ctype">text ?</text>
+  <rect x="164" y="1859" width="288" height="16" fill="#F7F8FB"/>
+  <text x="171" y="1871" class="key" fill="#6B7280"></text>
+  <text x="203" y="1871" class="cname">created_at</text>
+  <text x="445" y="1871" class="ctype">timestamp</text>
+  <text x="171" y="1887" class="key" fill="#6B7280"></text>
+  <text x="203" y="1887" class="cname">updated_at</text>
+  <text x="445" y="1887" class="ctype">timestamp ?</text>
+  <rect x="591" y="625" width="290" height="308" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="587" y="621" width="290" height="308" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M587,651 L587,629 Q587,621 595,621 L869,621 Q877,621 877,629 L877,651 Z" fill="#0C1D4A"/>
+  <text x="732" y="641" class="tname">equipment</text>
+  <text x="595" y="663" class="key" fill="#B38900">PK</text>
+  <text x="627" y="663" class="cname pk">id</text>
+  <text x="869" y="663" class="ctype">int</text>
+  <rect x="588" y="667" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="679" class="key" fill="#0072CE">FK</text>
+  <text x="627" y="679" class="cname fk">owner_id</text>
+  <text x="869" y="679" class="ctype">int</text>
+  <text x="595" y="695" class="key" fill="#6B7280"></text>
+  <text x="627" y="695" class="cname">name</text>
+  <text x="869" y="695" class="ctype">varchar(150)</text>
+  <rect x="588" y="699" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="711" class="key" fill="#6B7280"></text>
+  <text x="627" y="711" class="cname">description</text>
+  <text x="869" y="711" class="ctype">text</text>
+  <text x="595" y="727" class="key" fill="#6B7280"></text>
+  <text x="627" y="727" class="cname">condition_status</text>
+  <text x="869" y="727" class="ctype">enum ?</text>
+  <rect x="588" y="731" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="743" class="key" fill="#0072CE">FK</text>
+  <text x="627" y="743" class="cname fk">condition_checked_by</text>
+  <text x="869" y="743" class="ctype">int ?</text>
+  <text x="595" y="759" class="key" fill="#6B7280"></text>
+  <text x="627" y="759" class="cname">condition_checked_at</text>
+  <text x="869" y="759" class="ctype">timestamp ?</text>
+  <rect x="588" y="763" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="775" class="key" fill="#6B7280"></text>
+  <text x="627" y="775" class="cname">category</text>
+  <text x="869" y="775" class="ctype">varchar(100)</text>
+  <text x="595" y="791" class="key" fill="#6B7280"></text>
+  <text x="627" y="791" class="cname">section</text>
+  <text x="869" y="791" class="ctype">enum</text>
+  <rect x="588" y="795" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="807" class="key" fill="#6B7280"></text>
+  <text x="627" y="807" class="cname">daily_price</text>
+  <text x="869" y="807" class="ctype">decimal(10,2)</text>
+  <text x="595" y="823" class="key" fill="#6B7280"></text>
+  <text x="627" y="823" class="cname">item_value</text>
+  <text x="869" y="823" class="ctype">decimal(10,2) ?</text>
+  <rect x="588" y="827" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="839" class="key" fill="#6B7280"></text>
+  <text x="627" y="839" class="cname">is_available</text>
+  <text x="869" y="839" class="ctype">boolean</text>
+  <text x="595" y="855" class="key" fill="#6B7280"></text>
+  <text x="627" y="855" class="cname">created_at</text>
+  <text x="869" y="855" class="ctype">timestamp</text>
+  <rect x="588" y="859" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="871" class="key" fill="#6B7280"></text>
+  <text x="627" y="871" class="cname">updated_at</text>
+  <text x="869" y="871" class="ctype">timestamp</text>
+  <text x="595" y="887" class="key" fill="#6B7280"></text>
+  <text x="627" y="887" class="cname">image_urls</text>
+  <text x="869" y="887" class="ctype">longtext ?</text>
+  <rect x="588" y="891" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="903" class="key" fill="#6B7280"></text>
+  <text x="627" y="903" class="cname">moderation_status</text>
+  <text x="869" y="903" class="ctype">enum</text>
+  <text x="595" y="919" class="key" fill="#6B7280"></text>
+  <text x="627" y="919" class="cname">moderation_flags</text>
+  <text x="869" y="919" class="ctype">longtext ?</text>
+  <rect x="591" y="979" width="290" height="708" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="587" y="975" width="290" height="708" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M587,1005 L587,983 Q587,975 595,975 L869,975 Q877,975 877,983 L877,1005 Z" fill="#0C1D4A"/>
+  <text x="732" y="995" class="tname">equipment_bookings</text>
+  <text x="595" y="1017" class="key" fill="#B38900">PK</text>
+  <text x="627" y="1017" class="cname pk">id</text>
+  <text x="869" y="1017" class="ctype">int</text>
+  <rect x="588" y="1021" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1033" class="key" fill="#0072CE">FK</text>
+  <text x="627" y="1033" class="cname fk">equipment_id</text>
+  <text x="869" y="1033" class="ctype">int</text>
+  <text x="595" y="1049" class="key" fill="#0072CE">FK</text>
+  <text x="627" y="1049" class="cname fk">renter_id</text>
+  <text x="869" y="1049" class="ctype">int</text>
+  <rect x="588" y="1053" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1065" class="key" fill="#6B7280"></text>
+  <text x="627" y="1065" class="cname">start_date</text>
+  <text x="869" y="1065" class="ctype">date</text>
+  <text x="595" y="1081" class="key" fill="#6B7280"></text>
+  <text x="627" y="1081" class="cname">end_date</text>
+  <text x="869" y="1081" class="ctype">date</text>
+  <rect x="588" y="1085" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1097" class="key" fill="#6B7280"></text>
+  <text x="627" y="1097" class="cname">status</text>
+  <text x="869" y="1097" class="ctype">enum</text>
+  <text x="595" y="1113" class="key" fill="#6B7280"></text>
+  <text x="627" y="1113" class="cname">created_at</text>
+  <text x="869" y="1113" class="ctype">timestamp</text>
+  <rect x="588" y="1117" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1129" class="key" fill="#6B7280"></text>
+  <text x="627" y="1129" class="cname">updated_at</text>
+  <text x="869" y="1129" class="ctype">timestamp</text>
+  <text x="595" y="1145" class="key" fill="#6B7280"></text>
+  <text x="627" y="1145" class="cname">rental_days</text>
+  <text x="869" y="1145" class="ctype">int ?</text>
+  <rect x="588" y="1149" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1161" class="key" fill="#6B7280"></text>
+  <text x="627" y="1161" class="cname">rental_amount</text>
+  <text x="869" y="1161" class="ctype">decimal(10,2) ?</text>
+  <text x="595" y="1177" class="key" fill="#6B7280"></text>
+  <text x="627" y="1177" class="cname">protection_fee</text>
+  <text x="869" y="1177" class="ctype">decimal(10,2) ?</text>
+  <rect x="588" y="1181" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1193" class="key" fill="#6B7280"></text>
+  <text x="627" y="1193" class="cname">deposit_amount</text>
+  <text x="869" y="1193" class="ctype">decimal(10,2) ?</text>
+  <text x="595" y="1209" class="key" fill="#6B7280"></text>
+  <text x="627" y="1209" class="cname">trust_level</text>
+  <text x="869" y="1209" class="ctype">varchar(20) ?</text>
+  <rect x="588" y="1213" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1225" class="key" fill="#6B7280"></text>
+  <text x="627" y="1225" class="cname">payment_status</text>
+  <text x="869" y="1225" class="ctype">enum ?</text>
+  <text x="595" y="1241" class="key" fill="#6B7280"></text>
+  <text x="627" y="1241" class="cname">deposit_status</text>
+  <text x="869" y="1241" class="ctype">enum ?</text>
+  <rect x="588" y="1245" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1257" class="key" fill="#6B7280"></text>
+  <text x="627" y="1257" class="cname">condition_status</text>
+  <text x="869" y="1257" class="ctype">enum ?</text>
+  <text x="595" y="1273" class="key" fill="#6B7280"></text>
+  <text x="627" y="1273" class="cname">pickup_photos</text>
+  <text x="869" y="1273" class="ctype">longtext ?</text>
+  <rect x="588" y="1277" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1289" class="key" fill="#6B7280"></text>
+  <text x="627" y="1289" class="cname">picked_up_at</text>
+  <text x="869" y="1289" class="ctype">timestamp ?</text>
+  <text x="595" y="1305" class="key" fill="#6B7280"></text>
+  <text x="627" y="1305" class="cname">return_photos</text>
+  <text x="869" y="1305" class="ctype">longtext ?</text>
+  <rect x="588" y="1309" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1321" class="key" fill="#6B7280"></text>
+  <text x="627" y="1321" class="cname">returned_at</text>
+  <text x="869" y="1321" class="ctype">timestamp ?</text>
+  <text x="595" y="1337" class="key" fill="#6B7280"></text>
+  <text x="627" y="1337" class="cname">damage_note</text>
+  <text x="869" y="1337" class="ctype">text ?</text>
+  <rect x="588" y="1341" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1353" class="key" fill="#6B7280"></text>
+  <text x="627" y="1353" class="cname">pickup_condition</text>
+  <text x="869" y="1353" class="ctype">enum ?</text>
+  <text x="595" y="1369" class="key" fill="#6B7280"></text>
+  <text x="627" y="1369" class="cname">approved_at</text>
+  <text x="869" y="1369" class="ctype">timestamp ?</text>
+  <rect x="588" y="1373" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1385" class="key" fill="#6B7280"></text>
+  <text x="627" y="1385" class="cname">payment_due_at</text>
+  <text x="869" y="1385" class="ctype">timestamp ?</text>
+  <text x="595" y="1401" class="key" fill="#6B7280"></text>
+  <text x="627" y="1401" class="cname">paid_at</text>
+  <text x="869" y="1401" class="ctype">timestamp ?</text>
+  <rect x="588" y="1405" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1417" class="key" fill="#6B7280"></text>
+  <text x="627" y="1417" class="cname">return_due_at</text>
+  <text x="869" y="1417" class="ctype">timestamp ?</text>
+  <text x="595" y="1433" class="key" fill="#6B7280"></text>
+  <text x="627" y="1433" class="cname">return_minutes_late</text>
+  <text x="869" y="1433" class="ctype">int ?</text>
+  <rect x="588" y="1437" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1449" class="key" fill="#6B7280"></text>
+  <text x="627" y="1449" class="cname">cancelled_at</text>
+  <text x="869" y="1449" class="ctype">timestamp ?</text>
+  <text x="595" y="1465" class="key" fill="#6B7280"></text>
+  <text x="627" y="1465" class="cname">cancel_reason</text>
+  <text x="869" y="1465" class="ctype">varchar(30) ?</text>
+  <rect x="588" y="1469" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1481" class="key" fill="#6B7280"></text>
+  <text x="627" y="1481" class="cname">cancel_note</text>
+  <text x="869" y="1481" class="ctype">varchar(500) ?</text>
+  <text x="595" y="1497" class="key" fill="#6B7280"></text>
+  <text x="627" y="1497" class="cname">policy_version</text>
+  <text x="869" y="1497" class="ctype">varchar(40) ?</text>
+  <rect x="588" y="1501" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1513" class="key" fill="#6B7280"></text>
+  <text x="627" y="1513" class="cname">terms_snapshot</text>
+  <text x="869" y="1513" class="ctype">text ?</text>
+  <text x="595" y="1529" class="key" fill="#6B7280"></text>
+  <text x="627" y="1529" class="cname">return_reminder_sent_at</text>
+  <text x="869" y="1529" class="ctype">timestamp ?</text>
+  <rect x="588" y="1533" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1545" class="key" fill="#6B7280"></text>
+  <text x="627" y="1545" class="cname">overdue_notified_at</text>
+  <text x="869" y="1545" class="ctype">timestamp ?</text>
+  <text x="595" y="1561" class="key" fill="#6B7280"></text>
+  <text x="627" y="1561" class="cname">overdue_escalated_at</text>
+  <text x="869" y="1561" class="ctype">timestamp ?</text>
+  <rect x="588" y="1565" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1577" class="key" fill="#6B7280"></text>
+  <text x="627" y="1577" class="cname">problem_reported_at</text>
+  <text x="869" y="1577" class="ctype">timestamp ?</text>
+  <text x="595" y="1593" class="key" fill="#6B7280"></text>
+  <text x="627" y="1593" class="cname">problem_reported_by</text>
+  <text x="869" y="1593" class="ctype">enum ?</text>
+  <rect x="588" y="1597" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1609" class="key" fill="#6B7280"></text>
+  <text x="627" y="1609" class="cname">problem_category</text>
+  <text x="869" y="1609" class="ctype">varchar(40) ?</text>
+  <text x="595" y="1625" class="key" fill="#6B7280"></text>
+  <text x="627" y="1625" class="cname">problem_note</text>
+  <text x="869" y="1625" class="ctype">varchar(500) ?</text>
+  <rect x="588" y="1629" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1641" class="key" fill="#6B7280"></text>
+  <text x="627" y="1641" class="cname">return_attempted_at</text>
+  <text x="869" y="1641" class="ctype">timestamp ?</text>
+  <text x="595" y="1657" class="key" fill="#6B7280"></text>
+  <text x="627" y="1657" class="cname">damage_outcome</text>
+  <text x="869" y="1657" class="ctype">enum ?</text>
+  <rect x="588" y="1661" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1673" class="key" fill="#6B7280"></text>
+  <text x="627" y="1673" class="cname">damage_resolved_at</text>
+  <text x="869" y="1673" class="ctype">timestamp ?</text>
+  <rect x="591" y="1733" width="290" height="244" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="587" y="1729" width="290" height="244" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M587,1759 L587,1737 Q587,1729 595,1729 L869,1729 Q877,1729 877,1737 L877,1759 Z" fill="#0C1D4A"/>
+  <text x="732" y="1749" class="tname">booking_extensions</text>
+  <text x="595" y="1771" class="key" fill="#B38900">PK</text>
+  <text x="627" y="1771" class="cname pk">id</text>
+  <text x="869" y="1771" class="ctype">int</text>
+  <rect x="588" y="1775" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1787" class="key" fill="#0072CE">FK</text>
+  <text x="627" y="1787" class="cname fk">booking_id</text>
+  <text x="869" y="1787" class="ctype">int</text>
+  <text x="595" y="1803" class="key" fill="#6B7280"></text>
+  <text x="627" y="1803" class="cname">old_end_date</text>
+  <text x="869" y="1803" class="ctype">date</text>
+  <rect x="588" y="1807" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1819" class="key" fill="#6B7280"></text>
+  <text x="627" y="1819" class="cname">new_end_date</text>
+  <text x="869" y="1819" class="ctype">date</text>
+  <text x="595" y="1835" class="key" fill="#6B7280"></text>
+  <text x="627" y="1835" class="cname">extra_days</text>
+  <text x="869" y="1835" class="ctype">int</text>
+  <rect x="588" y="1839" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1851" class="key" fill="#6B7280"></text>
+  <text x="627" y="1851" class="cname">extra_amount</text>
+  <text x="869" y="1851" class="ctype">decimal(10,2)</text>
+  <text x="595" y="1867" class="key" fill="#6B7280"></text>
+  <text x="627" y="1867" class="cname">extra_fee</text>
+  <text x="869" y="1867" class="ctype">decimal(10,2)</text>
+  <rect x="588" y="1871" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1883" class="key" fill="#6B7280"></text>
+  <text x="627" y="1883" class="cname">status</text>
+  <text x="869" y="1883" class="ctype">enum</text>
+  <text x="595" y="1899" class="key" fill="#6B7280"></text>
+  <text x="627" y="1899" class="cname">payment_due_at</text>
+  <text x="869" y="1899" class="ctype">timestamp ?</text>
+  <rect x="588" y="1903" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1915" class="key" fill="#6B7280"></text>
+  <text x="627" y="1915" class="cname">responded_at</text>
+  <text x="869" y="1915" class="ctype">timestamp ?</text>
+  <text x="595" y="1931" class="key" fill="#6B7280"></text>
+  <text x="627" y="1931" class="cname">paid_at</text>
+  <text x="869" y="1931" class="ctype">timestamp ?</text>
+  <rect x="588" y="1935" width="288" height="16" fill="#F7F8FB"/>
+  <text x="595" y="1947" class="key" fill="#6B7280"></text>
+  <text x="627" y="1947" class="cname">created_at</text>
+  <text x="869" y="1947" class="ctype">timestamp</text>
+  <text x="595" y="1963" class="key" fill="#6B7280"></text>
+  <text x="627" y="1963" class="cname">updated_at</text>
+  <text x="869" y="1963" class="ctype">timestamp</text>
+  <rect x="1015" y="625" width="290" height="260" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1011" y="621" width="290" height="260" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1011,651 L1011,629 Q1011,621 1019,621 L1293,621 Q1301,621 1301,629 L1301,651 Z" fill="#0C1D4A"/>
+  <text x="1156" y="641" class="tname">sales_items</text>
+  <text x="1019" y="663" class="key" fill="#B38900">PK</text>
+  <text x="1051" y="663" class="cname pk">id</text>
+  <text x="1293" y="663" class="ctype">int</text>
+  <rect x="1012" y="667" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="679" class="key" fill="#0072CE">FK</text>
+  <text x="1051" y="679" class="cname fk">seller_id</text>
+  <text x="1293" y="679" class="ctype">int</text>
+  <text x="1019" y="695" class="key" fill="#6B7280"></text>
+  <text x="1051" y="695" class="cname">title</text>
+  <text x="1293" y="695" class="ctype">varchar(150)</text>
+  <rect x="1012" y="699" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="711" class="key" fill="#6B7280"></text>
+  <text x="1051" y="711" class="cname">description</text>
+  <text x="1293" y="711" class="ctype">text</text>
+  <text x="1019" y="727" class="key" fill="#6B7280"></text>
+  <text x="1051" y="727" class="cname">category</text>
+  <text x="1293" y="727" class="ctype">varchar(100)</text>
+  <rect x="1012" y="731" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="743" class="key" fill="#6B7280"></text>
+  <text x="1051" y="743" class="cname">section</text>
+  <text x="1293" y="743" class="ctype">enum</text>
+  <text x="1019" y="759" class="key" fill="#6B7280"></text>
+  <text x="1051" y="759" class="cname">price</text>
+  <text x="1293" y="759" class="ctype">decimal(10,2)</text>
+  <rect x="1012" y="763" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="775" class="key" fill="#6B7280"></text>
+  <text x="1051" y="775" class="cname">condition_status</text>
+  <text x="1293" y="775" class="ctype">enum</text>
+  <text x="1019" y="791" class="key" fill="#6B7280"></text>
+  <text x="1051" y="791" class="cname">location</text>
+  <text x="1293" y="791" class="ctype">varchar(150)</text>
+  <rect x="1012" y="795" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="807" class="key" fill="#6B7280"></text>
+  <text x="1051" y="807" class="cname">status</text>
+  <text x="1293" y="807" class="ctype">enum</text>
+  <text x="1019" y="823" class="key" fill="#6B7280"></text>
+  <text x="1051" y="823" class="cname">created_at</text>
+  <text x="1293" y="823" class="ctype">timestamp</text>
+  <rect x="1012" y="827" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="839" class="key" fill="#6B7280"></text>
+  <text x="1051" y="839" class="cname">image_urls</text>
+  <text x="1293" y="839" class="ctype">longtext ?</text>
+  <text x="1019" y="855" class="key" fill="#6B7280"></text>
+  <text x="1051" y="855" class="cname">moderation_status</text>
+  <text x="1293" y="855" class="ctype">enum</text>
+  <rect x="1012" y="859" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="871" class="key" fill="#6B7280"></text>
+  <text x="1051" y="871" class="cname">moderation_flags</text>
+  <text x="1293" y="871" class="ctype">longtext ?</text>
+  <rect x="1015" y="931" width="290" height="356" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1011" y="927" width="290" height="356" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1011,957 L1011,935 Q1011,927 1019,927 L1293,927 Q1301,927 1301,935 L1301,957 Z" fill="#0C1D4A"/>
+  <text x="1156" y="947" class="tname">sale_orders</text>
+  <text x="1019" y="969" class="key" fill="#B38900">PK</text>
+  <text x="1051" y="969" class="cname pk">id</text>
+  <text x="1293" y="969" class="ctype">int</text>
+  <rect x="1012" y="973" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="985" class="key" fill="#0072CE">FK</text>
+  <text x="1051" y="985" class="cname fk">sales_item_id</text>
+  <text x="1293" y="985" class="ctype">int</text>
+  <text x="1019" y="1001" class="key" fill="#0072CE">FK</text>
+  <text x="1051" y="1001" class="cname fk">buyer_id</text>
+  <text x="1293" y="1001" class="ctype">int</text>
+  <rect x="1012" y="1005" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1017" class="key" fill="#0072CE">FK</text>
+  <text x="1051" y="1017" class="cname fk">seller_id</text>
+  <text x="1293" y="1017" class="ctype">int</text>
+  <text x="1019" y="1033" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1033" class="cname">item_price</text>
+  <text x="1293" y="1033" class="ctype">decimal(10,2)</text>
+  <rect x="1012" y="1037" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1049" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1049" class="cname">protection_fee</text>
+  <text x="1293" y="1049" class="ctype">decimal(10,2)</text>
+  <text x="1019" y="1065" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1065" class="cname">total_amount</text>
+  <text x="1293" y="1065" class="ctype">decimal(10,2)</text>
+  <rect x="1012" y="1069" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1081" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1081" class="cname">handover_code</text>
+  <text x="1293" y="1081" class="ctype">char(4)</text>
+  <text x="1019" y="1097" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1097" class="cname">code_attempts</text>
+  <text x="1293" y="1097" class="ctype">int</text>
+  <rect x="1012" y="1101" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1113" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1113" class="cname">status</text>
+  <text x="1293" y="1113" class="ctype">enum</text>
+  <text x="1019" y="1129" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1129" class="cname">cancelled_by</text>
+  <text x="1293" y="1129" class="ctype">enum ?</text>
+  <rect x="1012" y="1133" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1145" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1145" class="cname">released_at</text>
+  <text x="1293" y="1145" class="ctype">timestamp ?</text>
+  <text x="1019" y="1161" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1161" class="cname">created_at</text>
+  <text x="1293" y="1161" class="ctype">timestamp</text>
+  <rect x="1012" y="1165" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1177" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1177" class="cname">updated_at</text>
+  <text x="1293" y="1177" class="ctype">timestamp</text>
+  <text x="1019" y="1193" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1193" class="cname">disputed_at</text>
+  <text x="1293" y="1193" class="ctype">timestamp ?</text>
+  <rect x="1012" y="1197" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1209" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1209" class="cname">disputed_by</text>
+  <text x="1293" y="1209" class="ctype">enum ?</text>
+  <text x="1019" y="1225" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1225" class="cname">dispute_category</text>
+  <text x="1293" y="1225" class="ctype">varchar(40) ?</text>
+  <rect x="1012" y="1229" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1241" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1241" class="cname">dispute_reason</text>
+  <text x="1293" y="1241" class="ctype">varchar(500) ?</text>
+  <text x="1019" y="1257" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1257" class="cname">dispute_outcome</text>
+  <text x="1293" y="1257" class="ctype">enum ?</text>
+  <rect x="1012" y="1261" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1273" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1273" class="cname">dispute_resolved_at</text>
+  <text x="1293" y="1273" class="ctype">timestamp ?</text>
+  <rect x="1015" y="1333" width="290" height="324" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1011" y="1329" width="290" height="324" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1011,1359 L1011,1337 Q1011,1329 1019,1329 L1293,1329 Q1301,1329 1301,1337 L1301,1359 Z" fill="#0C1D4A"/>
+  <text x="1156" y="1349" class="tname">events</text>
+  <text x="1019" y="1371" class="key" fill="#B38900">PK</text>
+  <text x="1051" y="1371" class="cname pk">id</text>
+  <text x="1293" y="1371" class="ctype">int</text>
+  <rect x="1012" y="1375" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1387" class="key" fill="#0072CE">FK</text>
+  <text x="1051" y="1387" class="cname fk">organizer_id</text>
+  <text x="1293" y="1387" class="ctype">int</text>
+  <text x="1019" y="1403" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1403" class="cname">title</text>
+  <text x="1293" y="1403" class="ctype">varchar(150)</text>
+  <rect x="1012" y="1407" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1419" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1419" class="cname">description</text>
+  <text x="1293" y="1419" class="ctype">text</text>
+  <text x="1019" y="1435" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1435" class="cname">category</text>
+  <text x="1293" y="1435" class="ctype">varchar(100)</text>
+  <rect x="1012" y="1439" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1451" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1451" class="cname">section</text>
+  <text x="1293" y="1451" class="ctype">enum</text>
+  <text x="1019" y="1467" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1467" class="cname">location</text>
+  <text x="1293" y="1467" class="ctype">varchar(150)</text>
+  <rect x="1012" y="1471" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1483" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1483" class="cname">event_date</text>
+  <text x="1293" y="1483" class="ctype">datetime</text>
+  <text x="1019" y="1499" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1499" class="cname">capacity</text>
+  <text x="1293" y="1499" class="ctype">int ?</text>
+  <rect x="1012" y="1503" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1515" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1515" class="cname">image_urls</text>
+  <text x="1293" y="1515" class="ctype">longtext ?</text>
+  <text x="1019" y="1531" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1531" class="cname">status</text>
+  <text x="1293" y="1531" class="ctype">enum</text>
+  <rect x="1012" y="1535" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1547" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1547" class="cname">created_at</text>
+  <text x="1293" y="1547" class="ctype">timestamp</text>
+  <text x="1019" y="1563" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1563" class="cname">updated_at</text>
+  <text x="1293" y="1563" class="ctype">timestamp</text>
+  <rect x="1012" y="1567" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1579" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1579" class="cname">moderation_status</text>
+  <text x="1293" y="1579" class="ctype">enum</text>
+  <text x="1019" y="1595" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1595" class="cname">moderation_flags</text>
+  <text x="1293" y="1595" class="ctype">longtext ?</text>
+  <rect x="1012" y="1599" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1611" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1611" class="cname">has_food</text>
+  <text x="1293" y="1611" class="ctype">boolean</text>
+  <text x="1019" y="1627" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1627" class="cname">has_refreshments</text>
+  <text x="1293" y="1627" class="ctype">boolean</text>
+  <rect x="1012" y="1631" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1643" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1643" class="cname">listing_authority</text>
+  <text x="1293" y="1643" class="ctype">varchar(300) ?</text>
+  <rect x="1015" y="1703" width="290" height="100" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1011" y="1699" width="290" height="100" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1011,1729 L1011,1707 Q1011,1699 1019,1699 L1293,1699 Q1301,1699 1301,1707 L1301,1729 Z" fill="#0C1D4A"/>
+  <text x="1156" y="1719" class="tname">event_rsvps</text>
+  <text x="1019" y="1741" class="key" fill="#B38900">PK</text>
+  <text x="1051" y="1741" class="cname pk">id</text>
+  <text x="1293" y="1741" class="ctype">int</text>
+  <rect x="1012" y="1745" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1757" class="key" fill="#0072CE">FK</text>
+  <text x="1051" y="1757" class="cname fk">event_id</text>
+  <text x="1293" y="1757" class="ctype">int</text>
+  <text x="1019" y="1773" class="key" fill="#0072CE">FK</text>
+  <text x="1051" y="1773" class="cname fk">user_id</text>
+  <text x="1293" y="1773" class="ctype">int</text>
+  <rect x="1012" y="1777" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1019" y="1789" class="key" fill="#6B7280"></text>
+  <text x="1051" y="1789" class="cname">created_at</text>
+  <text x="1293" y="1789" class="ctype">timestamp</text>
+  <rect x="1472" y="625" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1468" y="621" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1468,651 L1468,629 Q1468,621 1476,621 L1750,621 Q1758,621 1758,629 L1758,651 Z" fill="#0C1D4A"/>
+  <text x="1613" y="641" class="tname">conversations</text>
+  <text x="1476" y="663" class="key" fill="#B38900">PK</text>
+  <text x="1508" y="663" class="cname pk">id</text>
+  <text x="1750" y="663" class="ctype">int</text>
+  <rect x="1469" y="667" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="679" class="key" fill="#6B7280"></text>
+  <text x="1508" y="679" class="cname">context_type</text>
+  <text x="1750" y="679" class="ctype">enum</text>
+  <text x="1476" y="695" class="key" fill="#6B7280"></text>
+  <text x="1508" y="695" class="cname">context_id</text>
+  <text x="1750" y="695" class="ctype">int</text>
+  <rect x="1469" y="699" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="711" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="711" class="cname fk">user_a_id</text>
+  <text x="1750" y="711" class="ctype">int</text>
+  <text x="1476" y="727" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="727" class="cname fk">user_b_id</text>
+  <text x="1750" y="727" class="ctype">int</text>
+  <rect x="1469" y="731" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="743" class="key" fill="#6B7280"></text>
+  <text x="1508" y="743" class="cname">created_at</text>
+  <text x="1750" y="743" class="ctype">timestamp</text>
+  <text x="1476" y="759" class="key" fill="#6B7280"></text>
+  <text x="1508" y="759" class="cname">updated_at</text>
+  <text x="1750" y="759" class="ctype">timestamp</text>
+  <rect x="1472" y="819" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1468" y="815" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1468,845 L1468,823 Q1468,815 1476,815 L1750,815 Q1758,815 1758,823 L1758,845 Z" fill="#0C1D4A"/>
+  <text x="1613" y="835" class="tname">messages</text>
+  <text x="1476" y="857" class="key" fill="#B38900">PK</text>
+  <text x="1508" y="857" class="cname pk">id</text>
+  <text x="1750" y="857" class="ctype">int</text>
+  <rect x="1469" y="861" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="873" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="873" class="cname fk">conversation_id</text>
+  <text x="1750" y="873" class="ctype">int</text>
+  <text x="1476" y="889" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="889" class="cname fk">sender_id</text>
+  <text x="1750" y="889" class="ctype">int</text>
+  <rect x="1469" y="893" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="905" class="key" fill="#6B7280"></text>
+  <text x="1508" y="905" class="cname">body</text>
+  <text x="1750" y="905" class="ctype">text</text>
+  <text x="1476" y="921" class="key" fill="#6B7280"></text>
+  <text x="1508" y="921" class="cname">is_flagged</text>
+  <text x="1750" y="921" class="ctype">boolean</text>
+  <rect x="1469" y="925" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="937" class="key" fill="#6B7280"></text>
+  <text x="1508" y="937" class="cname">created_at</text>
+  <text x="1750" y="937" class="ctype">timestamp</text>
+  <text x="1476" y="953" class="key" fill="#6B7280"></text>
+  <text x="1508" y="953" class="cname">read_at</text>
+  <text x="1750" y="953" class="ctype">timestamp ?</text>
+  <rect x="1472" y="1013" width="290" height="196" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1468" y="1009" width="290" height="196" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1468,1039 L1468,1017 Q1468,1009 1476,1009 L1750,1009 Q1758,1009 1758,1017 L1758,1039 Z" fill="#0C1D4A"/>
+  <text x="1613" y="1029" class="tname">reports</text>
+  <text x="1476" y="1051" class="key" fill="#B38900">PK</text>
+  <text x="1508" y="1051" class="cname pk">id</text>
+  <text x="1750" y="1051" class="ctype">int</text>
+  <rect x="1469" y="1055" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1067" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="1067" class="cname fk">reporter_id</text>
+  <text x="1750" y="1067" class="ctype">int</text>
+  <text x="1476" y="1083" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="1083" class="cname fk">reported_user_id</text>
+  <text x="1750" y="1083" class="ctype">int</text>
+  <rect x="1469" y="1087" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1099" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1099" class="cname">context_type</text>
+  <text x="1750" y="1099" class="ctype">enum ?</text>
+  <text x="1476" y="1115" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1115" class="cname">context_id</text>
+  <text x="1750" y="1115" class="ctype">int ?</text>
+  <rect x="1469" y="1119" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1131" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1131" class="cname">reason</text>
+  <text x="1750" y="1131" class="ctype">text</text>
+  <text x="1476" y="1147" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1147" class="cname">category</text>
+  <text x="1750" y="1147" class="ctype">enum</text>
+  <rect x="1469" y="1151" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1163" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1163" class="cname">status</text>
+  <text x="1750" y="1163" class="ctype">enum</text>
+  <text x="1476" y="1179" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1179" class="cname">created_at</text>
+  <text x="1750" y="1179" class="ctype">timestamp</text>
+  <rect x="1469" y="1183" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1195" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="1195" class="cname fk">message_id</text>
+  <text x="1750" y="1195" class="ctype">int ?</text>
+  <rect x="1472" y="1255" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1468" y="1251" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1468,1281 L1468,1259 Q1468,1251 1476,1251 L1750,1251 Q1758,1251 1758,1259 L1758,1281 Z" fill="#0C1D4A"/>
+  <text x="1613" y="1271" class="tname">notifications</text>
+  <text x="1476" y="1293" class="key" fill="#B38900">PK</text>
+  <text x="1508" y="1293" class="cname pk">id</text>
+  <text x="1750" y="1293" class="ctype">int</text>
+  <rect x="1469" y="1297" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1309" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="1309" class="cname fk">user_id</text>
+  <text x="1750" y="1309" class="ctype">int</text>
+  <text x="1476" y="1325" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1325" class="cname">title</text>
+  <text x="1750" y="1325" class="ctype">varchar(150)</text>
+  <rect x="1469" y="1329" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1341" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1341" class="cname">message</text>
+  <text x="1750" y="1341" class="ctype">text</text>
+  <text x="1476" y="1357" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1357" class="cname">context_type</text>
+  <text x="1750" y="1357" class="ctype">enum ?</text>
+  <rect x="1469" y="1361" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1373" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1373" class="cname">context_id</text>
+  <text x="1750" y="1373" class="ctype">int ?</text>
+  <text x="1476" y="1389" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1389" class="cname">is_read</text>
+  <text x="1750" y="1389" class="ctype">boolean</text>
+  <rect x="1469" y="1393" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1405" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1405" class="cname">created_at</text>
+  <text x="1750" y="1405" class="ctype">timestamp</text>
+  <rect x="1472" y="1465" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1468" y="1461" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1468,1491 L1468,1469 Q1468,1461 1476,1461 L1750,1461 Q1758,1461 1758,1469 L1758,1491 Z" fill="#0C1D4A"/>
+  <text x="1613" y="1481" class="tname">lecturer_endorsements</text>
+  <text x="1476" y="1503" class="key" fill="#B38900">PK</text>
+  <text x="1508" y="1503" class="cname pk">id</text>
+  <text x="1750" y="1503" class="ctype">int</text>
+  <rect x="1469" y="1507" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1519" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="1519" class="cname fk">lecturer_id</text>
+  <text x="1750" y="1519" class="ctype">int</text>
+  <text x="1476" y="1535" class="key" fill="#0072CE">FK</text>
+  <text x="1508" y="1535" class="cname fk">endorsed_user_id</text>
+  <text x="1750" y="1535" class="ctype">int</text>
+  <rect x="1469" y="1539" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1551" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1551" class="cname">endorsement_type</text>
+  <text x="1750" y="1551" class="ctype">enum</text>
+  <text x="1476" y="1567" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1567" class="cname">context_type</text>
+  <text x="1750" y="1567" class="ctype">enum ?</text>
+  <rect x="1469" y="1571" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1583" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1583" class="cname">context_id</text>
+  <text x="1750" y="1583" class="ctype">int ?</text>
+  <text x="1476" y="1599" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1599" class="cname">message</text>
+  <text x="1750" y="1599" class="ctype">text ?</text>
+  <rect x="1469" y="1603" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1476" y="1615" class="key" fill="#6B7280"></text>
+  <text x="1508" y="1615" class="cname">created_at</text>
+  <text x="1750" y="1615" class="ctype">timestamp</text>
+  <rect x="1918" y="625" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="621" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,651 L1914,629 Q1914,621 1922,621 L2196,621 Q2204,621 2204,629 L2204,651 Z" fill="#0C1D4A"/>
+  <text x="2059" y="641" class="tname">push_subscriptions</text>
+  <text x="1922" y="663" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="663" class="cname pk">id</text>
+  <text x="2196" y="663" class="ctype">int</text>
+  <rect x="1915" y="667" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="679" class="key" fill="#0072CE">FK</text>
+  <text x="1954" y="679" class="cname fk">user_id</text>
+  <text x="2196" y="679" class="ctype">int</text>
+  <text x="1922" y="695" class="key" fill="#6B7280"></text>
+  <text x="1954" y="695" class="cname">endpoint</text>
+  <text x="2196" y="695" class="ctype">text</text>
+  <rect x="1915" y="699" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="711" class="key" fill="#6B7280">UQ</text>
+  <text x="1954" y="711" class="cname">endpoint_hash</text>
+  <text x="2196" y="711" class="ctype">char(64)</text>
+  <text x="1922" y="727" class="key" fill="#6B7280"></text>
+  <text x="1954" y="727" class="cname">p256dh</text>
+  <text x="2196" y="727" class="ctype">varchar(255)</text>
+  <rect x="1915" y="731" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="743" class="key" fill="#6B7280"></text>
+  <text x="1954" y="743" class="cname">auth</text>
+  <text x="2196" y="743" class="ctype">varchar(255)</text>
+  <text x="1922" y="759" class="key" fill="#6B7280"></text>
+  <text x="1954" y="759" class="cname">created_at</text>
+  <text x="2196" y="759" class="ctype">timestamp ?</text>
+  <rect x="1918" y="819" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="815" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,845 L1914,823 Q1914,815 1922,815 L2196,815 Q2204,815 2204,823 L2204,845 Z" fill="#0C1D4A"/>
+  <text x="2059" y="835" class="tname">trusted_devices</text>
+  <text x="1922" y="857" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="857" class="cname pk">id</text>
+  <text x="2196" y="857" class="ctype">int</text>
+  <rect x="1915" y="861" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="873" class="key" fill="#0072CE">FK</text>
+  <text x="1954" y="873" class="cname fk">user_id</text>
+  <text x="2196" y="873" class="ctype">int</text>
+  <text x="1922" y="889" class="key" fill="#6B7280">UQ</text>
+  <text x="1954" y="889" class="cname">token_hash</text>
+  <text x="2196" y="889" class="ctype">varchar(64)</text>
+  <rect x="1915" y="893" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="905" class="key" fill="#6B7280"></text>
+  <text x="1954" y="905" class="cname">device_label</text>
+  <text x="2196" y="905" class="ctype">varchar(150) ?</text>
+  <text x="1922" y="921" class="key" fill="#6B7280"></text>
+  <text x="1954" y="921" class="cname">ip_address</text>
+  <text x="2196" y="921" class="ctype">varchar(45) ?</text>
+  <rect x="1915" y="925" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="937" class="key" fill="#6B7280"></text>
+  <text x="1954" y="937" class="cname">created_at</text>
+  <text x="2196" y="937" class="ctype">timestamp</text>
+  <text x="1922" y="953" class="key" fill="#6B7280"></text>
+  <text x="1954" y="953" class="cname">expires_at</text>
+  <text x="2196" y="953" class="ctype">datetime</text>
+  <rect x="1915" y="957" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="969" class="key" fill="#6B7280"></text>
+  <text x="1954" y="969" class="cname">last_used_at</text>
+  <text x="2196" y="969" class="ctype">timestamp ?</text>
+  <rect x="1918" y="1029" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="1025" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,1055 L1914,1033 Q1914,1025 1922,1025 L2196,1025 Q2204,1025 2204,1033 L2204,1055 Z" fill="#0C1D4A"/>
+  <text x="2059" y="1045" class="tname">security_events</text>
+  <text x="1922" y="1067" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="1067" class="cname pk">id</text>
+  <text x="2196" y="1067" class="ctype">int</text>
+  <rect x="1915" y="1071" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1083" class="key" fill="#0072CE">FK</text>
+  <text x="1954" y="1083" class="cname fk">user_id</text>
+  <text x="2196" y="1083" class="ctype">int ?</text>
+  <text x="1922" y="1099" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1099" class="cname">email</text>
+  <text x="2196" y="1099" class="ctype">varchar(120) ?</text>
+  <rect x="1915" y="1103" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1115" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1115" class="cname">event</text>
+  <text x="2196" y="1115" class="ctype">varchar(60)</text>
+  <text x="1922" y="1131" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1131" class="cname">ip_address</text>
+  <text x="2196" y="1131" class="ctype">varchar(45) ?</text>
+  <rect x="1915" y="1135" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1147" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1147" class="cname">user_agent</text>
+  <text x="2196" y="1147" class="ctype">varchar(255) ?</text>
+  <text x="1922" y="1163" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1163" class="cname">metadata</text>
+  <text x="2196" y="1163" class="ctype">longtext ?</text>
+  <rect x="1915" y="1167" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1179" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1179" class="cname">created_at</text>
+  <text x="2196" y="1179" class="ctype">timestamp</text>
+  <rect x="1918" y="1239" width="290" height="116" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="1235" width="290" height="116" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,1265 L1914,1243 Q1914,1235 1922,1235 L2196,1235 Q2204,1235 2204,1243 L2204,1265 Z" fill="#0C1D4A"/>
+  <text x="2059" y="1255" class="tname">admin_allowlist</text>
+  <text x="1922" y="1277" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="1277" class="cname pk">id</text>
+  <text x="2196" y="1277" class="ctype">int</text>
+  <rect x="1915" y="1281" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1293" class="key" fill="#6B7280">UQ</text>
+  <text x="1954" y="1293" class="cname">email</text>
+  <text x="2196" y="1293" class="ctype">varchar(120)</text>
+  <text x="1922" y="1309" class="key" fill="#0072CE">FK</text>
+  <text x="1954" y="1309" class="cname fk">added_by</text>
+  <text x="2196" y="1309" class="ctype">int ?</text>
+  <rect x="1915" y="1313" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1325" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1325" class="cname">note</text>
+  <text x="2196" y="1325" class="ctype">varchar(255) ?</text>
+  <text x="1922" y="1341" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1341" class="cname">created_at</text>
+  <text x="2196" y="1341" class="ctype">timestamp</text>
+  <rect x="1918" y="1401" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="1397" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,1427 L1914,1405 Q1914,1397 1922,1397 L2196,1397 Q2204,1397 2204,1405 L2204,1427 Z" fill="#0C1D4A"/>
+  <text x="2059" y="1417" class="tname">admin_audit_logs</text>
+  <text x="1922" y="1439" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="1439" class="cname pk">id</text>
+  <text x="2196" y="1439" class="ctype">int</text>
+  <rect x="1915" y="1443" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1455" class="key" fill="#0072CE">FK</text>
+  <text x="1954" y="1455" class="cname fk">admin_id</text>
+  <text x="2196" y="1455" class="ctype">int</text>
+  <text x="1922" y="1471" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1471" class="cname">action</text>
+  <text x="2196" y="1471" class="ctype">varchar(100)</text>
+  <rect x="1915" y="1475" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1487" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1487" class="cname">target_type</text>
+  <text x="2196" y="1487" class="ctype">varchar(50)</text>
+  <text x="1922" y="1503" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1503" class="cname">target_id</text>
+  <text x="2196" y="1503" class="ctype">int ?</text>
+  <rect x="1915" y="1507" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1519" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1519" class="cname">reason</text>
+  <text x="2196" y="1519" class="ctype">text ?</text>
+  <text x="1922" y="1535" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1535" class="cname">metadata</text>
+  <text x="2196" y="1535" class="ctype">longtext ?</text>
+  <rect x="1915" y="1539" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1551" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1551" class="cname">created_at</text>
+  <text x="2196" y="1551" class="ctype">timestamp</text>
+  <rect x="1918" y="1611" width="290" height="164" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="1607" width="290" height="164" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,1637 L1914,1615 Q1914,1607 1922,1607 L2196,1607 Q2204,1607 2204,1615 L2204,1637 Z" fill="#0C1D4A"/>
+  <text x="2059" y="1627" class="tname">feedback</text>
+  <text x="1922" y="1649" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="1649" class="cname pk">id</text>
+  <text x="2196" y="1649" class="ctype">int</text>
+  <rect x="1915" y="1653" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1665" class="key" fill="#0072CE">FK</text>
+  <text x="1954" y="1665" class="cname fk">user_id</text>
+  <text x="2196" y="1665" class="ctype">int</text>
+  <text x="1922" y="1681" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1681" class="cname">kind</text>
+  <text x="2196" y="1681" class="ctype">enum</text>
+  <rect x="1915" y="1685" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1697" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1697" class="cname">message</text>
+  <text x="2196" y="1697" class="ctype">varchar(2000)</text>
+  <text x="1922" y="1713" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1713" class="cname">status</text>
+  <text x="2196" y="1713" class="ctype">enum</text>
+  <rect x="1915" y="1717" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1729" class="key" fill="#0072CE">FK</text>
+  <text x="1954" y="1729" class="cname fk">reviewed_by</text>
+  <text x="2196" y="1729" class="ctype">int ?</text>
+  <text x="1922" y="1745" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1745" class="cname">reviewed_at</text>
+  <text x="2196" y="1745" class="ctype">timestamp ?</text>
+  <rect x="1915" y="1749" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1761" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1761" class="cname">created_at</text>
+  <text x="2196" y="1761" class="ctype">timestamp</text>
+  <rect x="1918" y="1821" width="290" height="148" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="1817" width="290" height="148" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,1847 L1914,1825 Q1914,1817 1922,1817 L2196,1817 Q2204,1817 2204,1825 L2204,1847 Z" fill="#0C1D4A"/>
+  <text x="2059" y="1837" class="tname">blocked_content_attempts</text>
+  <text x="1922" y="1859" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="1859" class="cname pk">id</text>
+  <text x="2196" y="1859" class="ctype">int</text>
+  <rect x="1915" y="1863" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1875" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1875" class="cname">content_type</text>
+  <text x="2196" y="1875" class="ctype">enum</text>
+  <text x="1922" y="1891" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1891" class="cname">user_id</text>
+  <text x="2196" y="1891" class="ctype">int ?</text>
+  <rect x="1915" y="1895" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1907" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1907" class="cname">title</text>
+  <text x="2196" y="1907" class="ctype">varchar(255) ?</text>
+  <text x="1922" y="1923" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1923" class="cname">description_snippet</text>
+  <text x="2196" y="1923" class="ctype">varchar(300) ?</text>
+  <rect x="1915" y="1927" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="1939" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1939" class="cname">flagged_categories</text>
+  <text x="2196" y="1939" class="ctype">json ?</text>
+  <text x="1922" y="1955" class="key" fill="#6B7280"></text>
+  <text x="1954" y="1955" class="cname">created_at</text>
+  <text x="2196" y="1955" class="ctype">timestamp ?</text>
+  <rect x="1918" y="2015" width="290" height="100" rx="8" fill="#0C1D4A" opacity="0.08"/>
+  <rect x="1914" y="2011" width="290" height="100" rx="8" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.5" class="tbl"/>
+  <path d="M1914,2041 L1914,2019 Q1914,2011 1922,2011 L2196,2011 Q2204,2011 2204,2019 L2204,2041 Z" fill="#0C1D4A"/>
+  <text x="2059" y="2031" class="tname">flagged_uploads</text>
+  <text x="1922" y="2053" class="key" fill="#B38900">PK</text>
+  <text x="1954" y="2053" class="cname pk">id</text>
+  <text x="2196" y="2053" class="ctype">int</text>
+  <rect x="1915" y="2057" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="2069" class="key" fill="#6B7280"></text>
+  <text x="1954" y="2069" class="cname">image_url</text>
+  <text x="2196" y="2069" class="ctype">varchar(500)</text>
+  <text x="1922" y="2085" class="key" fill="#6B7280"></text>
+  <text x="1954" y="2085" class="cname">flagged_categories</text>
+  <text x="2196" y="2085" class="ctype">longtext ?</text>
+  <rect x="1915" y="2089" width="288" height="16" fill="#F7F8FB"/>
+  <text x="1922" y="2101" class="key" fill="#6B7280"></text>
+  <text x="1954" y="2101" class="cname">created_at</text>
+  <text x="2196" y="2101" class="ctype">timestamp</text>
+  <text x="308" y="607" class="group">Tasks, offers &amp; reviews</text>
+  <text x="732" y="607" class="group">Rentals</text>
+  <text x="1156" y="607" class="group">Sales &amp; Campus Marketplace</text>
+  <text x="1613" y="607" class="group">Messages, reports &amp; notifications</text>
+  <text x="2059" y="607" class="group">Security, admin, feedback &amp; moderation</text>
+  <text x="40" y="2161" class="lh">How to read it (crow's foot notation)</text>
+  <line x1="40" y1="2187" x2="110" y2="2187" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="110" y1="2177" x2="110" y2="2197" stroke="#0C1D4A" stroke-width="2"/>
+  <line x1="104" y1="2193" x2="104" y2="2181" stroke="#0C1D4A" stroke-width="1.4"/><line x1="99" y1="2193" x2="99" y2="2181" stroke="#0C1D4A" stroke-width="1.4"/>
+  <text x="124" y="2191" class="lt">exactly one (the foreign key is required)</text>
+  <line x1="460" y1="2187" x2="530" y2="2187" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="530" y1="2177" x2="530" y2="2197" stroke="#0C1D4A" stroke-width="2"/>
+  <line x1="523" y1="2193" x2="523" y2="2181" stroke="#0C1D4A" stroke-width="1.4"/><circle cx="513" cy="2187" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <text x="544" y="2191" class="lt">zero or one (optional foreign key, or a unique one)</text>
+  <line x1="900" y1="2187" x2="970" y2="2187" stroke="#0C1D4A" stroke-width="1.4"/>
+  <line x1="970" y1="2177" x2="970" y2="2197" stroke="#0C1D4A" stroke-width="2"/>
+  <path d="M958,2187 L970,2194 M958,2187 L970,2187 M958,2187 L970,2180" stroke="#0C1D4A" stroke-width="1.4" fill="none"/><circle cx="951" cy="2187" r="4" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="1.4"/>
+  <text x="984" y="2191" class="lt">zero or many</text>
+  <text x="40" y="2215" class="lt"><tspan fill="#B38900" font-weight="700">PK</tspan> primary key · <tspan fill="#0072CE" font-weight="700">FK</tspan> foreign key (a line to the table it refers to) · <tspan fill="#6B7280" font-weight="700">UQ</tspan> unique · "?" after a type = can be empty (NULL) · enum = one value from a fixed list · boolean = tinyint(1)</text>
+  <text x="40" y="2249" class="lh">References kept by the application, not by a foreign key (no line drawn)</text>
+  <text x="40" y="2266" class="lt"><tspan font-weight="700">offers</tspan>.context_type + context_id → tasks or sales_items</text>
+  <text x="40" y="2283" class="lt"><tspan font-weight="700">conversations</tspan>.context_type + context_id → tasks, equipment or sales_items ('sale')</text>
+  <text x="40" y="2300" class="lt"><tspan font-weight="700">notifications</tspan>.context_type + context_id → tasks, equipment_bookings, sales_items or events</text>
+  <text x="40" y="2317" class="lt"><tspan font-weight="700">reports</tspan>.context_type + context_id → tasks, equipment, equipment_bookings, sales_items or events</text>
+  <text x="40" y="2334" class="lt"><tspan font-weight="700">lecturer_endorsements</tspan>.context_type + context_id → sales_items, equipment, tasks or events</text>
+  <text x="40" y="2351" class="lt"><tspan font-weight="700">admin_audit_logs</tspan>.target_type + target_id → the user, task, report, sale order, booking … the action was about</text>
+  <text x="40" y="2368" class="lt"><tspan font-weight="700">blocked_content_attempts</tspan>.user_id → users (no foreign key; the blocked post itself is never saved, so there is nothing else to link to)</text>
+  <text x="40" y="2385" class="lt"><tspan font-weight="700">flagged_uploads</tspan>.image_url → matched against the image_urls lists in tasks, sales_items, equipment and events when a listing is posted</text>
+  <text x="40" y="2402" class="lt"><tspan font-weight="700">security_events</tspan>.email → the email typed at sign-in (may not be a user)</text>
+  <text x="40" y="2432" class="lt">Drawn from the live database structure on 2026-10-10: 26 tables, 325 columns, 39 foreign keys. Regenerate with: node docs/diagrams/build-erd.js</text>
 </svg>

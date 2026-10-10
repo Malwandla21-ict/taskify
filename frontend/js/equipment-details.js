@@ -146,7 +146,7 @@ function renderEquipmentDetails(item) {
         <div class="detail-media">
           ${renderImageGallery(item.image_urls, "ti-package")}
           ${endorsementCornerBadge(item)}
-          ${lecturerPostedCornerBadge(item.owner_member_type)}
+          ${lecturerPostedCornerBadge(item.owner_member_type, item.owner_lecturer_verified)}
         </div>
         ${sectionBadge(item.section || "General")}
         <h1 class="detail-title">${item.name}</h1>

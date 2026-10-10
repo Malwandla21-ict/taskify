@@ -56,6 +56,10 @@
           <i class="ti ti-messages" aria-hidden="true"></i> Messages
           <span class="badge-count gold" id="sidebarFlaggedMessagesCount" style="display:none;">0</span>
         </button>
+        <button type="button" class="admin-sidebar-link" data-section="feedback">
+          <i class="ti ti-bulb" aria-hidden="true"></i> Feedback
+          <span class="badge-count gold" id="sidebarFeedbackCount" style="display:none;">0</span>
+        </button>
         <button type="button" class="admin-sidebar-link" data-section="audit">
           <i class="ti ti-history" aria-hidden="true"></i> Audit Log
         </button>
@@ -284,11 +288,14 @@
             </div>
             <div class="admin-table-filters">
               <select id="userRoleFilter">
-                <option value="All">All Roles</option>
-                <option value="user">Student</option>
-                <option value="admin">Admin</option>
-                <option value="suspended">Suspended</option>
-                <option value="banned">Banned</option>
+                <option value="All">All accounts</option>
+                <option value="type:Student">Students</option>
+                <option value="type:Lecturer">Lecturers</option>
+                <option value="lecturer:unverified">Lecturers awaiting verification</option>
+                <option value="type:Staff">Staff</option>
+                <option value="role:admin">Admins</option>
+                <option value="role:suspended">Suspended</option>
+                <option value="role:banned">Banned</option>
               </select>
             </div>
           </div>
@@ -438,6 +445,40 @@
       </section>
 
       <!-- Audit Log -->
+      <!-- Help shape Taskify: feedback from users -->
+      <section id="feedbackSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Feedback</h1>
+            <p>Ideas, problems, consultation requests and offers to help test, sent from "Help shape Taskify".</p>
+          </div>
+          <div class="admin-page-header-meta">
+            <select id="feedbackStatusFilter" class="analytics-select" aria-label="Show">
+              <option value="New">New</option>
+              <option value="Reviewed">Reviewed</option>
+              <option value="">All</option>
+            </select>
+          </div>
+        </div>
+        <div class="admin-table-card">
+          <div class="admin-table-scroll">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>From</th>
+                  <th>Kind</th>
+                  <th>Message</th>
+                  <th>Sent</th>
+                  <th>Status</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="feedbackTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <section id="auditSection" class="admin-section">
         <div class="admin-page-header">
           <div>

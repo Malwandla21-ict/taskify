@@ -1,7 +1,10 @@
 const pool = require("../config/db");
+const FEATURES = require("../config/features");
 
+/* With the endorsements switch off (config/features.js) nothing is attached,
+   so no "Recommended by" badges appear anywhere. */
 async function attachLatestEndorsements(items, contextType) {
-  if (!items.length) return items;
+  if (!items.length || !FEATURES.endorsements) return items;
 
   try {
     const ids = items.map(i => i.id);

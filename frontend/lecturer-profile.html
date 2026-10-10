@@ -32,7 +32,7 @@
       <div>
         <div class="profile-tabs">
           <button type="button" class="profile-tab active" data-tab="overview"><i class="ti ti-layout-grid" aria-hidden="true"></i> Overview</button>
-          <button type="button" class="profile-tab" data-tab="endorsements"><i class="ti ti-certificate" aria-hidden="true"></i> My Endorsements</button>
+          <button type="button" class="profile-tab" data-tab="endorsements" data-feature="endorsements"><i class="ti ti-certificate" aria-hidden="true"></i> My Endorsements</button>
           <button type="button" class="profile-tab" data-tab="reviews"><i class="ti ti-star" aria-hidden="true"></i> Reviews</button>
           <button type="button" class="profile-tab" data-tab="activity"><i class="ti ti-activity" aria-hidden="true"></i> Activity</button>
         </div>
@@ -60,7 +60,7 @@
           </div>
         </div>
 
-        <div id="endorsementsTab" class="profile-tab-panel">
+        <div id="endorsementsTab" class="profile-tab-panel" data-feature="endorsements">
           <div class="profile-info-card-header" style="margin-bottom:14px;">
             <h3 style="font-size:15px;"><i class="ti ti-certificate" aria-hidden="true"></i> Endorsements You've Given</h3>
             <button type="button" class="primary-button" id="openGiveEndorsementBtn" style="width:auto;padding:9px 16px;">
@@ -90,14 +90,20 @@
             <button type="button" class="profile-quick-action-btn" id="quickEditProfileBtn">
               <i class="ti ti-pencil" aria-hidden="true"></i> Edit Profile
             </button>
-            <button type="button" class="profile-quick-action-btn" id="quickGiveEndorsementBtn">
+            <a href="./feedback.html?kind=consultation" class="profile-quick-action-btn" data-feature="feedback">
+              <i class="ti ti-bulb" aria-hidden="true"></i> Help shape Taskify
+            </a>
+            <a href="./feedback.html?kind=testing" class="profile-quick-action-btn" data-feature="feedback">
+              <i class="ti ti-test-pipe" aria-hidden="true"></i> Help test new features
+            </a>
+            <button type="button" class="profile-quick-action-btn" id="quickGiveEndorsementBtn" data-feature="endorsements">
               <i class="ti ti-certificate" aria-hidden="true"></i> Give Endorsement
             </button>
-            <button type="button" class="profile-quick-action-btn has-count" data-goto-tab="endorsements">
+            <button type="button" class="profile-quick-action-btn has-count" data-goto-tab="endorsements" data-feature="endorsements">
               <span><i class="ti ti-list-check" aria-hidden="true"></i> View My Endorsements</span>
               <span class="count-pill" id="endorsementCountPill">0</span>
             </button>
-            <a href="./endorsed-students.html" class="profile-quick-action-btn">
+            <a href="./endorsed-students.html" class="profile-quick-action-btn" data-feature="endorsements">
               <i class="ti ti-school-bell" aria-hidden="true"></i> Browse Endorsed Students
             </a>
           </div>

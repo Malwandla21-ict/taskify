@@ -6,6 +6,7 @@ const taskService = require("../services/task.service");
 const salesService = require("../services/sales.service");
 const equipmentService = require("../services/equipment.service");
 const analyticsService = require("../services/analytics.service");
+const feedbackService = require("../services/feedback.service");
 const reportExportService = require("../services/reportExport.service");
 
 async function getDashboardStats(req, res, next) {
@@ -194,6 +195,24 @@ async function removeContent(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function listFeedback(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+    const rows = await feedbackService.listFeedback({ status: req.query.status || null });
+    return res.status(200).json({ success: true, message: "Feedback fetched.", data: rows });
+  } catch (error) { next(error); }
+}
+
+async function markFeedbackReviewed(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+    const row = await feedbackService.markReviewed(Number(req.params.feedbackId), req.user.id);
+    return res.status(200).json({ success: true, message: "Marked as reviewed.", data: row });
+  } catch (error) { next(error); }
+}
+
 async function getAuditLogs(req, res, next) {
   try {
     const logs = await auditLogService.getAuditLogs({
@@ -221,6 +240,8 @@ module.exports = {
   unbanUser,
   refundPayment,
   getAuditLogs,
+  listFeedback,
+  markFeedbackReviewed,
   getModerationQueue,
   clearModerationFlag,
   removeContent

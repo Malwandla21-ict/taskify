@@ -82,7 +82,7 @@ function renderEventDetails(event, hasRsvped) {
         <div class="detail-media">
           ${renderImageGallery(event.image_urls, "ti-building-store")}
           ${endorsementCornerBadge(event)}
-          ${lecturerPostedCornerBadge(event.organizer_member_type)}
+          ${lecturerPostedCornerBadge(event.organizer_member_type, event.organizer_lecturer_verified)}
         </div>
         ${sectionBadge(event.section || "General")}
         <h1 class="detail-title">${event.title}</h1>

@@ -21,9 +21,9 @@ const LAYOUT = [
   ["equipment", "equipment_bookings", "booking_extensions"],
   ["sales_items", "sale_orders", "events", "event_rsvps"],
   ["conversations", "messages", "reports", "notifications", "lecturer_endorsements"],
-  ["push_subscriptions", "trusted_devices", "security_events", "admin_allowlist", "admin_audit_logs", "blocked_content_attempts", "flagged_uploads"]
+  ["push_subscriptions", "trusted_devices", "security_events", "admin_allowlist", "admin_audit_logs", "feedback", "blocked_content_attempts", "flagged_uploads"]
 ];
-const GROUP_LABELS = ["Tasks, offers & reviews", "Rentals", "Sales & Campus Marketplace", "Messages, reports & notifications", "Security, admin & moderation"];
+const GROUP_LABELS = ["Tasks, offers & reviews", "Rentals", "Sales & Campus Marketplace", "Messages, reports & notifications", "Security, admin, feedback & moderation"];
 
 /* References enforced in code rather than by a foreign key (a type column
    says which table the id belongs to, or there's simply no constraint). */

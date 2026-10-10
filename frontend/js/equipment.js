@@ -358,7 +358,7 @@ function equipmentCard(item) {
           ? `<img src="${imageUrl}" alt="${item.name}" class="lightbox-img" data-gallery="equip-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
-        ${lecturerPostedCornerBadge(item.owner_member_type)}
+        ${lecturerPostedCornerBadge(item.owner_member_type, item.owner_lecturer_verified)}
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${item.id}" aria-label="Save equipment">
           <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
         </button>

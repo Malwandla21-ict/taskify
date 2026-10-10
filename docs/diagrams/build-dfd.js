@@ -31,7 +31,8 @@ const STORES = {
   D4: { name: "Notifications", tables: "notifications, push_subscriptions" },
   D5: { name: "Reviews & endorsements", tables: "reviews, lecturer_endorsements" },
   D6: { name: "Reports & moderation", tables: "reports, blocked_content_attempts, flagged_uploads" },
-  D7: { name: "Admin audit log", tables: "admin_audit_logs" }
+  D7: { name: "Admin audit log", tables: "admin_audit_logs" },
+  D8: { name: "Feedback", tables: "feedback" }
 };
 
 const PROCESSES = {
@@ -43,7 +44,8 @@ const PROCESSES = {
   "6": { name: "Deliver notifications and reminders", code: "notification, push, mailer, jobs/scheduler" },
   "7": { name: "Manage reviews and endorsements", code: "review, lecturer" },
   "8": { name: "Moderate and resolve", code: "report, moderation, admin, messageReport" },
-  "9": { name: "Produce analytics and reports", code: "analytics, reportExport, auditlog" }
+  "9": { name: "Produce analytics and reports", code: "analytics, reportExport, auditlog" },
+  "10": { name: "Collect feedback", code: "feedback" }
 };
 
 /* from → to, or both ways ("<>": the process reads AND writes the store). */
@@ -115,7 +117,16 @@ const FLOWS = [
   ["D2", "9", "listing & transaction records"],
   ["D4", "9", "notification records"],
   ["D6", "9", "report & moderation records"],
-  ["9", "<>", "D7", "audit log & export entries"]
+  ["9", "<>", "D7", "audit log & export entries"],
+
+  ["user", "10", "feedback (ideas, problems, consultation, testing)"],
+  ["10", "user", "confirmation"],
+  ["admin", "10", "feedback marked reviewed"],
+  ["10", "admin", "feedback list"],
+  ["10", "<>", "D8", "feedback records"],
+  ["D1", "10", "names & account types"],
+  ["10", "D4", "notifications (new feedback)"],
+  ["10", "D7", "audit entries (reviewed)"]
 ].map((f) => (f.length === 4
   ? { from: f[0], to: f[2], both: true, label: f[3] }
   : { from: f[0], to: f[1], both: false, label: f[2] }));

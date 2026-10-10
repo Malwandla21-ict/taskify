@@ -233,7 +233,8 @@ const EQUIPMENT_SELECT_FIELDS = `
   u.full_name AS owner_name,
   u.profile_photo_url AS owner_profile_photo,
   u.member_type AS owner_member_type,
-  u.lecturer_title AS owner_lecturer_title
+  IF(u.lecturer_verified = 1, u.lecturer_title, NULL) AS owner_lecturer_title,
+  u.lecturer_verified AS owner_lecturer_verified
 `;
 
 async function createEquipment({
