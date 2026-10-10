@@ -149,12 +149,56 @@ async function getAllUsersForAdmin({ limit = 100, offset = 0 } = {}) {
     `SELECT id, full_name, email, role, profile_photo_url,
             suspension_reason, suspended_at, ban_reason, banned_at,
             rating_average, total_reviews, created_at,
-            totp_enabled, totp_method
+            totp_enabled, totp_method, member_type, lecturer_verified
      FROM users
      ORDER BY created_at DESC
      LIMIT ${safeLimit} OFFSET ${safeOffset}`
   );
   return rows;
+}
+
+/* Verify (or un-verify) a lecturer account. Lecturer-only features (see
+   requireLecturer in auth.middleware.js) stay locked until this is done,
+   since anyone with a name.surname@ump.ac.za email can choose "Lecturer"
+   at sign-up. */
+async function setLecturerVerified(userId, verified, actingAdminId) {
+  const [rows] = await pool.execute(
+    `SELECT id, full_name, email, member_type, lecturer_verified FROM users WHERE id = ? LIMIT 1`, [userId]
+  );
+  if (rows.length === 0) {
+    const error = new Error("User not found."); error.statusCode = 404; throw error;
+  }
+
+  const user = rows[0];
+  if (user.member_type !== "Lecturer") {
+    const error = new Error("Only lecturer accounts can be verified as lecturers."); error.statusCode = 400; throw error;
+  }
+  if (!!Number(user.lecturer_verified) === verified) {
+    const error = new Error(verified ? "This lecturer is already verified." : "This lecturer isn't verified."); error.statusCode = 400; throw error;
+  }
+
+  await pool.execute(`UPDATE users SET lecturer_verified = ? WHERE id = ?`, [verified ? 1 : 0, userId]);
+
+  await auditLogService.createAuditLog({
+    adminId: actingAdminId,
+    action: verified ? "user.verify_lecturer" : "user.unverify_lecturer",
+    targetType: "user",
+    targetId: userId,
+    reason: `${verified ? "Verified" : "Removed lecturer verification for"} ${user.full_name} (${user.email}).`
+  });
+
+  await notificationService.createNotification({
+    userId,
+    title: verified ? "Lecturer Account Verified" : "Lecturer Verification Removed",
+    message: verified
+      ? "An admin has verified your lecturer account. Lecturer features are now unlocked."
+      : "An admin has removed the verification on your lecturer account, so lecturer features are locked. Contact an admin if you think this is a mistake."
+  });
+
+  const [updatedRows] = await pool.execute(
+    `SELECT id, full_name, email, member_type, lecturer_verified FROM users WHERE id = ? LIMIT 1`, [userId]
+  );
+  return updatedRows[0];
 }
 
 async function promoteUserToAdmin(userId, actingAdminId) {
@@ -339,6 +383,7 @@ async function getDashboardStats() {
 
 module.exports = {
   getAllUsersForAdmin,
+  setLecturerVerified,
   promoteUserToAdmin,
   demoteAdminToUser,
   getDashboardStats,

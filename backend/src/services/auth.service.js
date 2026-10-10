@@ -3,6 +3,7 @@ const pool = require("../config/db");
 const adminAllowlistService = require("./adminAllowlist.service");
 const mailerService = require("./mailer.service");
 const securityLogService = require("./securityLog.service");
+const notificationService = require("./notification.service");
 const twoFactorService = require("./twoFactor.service");
 const { generateRawToken, hashToken, generateNumericCode } = require("../utils/crypto");
 const { signAccessToken, signPurposeToken, verifyPurposeToken } = require("../utils/jwt");
@@ -185,6 +186,14 @@ async function registerUser({
   const normalizedMemberType = ["Student", "Lecturer", "Staff"].includes(memberType) ? memberType : "Student";
   const isLecturer = normalizedMemberType === "Lecturer";
 
+  /* UMP students sign in with their student number (2023123456@ump.ac.za);
+     lecturers and staff have name.surname@ump.ac.za. A student-number email
+     can't claim a lecturer or staff account. Lecturer accounts also start
+     unverified (lecturer_verified = 0) until an admin verifies them. */
+  if (normalizedMemberType !== "Student" && /^\d+@/.test(normalizedEmail)) {
+    throwError("Lecturer and staff accounts need your name.surname@ump.ac.za email. Students sign up with their student-number email.", 400);
+  }
+
   const verificationCode = generateNumericCode(6);
   const verificationExpiryMinutes = Number(process.env.EMAIL_VERIFICATION_OTP_EXPIRY_MINUTES) || 15;
 
@@ -234,6 +243,13 @@ async function registerUser({
     email: normalizedEmail,
     event: "register"
   });
+
+  if (isLecturer) {
+    await notificationService.notifyAllAdmins({
+      title: "Lecturer Account to Verify",
+      message: `${fullName.trim()} (${normalizedEmail}) signed up as a lecturer. Lecturer features stay locked until an admin verifies the account in Admin → Users.`
+    });
+  }
 
   return {
     email: normalizedEmail,

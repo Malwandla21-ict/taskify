@@ -24,6 +24,18 @@ router.get(
 );
 
 router.patch(
+  "/users/:userId/verify-lecturer",
+  [ param("userId").isInt({ min: 1 }).withMessage("User ID must be a valid positive integer.") ],
+  adminController.verifyLecturer
+);
+
+router.patch(
+  "/users/:userId/unverify-lecturer",
+  [ param("userId").isInt({ min: 1 }).withMessage("User ID must be a valid positive integer.") ],
+  adminController.unverifyLecturer
+);
+
+router.patch(
   "/users/:userId/promote",
   [ param("userId").isInt({ min: 1 }).withMessage("User ID must be a valid positive integer.") ],
   adminController.promoteUser

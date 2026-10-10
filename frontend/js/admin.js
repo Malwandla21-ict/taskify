@@ -457,10 +457,34 @@ function getFilteredUsers() {
 /* Quick-action icons next to the eye icon, tailored to the user's current
    role, so common moderation (suspend/ban/unsuspend/unban) is one click
    from the table without opening the detail modal. */
+/* Lecturer accounts start unverified (anyone with a name.surname email can
+   choose "Lecturer" at sign-up); lecturer-only features unlock once an
+   admin verifies them here. */
+function lecturerBadgeFor(user) {
+  if (user.member_type !== "Lecturer") return "";
+  return Number(user.lecturer_verified)
+    ? badge("Verified lecturer", "navy")
+    : badge("Unverified lecturer", "gold");
+}
+
+function lecturerVerifyButtonFor(user) {
+  if (user.member_type !== "Lecturer") return "";
+  return Number(user.lecturer_verified)
+    ? `<button type="button" class="table-icon-btn danger qa-table-unverify-lecturer-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Remove lecturer verification">
+         <i class="ti ti-school-off" aria-hidden="true"></i>
+       </button>`
+    : `<button type="button" class="table-icon-btn success qa-table-verify-lecturer-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Verify lecturer">
+         <i class="ti ti-school" aria-hidden="true"></i>
+       </button>`;
+}
+
 function quickActionButtonsFor(user) {
   const isSelf = Number(user.id) === Number(currentUser.id);
   if (isSelf) return "";
+  return lecturerVerifyButtonFor(user) + roleActionButtonsFor(user);
+}
 
+function roleActionButtonsFor(user) {
   if (user.role === "user") {
     return `
       <button type="button" class="table-icon-btn danger qa-table-suspend-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Suspend">
@@ -502,7 +526,7 @@ function renderUsersTable() {
             </div>
           </td>
           <td class="admin-table-muted">${u.email}</td>
-          <td>${roleBadge(u.role)}</td>
+          <td>${roleBadge(u.role)} ${lecturerBadgeFor(u)}</td>
           <td>${twoFactorBadge(u)}</td>
           <td class="admin-table-muted">${new Date(u.created_at).toLocaleDateString()}</td>
           <td>
@@ -529,6 +553,36 @@ function renderUsersTable() {
 }
 
 function attachUsersTableQuickActions() {
+  document.querySelectorAll(".qa-table-verify-lecturer-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm(`Verify ${btn.dataset.userName} as a lecturer? Only do this once you've confirmed they really are UMP teaching staff.`)) return;
+      btn.disabled = true;
+      try {
+        await apiRequest(`/admin/users/${btn.dataset.userId}/verify-lecturer`, "PATCH");
+        showToast(`${btn.dataset.userName} is now a verified lecturer.`);
+        await loadUsers();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+      }
+    });
+  });
+
+  document.querySelectorAll(".qa-table-unverify-lecturer-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      if (!confirm(`Remove lecturer verification from ${btn.dataset.userName}? Their lecturer features will lock.`)) return;
+      btn.disabled = true;
+      try {
+        await apiRequest(`/admin/users/${btn.dataset.userId}/unverify-lecturer`, "PATCH");
+        showToast(`Lecturer verification removed from ${btn.dataset.userName}.`);
+        await loadUsers();
+      } catch (err) {
+        showToast(err.message, "error");
+        btn.disabled = false;
+      }
+    });
+  });
+
   document.querySelectorAll(".qa-table-suspend-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       openActionModal({
