@@ -70,6 +70,18 @@ router.patch(
   adminController.unbanUser
 );
 
+/* Settle a disputed task: release to the worker, refund the poster, or
+   send it back for more work. */
+router.patch(
+  "/tasks/:taskId/resolve-dispute",
+  [
+    param("taskId").isInt({ min: 1 }).withMessage("Task ID must be a valid positive integer."),
+    body("outcome").isIn(["release", "refund", "rework"]).withMessage("Outcome must be release, refund or rework."),
+    body("note").optional().trim().isLength({ max: 500 }).withMessage("Note must not exceed 500 characters.")
+  ],
+  adminController.resolveTaskDispute
+);
+
 router.patch(
   "/tasks/:taskId/refund",
   [

@@ -38,6 +38,35 @@
     <i class="ti ti-x" aria-hidden="true"></i> Close
   </button>
 </div>
+<!-- Poster's alternative to confirming: report a problem with the work (task becomes Disputed). -->
+<div id="taskProblemModal" role="dialog" aria-modal="true" aria-labelledby="taskProblemTitle">
+  <h2 id="taskProblemTitle"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Report a problem with the work</h2>
+  <p class="pay-note">The payment stays held and nothing is released. The worker is told, and a Taskify admin will look at it. They can release the payment, refund you, or send the task back to be finished.</p>
+  <form id="taskProblemForm">
+    <div class="form-group">
+      <label for="taskProblemCategory">What went wrong?</label>
+      <select id="taskProblemCategory" required>
+        <option value="no_show">The work wasn't done</option>
+        <option value="not_as_described">It wasn't done the way we agreed</option>
+        <option value="other">Something else</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="taskProblemReason">Describe the problem</label>
+      <textarea id="taskProblemReason" rows="4" minlength="10" maxlength="500" required
+        placeholder="e.g. The boxes were left outside the room instead of carried in."></textarea>
+    </div>
+    <p id="taskProblemMessage" class="pay-note" style="color:var(--ump-red);"></p>
+    <div class="form-row">
+      <button type="button" id="cancelTaskProblem" class="secondary-button">
+        <i class="ti ti-x" aria-hidden="true"></i> Cancel
+      </button>
+      <button type="submit" id="submitTaskProblem" class="primary-button" style="background:var(--ump-red);">
+        <i class="ti ti-send" aria-hidden="true"></i> Report Problem
+      </button>
+    </div>
+  </form>
+</div>
 <div id="paymentModal">
   <h2><i class="ti ti-credit-card" aria-hidden="true"></i> Confirm &amp; Accept Task</h2>
   <div style="background:rgba(245,180,0,0.12);border:1px solid rgba(245,180,0,0.35);border-radius:10px;padding:10px 12px;margin-bottom:14px;font-size:12.5px;font-weight:600;color:#8a6d00;display:flex;gap:8px;align-items:flex-start;">

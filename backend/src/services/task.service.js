@@ -4,6 +4,12 @@ const contentModerationService = require("./contentModeration.service");
 const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
 const { closeOpenOffers, notifyClosedOffers, deleteOffersFor } = require("./offerClosure.service");
 const { messagingAccess } = require("./conversation.service");
+const reportService = require("./report.service");
+const auditLogService = require("./auditlog.service");
+
+/* What a poster can say went wrong when they report a problem instead of
+   confirming (a subset of report.service.js's VALID_CATEGORIES). */
+const TASK_DISPUTE_CATEGORIES = ["no_show", "not_as_described", "other"];
 
 /* Derived-table pattern (subquery in FROM, not in ON) for "latest
    endorsement per context" — safe and fast, unlike a correlated subquery
@@ -27,6 +33,7 @@ const TASK_SELECT_FIELDS = `
   t.price, t.location, t.status, t.urgent,
   t.created_by, t.accepted_by, t.created_at,
   t.image_urls, t.moderation_status,
+  t.awaiting_confirmation_at, t.disputed_at, t.dispute_reason, t.dispute_outcome, t.dispute_resolved_at,
   u.full_name AS created_by_name,
   u.profile_photo_url AS created_by_profile_photo,
   u.member_type AS created_by_member_type,
@@ -312,8 +319,14 @@ async function updateTaskStatus(taskId, userId, newStatus) {
   /* Only moves the task on if it's still at the step checked above, so a
      double click (or two tabs) can't apply the same step twice. */
   const expectedStatus = newStatus === "In Progress" ? "Accepted" : "In Progress";
+  /* Marking it done starts the poster's review clock (see jobs/scheduler.js);
+     the reminder flags reset in case it was sent back for more work. */
   const [result] = await pool.execute(
-    `UPDATE tasks SET status = ? WHERE id = ? AND status = ? AND accepted_by = ?`,
+    newStatus === "Awaiting Confirmation"
+      ? `UPDATE tasks SET status = ?, awaiting_confirmation_at = NOW(),
+                          review_reminder_sent_at = NULL, review_escalated_at = NULL
+         WHERE id = ? AND status = ? AND accepted_by = ?`
+      : `UPDATE tasks SET status = ? WHERE id = ? AND status = ? AND accepted_by = ?`,
     [newStatus, taskId, expectedStatus, userId]
   );
   if (result.affectedRows === 0) {
@@ -364,12 +377,25 @@ async function confirmTaskCompletion(taskId, ownerId) {
     if (Number(task.created_by) !== Number(ownerId)) {
       const error = new Error("Only the task owner can confirm completion."); error.statusCode = 403; throw error;
     }
-    if (task.status !== "Awaiting Confirmation") {
+    /* A poster who reported a problem can still change their mind and
+       confirm — that settles the dispute in the worker's favour. */
+    if (!["Awaiting Confirmation", "Disputed"].includes(task.status)) {
       const error = new Error("This task is not awaiting confirmation."); error.statusCode = 400; throw error;
     }
+    const wasDisputed = task.status === "Disputed";
 
-    await connection.execute(`UPDATE tasks SET status = 'Completed' WHERE id = ?`, [taskId]);
+    await connection.execute(
+      wasDisputed
+        ? `UPDATE tasks SET dispute_outcome = 'poster_confirmed', dispute_resolved_at = NOW(), status = 'Completed' WHERE id = ?`
+        : `UPDATE tasks SET status = 'Completed' WHERE id = ?`,
+      [taskId]
+    );
     await connection.execute(`UPDATE payments SET status = 'Released' WHERE task_id = ?`, [taskId]);
+    if (wasDisputed) {
+      await connection.execute(
+        `UPDATE reports SET status = 'Resolved' WHERE context_type = 'task' AND context_id = ? AND status = 'Pending'`, [taskId]
+      );
+    }
 
     await connection.commit();
 
@@ -396,6 +422,158 @@ async function confirmTaskCompletion(taskId, ownerId) {
   } finally {
     connection.release();
   }
+}
+
+/*
+  Poster doesn't agree the work is done: instead of confirming, they report
+  a problem. The task becomes 'Disputed', the payment stays held, the
+  worker is told, and a report lands in the admins' Reports queue (with its
+  duplicate checks and admin notification). An admin then decides — see
+  resolveTaskDispute — or the poster can still confirm after all.
+*/
+async function disputeTask(taskId, posterId, { reason, category = "no_show" }) {
+  const cleanReason = String(reason || "").trim();
+  const cleanCategory = TASK_DISPUTE_CATEGORIES.includes(category) ? category : "other";
+
+  const connection = await pool.getConnection();
+  let task;
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      `SELECT id, title, created_by, accepted_by, status FROM tasks WHERE id = ? LIMIT 1 FOR UPDATE`, [taskId]
+    );
+    if (rows.length === 0) {
+      const error = new Error("Task not found."); error.statusCode = 404; throw error;
+    }
+    task = rows[0];
+
+    if (Number(task.created_by) !== Number(posterId)) {
+      const error = new Error("Only the task poster can report a problem with the work."); error.statusCode = 403; throw error;
+    }
+    if (task.status !== "Awaiting Confirmation") {
+      const error = new Error(task.status === "Disputed"
+        ? "You've already reported a problem with this task. An admin is looking at it."
+        : "You can report a problem once the worker has marked the task as done.");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    await connection.execute(
+      `UPDATE tasks SET status = 'Disputed', disputed_at = NOW(), dispute_reason = ?,
+                        dispute_outcome = NULL, dispute_resolved_at = NULL
+       WHERE id = ? AND status = 'Awaiting Confirmation'`,
+      [cleanReason.slice(0, 500), taskId]
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  try {
+    await reportService.createReport({
+      reporterId: posterId, reportedUserId: task.accepted_by,
+      contextType: "task", contextId: taskId, reason: cleanReason, category: cleanCategory
+    });
+  } catch (error) {
+    /* 409 = this poster already has the same report open — the admin queue
+       already has it, so the dispute itself still stands. */
+    if (error.statusCode !== 409) throw error;
+  }
+
+  await notificationService.createNotification({
+    userId: task.accepted_by,
+    title: "Problem Reported",
+    message: `The poster of "${task.title}" reported a problem instead of confirming: "${cleanReason.slice(0, 160)}". The payment stays held while an admin looks at it. You can message the poster to sort it out.`,
+    contextType: "task",
+    contextId: taskId,
+    email: true
+  });
+
+  return getTaskById(taskId);
+}
+
+const DISPUTE_OUTCOMES = {
+  release: {
+    taskStatus: "Completed", paymentStatus: "Released", outcome: "released",
+    poster: (t) => `An admin reviewed the problem you reported on "${t}" and released the payment to the worker.`,
+    worker: (t) => `An admin reviewed the problem reported on "${t}" and released your payment.`
+  },
+  refund: {
+    taskStatus: "Cancelled", paymentStatus: "Refunded", outcome: "refunded",
+    poster: (t) => `An admin reviewed the problem you reported on "${t}" and refunded your payment (demo). The task is cancelled.`,
+    worker: (t) => `An admin reviewed the problem reported on "${t}" and refunded the poster. The task is cancelled.`
+  },
+  rework: {
+    taskStatus: "In Progress", paymentStatus: null, outcome: "rework",
+    poster: (t) => `An admin reviewed the problem you reported on "${t}" and sent it back to the worker to finish. The payment stays held.`,
+    worker: (t) => `An admin reviewed the problem reported on "${t}" and sent it back to you to finish. Mark it as done again when it's complete.`
+  }
+};
+
+/* Admin decision on a disputed task: release to the worker, refund the
+   poster, or send it back for more work. Only for tasks in 'Disputed'. */
+async function resolveTaskDispute(taskId, adminId, outcomeKey, note = "") {
+  const outcome = DISPUTE_OUTCOMES[outcomeKey];
+  if (!outcome) {
+    const error = new Error("Choose release, refund or rework."); error.statusCode = 400; throw error;
+  }
+
+  const connection = await pool.getConnection();
+  let task;
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      `SELECT id, title, created_by, accepted_by, status FROM tasks WHERE id = ? LIMIT 1 FOR UPDATE`, [taskId]
+    );
+    if (rows.length === 0) {
+      const error = new Error("Task not found."); error.statusCode = 404; throw error;
+    }
+    task = rows[0];
+    if (task.status !== "Disputed") {
+      const error = new Error("This task isn't disputed (it may already have been settled)."); error.statusCode = 400; throw error;
+    }
+
+    await connection.execute(
+      `UPDATE tasks SET dispute_outcome = ?, dispute_resolved_at = NOW(),
+                        awaiting_confirmation_at = IF(? = 'In Progress', NULL, awaiting_confirmation_at),
+                        status = ?
+       WHERE id = ? AND status = 'Disputed'`,
+      [outcome.outcome, outcome.taskStatus, outcome.taskStatus, taskId]
+    );
+    if (outcome.paymentStatus) {
+      await connection.execute(
+        `UPDATE payments SET status = ? WHERE task_id = ? AND status = 'Held'`, [outcome.paymentStatus, taskId]
+      );
+    }
+    await connection.execute(
+      `UPDATE reports SET status = 'Resolved' WHERE context_type = 'task' AND context_id = ? AND status = 'Pending'`, [taskId]
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  await auditLogService.createAuditLog({
+    adminId,
+    action: `task.dispute_${outcome.outcome}`,
+    targetType: "task",
+    targetId: taskId,
+    reason: String(note || "").trim().slice(0, 500) || null
+  });
+
+  for (const [userId, text] of [[task.created_by, outcome.poster(task.title)], [task.accepted_by, outcome.worker(task.title)]]) {
+    await notificationService.createNotification({
+      userId, title: "Task Problem Settled", message: text, contextType: "task", contextId: taskId, email: true
+    });
+  }
+
+  return getTaskById(taskId);
 }
 
 async function withdrawFromTask(taskId, workerId) {
@@ -461,7 +639,7 @@ async function cancelTask(taskId, userId) {
     if (Number(task.created_by) !== Number(userId)) {
       const error = new Error("Only the task creator can cancel this task."); error.statusCode = 403; throw error;
     }
-    if (["In Progress", "Awaiting Confirmation"].includes(task.status)) {
+    if (["In Progress", "Awaiting Confirmation", "Disputed"].includes(task.status)) {
       const error = new Error("Tasks that are already underway cannot be cancelled."); error.statusCode = 400; throw error;
     }
     if (task.status === "Completed") {
@@ -547,6 +725,15 @@ async function getTaskByIdForViewing(taskId, viewerId = null, viewerRole = null)
      assigned student see each other's, and only once the (demo) payment
      is held, so there's no reason to swap numbers before that. */
   const isWorker = viewerId != null && Number(task.accepted_by) === Number(viewerId);
+
+  /* A dispute (what the poster said went wrong) is between the two people
+     involved and the admins — never shown to anyone else. */
+  if (!isOwner && !isWorker && !isAdmin) {
+    task.dispute_reason = null;
+    task.disputed_at = null;
+    task.dispute_outcome = null;
+    task.dispute_resolved_at = null;
+  }
   if ((isOwner || isWorker) && ["Held", "Released"].includes(task.payment_status)) {
     const [phoneRows] = await pool.execute(
       `SELECT id, phone_number FROM users WHERE id IN (?, ?)`,
@@ -623,6 +810,9 @@ module.exports = {
   acceptTask,
   updateTaskStatus,
   confirmTaskCompletion,
+  disputeTask,
+  resolveTaskDispute,
+  TASK_DISPUTE_CATEGORIES,
   withdrawFromTask,
   cancelTask,
   getUserTaskHistory,

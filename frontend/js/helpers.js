@@ -145,6 +145,7 @@ function equipmentConditionCheckedText(item) {
 function statusBadge(status) {
   const map = {
     Posted: "blue", Accepted: "gold", "In Progress": "gold",
+    "Awaiting Confirmation": "gold", Disputed: "red",
     Completed: "", Cancelled: "red", Available: "", Booked: "gold", Returned: "",
     Upcoming: "blue", Reserved: "gold", Pending: "gold", Confirmed: "blue",
     /* offer statuses (Pending/Accepted above are shared) */

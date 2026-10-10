@@ -45,7 +45,7 @@ async function taskItems(userId) {
      LEFT JOIN payments p ON p.task_id = t.id
      LEFT JOIN users poster ON poster.id = t.created_by
      LEFT JOIN users worker ON worker.id = t.accepted_by
-     WHERE t.status IN ('Accepted', 'In Progress', 'Awaiting Confirmation')
+     WHERE t.status IN ('Accepted', 'In Progress', 'Awaiting Confirmation', 'Disputed')
        AND (t.created_by = ? OR t.accepted_by = ?)`,
     [userId, userId]
   );
@@ -83,15 +83,22 @@ async function taskItems(userId) {
                       body: { status: "Awaiting Confirmation" }, success: "Marked as done. The poster has been asked to confirm.",
                       confirm: "Mark this task as done? The poster will be asked to check the work and confirm." } };
     }
+    if (t.status === "Disputed") {
+      return isPoster
+        ? { ...base, status: "Problem reported", tone: "problem", nextBy: "Taskify admin",
+            step: "You reported a problem with the work. An admin will decide; the payment stays held. You can still confirm if it gets sorted out." }
+        : { ...base, status: "Problem reported", tone: "problem", nextBy: "Taskify admin",
+            step: `${poster} reported a problem with the work. The payment stays held while an admin looks at it. Message them to sort it out.` };
+    }
     /* Awaiting Confirmation */
     return isPoster
       ? { ...base, status: "Awaiting your confirmation", tone: "action", nextBy: "you",
-          step: `${worker} marked it as done. Check the work, then confirm to release the payment.`,
+          step: `${worker} marked it as done. Check the work, then confirm to release the payment, or report a problem if it isn't done properly.`,
           action: { type: "api", label: "Confirm & release payment", method: "PATCH",
                     endpoint: `/tasks/${t.id}/confirm-completion`, moment: "released",
                     success: `Task completed. Payment released to ${worker}.`,
                     confirm: "Confirm this task is complete? This releases the payment to the worker." },
-          secondaryAction: { type: "link", label: "Check details", href: base.href } }
+          secondaryAction: { type: "link", label: "Report a problem", href: `${base.href}#report-problem` } }
       : { ...base, status: "Awaiting confirmation", tone: "waiting", nextBy: poster,
           step: `You marked it as done. Waiting for ${poster} to confirm and release your payment.` };
   });
