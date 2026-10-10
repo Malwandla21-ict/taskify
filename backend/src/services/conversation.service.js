@@ -59,7 +59,7 @@ async function messagingAccess(contextType, contextId, userId) {
   } else if (contextType === "sale") {
     if (await isOpenCashSale(contextId)) return { allowed: true, reason: null };
     [rows] = await pool.execute(
-      `SELECT 1 FROM sale_orders WHERE sales_item_id = ? AND buyer_id = ? AND status IN ('Held','Released') LIMIT 1`,
+      `SELECT 1 FROM sale_orders WHERE sales_item_id = ? AND buyer_id = ? AND status IN ('Held','Disputed','Released') LIMIT 1`,
       [contextId, userId]
     );
   } else if (contextType === "equipment") {
@@ -250,7 +250,7 @@ async function contactUnlocked(conv) {
            LIMIT 1`;
   } else if (conv.context_type === "sale") {
     sql = `SELECT 1 FROM sale_orders
-           WHERE sales_item_id = ? AND status IN ('Held','Released')
+           WHERE sales_item_id = ? AND status IN ('Held','Disputed','Released')
              AND ((buyer_id = ? AND seller_id = ?) OR (buyer_id = ? AND seller_id = ?))
            LIMIT 1`;
   } else if (conv.context_type === "equipment") {

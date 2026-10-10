@@ -222,8 +222,21 @@ async function enrichReportsWithContext(rows) {
 
   const salesMap = new Map();
   if (salesItemIds.length) {
-    const [salesRows] = await pool.query(`SELECT id, title FROM sales_items WHERE id IN (?)`, [salesItemIds]);
-    salesRows.forEach(s => salesMap.set(s.id, { title: s.title, linkId: s.id }));
+    /* A reported sale (buyer or seller pressed "Report a problem") has an
+       order in 'Disputed' — the admin table offers the outcomes for it. */
+    const [salesRows] = await pool.query(
+      `SELECT si.id, si.title,
+              (SELECT so.id FROM sale_orders so
+               WHERE so.sales_item_id = si.id AND so.status = 'Disputed'
+               ORDER BY so.id DESC LIMIT 1) AS disputed_order_id
+       FROM sales_items si WHERE si.id IN (?)`,
+      [salesItemIds]
+    );
+    salesRows.forEach(s => salesMap.set(s.id, {
+      title: s.title, linkId: s.id,
+      status: s.disputed_order_id ? "Disputed" : null,
+      orderId: s.disputed_order_id || null
+    }));
   }
 
   const eventMap = new Map();
@@ -262,8 +275,9 @@ async function enrichReportsWithContext(rows) {
       category_label: CATEGORY_LABELS[row.category] || CATEGORY_LABELS.other,
       context_title: context ? context.title : null,
       context_link_id: context ? context.linkId : null,
-      /* Tasks only: lets the admin Reports table offer dispute outcomes. */
-      context_status: context && context.status ? context.status : null
+      /* Tasks and sales: lets the admin Reports table offer dispute outcomes. */
+      context_status: context && context.status ? context.status : null,
+      context_order_id: context && context.orderId ? context.orderId : null
     };
   });
 }

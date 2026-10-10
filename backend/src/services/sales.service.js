@@ -8,6 +8,8 @@ const { SALES } = require("../config/paymentSettings");
 const { roundMoney } = require("./trust.service");
 const { closeOpenOffers, notifyClosedOffers, deleteOffersFor } = require("./offerClosure.service");
 const { messagingAccess } = require("./conversation.service");
+const reportService = require("./report.service");
+const auditLogService = require("./auditlog.service");
 
 function parseImageUrls(row) {
   if (!row) return row;
@@ -207,6 +209,18 @@ function paymentRulesFor(price, { forceProtection = false } = {}) {
   };
 }
 
+/* "Report a problem" on an order that hasn't been handed over yet. `who`
+   is which side may pick it; `report` is the matching admin Reports
+   category (report.service.js VALID_CATEGORIES). */
+const SALE_DISPUTE_CATEGORIES = {
+  no_show:             { label: "They didn't turn up", who: ["buyer", "seller"], report: "no_show" },
+  not_as_described:    { label: "The item isn't what was advertised", who: ["buyer"], report: "not_as_described" },
+  damaged_item:        { label: "The item is broken or damaged", who: ["buyer"], report: "damaged_item" },
+  handed_over_no_code: { label: "I handed the item over but didn't get the code", who: ["seller"], report: "payment" },
+  code_problem:        { label: "The handover code isn't working", who: ["buyer", "seller"], report: "payment" },
+  other:               { label: "Something else", who: ["buyer", "seller"], report: "other" }
+};
+
 function generateHandoverCode() {
   return String(crypto.randomInt(0, 10000)).padStart(4, "0");
 }
@@ -234,6 +248,7 @@ function orderViewFor(order, viewerId) {
   if (!isBuyer && !isSeller) return null;
 
   const attemptsLeft = Math.max(0, SALES.maxCodeAttempts - Number(order.code_attempts || 0));
+  const waitingForHandover = ["Held", "Disputed"].includes(order.status);
   return {
     id: order.id,
     role: isBuyer ? "buyer" : "seller",
@@ -248,8 +263,17 @@ function orderViewFor(order, viewerId) {
     released_at: order.released_at,
     cancelled_by: order.cancelled_by,
     attempts_left: attemptsLeft,
-    locked: order.status === "Held" && attemptsLeft === 0,
-    handover_code: isBuyer && order.status === "Held" ? order.handover_code : null
+    locked: waitingForHandover && attemptsLeft === 0,
+    /* The buyer keeps their code while a problem is being looked at — if
+       they meet and sort it out, the handover still works as normal. */
+    handover_code: isBuyer && waitingForHandover ? order.handover_code : null,
+    /* "Report a problem" details — only ever sent to the buyer and seller. */
+    disputed_at: order.disputed_at || null,
+    disputed_by: order.disputed_by || null,
+    dispute_category: order.dispute_category || null,
+    dispute_category_label: SALE_DISPUTE_CATEGORIES[order.dispute_category]?.label || null,
+    dispute_reason: order.dispute_reason || null,
+    dispute_outcome: order.dispute_outcome || null
   };
 }
 
@@ -386,11 +410,16 @@ async function releaseSaleOrder(orderId, sellerId, code) {
     );
     const locked = lockedRows[0];
 
-    if (locked.status !== "Held") {
+    /* A reported ('Disputed') order can still be handed over: if they meet
+       and sort it out, the buyer's code settles it like any other sale. */
+    if (!["Held", "Disputed"].includes(locked.status)) {
       const error = new Error("This order is no longer waiting for a handover code."); error.statusCode = 400; throw error;
     }
     if (Number(locked.code_attempts) >= SALES.maxCodeAttempts) {
-      const error = new Error("Too many wrong codes were entered, so this order is locked. The buyer can cancel it for a refund."); error.statusCode = 423; throw error;
+      const error = new Error(locked.status === "Disputed"
+        ? "Too many wrong codes were entered, so this order is locked. An admin is looking at the problem that was reported."
+        : "Too many wrong codes were entered, so this order is locked. The buyer can cancel it for a refund, or you can report a problem.");
+      error.statusCode = 423; throw error;
     }
 
     const entered = String(code || "").trim();
@@ -399,10 +428,17 @@ async function releaseSaleOrder(orderId, sellerId, code) {
       crypto.timingSafeEqual(Buffer.from(entered), Buffer.from(expected));
 
     if (matches) {
+      const wasDisputed = locked.status === "Disputed";
       await connection.execute(
-        `UPDATE sale_orders SET status = 'Released', released_at = NOW() WHERE id = ? AND status = 'Held'`, [orderId]
+        `UPDATE sale_orders
+         SET dispute_outcome = IF(?, 'handed_over', dispute_outcome),
+             dispute_resolved_at = IF(?, NOW(), dispute_resolved_at),
+             status = 'Released', released_at = NOW()
+         WHERE id = ? AND status = ?`,
+        [wasDisputed, wasDisputed, orderId, locked.status]
       );
       await connection.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [order.sales_item_id]);
+      if (wasDisputed) await resolvePartyReports(connection, order);
     } else {
       attempts = Number(locked.code_attempts) + 1;
       await connection.execute(`UPDATE sale_orders SET code_attempts = ? WHERE id = ?`, [attempts, orderId]);
@@ -453,27 +489,85 @@ async function releaseSaleOrder(orderId, sellerId, code) {
   return getLatestOrderForViewer(order.sales_item_id, sellerId);
 }
 
-async function cancelSaleOrder(orderId, userId) {
-  const order = await getOrderById(orderId);
-  const isBuyer = Number(order.buyer_id) === Number(userId);
-  const isSeller = Number(order.seller_id) === Number(userId);
-
-  if (!isBuyer && !isSeller) {
+/* Locks the order row and checks the viewer is the buyer or seller. */
+async function lockOrderForParty(connection, orderId, userId) {
+  const [rows] = await connection.execute(
+    `SELECT so.*, si.title AS item_title
+     FROM sale_orders so INNER JOIN sales_items si ON si.id = so.sales_item_id
+     WHERE so.id = ? FOR UPDATE`,
+    [orderId]
+  );
+  if (!rows.length) {
+    const error = new Error("Order not found."); error.statusCode = 404; throw error;
+  }
+  const order = rows[0];
+  const role = Number(order.buyer_id) === Number(userId) ? "buyer"
+    : Number(order.seller_id) === Number(userId) ? "seller" : null;
+  if (!role) {
     const error = new Error("You are not part of this order."); error.statusCode = 403; throw error;
   }
-  if (order.status !== "Held") {
-    const error = new Error("Only an order that is still waiting for handover can be cancelled."); error.statusCode = 400; throw error;
+  return { order, role };
+}
+
+/* Once a reported order is settled, the buyer's/seller's own reports about
+   it leave the admin queue. Reports by anyone else about the listing (e.g.
+   "this item isn't allowed") stay open. */
+async function resolvePartyReports(connection, order) {
+  await connection.execute(
+    `UPDATE reports SET status = 'Resolved'
+     WHERE context_type = 'sales_item' AND context_id = ? AND status = 'Pending' AND reporter_id IN (?, ?)`,
+    [order.sales_item_id, order.buyer_id, order.seller_id]
+  );
+}
+
+/*
+  Cancelling before the handover.
+    Held      → either side may cancel: the buyer is refunded (demo) and
+                the item goes back on sale.
+    Disputed  → only the seller may (giving the buyer their money back).
+                The buyer can't, because the seller may have said they
+                already handed the item over — an admin decides instead.
+  The order row is locked, so a double click can't refund twice.
+*/
+async function cancelSaleOrder(orderId, userId) {
+  const connection = await pool.getConnection();
+  let order;
+  let role;
+  try {
+    await connection.beginTransaction();
+    ({ order, role } = await lockOrderForParty(connection, orderId, userId));
+
+    if (order.status === "Disputed" && role === "buyer") {
+      const error = new Error("A problem has been reported on this order, so an admin will decide what happens to the money. You can still message the seller to sort it out.");
+      error.statusCode = 400; throw error;
+    }
+    if (!["Held", "Disputed"].includes(order.status)) {
+      const error = new Error("Only an order that is still waiting for handover can be cancelled."); error.statusCode = 400; throw error;
+    }
+
+    const wasDisputed = order.status === "Disputed";
+    await connection.execute(
+      `UPDATE sale_orders
+       SET dispute_outcome = IF(?, 'seller_refunded', dispute_outcome),
+           dispute_resolved_at = IF(?, NOW(), dispute_resolved_at),
+           status = 'Refunded', cancelled_by = ?
+       WHERE id = ? AND status = ?`,
+      [wasDisputed, wasDisputed, role, orderId, order.status]
+    );
+    await connection.execute(
+      `UPDATE sales_items SET status = 'Available' WHERE id = ? AND status = 'Reserved'`,
+      [order.sales_item_id]
+    );
+    if (wasDisputed) await resolvePartyReports(connection, order);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
   }
 
-  await pool.execute(
-    `UPDATE sale_orders SET status = 'Refunded', cancelled_by = ? WHERE id = ? AND status = 'Held'`,
-    [isBuyer ? "buyer" : "seller", orderId]
-  );
-  await pool.execute(
-    `UPDATE sales_items SET status = 'Available' WHERE id = ? AND status = 'Reserved'`,
-    [order.sales_item_id]
-  );
-
+  const isBuyer = role === "buyer";
   await notificationService.createNotification({
     userId: isBuyer ? order.seller_id : order.buyer_id,
     title: "Order Cancelled",
@@ -494,6 +588,173 @@ async function cancelSaleOrder(orderId, userId) {
   }
 
   return getLatestOrderForViewer(order.sales_item_id, userId);
+}
+
+/*
+  "Report a problem" — the meetup failed or the handover went wrong.
+  Either side can report on an order still waiting for handover. The order
+  becomes 'Disputed': the money stays held, the item stays reserved, the
+  other person is told, and a report lands in the admin Reports queue.
+  From there: the seller can still enter the buyer's code (they sorted it
+  out), the seller can refund the buyer, or an admin decides
+  (resolveSaleDispute).
+*/
+async function disputeSaleOrder(orderId, userId, { reason, category = "other" }) {
+  const cleanReason = String(reason || "").trim().slice(0, 500);
+  const connection = await pool.getConnection();
+  let order;
+  let role;
+  try {
+    await connection.beginTransaction();
+    ({ order, role } = await lockOrderForParty(connection, orderId, userId));
+
+    const kind = SALE_DISPUTE_CATEGORIES[category];
+    if (!kind || !kind.who.includes(role)) {
+      const error = new Error("Please choose what went wrong from the list."); error.statusCode = 400; throw error;
+    }
+    if (order.status !== "Held") {
+      const error = new Error(order.status === "Disputed"
+        ? "A problem has already been reported on this order. An admin is looking at it."
+        : "You can only report a problem before the item has been handed over.");
+      error.statusCode = 400; throw error;
+    }
+
+    await connection.execute(
+      `UPDATE sale_orders
+       SET status = 'Disputed', disputed_at = NOW(), disputed_by = ?, dispute_category = ?, dispute_reason = ?,
+           dispute_outcome = NULL, dispute_resolved_at = NULL
+       WHERE id = ? AND status = 'Held'`,
+      [role, category, cleanReason, orderId]
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  const otherId = role === "buyer" ? order.seller_id : order.buyer_id;
+  const label = SALE_DISPUTE_CATEGORIES[category].label;
+  try {
+    await reportService.createReport({
+      reporterId: userId, reportedUserId: otherId,
+      contextType: "sales_item", contextId: order.sales_item_id,
+      reason: `${label}: ${cleanReason}`, category: SALE_DISPUTE_CATEGORIES[category].report
+    });
+  } catch (error) {
+    /* 409 = the same person already has this kind of report open on the
+       item — the admin queue already has it, so the dispute still stands. */
+    if (error.statusCode !== 409) throw error;
+  }
+
+  await notificationService.createNotification({
+    userId: otherId,
+    title: "Problem Reported",
+    message: `The ${role} reported a problem with "${order.item_title}": ${label.toLowerCase()}. The money stays held and the item stays reserved while a Taskify admin looks at it. If you meet and sort it out, the handover code still works as normal.`,
+    contextType: "sales_item",
+    contextId: order.sales_item_id,
+    email: true
+  });
+
+  return getLatestOrderForViewer(order.sales_item_id, userId);
+}
+
+const SALE_DISPUTE_OUTCOMES = {
+  release: {
+    outcome: "released",
+    buyer: (t) => `An admin looked at the problem reported on "${t}" and released the payment to the seller (demo). The sale is complete.`,
+    seller: (t) => `An admin looked at the problem reported on "${t}" and released the payment to you (demo). The sale is complete.`
+  },
+  refund: {
+    outcome: "refunded",
+    buyer: (t) => `An admin looked at the problem reported on "${t}" and refunded your payment (demo).`,
+    seller: (t) => `An admin looked at the problem reported on "${t}" and refunded the buyer (demo). Your item is listed again — edit or delete it if you no longer have it.`
+  },
+  retry: {
+    outcome: "retry",
+    buyer: (t) => `An admin looked at the problem reported on "${t}" and asked you both to try the handover again. Your money is still held, and you have a NEW handover code on the item page.`,
+    seller: (t) => `An admin looked at the problem reported on "${t}" and asked you both to try the handover again. The money is still held. Meet the buyer and enter their new code.`
+  }
+};
+
+/* Admin decision on a reported sale: pay the seller, refund the buyer (the
+   item goes back on sale), or send them back to try the handover again
+   with a fresh code. Only for orders in 'Disputed'. */
+async function resolveSaleDispute(orderId, adminId, outcomeKey, note = "") {
+  const outcome = SALE_DISPUTE_OUTCOMES[outcomeKey];
+  if (!outcome) {
+    const error = new Error("Choose release, refund or retry."); error.statusCode = 400; throw error;
+  }
+
+  const connection = await pool.getConnection();
+  let order;
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.execute(
+      `SELECT so.*, si.title AS item_title
+       FROM sale_orders so INNER JOIN sales_items si ON si.id = so.sales_item_id
+       WHERE so.id = ? FOR UPDATE`,
+      [orderId]
+    );
+    if (!rows.length) {
+      const error = new Error("Order not found."); error.statusCode = 404; throw error;
+    }
+    order = rows[0];
+    if (order.status !== "Disputed") {
+      const error = new Error("This order isn't disputed (it may already have been settled)."); error.statusCode = 400; throw error;
+    }
+
+    if (outcomeKey === "release") {
+      await connection.execute(
+        `UPDATE sale_orders SET dispute_outcome = 'released', dispute_resolved_at = NOW(), status = 'Released', released_at = NOW()
+         WHERE id = ? AND status = 'Disputed'`, [orderId]
+      );
+      await connection.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [order.sales_item_id]);
+    } else if (outcomeKey === "refund") {
+      await connection.execute(
+        `UPDATE sale_orders SET dispute_outcome = 'refunded', dispute_resolved_at = NOW(), status = 'Refunded'
+         WHERE id = ? AND status = 'Disputed'`, [orderId]
+      );
+      await connection.execute(
+        `UPDATE sales_items SET status = 'Available' WHERE id = ? AND status = 'Reserved'`, [order.sales_item_id]
+      );
+    } else {
+      /* A fresh code and a fresh set of attempts — the old code may have
+         been seen or half-guessed during the failed meetup. */
+      await connection.execute(
+        `UPDATE sale_orders SET dispute_outcome = 'retry', dispute_resolved_at = NOW(), status = 'Held',
+                                handover_code = ?, code_attempts = 0
+         WHERE id = ? AND status = 'Disputed'`, [generateHandoverCode(), orderId]
+      );
+    }
+    await resolvePartyReports(connection, order);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+
+  await auditLogService.createAuditLog({
+    adminId,
+    action: `sale.dispute_${outcome.outcome}`,
+    targetType: "sale_order",
+    targetId: orderId,
+    reason: String(note || "").trim().slice(0, 500) || null,
+    metadata: { salesItemId: order.sales_item_id }
+  });
+
+  for (const [userId, text] of [[order.buyer_id, outcome.buyer(order.item_title)], [order.seller_id, outcome.seller(order.item_title)]]) {
+    await notificationService.createNotification({
+      userId, title: "Sale Problem Settled", message: text,
+      contextType: "sales_item", contextId: order.sales_item_id, email: true
+    });
+  }
+
+  const [rows] = await pool.execute(`SELECT id, status, dispute_outcome FROM sale_orders WHERE id = ?`, [orderId]);
+  return rows[0];
 }
 
 async function markSalesItemAsSold(itemId, userId) {
@@ -565,7 +826,7 @@ async function getSalesItemByIdForViewing(itemId, viewerId = null, viewerRole = 
 
   /* Phone numbers are never in public listing data — the buyer and seller
      only see each other's once a (demo) payment is held between them. */
-  if (item.my_order && ["Held", "Released"].includes(item.my_order.status)) {
+  if (item.my_order && ["Held", "Disputed", "Released"].includes(item.my_order.status)) {
     const [phoneRows] = await pool.execute(
       `SELECT id, phone_number FROM users WHERE id IN (?, ?)`,
       [item.my_order.buyer_id, item.my_order.seller_id]
@@ -623,5 +884,8 @@ module.exports = {
   buySalesItem,
   releaseSaleOrder,
   cancelSaleOrder,
+  disputeSaleOrder,
+  resolveSaleDispute,
+  SALE_DISPUTE_CATEGORIES,
   paymentRulesFor
 };

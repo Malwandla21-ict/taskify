@@ -184,7 +184,7 @@ async function transactions(range) {
   const heldNow = await one(
     `SELECT
        (SELECT COALESCE(SUM(amount), 0) FROM payments WHERE status = 'Held')
-     + (SELECT COALESCE(SUM(total_amount), 0) FROM sale_orders WHERE status = 'Held')
+     + (SELECT COALESCE(SUM(total_amount), 0) FROM sale_orders WHERE status IN ('Held', 'Disputed'))
      + (SELECT COALESCE(SUM(COALESCE(rental_amount,0) + COALESCE(protection_fee,0)), 0) FROM equipment_bookings WHERE payment_status = 'Held')
      + (SELECT COALESCE(SUM(deposit_amount), 0) FROM equipment_bookings WHERE deposit_status = 'Held') AS held`
   );
@@ -258,11 +258,16 @@ async function trust(range) {
     byCategory[r.category || "other"] = (byCategory[r.category || "other"] || 0) + num(r.n);
     if (r.status === "Pending") pending += num(r.n); else resolved += num(r.n);
   }
-  const disputesOpened = await one(`SELECT COUNT(*) AS n FROM tasks WHERE ${within("disputed_at")}`, p);
-  const disputeOutcomes = await many(
+  /* "Report a problem" on tasks (poster) and on sales (buyer or seller). */
+  const taskDisputes = await one(`SELECT COUNT(*) AS n FROM tasks WHERE ${within("disputed_at")}`, p);
+  const saleDisputes = await one(`SELECT COUNT(*) AS n FROM sale_orders WHERE ${within("disputed_at")}`, p);
+  /* Outcomes from both tables (the two ENUM columns can't share one UNION
+     because of differing collations, so they're added up here). */
+  const outcomeQuery = (table) => many(
     `SELECT dispute_outcome AS outcome, COUNT(*) AS n, AVG(TIMESTAMPDIFF(MINUTE, disputed_at, dispute_resolved_at)) / 60 AS hours
-     FROM tasks WHERE dispute_outcome IS NOT NULL AND ${within("dispute_resolved_at")} GROUP BY dispute_outcome`, p
+     FROM ${table} WHERE dispute_outcome IS NOT NULL AND ${within("dispute_resolved_at")} GROUP BY dispute_outcome`, p
   );
+  const disputeOutcomes = [...await outcomeQuery("tasks"), ...await outcomeQuery("sale_orders")];
   const resolvedTotal = disputeOutcomes.reduce((s, r) => s + num(r.n), 0);
   const avgResolve = resolvedTotal
     ? disputeOutcomes.reduce((s, r) => s + num(r.hours) * num(r.n), 0) / resolvedTotal : null;
@@ -282,9 +287,10 @@ async function trust(range) {
   return {
     reports: { total: pending + resolved, pending, resolved, byCategory },
     disputes: {
-      opened: num(disputesOpened.n),
+      opened: num(taskDisputes.n) + num(saleDisputes.n),
+      openedByType: { tasks: num(taskDisputes.n), sales: num(saleDisputes.n) },
       resolved: resolvedTotal,
-      outcomes: Object.fromEntries(disputeOutcomes.map((r) => [r.outcome, num(r.n)])),
+      outcomes: disputeOutcomes.reduce((o, r) => ({ ...o, [r.outcome]: (o[r.outcome] || 0) + num(r.n) }), {}),
       averageHoursToResolve: round1(avgResolve)
     },
     moderation: { flagged: num(flagged.n), blocked: num(blocked.n) },

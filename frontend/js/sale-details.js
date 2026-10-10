@@ -54,38 +54,70 @@ function contactLine(label, phone) {
   return `<p class="pay-note" style="display:flex;align-items:center;gap:6px;"><i class="ti ti-phone" aria-hidden="true"></i> ${label}: <strong>${phone}</strong></p>`;
 }
 
+/* Text people typed (the problem description) goes into the page as text,
+   never as HTML. */
+function escapeSaleText(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+const reportSaleProblemButton = (order) => `
+  <button class="secondary-button" id="reportSaleProblemButton" data-order-id="${order.id}" style="margin-top:6px;">
+    <i class="ti ti-alert-triangle" aria-hidden="true"></i> Meetup failed? Report a problem
+  </button>`;
+
+/* While a problem is being looked at — same for both sides, plus who
+   reported it and what they said (only the buyer and seller see this). */
+function disputeNotice(order) {
+  const reportedByMe = order.disputed_by === order.role;
+  const who = reportedByMe ? "You" : (order.role === "buyer" ? "The seller" : "The buyer");
+  return `
+    <div class="sale-dispute-note">
+      <strong><i class="ti ti-alert-triangle" aria-hidden="true"></i> ${who} reported a problem</strong>
+      <p>${escapeSaleText(order.dispute_category_label || "Something went wrong")}${order.dispute_reason ? `: "${escapeSaleText(order.dispute_reason)}"` : ""}</p>
+      <p>The money stays held and the item stays reserved while a Taskify admin looks at it. They can pay the seller, refund the buyer, or ask you both to try the handover again.</p>
+    </div>`;
+}
+
 /* The buyer's or seller's view of an order still in progress / finished. */
 function orderPanel(item, order) {
   if (!order) return "";
+  const waiting = order.status === "Held" || order.status === "Disputed";
+  const disputed = order.status === "Disputed";
 
-  if (order.status === "Held" && order.role === "buyer") {
+  if (waiting && order.role === "buyer") {
     return `
-      <div class="pay-panel" style="border-color:var(--ump-green);">
+      <div class="pay-panel" style="border-color:${disputed ? "var(--ump-red)" : "var(--ump-green)"};">
         <h4><i class="ti ti-shield-check" aria-hidden="true"></i> Your payment is held <span class="badge gold" style="margin-left:auto;">Demo</span></h4>
+        ${disputed ? disputeNotice(order) : ""}
         <p class="pay-note" style="margin-bottom:4px;">Your handover code:</p>
         <div class="handover-code">${order.handover_code}</div>
         <p class="pay-note"><strong>Only show this code once you have the item and you're happy with it.</strong> The seller can't get paid without it. Nobody from Taskify will ever ask you for it.</p>
         ${contactLine("Seller", item.seller_phone_number)}
-        ${order.locked ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked. If you didn't get the item, cancel for a refund.</p>` : ""}
+        ${order.locked ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked.${disputed ? "" : " If you didn't get the item, cancel for a refund."}</p>` : ""}
         <div class="money-breakdown">
           ${moneyRow("Item price", order.item_price)}
           ${moneyRow("Protection fee", order.protection_fee)}
           ${moneyRow("Held", order.total_amount, { strong: true })}
         </div>
-        <button class="secondary-button" id="cancelOrderButton" data-order-id="${order.id}" style="color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
-          <i class="ti ti-arrow-back-up" aria-hidden="true"></i> Cancel &amp; get refund
-        </button>
+        ${disputed ? "" : `
+          <button class="secondary-button" id="cancelOrderButton" data-order-id="${order.id}" style="color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+            <i class="ti ti-arrow-back-up" aria-hidden="true"></i> Cancel &amp; get refund
+          </button>
+          <p class="pay-note" style="margin-top:6px;">Seller didn't turn up or the item isn't right? Cancelling refunds you straight away. Report a problem if you need an admin to step in.</p>
+          ${reportSaleProblemButton(order)}`}
       </div>`;
   }
 
-  if (order.status === "Held" && order.role === "seller") {
+  if (waiting && order.role === "seller") {
     return `
-      <div class="pay-panel" style="border-color:var(--ump-green);">
-        <h4><i class="ti ti-shield-check" aria-hidden="true"></i> ${order.buyer_name || "The buyer"} has paid <span class="badge gold" style="margin-left:auto;">Demo</span></h4>
-        <p class="pay-note">${formatRand(order.item_price)} is held by Taskify. Meet on campus, let them check the item, then ask for their 4-digit handover code and type it here to get paid.</p>
+      <div class="pay-panel" style="border-color:${disputed ? "var(--ump-red)" : "var(--ump-green)"};">
+        <h4><i class="ti ti-shield-check" aria-hidden="true"></i> ${escapeSaleText(order.buyer_name || "The buyer")} has paid <span class="badge gold" style="margin-left:auto;">Demo</span></h4>
+        ${disputed ? disputeNotice(order) : ""}
+        <p class="pay-note">${formatRand(order.item_price)} is held by Taskify. Meet on campus, let them check the item, then ask for their 4-digit handover code and type it here to get paid.
+          <strong>Keep hold of the item until the code is accepted.</strong></p>
         ${contactLine("Buyer", order.buyer_phone_number)}
         ${order.locked
-          ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked. The buyer can cancel it for a refund.</p>`
+          ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked.${disputed ? " An admin is looking at it." : " The buyer can cancel it for a refund, or you can report a problem."}</p>`
           : `<input type="text" id="handoverCodeInput" class="handover-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="Buyer's 4-digit handover code" />
              <button class="primary-button" id="releaseOrderButton" data-order-id="${order.id}" style="width:100%;">
                <i class="ti ti-lock-open" aria-hidden="true"></i> Confirm handover &amp; get paid
@@ -94,6 +126,7 @@ function orderPanel(item, order) {
         <button class="secondary-button" id="cancelOrderButton" data-order-id="${order.id}" style="margin-top:6px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
           <i class="ti ti-x" aria-hidden="true"></i> Cancel sale (refund buyer)
         </button>
+        ${disputed ? "" : reportSaleProblemButton(order)}
       </div>`;
   }
 
@@ -103,15 +136,81 @@ function orderPanel(item, order) {
         <h4><i class="ti ti-circle-check" aria-hidden="true" style="color:var(--ump-green);"></i> Sale complete</h4>
         <p class="pay-note" style="margin-bottom:0;">${order.role === "seller"
           ? `${formatRand(order.item_price)} was released to you (demo).`
-          : `You confirmed the handover. Your payment was released to the seller (demo).`}</p>
+          : `You confirmed the handover. Your payment was released to the seller (demo).`}${order.dispute_outcome === "released" ? " An admin settled the problem that was reported." : ""}</p>
       </div>`;
   }
 
   if (order.status === "Refunded" && item.status === "Available") {
-    return `<p class="pay-note">Your last order on this item was cancelled${order.role === "buyer" ? " and refunded (demo)" : ""}.</p>`;
+    const byAdmin = order.dispute_outcome === "refunded";
+    return `<p class="pay-note">Your last order on this item was ${byAdmin ? "refunded by an admin after a problem was reported" : "cancelled"}${order.role === "buyer" ? " and refunded (demo)" : ""}.</p>`;
   }
   return "";
 }
+
+/* ── Report a problem (buyer or seller, before the handover) ── */
+const SALE_PROBLEM_OPTIONS = {
+  buyer: [
+    ["no_show", "The seller didn't turn up"],
+    ["not_as_described", "The item isn't what was advertised"],
+    ["damaged_item", "The item is broken or damaged"],
+    ["code_problem", "The handover code isn't working"],
+    ["other", "Something else"]
+  ],
+  seller: [
+    ["no_show", "The buyer didn't turn up"],
+    ["handed_over_no_code", "I handed the item over but didn't get the code"],
+    ["code_problem", "The handover code isn't working"],
+    ["other", "Something else"]
+  ]
+};
+
+const saleProblemModal   = document.getElementById("saleProblemModal");
+const saleProblemForm    = document.getElementById("saleProblemForm");
+const saleProblemMessage = document.getElementById("saleProblemMessage");
+let saleProblemOrderId = null;
+
+function openSaleProblemModal(order) {
+  saleProblemOrderId = order.id;
+  saleProblemForm?.reset();
+  saleProblemMessage.textContent = "";
+  document.getElementById("saleProblemCategory").innerHTML = SALE_PROBLEM_OPTIONS[order.role]
+    .map(([value, label]) => `<option value="${value}">${label}</option>`).join("");
+  document.getElementById("saleProblemIntro").textContent = order.role === "buyer"
+    ? "Your money stays held and nothing is released. The seller is told, and a Taskify admin will look at it. You won't be able to cancel for an instant refund while they do."
+    : "The money stays held and the item stays reserved. The buyer is told, and a Taskify admin will look at it. If you meet and sort it out, you can still enter the code as normal.";
+  openModal(saleProblemModal);
+  document.getElementById("saleProblemReason")?.focus();
+}
+
+document.getElementById("cancelSaleProblem")?.addEventListener("click", () => closeModal(saleProblemModal));
+document.getElementById("overlay")?.addEventListener("click", () => closeModal(saleProblemModal));
+
+saleProblemForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const reason = document.getElementById("saleProblemReason").value.trim();
+  if (reason.length < 10) {
+    saleProblemMessage.textContent = "Please describe what happened in at least 10 characters.";
+    return;
+  }
+  const submitBtn = document.getElementById("submitSaleProblem");
+  const originalHtml = submitBtn.innerHTML;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Reporting…`;
+  try {
+    await apiRequest(`/sales/orders/${saleProblemOrderId}/dispute`, "POST", {
+      reason, category: document.getElementById("saleProblemCategory").value
+    });
+    closeModal(saleProblemModal);
+    showToast("Problem reported. The money stays held while an admin looks at it.");
+    await loadSaleDetails();
+  } catch (err) {
+    saleProblemMessage.textContent = err.message;
+    showToast(err.message, "error");
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = originalHtml;
+  }
+});
 
 async function loadSaleDetails() {
   try {
@@ -133,7 +232,7 @@ function renderSaleDetails(item) {
 
   const rules = item.payment_rules || { requiresProtection: false, escrowThreshold: 300 };
   const order = item.my_order;
-  const activeOrder = order && order.status === "Held" ? order : null;
+  const activeOrder = order && ["Held", "Disputed"].includes(order.status) ? order : null;
 
   /* Messaging the seller opens once you've bought through Taskify
      Protection — or straight away on cheap cash items, where messaging is
@@ -294,6 +393,8 @@ function renderSaleDetails(item) {
       }
     };
   }
+
+  document.getElementById("reportSaleProblemButton")?.addEventListener("click", () => openSaleProblemModal(order));
 
   document.getElementById("handoverCodeInput")?.addEventListener("input", (e) => {
     e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);

@@ -1414,7 +1414,7 @@ textarea { min-height: 110px; resize: vertical; }
 ============================== */
 
 #reviewModal, #bookingModal, #profileModal, #paymentModal,
-#rentalPhotoModal, #damageModal, #buyModal, #offerModal, #offerConfirmModal, #taskProblemModal {
+#rentalPhotoModal, #damageModal, #buyModal, #offerModal, #offerConfirmModal, #taskProblemModal, #saleProblemModal {
   display: none;
   position: fixed;
   top: 10%;
@@ -1433,7 +1433,7 @@ textarea { min-height: 110px; resize: vertical; }
 }
 
 #reviewModal h2, #bookingModal h2, #profileModal h2, #paymentModal h2,
-#rentalPhotoModal h2, #damageModal h2, #buyModal h2, #offerModal h2, #offerConfirmModal h2, #taskProblemModal h2 {
+#rentalPhotoModal h2, #damageModal h2, #buyModal h2, #offerModal h2, #offerConfirmModal h2, #taskProblemModal h2, #saleProblemModal h2 {
   font-size: 18px;
   font-weight: 800;
   margin-bottom: 18px;
@@ -1445,7 +1445,7 @@ textarea { min-height: 110px; resize: vertical; }
 
 #reviewModal h2 i, #bookingModal h2 i, #profileModal h2 i, #paymentModal h2 i,
 #rentalPhotoModal h2 i, #damageModal h2 i, #buyModal h2 i,
-#offerModal h2 i, #offerConfirmModal h2 i, #taskProblemModal h2 i { font-size: 20px; color: var(--ump-green); }
+#offerModal h2 i, #offerConfirmModal h2 i, #taskProblemModal h2 i, #saleProblemModal h2 i { font-size: 20px; color: var(--ump-green); }
 
 /* ==============================
    PAYMENT SIMULATION (demo)

@@ -112,8 +112,21 @@ async function cancelSaleOrder(req, res, next) {
   } catch (error) { next(error); }
 }
 
+async function disputeSaleOrder(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+
+    const order = await salesService.disputeSaleOrder(Number(req.params.orderId), req.user.id, {
+      reason: req.body.reason, category: req.body.category
+    });
+    return res.status(200).json({ success: true, message: "Problem reported. The money stays held while an admin looks at it.", data: order });
+  } catch (error) { next(error); }
+}
+
 module.exports = {
   buySalesItem,
+  disputeSaleOrder,
   releaseSaleOrder,
   cancelSaleOrder,
   createSalesItem,

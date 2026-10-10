@@ -162,13 +162,13 @@ async function offerItems(userId) {
 async function saleItems(userId) {
   const [rows] = await pool.execute(
     `SELECT so.id, so.sales_item_id, so.buyer_id, so.seller_id, so.item_price, so.total_amount,
-            so.code_attempts, so.updated_at, si.title,
+            so.code_attempts, so.updated_at, so.status, so.disputed_by, si.title,
             buyer.full_name AS buyer_name, seller.full_name AS seller_name
      FROM sale_orders so
      INNER JOIN sales_items si ON si.id = so.sales_item_id
      LEFT JOIN users buyer ON buyer.id = so.buyer_id
      LEFT JOIN users seller ON seller.id = so.seller_id
-     WHERE so.status = 'Held' AND (so.buyer_id = ? OR so.seller_id = ?)`,
+     WHERE so.status IN ('Held', 'Disputed') AND (so.buyer_id = ? OR so.seller_id = ?)`,
     [userId, userId]
   );
 
@@ -187,13 +187,27 @@ async function saleItems(userId) {
     const seller = s.seller_name || "The seller";
     const buyer = s.buyer_name || "The buyer";
 
+    /* A problem was reported (meetup failed / handover went wrong): the
+       money stays held until it's sorted out or an admin decides. */
+    if (s.status === "Disputed") {
+      const iReported = s.disputed_by === (isBuyer ? "buyer" : "seller");
+      return isBuyer
+        ? { ...base, status: "Problem reported", tone: "problem", nextBy: "Taskify admin",
+            step: `${iReported ? "You" : seller} reported a problem. Your money stays held while an admin looks at it. If you meet and sort it out, show your code as normal.`,
+            action: { type: "link", label: "View order", href } }
+        : { ...base, status: "Problem reported", tone: "problem", nextBy: "Taskify admin",
+            step: `${iReported ? "You" : buyer} reported a problem. The money stays held while an admin looks at it. If you meet and sort it out, enter the buyer's code as normal.`,
+            action: { type: "link", label: "View order", href } };
+    }
+
     if (locked) {
       return isBuyer
         ? { ...base, status: "Handover locked", tone: "problem", nextBy: "you",
             step: "Too many wrong codes were entered. If you didn't get the item, cancel the order for a refund.",
             action: { type: "link", label: "Cancel & get refund", href } }
         : { ...base, status: "Handover locked", tone: "problem", nextBy: buyer,
-            step: `Too many wrong codes were entered, so the order is locked. ${buyer} can cancel it for a refund.` };
+            step: `Too many wrong codes were entered, so the order is locked. ${buyer} can cancel it for a refund, or you can report a problem for an admin to sort out.`,
+            action: { type: "link", label: "Report a problem", href } };
     }
     return isBuyer
       ? { ...base, status: "Meet the seller", tone: "action", nextBy: "you",

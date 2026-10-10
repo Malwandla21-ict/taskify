@@ -51,6 +51,31 @@
     </button>
   </div>
 </div>
+<!-- Buyer or seller: the meetup failed or the handover went wrong (order becomes Disputed). -->
+<div id="saleProblemModal" role="dialog" aria-modal="true" aria-labelledby="saleProblemTitle">
+  <h2 id="saleProblemTitle"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Report a problem with this sale</h2>
+  <p class="pay-note" id="saleProblemIntro"></p>
+  <form id="saleProblemForm">
+    <div class="form-group">
+      <label for="saleProblemCategory">What went wrong?</label>
+      <select id="saleProblemCategory" required></select>
+    </div>
+    <div class="form-group">
+      <label for="saleProblemReason">Describe what happened</label>
+      <textarea id="saleProblemReason" rows="4" minlength="10" maxlength="500" required
+        placeholder="e.g. We agreed to meet at the library at 2pm and I waited 30 minutes."></textarea>
+    </div>
+    <p id="saleProblemMessage" class="pay-note" style="color:var(--ump-red);"></p>
+    <div class="form-row">
+      <button type="button" id="cancelSaleProblem" class="secondary-button">
+        <i class="ti ti-x" aria-hidden="true"></i> Cancel
+      </button>
+      <button type="submit" id="submitSaleProblem" class="primary-button" style="background:var(--ump-red);">
+        <i class="ti ti-send" aria-hidden="true"></i> Report Problem
+      </button>
+    </div>
+  </form>
+</div>
 <script src="./js/api.js"></script>
 <script src="./js/helpers.js"></script>
 <script src="./js/taskify-motion.js"></script>

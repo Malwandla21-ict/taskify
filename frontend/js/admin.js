@@ -880,6 +880,8 @@ function renderReportsTable() {
         /* A disputed task (the poster reported a problem instead of
            confirming) gets the three dispute outcomes instead of a plain refund. */
         const isDisputedTask = r.context_type === "task" && r.context_status === "Disputed";
+        /* A reported sale (buyer or seller said the meetup/handover failed). */
+        const isDisputedSale = r.context_type === "sales_item" && r.context_status === "Disputed" && r.context_order_id;
         const canRefund = r.context_type === "task" && r.status === "Pending" && !isDisputedTask;
         const itemType = reportItemType(r);
         const reasonShort = r.reason.length > 80 ? r.reason.slice(0, 80) + "…" : r.reason;
@@ -929,6 +931,16 @@ function renderReportsTable() {
                 <button type="button" class="table-icon-btn dispute-outcome-btn" data-task-id="${r.context_id}" data-outcome="rework" title="Send back to the worker to finish">
                   <i class="ti ti-arrow-back-up" aria-hidden="true"></i>
                 </button>` : ""}
+              ${isDisputedSale ? `
+                <button type="button" class="table-icon-btn success sale-dispute-btn" data-order-id="${r.context_order_id}" data-outcome="release" title="Pay the seller (sale complete)">
+                  <i class="ti ti-cash" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="table-icon-btn sale-dispute-btn" data-order-id="${r.context_order_id}" data-outcome="refund" title="Refund the buyer (item listed again)">
+                  <i class="ti ti-receipt-refund" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="table-icon-btn sale-dispute-btn" data-order-id="${r.context_order_id}" data-outcome="retry" title="Ask them to try the handover again (new code)">
+                  <i class="ti ti-refresh" aria-hidden="true"></i>
+                </button>` : ""}
             </div>
           </td>
         </tr>`;
@@ -950,7 +962,28 @@ const DISPUTE_OUTCOME_TEXT = {
   rework:  { title: "Send the task back to the worker to finish?", label: "Send back", done: "Task sent back to the worker." }
 };
 
+const SALE_DISPUTE_OUTCOME_TEXT = {
+  release: { title: "Pay the seller and complete the sale?", label: "Pay seller", done: "Seller paid and sale completed." },
+  refund:  { title: "Refund the buyer and list the item again?", label: "Refund buyer", done: "Buyer refunded and item listed again." },
+  retry:   { title: "Ask them to try the handover again? The buyer gets a new code.", label: "Try again", done: "Sent back for another handover, with a new code." }
+};
+
 function attachReportRowEvents() {
+  document.querySelectorAll(".sale-dispute-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = SALE_DISPUTE_OUTCOME_TEXT[btn.dataset.outcome];
+      openActionModal({
+        title: text.title,
+        confirmLabel: text.label,
+        onConfirm: async (note) => {
+          await apiRequest(`/admin/sale-orders/${btn.dataset.orderId}/resolve-dispute`, "PATCH", { outcome: btn.dataset.outcome, note });
+          showToast(`${text.done} Both people have been told.`);
+          await Promise.all([loadReports(), loadStats(), loadPendingReportsPreview()]);
+        }
+      });
+    });
+  });
+
   document.querySelectorAll(".dispute-outcome-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const text = DISPUTE_OUTCOME_TEXT[btn.dataset.outcome];
