@@ -869,6 +869,8 @@ async function deleteEquipment(equipmentId, userId) {
 
 module.exports = {
   EQUIPMENT_CONDITIONS,
+  expireStaleBookingRequests,
+  todayInTaskifyTimezone,
   createEquipment,
   updateEquipment,
   getAllAvailableEquipment,
