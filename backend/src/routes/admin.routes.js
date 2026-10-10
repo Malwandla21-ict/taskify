@@ -108,6 +108,18 @@ router.patch(
   adminController.resolveSaleDispute
 );
 
+/* Settle a rental damage report from the owner's condition check. Never
+   deducts money (deposit deductions aren't an approved policy). */
+router.patch(
+  "/rental-bookings/:bookingId/resolve-damage",
+  [
+    param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer."),
+    body("outcome").isIn(["renter_not_at_fault", "damage_confirmed"]).withMessage("Outcome must be renter_not_at_fault or damage_confirmed."),
+    body("note").optional().trim().isLength({ max: 500 }).withMessage("Note must not exceed 500 characters.")
+  ],
+  adminController.resolveRentalDamage
+);
+
 router.patch(
   "/tasks/:taskId/refund",
   [

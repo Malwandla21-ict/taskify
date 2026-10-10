@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, param, query } = require("express-validator");
 const equipmentController = require("../controllers/equipment.controller");
-const { EQUIPMENT_CONDITIONS } = require("../services/equipment.service");
+const { EQUIPMENT_CONDITIONS, RENTAL_PROBLEM_CATEGORIES } = require("../services/equipment.service");
 const { categoriesFor, applyCategorySection } = require("../config/categories");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
@@ -93,13 +93,65 @@ router.patch(
   equipmentController.declineBooking
 );
 
-/* Renter: back out of a request that hasn't been confirmed yet */
+/* Renter: back out before collecting the item (request, unpaid approval,
+   or a paid booking not yet collected — full refund, demo) */
 router.patch(
   "/bookings/:bookingId/cancel",
   authenticate,
   [ param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer.") ],
   equipmentController.cancelBooking
 );
+
+const bookingIdRule = param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer.");
+
+/* Renter: pay (demo) for a booking the owner approved. The terms version
+   they were shown must match the current one. */
+router.post(
+  "/bookings/:bookingId/pay",
+  authenticate,
+  [ bookingIdRule, body("acceptedPolicyVersion").isString().notEmpty().withMessage("Please review and accept the rental terms.") ],
+  equipmentController.payBooking
+);
+
+/* Owner: can't go ahead after approving — the renter is refunded in full */
+router.patch(
+  "/bookings/:bookingId/owner-cancel",
+  authenticate,
+  [ bookingIdRule, body("note").trim().isLength({ min: 5, max: 500 }).withMessage("Please tell the renter why (5 to 500 characters).") ],
+  equipmentController.ownerCancelBooking
+);
+
+/* Renter: the item is faulty at collection, so they don't take it */
+router.patch(
+  "/bookings/:bookingId/refuse-pickup",
+  authenticate,
+  [ bookingIdRule, body("note").trim().isLength({ min: 10, max: 500 }).withMessage("Please say what's wrong with the item (10 to 500 characters).") ],
+  equipmentController.refusePickup
+);
+
+/* Either side: report a problem during the rental (goes to admins) */
+router.post(
+  "/bookings/:bookingId/problem",
+  authenticate,
+  [
+    bookingIdRule,
+    body("category").isIn(Object.keys(RENTAL_PROBLEM_CATEGORIES)).withMessage("Please choose what went wrong from the list."),
+    body("note").trim().isLength({ min: 10, max: 500 }).withMessage("Please describe what happened in 10 to 500 characters.")
+  ],
+  equipmentController.reportRentalProblem
+);
+
+/* Extensions: renter asks → owner approves/declines → renter pays (demo) */
+router.post(
+  "/bookings/:bookingId/extension",
+  authenticate,
+  [ bookingIdRule, body("newEndDate").isISO8601({ strict: true }).withMessage("Choose a valid new return date.") ],
+  equipmentController.requestExtension
+);
+router.patch("/bookings/:bookingId/extension/approve", authenticate, [bookingIdRule], equipmentController.approveExtension);
+router.patch("/bookings/:bookingId/extension/decline", authenticate, [bookingIdRule], equipmentController.declineExtension);
+router.patch("/bookings/:bookingId/extension/cancel", authenticate, [bookingIdRule], equipmentController.cancelExtension);
+router.post("/bookings/:bookingId/extension/pay", authenticate, [bookingIdRule], equipmentController.payExtension);
 
 /* Renter: collected the item — "before" condition photos, plus the
    renter confirming what condition it's in */

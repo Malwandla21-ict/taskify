@@ -4,6 +4,7 @@ const auditLogService = require("../services/auditlog.service");
 const moderationService = require("../services/moderation.service");
 const taskService = require("../services/task.service");
 const salesService = require("../services/sales.service");
+const equipmentService = require("../services/equipment.service");
 const analyticsService = require("../services/analytics.service");
 const reportExportService = require("../services/reportExport.service");
 
@@ -79,6 +80,16 @@ async function resolveSaleDispute(req, res, next) {
 
     const order = await salesService.resolveSaleDispute(Number(req.params.orderId), req.user.id, req.body.outcome, req.body.note);
     return res.status(200).json({ success: true, message: "Sale problem settled.", data: order });
+  } catch (error) { next(error); }
+}
+
+async function resolveRentalDamage(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const booking = await equipmentService.resolveRentalDamage(Number(req.params.bookingId), req.user.id, req.body.outcome, req.body.note);
+    return res.status(200).json({ success: true, message: "Damage report settled.", data: booking });
   } catch (error) { next(error); }
 }
 
@@ -200,6 +211,7 @@ module.exports = {
   downloadExport,
   resolveTaskDispute,
   resolveSaleDispute,
+  resolveRentalDamage,
   verifyLecturer,
   unverifyLecturer,
   promoteUser,

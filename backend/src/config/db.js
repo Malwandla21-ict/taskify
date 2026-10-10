@@ -32,7 +32,17 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  /* Every connection talks UTC, whatever timezone the database server or
+     this machine is set to — the same as the live site (Aiven + Render are
+     both UTC). Without this, a database in South African time read by a
+     server in UTC shifts every timestamp by two hours. South African dates
+     and deadlines are worked out explicitly with CONVERT_TZ / '+02:00'. */
+  timezone: "Z",
   ...(sslConfig ? { ssl: sslConfig } : {})
+});
+
+pool.pool.on("connection", (connection) => {
+  connection.query("SET time_zone = '+00:00'");
 });
 
 module.exports = pool;

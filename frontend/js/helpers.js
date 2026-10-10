@@ -147,11 +147,58 @@ function statusBadge(status) {
     Posted: "blue", Accepted: "gold", "In Progress": "gold",
     "Awaiting Confirmation": "gold", Disputed: "red",
     Completed: "", Cancelled: "red", Available: "", Booked: "gold", Returned: "",
-    Upcoming: "blue", Reserved: "gold", Pending: "gold", Confirmed: "blue",
+    Upcoming: "blue", Reserved: "gold", Pending: "gold", Confirmed: "blue", "Awaiting Payment": "gold",
     /* offer statuses (Pending/Accepted above are shared) */
     Declined: "red", Withdrawn: "navy", Expired: "navy"
   };
   return `<div class="badge ${map[status] ?? ""}">${status}</div>`;
+}
+
+/* ── Rentals: dates, deadlines and terms ──
+   Shared by the rental pages. Times are always shown in South African
+   time, whatever timezone the viewer's device is set to. */
+const TASKIFY_TIME_ZONE = "Africa/Johannesburg";
+
+function todayInSast() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: TASKIFY_TIME_ZONE }).format(new Date());
+}
+
+/* "2026-10-11" → "Sun 11 Oct" */
+function rentalDate(dateText) {
+  if (!dateText) return "";
+  const [y, m, d] = String(dateText).slice(0, 10).split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+}
+
+/* A moment → "Sun 11 Oct, 18:00" (South African time) */
+function rentalDeadline(value) {
+  const d = new Date(value);
+  if (!value || Number.isNaN(d.getTime())) return "";
+  const date = d.toLocaleDateString("en-ZA", { weekday: "short", day: "numeric", month: "short", timeZone: TASKIFY_TIME_ZONE });
+  const time = d.toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: TASKIFY_TIME_ZONE });
+  return `${date}, ${time}`;
+}
+
+/* The rental terms (from the API's `terms`): when it's due back, paying,
+   cancelling, and the three money rules with their review status. */
+function rentalTermsHtml(terms) {
+  if (!terms) return "";
+  const rule = (icon, title, r) => `
+    <li><i class="ti ${icon}" aria-hidden="true"></i>
+      <span><strong>${title}</strong> <em class="rental-rule-status${r.inEffect ? " on" : ""}">${escapeReportText(r.statusLabel)}</em><br>${escapeReportText(r.summary)}</span></li>`;
+  return `
+    <ul class="rental-terms">
+      <li><i class="ti ti-clock" aria-hidden="true"></i>
+        <span><strong>Return deadline</strong><br>${escapeReportText(terms.returnTime)} (South African time) on your last day. Ask for an extension before then if you need it longer.</span></li>
+      <li><i class="ti ti-credit-card" aria-hidden="true"></i>
+        <span><strong>Paying</strong><br>You pay only after the owner approves, and then have up to ${Number(terms.paymentWindowHours)} hours (demo payment).</span></li>
+      <li><i class="ti ti-arrow-back-up" aria-hidden="true"></i>
+        <span><strong>Cancelling</strong><br>${escapeReportText(terms.cancellation?.summary || "")}</span></li>
+      ${rule("ti-shield-lock", "Deposit", terms.deposit)}
+      ${rule("ti-calendar-minus", "Returning early", terms.earlyReturn)}
+      ${rule("ti-calendar-exclamation", "Returning late", terms.lateReturn)}
+    </ul>
+    <p class="pay-note" style="font-size:11px;">Terms version ${escapeReportText(terms.policyVersion)}.</p>`;
 }
 
 /* ── Payment simulation helpers (DEMO — no real money moves) ──

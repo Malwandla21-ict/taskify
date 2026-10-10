@@ -1,8 +1,10 @@
 const pool = require("../config/db");
 const {
   RENTAL_TRUST_LEVELS,
-  RENTAL_PROTECTION_FEE
+  RENTAL_PROTECTION_FEE,
+  RENTALS
 } = require("../config/paymentSettings");
+const { isEnforceable } = require("./rentalPolicy.service");
 
 /*
   Renter trust ladder + rental price quote (DEMO — see paymentSettings.js).
@@ -118,7 +120,11 @@ async function buildRentalQuote({ renterId, equipment, startDate, endDate }) {
 
   const rentalAmount = roundMoney(dailyPrice * (days > 0 ? days : 0));
   const protectionFee = days > 0 ? calculateProtectionFee(rentalAmount) : 0;
-  const depositAmount = itemValue == null ? 0 : roundMoney(itemValue * (trust.depositPercent / 100));
+  /* Deposits are only taken once the deposit policy is approved AND
+     switched on (config/rentalPolicy.js, RENTALS.depositsEnabled) — until
+     then every new booking has no deposit, whatever the trust level. */
+  const depositsOn = RENTALS.depositsEnabled && isEnforceable("deposit");
+  const depositAmount = !depositsOn || itemValue == null ? 0 : roundMoney(itemValue * (trust.depositPercent / 100));
 
   let allowed = true;
   let reason = null;
@@ -141,6 +147,7 @@ async function buildRentalQuote({ renterId, equipment, startDate, endDate }) {
     rentalAmount,
     protectionFee,
     depositAmount,
+    depositsEnabled: depositsOn,
     totalToHold: roundMoney(rentalAmount + protectionFee + depositAmount),
     allowed,
     reason
@@ -151,5 +158,6 @@ module.exports = {
   getRenterTrust,
   buildRentalQuote,
   countRentalDays,
-  roundMoney
+  roundMoney,
+  calculateProtectionFee
 };

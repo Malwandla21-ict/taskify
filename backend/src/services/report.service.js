@@ -210,14 +210,19 @@ async function enrichReportsWithContext(rows) {
 
   const bookingMap = new Map();
   if (bookingIds.length) {
+    /* A rental with an open damage report (owner's condition check) gets
+       the damage outcomes in the admin Reports table. */
     const [bookingRows] = await pool.query(
-      `SELECT eb.id, eb.equipment_id, e.name
+      `SELECT eb.id, eb.equipment_id, e.name, eb.condition_status, eb.damage_outcome
        FROM equipment_bookings eb
        INNER JOIN equipment e ON eb.equipment_id = e.id
        WHERE eb.id IN (?)`,
       [bookingIds]
     );
-    bookingRows.forEach(b => bookingMap.set(b.id, { title: b.name, linkId: b.equipment_id }));
+    bookingRows.forEach(b => bookingMap.set(b.id, {
+      title: b.name, linkId: b.equipment_id,
+      status: b.condition_status === "Damaged" && !b.damage_outcome ? "DamageReported" : null
+    }));
   }
 
   const salesMap = new Map();

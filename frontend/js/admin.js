@@ -882,6 +882,8 @@ function renderReportsTable() {
         const isDisputedTask = r.context_type === "task" && r.context_status === "Disputed";
         /* A reported sale (buyer or seller said the meetup/handover failed). */
         const isDisputedSale = r.context_type === "sales_item" && r.context_status === "Disputed" && r.context_order_id;
+        /* An owner's damage report after a rental (condition check). */
+        const isRentalDamage = r.context_type === "equipment_booking" && r.context_status === "DamageReported";
         const canRefund = r.context_type === "task" && r.status === "Pending" && !isDisputedTask;
         const itemType = reportItemType(r);
         const reasonShort = r.reason.length > 80 ? r.reason.slice(0, 80) + "…" : r.reason;
@@ -941,6 +943,13 @@ function renderReportsTable() {
                 <button type="button" class="table-icon-btn sale-dispute-btn" data-order-id="${r.context_order_id}" data-outcome="retry" title="Ask them to try the handover again (new code)">
                   <i class="ti ti-refresh" aria-hidden="true"></i>
                 </button>` : ""}
+              ${isRentalDamage ? `
+                <button type="button" class="table-icon-btn success rental-damage-btn" data-booking-id="${r.context_id}" data-outcome="renter_not_at_fault" title="Renter not at fault (removes the damage mark)">
+                  <i class="ti ti-user-check" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="table-icon-btn rental-damage-btn" data-booking-id="${r.context_id}" data-outcome="damage_confirmed" title="Damage confirmed (stays on the renter's record, nothing charged)">
+                  <i class="ti ti-alert-octagon" aria-hidden="true"></i>
+                </button>` : ""}
             </div>
           </td>
         </tr>`;
@@ -968,7 +977,27 @@ const SALE_DISPUTE_OUTCOME_TEXT = {
   retry:   { title: "Ask them to try the handover again? The buyer gets a new code.", label: "Try again", done: "Sent back for another handover, with a new code." }
 };
 
+const RENTAL_DAMAGE_OUTCOME_TEXT = {
+  renter_not_at_fault: { title: "Renter not at fault? The damage mark comes off their record.", label: "Not at fault", done: "Marked as not the renter's fault." },
+  damage_confirmed: { title: "Confirm the damage? It stays on the renter's record. Nothing is charged — damage charges aren't an approved policy.", label: "Confirm damage", done: "Damage confirmed." }
+};
+
 function attachReportRowEvents() {
+  document.querySelectorAll(".rental-damage-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = RENTAL_DAMAGE_OUTCOME_TEXT[btn.dataset.outcome];
+      openActionModal({
+        title: text.title,
+        confirmLabel: text.label,
+        onConfirm: async (note) => {
+          await apiRequest(`/admin/rental-bookings/${btn.dataset.bookingId}/resolve-damage`, "PATCH", { outcome: btn.dataset.outcome, note });
+          showToast(`${text.done} Both people have been told.`);
+          await Promise.all([loadReports(), loadStats(), loadPendingReportsPreview()]);
+        }
+      });
+    });
+  });
+
   document.querySelectorAll(".sale-dispute-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const text = SALE_DISPUTE_OUTCOME_TEXT[btn.dataset.outcome];

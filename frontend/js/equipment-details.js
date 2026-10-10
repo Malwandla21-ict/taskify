@@ -14,39 +14,37 @@ const bookingMessage            = document.getElementById("bookingMessage");
 const bookingQuote              = document.getElementById("bookingQuote");
 const bookingSubmitButton       = document.getElementById("bookingSubmitButton");
 
-/* ── DEMO payment quote ──
-   Every number (rent, protection fee, trust-based deposit, whether this
-   renter may book this item at all) comes from the backend — see
-   backend/src/config/paymentSettings.js. Nothing is charged for real. */
+/* ── Booking request + quote ──
+   Sending a request takes no money: the owner approves first, then the
+   renter pays (demo) from their rental history. Every number and term
+   comes from the backend (config/paymentSettings.js, config/rentalPolicy.js). */
 let quoteRequestId = 0;
 
 function renderQuotePlaceholder() {
-  bookingQuote.innerHTML = `<p class="pay-note"><i class="ti ti-calendar-search" aria-hidden="true"></i> Pick your dates to see the price breakdown.</p>`;
+  bookingQuote.innerHTML = `<p class="pay-note"><i class="ti ti-calendar-search" aria-hidden="true"></i> Pick your dates to see the price and the rental terms.</p>`;
   bookingSubmitButton.disabled = true;
 }
 
 function renderQuote(q) {
-  const depositHint = q.itemValueMissing
-    ? "this older listing has no item value, so no deposit"
-    : q.trust.depositPercent > 0
-      ? `${q.trust.depositPercent}% of the item's ${formatRand(q.itemValue)} value — you get it back after a good return`
-      : "none — you're a Top renter";
-
   bookingQuote.innerHTML = `
-    ${demoPaymentBanner("No real payment gateway is connected. This simulates your money being held by Taskify until the rental is finished.")}
+    ${demoPaymentBanner("Sending a request is free. You'll only be asked to pay (demo) once the owner approves.")}
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
       ${trustChip(q.trust.level, q.trust.label)}
       <span style="font-size:12px;color:var(--muted);">${q.trust.goodRentals} good rental${q.trust.goodRentals === 1 ? "" : "s"}</span>
     </div>
-    ${q.allowed && q.trust.next?.hint ? `<p class="pay-note" style="margin-bottom:8px;">${q.trust.next.hint}</p>` : ""}
     ${q.allowed ? `
       <div class="money-breakdown">
         ${moneyRow(`Rent (${q.days} day${q.days === 1 ? "" : "s"} × ${formatRand(q.dailyPrice)})`, q.rentalAmount, { hint: "goes to the owner once you return the item" })}
         ${moneyRow("Protection fee", q.protectionFee, { hint: "small fee for the shared damage pot, not refunded" })}
-        ${moneyRow("Deposit", q.depositAmount, { hint: depositHint })}
-        ${moneyRow("Total to hold", q.totalToHold, { strong: true })}
-      </div>` : `
-      <p class="pay-note blocked"><i class="ti ti-lock" aria-hidden="true"></i> ${q.reason}</p>`}`;
+        ${moneyRow("Deposit", q.depositAmount, { hint: q.depositsEnabled ? "returned after a good return" : "none — deposits are switched off while the deposit policy is reviewed" })}
+        ${moneyRow("Total to pay once approved", q.totalToHold, { strong: true })}
+      </div>
+      <p class="pay-note"><i class="ti ti-clock" aria-hidden="true"></i> Due back by <strong>${rentalDate(bookingEndDateInput.value)}, ${escapeReportText(q.terms.returnTime)}</strong> (South African time).</p>
+      <details class="rental-terms-box" open>
+        <summary>Rental terms</summary>
+        ${rentalTermsHtml(q.terms)}
+      </details>` : `
+      <p class="pay-note blocked"><i class="ti ti-lock" aria-hidden="true"></i> ${escapeReportText(q.reason)}</p>`}`;
   bookingSubmitButton.disabled = !q.allowed;
 }
 
@@ -85,6 +83,18 @@ document.getElementById("backButton")?.addEventListener("click", () => goBack(".
 closeBookingModalButton?.addEventListener("click", () => closeModal(bookingModal, bookingForm, bookingMessage));
 document.getElementById("overlay")?.addEventListener("click", () => closeModal(bookingModal, bookingForm, bookingMessage));
 
+/* Dates already taken on this item (no names) so renters pick free dates. */
+function bookedRangesHtml(ranges) {
+  if (!Array.isArray(ranges) || !ranges.length) {
+    return `<p class="pay-note" style="margin-top:14px;"><i class="ti ti-calendar-check" aria-hidden="true"></i> No upcoming bookings — any dates are free.</p>`;
+  }
+  return `
+    <div class="booked-ranges">
+      <div class="booked-ranges-title"><i class="ti ti-calendar-off" aria-hidden="true"></i> Already booked</div>
+      ${ranges.map((r) => `<span class="booked-range">${rentalDate(r.start)}${r.end !== r.start ? ` – ${rentalDate(r.end)}` : ""}</span>`).join("")}
+    </div>`;
+}
+
 async function loadEquipmentDetails() {
   try {
     const res = await apiRequest(`/equipment/${equipmentId}`);
@@ -121,7 +131,7 @@ function renderEquipmentDetails(item) {
                     <i class="ti ti-trash" aria-hidden="true"></i> Delete Listing
                   </button>`;
   } else if (!item.is_available) {
-    actionArea = `<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Currently booked</div>
+    actionArea = `<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Not taking bookings right now</div>
                   ${messageOwnerButton}`;
   } else {
     actionArea = `<button class="primary-button" id="openBookingButton" data-equipment-id="${item.id}">
@@ -145,10 +155,15 @@ function renderEquipmentDetails(item) {
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
           ${conditionBadge(item.condition_status)}
           ${item.is_available
-            ? `<div class="market-tag green"><i class="ti ti-circle-check" aria-hidden="true"></i> Available</div>`
-            : `<div class="market-tag gold"><i class="ti ti-lock" aria-hidden="true"></i> Booked</div>`}
+            ? `<div class="market-tag green"><i class="ti ti-circle-check" aria-hidden="true"></i> Taking bookings</div>`
+            : `<div class="market-tag gold"><i class="ti ti-lock" aria-hidden="true"></i> Paused</div>`}
         </div>
         ${endorsementDetailBlock(item)}
+        ${bookedRangesHtml(item.booked_ranges)}
+        <details class="rental-terms-box" style="margin-top:18px;">
+          <summary>Rental terms</summary>
+          ${rentalTermsHtml(item.terms)}
+        </details>
       </div>
       <div class="form-panel detail-summary">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
@@ -171,7 +186,7 @@ function renderEquipmentDetails(item) {
           <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;">
             <i class="ti ti-shield-check" aria-hidden="true"></i> ${formatRand(item.item_value)}
           </div>
-          <div style="font-size:11px;color:var(--muted);margin-top:3px;">Your deposit depends on your renter trust level.</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">No deposit is taken while the deposit policy is reviewed. Your trust level decides how valuable an item you can rent.</div>
         </div>` : ""}
         <div style="margin-bottom:12px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Condition</div>
@@ -183,10 +198,8 @@ function renderEquipmentDetails(item) {
           </div>
         </div>
         <div style="margin-bottom:20px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Status</div>
-          ${item.is_available
-            ? `<div class="badge"><i class="ti ti-circle-check" aria-hidden="true"></i> Available</div>`
-            : `<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Booked</div>`}
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Return time</div>
+          <div style="font-size:13px;font-weight:600;"><i class="ti ti-clock" aria-hidden="true"></i> ${escapeReportText(item.terms?.returnTime || "18:00")} on the last day (South African time)</div>
         </div>
         ${actionArea}
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
@@ -208,7 +221,7 @@ function renderEquipmentDetails(item) {
     bookingForm.reset();
     bookingEquipmentIdInput.value = item.id;
     bookingMessage.textContent = "";
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayInSast();
     bookingStartDateInput.min = today;
     bookingEndDateInput.min = today;
     renderQuotePlaceholder();
@@ -242,21 +255,15 @@ bookingForm?.addEventListener("submit", async e => {
   const submitBtn = bookingForm.querySelector("button[type='submit']");
   const originalHtml = submitBtn.innerHTML;
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Holding payment…`;
+  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Sending request…`;
   try {
-    const res = await apiRequest(`/equipment/${bookingEquipmentIdInput.value}/book`, "POST", {
+    await apiRequest(`/equipment/${bookingEquipmentIdInput.value}/book`, "POST", {
       startDate: bookingStartDateInput.value,
       endDate:   bookingEndDateInput.value
     });
-    /* Rent + protection fee + deposit, as saved by the server. */
-    const booking = res?.data || {};
-    const heldTotal = Number(booking.rental_amount || 0) + Number(booking.protection_fee || 0) + Number(booking.deposit_amount || 0);
-    showPaymentMoment("held", heldTotal > 0
-      ? `Booking requested. ${formatRand(heldTotal)} is held by Taskify until the owner responds.`
-      : "Booking requested. Your payment is held by Taskify until the owner responds.");
+    showToast("Request sent. You'll be asked to pay only once the owner approves.");
     closeModal(bookingModal, bookingForm, bookingMessage);
-    /* 2s instead of 0.8s so the payment pop-up can finish before we leave. */
-    setTimeout(() => window.location.href = "./equipment.html", 2000);
+    setTimeout(() => window.location.href = "./equipment.html#history", 1200);
   } catch (err) {
     bookingMessage.textContent = err.message;
     bookingMessage.style.color = "red";
