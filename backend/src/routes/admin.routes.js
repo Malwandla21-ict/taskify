@@ -96,6 +96,18 @@ router.patch(
   adminController.resolveTaskDispute
 );
 
+/* Settle a reported sale: pay the seller, refund the buyer, or send them
+   back to try the handover again with a new code. */
+router.patch(
+  "/sale-orders/:orderId/resolve-dispute",
+  [
+    param("orderId").isInt({ min: 1 }).withMessage("Order ID must be a valid positive integer."),
+    body("outcome").isIn(["release", "refund", "retry"]).withMessage("Outcome must be release, refund or retry."),
+    body("note").optional().trim().isLength({ max: 500 }).withMessage("Note must not exceed 500 characters.")
+  ],
+  adminController.resolveSaleDispute
+);
+
 router.patch(
   "/tasks/:taskId/refund",
   [

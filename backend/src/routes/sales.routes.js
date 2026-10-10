@@ -3,6 +3,7 @@ const { body, param } = require("express-validator");
 const salesController = require("../controllers/sales.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 const { categoriesFor, applyCategorySection } = require("../config/categories");
+const { SALE_DISPUTE_CATEGORIES } = require("../services/sales.service");
 
 const router = express.Router();
 
@@ -79,6 +80,21 @@ router.patch(
   authenticate,
   [ param("orderId").isInt({ min: 1 }).withMessage("Order ID must be a valid positive integer.") ],
   salesController.cancelSaleOrder
+);
+
+/* Buyer or seller: the meetup failed or the handover went wrong. The order
+   becomes 'Disputed' — money stays held — until it's sorted out or an
+   admin decides (see sales.service.js disputeSaleOrder). */
+router.post(
+  "/orders/:orderId/dispute",
+  authenticate,
+  [
+    param("orderId").isInt({ min: 1 }).withMessage("Order ID must be a valid positive integer."),
+    body("category").isIn(Object.keys(SALE_DISPUTE_CATEGORIES)).withMessage("Please choose what went wrong from the list."),
+    body("reason").trim().notEmpty().withMessage("Please describe what happened.")
+      .isLength({ min: 10, max: 500 }).withMessage("Please describe what happened in 10 to 500 characters.")
+  ],
+  salesController.disputeSaleOrder
 );
 
 /*

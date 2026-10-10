@@ -3,6 +3,7 @@ const adminService = require("../services/admin.service");
 const auditLogService = require("../services/auditlog.service");
 const moderationService = require("../services/moderation.service");
 const taskService = require("../services/task.service");
+const salesService = require("../services/sales.service");
 const analyticsService = require("../services/analytics.service");
 const reportExportService = require("../services/reportExport.service");
 
@@ -68,6 +69,16 @@ async function resolveTaskDispute(req, res, next) {
 
     const task = await taskService.resolveTaskDispute(Number(req.params.taskId), req.user.id, req.body.outcome, req.body.note);
     return res.status(200).json({ success: true, message: "Dispute settled.", data: task });
+  } catch (error) { next(error); }
+}
+
+async function resolveSaleDispute(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+
+    const order = await salesService.resolveSaleDispute(Number(req.params.orderId), req.user.id, req.body.outcome, req.body.note);
+    return res.status(200).json({ success: true, message: "Sale problem settled.", data: order });
   } catch (error) { next(error); }
 }
 
@@ -188,6 +199,7 @@ module.exports = {
   getAnalytics,
   downloadExport,
   resolveTaskDispute,
+  resolveSaleDispute,
   verifyLecturer,
   unverifyLecturer,
   promoteUser,

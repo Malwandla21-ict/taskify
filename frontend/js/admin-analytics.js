@@ -133,7 +133,7 @@ function renderAnalytics(d) {
   document.getElementById("trustList").innerHTML = [
     listRow("Reports made", t.reports.total),
     listRow("…resolved", t.reports.resolved),
-    listRow("Task problems reported", t.disputes.opened),
+    listRow("Problems reported (tasks / sales)", `${t.disputes.openedByType?.tasks ?? t.disputes.opened} / ${t.disputes.openedByType?.sales ?? 0}`),
     listRow("…settled", t.disputes.resolved),
     listRow("Typical time to settle", hours(t.disputes.averageHoursToResolve)),
     listRow("Content flagged / blocked", `${t.moderation.flagged} / ${t.moderation.blocked}`),

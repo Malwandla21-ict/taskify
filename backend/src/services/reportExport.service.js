@@ -62,7 +62,7 @@ const REPORTS = {
       const [sales] = await pool.query(
         `SELECT so.id, si.title, ${sast("so.created_at")} AS created, so.status, so.item_price AS amount, so.protection_fee AS fee,
                 seller.full_name AS owner_name, so.seller_id AS owner_id, buyer.full_name AS other_name, so.buyer_id AS other_id,
-                ${sast("so.released_at")} AS closed, so.code_attempts
+                ${sast("so.released_at")} AS closed, so.code_attempts, so.dispute_outcome, so.disputed_by
          FROM sale_orders so
          INNER JOIN sales_items si ON si.id = so.sales_item_id
          LEFT JOIN users seller ON seller.id = so.seller_id
@@ -92,7 +92,10 @@ const REPORTS = {
           type: "Sale", id: r.id, title: r.title, created: r.created, status: r.status, payment: r.status,
           owner: who(r.owner_name, r.owner_id), counterparty: who(r.other_name, r.other_id),
           amount: money(r.amount), fee: money(r.fee), deposit: "", closed: r.closed || "",
-          notes: Number(r.code_attempts) ? `${r.code_attempts} wrong handover code attempt(s)` : ""
+          notes: [
+            r.disputed_by ? `Problem reported by the ${r.disputed_by}${r.dispute_outcome ? ` — ${r.dispute_outcome}` : " — open"}` : "",
+            Number(r.code_attempts) ? `${r.code_attempts} wrong handover code attempt(s)` : ""
+          ].filter(Boolean).join("; ")
         })),
         ...rentals.map((r) => ({
           type: "Rental", id: r.id, title: r.title, created: r.created, status: r.status, payment: r.payment || "",
@@ -137,24 +140,30 @@ const REPORTS = {
     title: "Reports and disputes",
     columns: [
       ["id", "Report ID"], ["created", "Reported (SAST)"], ["category", "Problem type"], ["about", "About"],
-      ["reported", "Reported user"], ["reporter", "Reported by"], ["status", "Status"], ["dispute", "Task dispute outcome"],
+      ["reported", "Reported user"], ["reporter", "Reported by"], ["status", "Status"], ["dispute", "Dispute outcome"],
       ["reason", "What they said"]
     ],
     async rows(range) {
       const [rows] = await pool.query(
         `SELECT r.id, ${sast("r.created_at")} AS created, r.category, r.context_type, r.context_id, r.status, r.reason,
                 reported.full_name AS reported_name, r.reported_user_id, reporter.full_name AS reporter_name, r.reporter_id,
-                t.title AS task_title, t.dispute_outcome
+                COALESCE(t.title, si.title) AS context_title,
+                COALESCE(t.dispute_outcome, (
+                  SELECT so.dispute_outcome FROM sale_orders so
+                  WHERE so.sales_item_id = si.id AND so.disputed_at IS NOT NULL
+                    AND r.reporter_id IN (so.buyer_id, so.seller_id)
+                  ORDER BY so.disputed_at DESC LIMIT 1)) AS dispute_outcome
          FROM reports r
          LEFT JOIN users reported ON reported.id = r.reported_user_id
          LEFT JOIN users reporter ON reporter.id = r.reporter_id
          LEFT JOIN tasks t ON r.context_type = 'task' AND t.id = r.context_id
+         LEFT JOIN sales_items si ON r.context_type = 'sales_item' AND si.id = r.context_id
          WHERE ${within("r.created_at")} ORDER BY r.created_at`,
         [range.startAt, range.endAt]
       );
       return rows.map((r) => ({
         id: r.id, created: r.created, category: CATEGORY_LABELS[r.category] || r.category || "",
-        about: r.context_type ? `${r.context_type} #${r.context_id}${r.task_title ? ` (${r.task_title})` : ""}` : "",
+        about: r.context_type ? `${r.context_type} #${r.context_id}${r.context_title ? ` (${r.context_title})` : ""}` : "",
         reported: who(r.reported_name, r.reported_user_id), reporter: who(r.reporter_name, r.reporter_id),
         status: r.status, dispute: r.dispute_outcome || "", reason: safeText(r.reason)
       }));

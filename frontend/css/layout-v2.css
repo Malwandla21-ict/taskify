@@ -1907,3 +1907,16 @@ body.dashboard-body {
     justify-content: center;
   }
 }
+
+/* ── Sale: a problem has been reported (sale-details.js disputeNotice) ── */
+.sale-dispute-note {
+  background: rgba(224, 58, 62, 0.06);
+  border: 1px solid rgba(224, 58, 62, 0.25);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.sale-dispute-note strong { display: flex; align-items: center; gap: 6px; color: var(--ump-red); font-size: 13px; }
+.sale-dispute-note p { margin: 6px 0 0; color: var(--text); }
