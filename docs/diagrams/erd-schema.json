@@ -1,0 +1,2298 @@
+{
+  "source": "live database (information_schema), structure only",
+  "takenAt": "2026-10-10",
+  "tables": {
+    "admin_allowlist": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "email",
+          "type": "varchar(120)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "added_by",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "note",
+          "type": "varchar(255)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "email"
+        ]
+      ]
+    },
+    "admin_audit_logs": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "admin_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "action",
+          "type": "varchar(100)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "target_type",
+          "type": "varchar(50)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "target_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "metadata",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "blocked_content_attempts": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "content_type",
+          "type": "enum('task','sales_item','equipment','event')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "title",
+          "type": "varchar(255)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "description_snippet",
+          "type": "varchar(300)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "flagged_categories",
+          "type": "json",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "booking_extensions": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "booking_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "old_end_date",
+          "type": "date",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "new_end_date",
+          "type": "date",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "extra_days",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "extra_amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "extra_fee",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Requested','Awaiting Payment','Paid','Declined','Cancelled','Expired')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "payment_due_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "responded_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "conversations": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "context_type",
+          "type": "enum('task','equipment','sale')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "context_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "user_a_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "user_b_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "context_type",
+          "context_id",
+          "user_a_id",
+          "user_b_id"
+        ]
+      ]
+    },
+    "equipment": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "owner_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "name",
+          "type": "varchar(150)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "condition_status",
+          "type": "enum('Excellent','Functional','Damaged')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "condition_checked_by",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "condition_checked_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "category",
+          "type": "varchar(100)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "section",
+          "type": "enum('Academic','General')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "daily_price",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "item_value",
+          "type": "decimal(10,2)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "is_available",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "image_urls",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "moderation_status",
+          "type": "enum('clean','pending_review','removed')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "moderation_flags",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "equipment_bookings": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "equipment_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "renter_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "start_date",
+          "type": "date",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "end_date",
+          "type": "date",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Pending','Awaiting Payment','Confirmed','Returned','Cancelled')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "rental_days",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "rental_amount",
+          "type": "decimal(10,2)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "protection_fee",
+          "type": "decimal(10,2)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "deposit_amount",
+          "type": "decimal(10,2)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "trust_level",
+          "type": "varchar(20)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "payment_status",
+          "type": "enum('Unpaid','Held','Released','Refunded')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "deposit_status",
+          "type": "enum('None','Held','Refunded','Disputed')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "condition_status",
+          "type": "enum('Pending','OK','Damaged')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "pickup_photos",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "picked_up_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "return_photos",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "returned_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "damage_note",
+          "type": "text",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "pickup_condition",
+          "type": "enum('Excellent','Functional','Damaged')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "approved_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "payment_due_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "paid_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "return_due_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "return_minutes_late",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "cancelled_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "cancel_reason",
+          "type": "varchar(30)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "cancel_note",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "policy_version",
+          "type": "varchar(40)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "terms_snapshot",
+          "type": "text",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "return_reminder_sent_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "overdue_notified_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "overdue_escalated_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "problem_reported_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "problem_reported_by",
+          "type": "enum('renter','owner')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "problem_category",
+          "type": "varchar(40)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "problem_note",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "return_attempted_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "damage_outcome",
+          "type": "enum('renter_not_at_fault','damage_confirmed')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "damage_resolved_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "event_rsvps": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "event_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "event_id",
+          "user_id"
+        ]
+      ]
+    },
+    "events": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "organizer_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "title",
+          "type": "varchar(150)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "category",
+          "type": "varchar(100)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "section",
+          "type": "enum('Academic','General')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "location",
+          "type": "varchar(150)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "event_date",
+          "type": "datetime",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "capacity",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "image_urls",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Upcoming','Cancelled','Completed')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "moderation_status",
+          "type": "enum('clean','pending_review','removed')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "moderation_flags",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "has_food",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "has_refreshments",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "listing_authority",
+          "type": "varchar(300)",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "flagged_uploads": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "image_url",
+          "type": "varchar(500)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "flagged_categories",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "lecturer_endorsements": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "lecturer_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "endorsed_user_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "endorsement_type",
+          "type": "enum('Tutoring','Toolkit','General')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "context_type",
+          "type": "enum('sales_item','equipment','task','event')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "context_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "messages": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "conversation_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "sender_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "is_flagged",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "read_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "notifications": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "title",
+          "type": "varchar(150)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "message",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "context_type",
+          "type": "enum('task','equipment_booking','sales_item','event')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "context_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "is_read",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "offer_history": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "offer_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "proposed_by",
+          "type": "enum('offerer','owner')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "message",
+          "type": "varchar(300)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "offers": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "context_type",
+          "type": "enum('task','sales_item')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "context_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "offerer_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "owner_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "message",
+          "type": "varchar(300)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "last_proposed_by",
+          "type": "enum('offerer','owner')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "counter_rounds",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Pending','Accepted','Declined','Withdrawn','Expired')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "payments": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "task_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Held','Released','Refunded','Cancelled')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "task_id"
+        ]
+      ]
+    },
+    "push_subscriptions": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "endpoint",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "endpoint_hash",
+          "type": "char(64)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "p256dh",
+          "type": "varchar(255)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "auth",
+          "type": "varchar(255)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "endpoint_hash"
+        ]
+      ]
+    },
+    "reports": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "reporter_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "reported_user_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "context_type",
+          "type": "enum('task','equipment','equipment_booking','sales_item','event')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "context_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "category",
+          "type": "enum('payment','damaged_item','not_as_described','no_show','scam','harassment','inappropriate','other')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Pending','Resolved')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "message_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "reviews": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "task_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "booking_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "reviewer_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "reviewee_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "rating",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "comment",
+          "type": "text",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "booking_id",
+          "reviewer_id"
+        ],
+        [
+          "task_id",
+          "reviewer_id"
+        ]
+      ]
+    },
+    "sale_orders": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "sales_item_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "buyer_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "seller_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "item_price",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "protection_fee",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "total_amount",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "handover_code",
+          "type": "char(4)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "code_attempts",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Held','Disputed','Released','Refunded')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "cancelled_by",
+          "type": "enum('buyer','seller')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "released_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "disputed_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "disputed_by",
+          "type": "enum('buyer','seller')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "dispute_category",
+          "type": "varchar(40)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "dispute_reason",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "dispute_outcome",
+          "type": "enum('released','refunded','retry','handed_over','seller_refunded')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "dispute_resolved_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "sales_items": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "seller_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "title",
+          "type": "varchar(150)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "category",
+          "type": "varchar(100)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "section",
+          "type": "enum('Academic','General')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "price",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "condition_status",
+          "type": "enum('New','Excellent','Good','Fair','Used')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "location",
+          "type": "varchar(150)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Available','Reserved','Sold')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "image_urls",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "moderation_status",
+          "type": "enum('clean','pending_review','removed')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "moderation_flags",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "security_events": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "email",
+          "type": "varchar(120)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "event",
+          "type": "varchar(60)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "user_agent",
+          "type": "varchar(255)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "metadata",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "tasks": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "title",
+          "type": "varchar(150)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "category",
+          "type": "varchar(50)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "section",
+          "type": "enum('Academic','General')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "price",
+          "type": "decimal(10,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "location",
+          "type": "varchar(100)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "status",
+          "type": "enum('Posted','Accepted','In Progress','Awaiting Confirmation','Disputed','Completed','Cancelled')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "urgent",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_by",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "accepted_by",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "image_urls",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "moderation_status",
+          "type": "enum('clean','pending_review','removed')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "moderation_flags",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "awaiting_confirmation_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "review_reminder_sent_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "review_escalated_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "disputed_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "dispute_reason",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "dispute_outcome",
+          "type": "enum('released','refunded','rework','poster_confirmed')",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "dispute_resolved_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": []
+    },
+    "trusted_devices": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "token_hash",
+          "type": "varchar(64)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "device_label",
+          "type": "varchar(150)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "ip_address",
+          "type": "varchar(45)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "expires_at",
+          "type": "datetime",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "last_used_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "token_hash"
+        ]
+      ]
+    },
+    "users": {
+      "columns": [
+        {
+          "name": "id",
+          "type": "int",
+          "nullable": false,
+          "pk": true
+        },
+        {
+          "name": "full_name",
+          "type": "varchar(100)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "email",
+          "type": "varchar(120)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "phone_number",
+          "type": "varchar(20)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "profile_photo_url",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "password_hash",
+          "type": "varchar(255)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "role",
+          "type": "enum('user','admin','suspended','banned')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "suspension_reason",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "suspended_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "ban_reason",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "banned_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "is_verified",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "rating_average",
+          "type": "decimal(3,2)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "total_reviews",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "student_number",
+          "type": "varchar(50)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "member_type",
+          "type": "enum('Student','Lecturer','Staff')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "faculty",
+          "type": "varchar(150)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "academic_year",
+          "type": "varchar(50)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "account_role",
+          "type": "enum('Student','Staff')",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "bio",
+          "type": "text",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "skills",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "services",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "lecturer_title",
+          "type": "varchar(20)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "years_experience",
+          "type": "int",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "office_location",
+          "type": "varchar(150)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "consultation_mode",
+          "type": "varchar(150)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "availability_note",
+          "type": "text",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "email_verification_token_hash",
+          "type": "varchar(255)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "email_verification_expires",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "password_reset_token_hash",
+          "type": "varchar(255)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "password_reset_expires",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "totp_secret_encrypted",
+          "type": "varchar(500)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "totp_enabled",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "totp_backup_codes",
+          "type": "longtext",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "token_version",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "failed_login_attempts",
+          "type": "int",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "lockout_until",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "login_email_otp_hash",
+          "type": "varchar(255)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "login_email_otp_expires",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "login_email_otp_requested_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "totp_method",
+          "type": "varchar(10)",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "has_seen_onboarding",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        },
+        {
+          "name": "lecturer_verified",
+          "type": "tinyint(1)",
+          "nullable": false,
+          "pk": false
+        }
+      ],
+      "unique": [
+        [
+          "email"
+        ]
+      ]
+    }
+  },
+  "foreignKeys": [
+    {
+      "table": "admin_allowlist",
+      "column": "added_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "admin_audit_logs",
+      "column": "admin_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "booking_extensions",
+      "column": "booking_id",
+      "refTable": "equipment_bookings",
+      "refColumn": "id"
+    },
+    {
+      "table": "conversations",
+      "column": "user_a_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "conversations",
+      "column": "user_b_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "equipment",
+      "column": "condition_checked_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "equipment",
+      "column": "owner_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "equipment_bookings",
+      "column": "equipment_id",
+      "refTable": "equipment",
+      "refColumn": "id"
+    },
+    {
+      "table": "equipment_bookings",
+      "column": "renter_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "event_rsvps",
+      "column": "event_id",
+      "refTable": "events",
+      "refColumn": "id"
+    },
+    {
+      "table": "event_rsvps",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "events",
+      "column": "organizer_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "lecturer_endorsements",
+      "column": "endorsed_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "lecturer_endorsements",
+      "column": "lecturer_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "messages",
+      "column": "conversation_id",
+      "refTable": "conversations",
+      "refColumn": "id"
+    },
+    {
+      "table": "messages",
+      "column": "sender_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "notifications",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "offer_history",
+      "column": "offer_id",
+      "refTable": "offers",
+      "refColumn": "id"
+    },
+    {
+      "table": "offers",
+      "column": "offerer_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "offers",
+      "column": "owner_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "payments",
+      "column": "task_id",
+      "refTable": "tasks",
+      "refColumn": "id"
+    },
+    {
+      "table": "push_subscriptions",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "reports",
+      "column": "message_id",
+      "refTable": "messages",
+      "refColumn": "id"
+    },
+    {
+      "table": "reports",
+      "column": "reported_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "reports",
+      "column": "reporter_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "reviews",
+      "column": "booking_id",
+      "refTable": "equipment_bookings",
+      "refColumn": "id"
+    },
+    {
+      "table": "reviews",
+      "column": "reviewee_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "reviews",
+      "column": "reviewer_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "reviews",
+      "column": "task_id",
+      "refTable": "tasks",
+      "refColumn": "id"
+    },
+    {
+      "table": "sale_orders",
+      "column": "buyer_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "sale_orders",
+      "column": "sales_item_id",
+      "refTable": "sales_items",
+      "refColumn": "id"
+    },
+    {
+      "table": "sale_orders",
+      "column": "seller_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "sales_items",
+      "column": "seller_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "security_events",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "tasks",
+      "column": "accepted_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "tasks",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "table": "trusted_devices",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    }
+  ]
+}

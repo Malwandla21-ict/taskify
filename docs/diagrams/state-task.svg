@@ -1,0 +1,162 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1540 860" width="1540" height="860" font-family="Poppins, 'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#0C1D4A"/>
+    </marker>
+    <style>
+      .title { font-size: 22px; font-weight: 700; fill: #0C1D4A; }
+      .subtitle { font-size: 12.5px; fill: #4B5563; }
+      .state { fill: #EEF4FF; stroke: #0C1D4A; stroke-width: 1.6; }
+      .state-done { fill: #E6F6F0; stroke: #009B72; stroke-width: 1.8; }
+      .state-bad { fill: #FDECEC; stroke: #E03A3E; stroke-width: 1.8; }
+      .composite { fill: #FFFBEB; stroke: #B38900; stroke-width: 1.6; stroke-dasharray: 0; }
+      .name { font-size: 14.5px; font-weight: 700; fill: #0C1D4A; text-anchor: middle; }
+      .db { font-size: 10.5px; fill: #4B5563; text-anchor: middle; }
+      .edge { fill: none; stroke: #0C1D4A; stroke-width: 1.5; marker-end: url(#arrow); }
+      .label { font-size: 11px; fill: #111827; }
+      .guard { font-size: 11px; fill: #0072CE; }
+      .effect { font-size: 11px; fill: #009B72; }
+      .note { fill: #FFFFFF; stroke: #687280; stroke-width: 1.2; }
+      .note-text { font-size: 10.5px; fill: #374151; }
+      .legend { font-size: 11px; fill: #374151; }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1540" height="860" fill="#FFFFFF"/>
+  <text class="title" x="40" y="44">Taskify — Task state transition diagram</text>
+  <text class="subtitle" x="40" y="66">UML state machine for one task. State names are the values stored in tasks.status; the payment is payments.status (demo — no real money moves).</text>
+
+  <!-- Composite: payment held -->
+  <rect class="composite" x="430" y="150" width="720" height="400" rx="18"/>
+  <text x="1134" y="174" font-size="13" font-weight="700" fill="#8A6A00" text-anchor="end">Assigned — payment held (demo)</text>
+  <text x="1134" y="191" font-size="10.5" fill="#8A6A00" text-anchor="end">payments.status = Held in every state inside this box</text>
+
+  <!-- States -->
+  <rect class="state" x="80" y="210" width="200" height="64" rx="14"/>
+  <text class="name" x="180" y="238">Posted</text>
+  <text class="db" x="180" y="256">open for applications</text>
+
+  <rect class="state" x="470" y="210" width="210" height="64" rx="14"/>
+  <text class="name" x="575" y="238">Accepted</text>
+  <text class="db" x="575" y="256">worker chosen</text>
+
+  <rect class="state" x="900" y="210" width="210" height="64" rx="14"/>
+  <text class="name" x="1005" y="238">In Progress</text>
+  <text class="db" x="1005" y="256">worker is doing the job</text>
+
+  <rect class="state" x="900" y="420" width="210" height="64" rx="14"/>
+  <text class="name" x="1005" y="448">Awaiting Confirmation</text>
+  <text class="db" x="1005" y="466">poster reviews the work</text>
+
+  <rect class="state-bad" x="470" y="420" width="210" height="64" rx="14"/>
+  <text class="name" x="575" y="448">Disputed</text>
+  <text class="db" x="575" y="466">problem reported, admin decides</text>
+
+  <rect class="state-done" x="1260" y="420" width="200" height="64" rx="14"/>
+  <text class="name" x="1360" y="448">Completed</text>
+  <text class="db" x="1360" y="466">payment Released to worker</text>
+
+  <rect class="state-bad" x="80" y="640" width="200" height="64" rx="14"/>
+  <text class="name" x="180" y="668">Cancelled</text>
+  <text class="db" x="180" y="686">payment Cancelled or Refunded</text>
+
+  <!-- Initial and final pseudostates -->
+  <circle cx="180" cy="130" r="10" fill="#0C1D4A"/>
+  <circle cx="40" cy="457" r="12" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="2"/>
+  <circle cx="40" cy="457" r="7" fill="#0C1D4A"/>
+  <circle cx="1500" cy="452" r="12" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="2"/>
+  <circle cx="1500" cy="452" r="7" fill="#0C1D4A"/>
+
+  <!-- T1 create -->
+  <path class="edge" d="M180,140 L180,208"/>
+  <text class="label" x="190" y="180">poster posts a task</text>
+
+  <!-- T2 Posted -> Accepted -->
+  <path class="edge" d="M280,230 L468,230"/>
+  <text class="label" x="355" y="190" text-anchor="middle">poster and worker agree</text>
+  <text class="label" x="355" y="204" text-anchor="middle">on an application/offer</text>
+  <text class="effect" x="355" y="220" text-anchor="middle">/ payment Held</text>
+
+  <!-- T3 Accepted -> Posted -->
+  <path class="edge" d="M470,256 L282,256"/>
+  <text class="label" x="355" y="273" text-anchor="middle">worker withdraws</text>
+  <text class="effect" x="355" y="287" text-anchor="middle">/ payment Cancelled</text>
+
+  <!-- T4 Accepted -> In Progress -->
+  <path class="edge" d="M680,242 L898,242"/>
+  <text class="label" x="790" y="233" text-anchor="middle">worker starts work</text>
+
+  <!-- T5 In Progress -> Awaiting Confirmation -->
+  <path class="edge" d="M1005,274 L1005,418"/>
+  <text class="label" x="995" y="338" text-anchor="end">worker marks it done</text>
+  <text class="effect" x="995" y="352" text-anchor="end">/ poster's review clock starts</text>
+
+  <!-- T6 Awaiting -> Disputed -->
+  <path class="edge" d="M900,452 L682,452"/>
+  <text class="label" x="790" y="443" text-anchor="middle">poster reports a problem</text>
+  <text class="effect" x="790" y="470" text-anchor="middle">/ payment stays held</text>
+
+  <!-- T7 Disputed -> In Progress (rework) -->
+  <path class="edge" d="M670,420 L902,276"/>
+  <text class="label" x="698" y="346" text-anchor="end">admin: send back</text>
+  <text class="label" x="698" y="360" text-anchor="end">for rework</text>
+
+  <!-- T8 Awaiting -> Completed -->
+  <path class="edge" d="M1110,452 L1258,452"/>
+  <text class="label" x="1205" y="430" text-anchor="middle">poster confirms</text>
+  <text class="effect" x="1205" y="444" text-anchor="middle">/ payment Released</text>
+
+  <!-- T9 Disputed -> Completed -->
+  <path class="edge" d="M575,484 L575,600 L1360,600 L1360,486"/>
+  <text class="label" x="968" y="592" text-anchor="middle">poster confirms after all, or admin releases the payment</text>
+  <text class="effect" x="968" y="617" text-anchor="middle">/ payment Released</text>
+
+  <!-- T10 Completed -> final -->
+  <path class="edge" d="M1460,452 L1486,452"/>
+
+  <!-- T11 Posted -> Cancelled -->
+  <path class="edge" d="M150,274 L150,638"/>
+  <text class="label" x="160" y="456">poster cancels</text>
+
+  <!-- T12 Accepted -> Cancelled -->
+  <path class="edge" d="M500,274 L500,330 L240,330 L240,638"/>
+  <text class="label" x="370" y="348" text-anchor="middle">poster cancels</text>
+  <text class="effect" x="370" y="362" text-anchor="middle">/ payment Cancelled</text>
+
+  <!-- T13 composite -> Cancelled (admin refund) -->
+  <path class="edge" d="M470,550 L470,672 L282,672"/>
+  <text class="label" x="460" y="600" text-anchor="end">admin refunds the poster</text>
+  <text class="label" x="460" y="614" text-anchor="end">(refund, or settle dispute: refund)</text>
+  <text class="effect" x="460" y="630" text-anchor="end">/ payment Refunded</text>
+
+  <!-- Deletes -> final -->
+  <path class="edge" d="M80,242 L40,242 L40,443"/>
+  <path class="edge" d="M80,672 L40,672 L40,471"/>
+  <text class="label" x="48" y="360">poster</text>
+  <text class="label" x="48" y="374">deletes</text>
+  <text class="label" x="48" y="560">poster</text>
+  <text class="label" x="48" y="574">deletes</text>
+
+  <!-- Note: time events on Awaiting Confirmation -->
+  <rect class="note" x="1190" y="250" width="320" height="104" rx="4"/>
+  <path d="M1190,330 L1112,430" stroke="#687280" stroke-width="1.2" stroke-dasharray="5,4" fill="none"/>
+  <text class="note-text" x="1204" y="272" font-weight="700">Time events in Awaiting Confirmation</text>
+  <text class="note-text" x="1204" y="290">after 48 h without a review: poster reminded (once)</text>
+  <text class="note-text" x="1204" y="306">after 168 h: admins asked to follow up (once)</text>
+  <text class="note-text" x="1204" y="322">The state does not change and the payment is</text>
+  <text class="note-text" x="1204" y="338">never released automatically.</text>
+
+  <!-- Legend -->
+  <line x1="40" y1="744" x2="1500" y2="744" stroke="#E5E7EB" stroke-width="1"/>
+  <circle cx="52" cy="772" r="7" fill="#0C1D4A"/>
+  <text class="legend" x="66" y="776">initial state</text>
+  <circle cx="172" cy="772" r="9" fill="#FFFFFF" stroke="#0C1D4A" stroke-width="2"/>
+  <circle cx="172" cy="772" r="5" fill="#0C1D4A"/>
+  <text class="legend" x="188" y="776">final state (record deleted / closed)</text>
+  <rect x="420" y="760" width="34" height="24" rx="6" class="composite"/>
+  <text class="legend" x="462" y="776">composite state (a transition from its edge applies to every state inside)</text>
+  <path d="M960,772 L1010,772" class="edge"/>
+  <text class="legend" x="1018" y="776"><tspan fill="#111827">event</tspan> <tspan fill="#0072CE">[guard]</tspan> <tspan fill="#009B72">/ effect</tspan></text>
+  <text class="legend" x="40" y="808">Workers can't take a task directly: they apply (an offer at the listed price). It is agreed when the poster accepts it, or the worker accepts the poster's counter-offer. Only a Posted task can be edited.</text>
+  <text class="legend" x="40" y="826">An admin removing content changes moderation_status (hidden from the public), not tasks.status. Every transition is checked on the server and runs once even if clicked twice.</text>
+</svg>
