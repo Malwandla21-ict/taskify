@@ -17,7 +17,7 @@ const LABELS = {
   task:       { noun: "task",              heldTitle: "Task Held for Review" },
   sales_item: { noun: "sales listing",     heldTitle: "Listing Held for Review" },
   equipment:  { noun: "equipment listing", heldTitle: "Listing Held for Review" },
-  event:      { noun: "event",             heldTitle: "Event Held for Review" }
+  event:      { noun: "Campus Marketplace listing", heldTitle: "Listing Held for Review" }
 };
 
 /* `current` is the listing's row before the edit (needs moderation_status

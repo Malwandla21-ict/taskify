@@ -2,7 +2,7 @@ const express = require("express");
 const { body, param } = require("express-validator");
 const eventController = require("../controllers/event.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
-const { categoriesFor, applyCategorySection } = require("../config/categories");
+const { categoriesFor, legacyCategoriesFor, applyCategorySection } = require("../config/categories");
 
 const router = express.Router();
 
@@ -18,7 +18,11 @@ const eventFieldRules = [
   body("description").trim().notEmpty().withMessage("Description is required.")
     .isLength({ min: 10 }).withMessage("Description must be at least 10 characters."),
   body("category").trim().notEmpty().withMessage("Please choose a category.").bail()
-    .isIn(categoriesFor("event")).withMessage("Please choose a category from the list."),
+    /* Old event categories are accepted here only so existing events can
+       still be edited; event.service.js refuses them for anything new. */
+    .isIn([...categoriesFor("event"), ...legacyCategoriesFor("event")]).withMessage("Please choose a category from the list."),
+  /* Institutional marketplace listings: who authorised it (checked in event.service.js) */
+  body("listingAuthority").optional({ nullable: true }).isString().isLength({ max: 300 }).withMessage("Keep the authorisation note under 300 characters."),
   /* section is worked out from the category (applyCategorySection below) */
   body("location").trim().notEmpty().withMessage("Location is required."),
   body("eventDate").notEmpty().withMessage("Event date is required.")

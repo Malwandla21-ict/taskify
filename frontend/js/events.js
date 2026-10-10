@@ -39,9 +39,9 @@ let selectedSection = "All";
 let editingEventId = null;
 const eventModalTitle = document.getElementById("eventModalTitle");
 const EVENT_TEXT = {
-  create: { title: `<i class="ti ti-calendar-plus" aria-hidden="true"></i> Post an Event`,
-            submit: `<i class="ti ti-send" aria-hidden="true"></i> Post Event` },
-  edit:   { title: `<i class="ti ti-edit" aria-hidden="true"></i> Edit Event`,
+  create: { title: `<i class="ti ti-building-store" aria-hidden="true"></i> Post to Campus Marketplace`,
+            submit: `<i class="ti ti-send" aria-hidden="true"></i> Post Listing` },
+  edit:   { title: `<i class="ti ti-edit" aria-hidden="true"></i> Edit Listing`,
             submit: `<i class="ti ti-device-floppy" aria-hidden="true"></i> Save Changes` }
 };
 
@@ -59,8 +59,25 @@ function toLocalDateTimeInput(iso) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
+/* Institutional categories (farm produce, surplus, lost property,
+   departmental) ask who authorised the listing. */
+const eventCategorySelect = document.getElementById("eventCategory");
+const eventAuthorityGroup = document.getElementById("eventAuthorityGroup");
+const eventAuthorityInput = document.getElementById("eventAuthority");
+
+function isInstitutionalCategory(category) {
+  return INSTITUTIONAL_EVENT_CATEGORIES.includes(category);
+}
+
+function syncAuthorityField() {
+  if (!eventAuthorityGroup) return;
+  eventAuthorityGroup.hidden = !isInstitutionalCategory(eventCategorySelect?.value);
+}
+eventCategorySelect?.addEventListener("change", syncAuthorityField);
+eventForm?.addEventListener("reset", () => setTimeout(syncAuthorityField, 0));
+
 openCreateEventButton?.addEventListener("click", () => {
-  if (!requireAuthAction("Sign in to create an event.")) return;
+  if (!requireAuthAction("Sign in to post to the marketplace.")) return;
   editingEventId = null;
   eventForm.reset();
   eventMessage.textContent = "";
@@ -76,6 +93,13 @@ function openEventEditModal(event) {
   eventMessage.textContent = "";
   document.getElementById("eventTitle").value           = event.title || "";
   fillCategorySelect(document.getElementById("eventCategory"), "event", event.category || "", document.getElementById("eventCategoryHint"));
+  /* An older event keeps its old category (no longer offered for new listings). */
+  if (LEGACY_EVENT_CATEGORIES.includes(event.category)) {
+    eventCategorySelect.insertAdjacentHTML("beforeend", `<optgroup label="Current (no longer offered)"><option value="${event.category}">${event.category}</option></optgroup>`);
+    eventCategorySelect.value = event.category;
+  }
+  if (eventAuthorityInput) eventAuthorityInput.value = event.listing_authority || "";
+  syncAuthorityField();
   document.getElementById("eventDescription").value     = event.description || "";
   document.getElementById("eventLocation").value        = event.location || "";
   document.getElementById("eventDate").value            = toLocalDateTimeInput(event.event_date);
@@ -126,7 +150,11 @@ function showEventStep(n) {
 
 function validateEventStep1() {
   if (!document.getElementById("eventTitle").value.trim() || !document.getElementById("eventCategory").value.trim()) {
-    showToast("Please complete the event title and category.", "error");
+    showToast("Please complete the title and category.", "error");
+    return false;
+  }
+  if (isInstitutionalCategory(eventCategorySelect.value) && (eventAuthorityInput?.value.trim().length || 0) < 5) {
+    showToast("Please say who authorised this listing.", "error");
     return false;
   }
   return true;
@@ -192,7 +220,7 @@ function eventCard(event) {
       <div class="market-image" style="position:relative;">
         ${event.image_urls?.length
           ? `<img src="${event.image_urls[0]}" alt="${event.title}" class="lightbox-img" data-gallery="event-${event.id}" data-full="${event.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="media-placeholder light green"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}
+          : `<div class="media-placeholder light green"><i class="ti ti-building-store" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(event)}
         ${lecturerPostedCornerBadge(event.organizer_member_type)}
       </div>
@@ -202,13 +230,14 @@ function eventCard(event) {
             <div class="market-avatar">${avatarHtml(event.organizer_name, event.organizer_profile_photo)}</div>
             <div>
               <div class="market-user-name profile-link" data-user-id="${event.organizer_id}" style="cursor:pointer;">${posterName(event.organizer_name, event.organizer_lecturer_title)}</div>
-              <div class="market-user-meta"><i class="ti ti-calendar-event" aria-hidden="true"></i> Organizer</div>
+              <div class="market-user-meta"><i class="ti ti-building-store" aria-hidden="true"></i> Posted by</div>
             </div>
           </div>
           ${sectionBadge(event.section || "General")}
         </div>
         <h3>${event.title}</h3>
         <div class="market-tags">
+          ${institutionalBadge(event)}
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${event.category}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
           <div class="market-tag"><i class="ti ti-clock" aria-hidden="true"></i> ${formatEventDate(event.event_date)}</div>
@@ -291,7 +320,7 @@ function renderEvents() {
 
   eventsContainer.innerHTML = filtered.length
     ? filtered.map(eventCard).join("")
-    : emptyState("ti-calendar-event", "No events found", "Try a different filter or post one yourself.");
+    : emptyState("ti-building-store", "Nothing here yet", "Try a different filter, or post a market day, stall or swap yourself.");
   attachEventButtonEvents(eventsContainer);
   attachProfileLinkEvents();
 }
@@ -327,7 +356,7 @@ function renderPopularCategories() {
           <i class="ti ti-tag" aria-hidden="true"></i>
           <div>
             <strong>${cat}</strong>
-            <span>${count} event${count === 1 ? "" : "s"}</span>
+            <span>${count} listing${count === 1 ? "" : "s"}</span>
           </div>
         </div>`).join("")
     : `<p class="rail-loading">No categories yet.</p>`;
@@ -395,7 +424,7 @@ function attachEventButtonEvents(scope = document) {
     if (btn.dataset.bound) return;
     btn.dataset.bound = "1";
     btn.addEventListener("click", async () => {
-      if (!confirm("Permanently delete this event?")) return;
+      if (!confirm("Permanently delete this listing?")) return;
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
       try {
@@ -489,19 +518,24 @@ eventForm?.addEventListener("submit", async e => {
       capacity:        capacityValue ? Number(capacityValue) : null,
       hasFood:         document.getElementById("eventHasFood").checked,
       hasRefreshments: document.getElementById("eventHasRefreshments").checked,
-      imageUrls
+      imageUrls,
+      listingAuthority: isInstitutionalCategory(document.getElementById("eventCategory").value)
+        ? eventAuthorityInput.value.trim() : null
     };
+    const heldForCheck = isInstitutionalCategory(payload.category);
 
     if (editingEventId) {
       await apiRequest(`/events/${editingEventId}`, "PUT", payload);
-      showToast("Event updated!");
+      showToast(heldForCheck ? "Saved. An admin will check the authorisation before it's shown again." : "Listing updated!");
       window.location.href = `./event-details.html?id=${editingEventId}`;
       return;
     }
 
-    await apiRequest("/events", "POST", payload);
+    const created = await apiRequest("/events", "POST", payload);
 
-    showToast("Event posted successfully!");
+    showToast(created?.data?.moderation_status === "pending_review"
+      ? "Sent for a check. Your listing appears once a Taskify admin approves it."
+      : "Listing posted!");
     closeModal(bookingModal, eventForm, eventMessage);
     if (eventUploader) eventUploader.reset();
     await Promise.all([loadEvents(), loadMyEvents()]);

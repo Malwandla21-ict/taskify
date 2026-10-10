@@ -1946,3 +1946,11 @@ body.dashboard-body {
 .booked-ranges { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .booked-ranges-title { width: 100%; font-size: 12px; font-weight: 700; color: var(--muted); }
 .booked-range { font-size: 12px; background: rgba(224, 58, 62, 0.08); color: var(--ump-red); border-radius: 999px; padding: 3px 10px; }
+
+/* ── Campus Marketplace ── */
+.market-tag.institutional-tag { background: rgba(0, 114, 206, 0.10); color: var(--ump-blue); font-weight: 700; }
+.institutional-note { margin-top: 14px; font-size: 12px; }
+.marketplace-guide ul { list-style: none; margin: 6px 0 8px; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.marketplace-guide li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.45; }
+.marketplace-guide li i { margin-top: 2px; color: var(--ump-blue); }
+.marketplace-guide a { color: var(--ump-blue); }

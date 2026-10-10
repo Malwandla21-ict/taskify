@@ -908,7 +908,7 @@ const REPORT_CONTEXT_LABELS = {
   equipment: "Equipment / Uniforms listing",
   equipment_booking: "Equipment rental",
   sales_item: "Item for sale",
-  event: "Event",
+  event: "Campus Marketplace listing",
   message: "Chat message"
 };
 
@@ -1076,13 +1076,37 @@ const TASKIFY_CATEGORIES = {
     General:  ["Electronics & Gadgets", "Clothing & Shoes", "Furniture & Room Items", "Kitchen & Appliances",
                "Sports & Outdoor", "Other"]
   },
+  /* Campus Marketplace (the area that used to be "Events"). Keep in sync
+     with backend/src/config/categories.js. */
   event: {
-    Academic: ["Workshop & Training", "Study Group / Revision", "Careers & Info Session",
-               "Guest Lecture / Seminar", "Other academic"],
-    General:  ["Sports & Fitness", "Society & Club Meeting", "Social & Entertainment", "Arts & Culture",
-               "Community & Outreach", "Other"]
+    Academic: ["Departmental opportunity"],
+    General:  ["Campus market day", "Student stalls & pop-ups", "Swap & exchange",
+               "University farm-produce sale", "Institutional surplus sale", "Lost-property sale or auction",
+               "Other marketplace"]
   }
 };
+
+/* Campus Marketplace categories that need a "who authorised this" note and
+   an admin check before they're shown. */
+const INSTITUTIONAL_EVENT_CATEGORIES = [
+  "University farm-produce sale", "Institutional surplus sale",
+  "Lost-property sale or auction", "Departmental opportunity"
+];
+
+/* The old general-events categories: existing events keep them until they
+   end, but they aren't offered for new listings. */
+const LEGACY_EVENT_CATEGORIES = [
+  "Workshop & Training", "Study Group / Revision", "Careers & Info Session", "Guest Lecture / Seminar",
+  "Other academic", "Sports & Fitness", "Society & Club Meeting", "Social & Entertainment", "Arts & Culture",
+  "Community & Outreach", "Other"
+];
+
+/* An approved institutional listing — reviewed by Taskify, never presented
+   as official or endorsed by the university. */
+function institutionalBadge(item) {
+  if (!item?.is_institutional) return "";
+  return `<div class="market-tag institutional-tag" title="A Taskify admin checked who authorised this listing. It is not an official university announcement."><i class="ti ti-building-bank" aria-hidden="true"></i> Reviewed institutional listing</div>`;
+}
 
 /* Icon + one-line blurb for the category buttons on the Academic and
    General pages. */
@@ -1109,7 +1133,15 @@ const CATEGORY_DETAILS = {
   "Party & Event Gear":      { icon: "ti-confetti",        blurb: "Decor and sound" },
   "Clothing & Shoes":        { icon: "ti-hanger",          blurb: "Everyday wear" },
   "Furniture & Room Items":  { icon: "ti-armchair",        blurb: "Desks, chairs, shelves" },
-  "Other":                   { icon: "ti-dots",            blurb: "Anything else" }
+  "Other":                   { icon: "ti-dots",            blurb: "Anything else" },
+  "Campus market day":       { icon: "ti-building-store",  blurb: "Market days on campus" },
+  "Student stalls & pop-ups":{ icon: "ti-tent",            blurb: "Student stalls and pop-ups" },
+  "Swap & exchange":         { icon: "ti-arrows-exchange", blurb: "Swap books, clothes and more" },
+  "University farm-produce sale": { icon: "ti-plant",      blurb: "Authorised farm-produce sales" },
+  "Institutional surplus sale":   { icon: "ti-packages",   blurb: "Authorised surplus sales" },
+  "Lost-property sale or auction":{ icon: "ti-gavel",      blurb: "Authorised lost-property sales" },
+  "Departmental opportunity":     { icon: "ti-building-bank", blurb: "Approved departmental requests" },
+  "Other marketplace":       { icon: "ti-dots",            blurb: "Other campus exchanges" }
 };
 
 /* "Academic" or "General" for a category on the list, otherwise null. */

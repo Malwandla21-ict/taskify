@@ -3,6 +3,68 @@ const notificationService = require("./notification.service");
 const { attachLatestEndorsements, attachLatestEndorsement } = require("./endorsementLookup.service");
 const contentModerationService = require("./contentModeration.service");
 const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
+const { categoriesFor, legacyCategoriesFor, INSTITUTIONAL_EVENT_CATEGORIES } = require("../config/categories");
+const MARKETPLACE = require("../config/marketplace");
+
+/*
+  Campus Marketplace (this table used to hold general "Events"). New
+  listings must use a marketplace category; old events keep their old
+  category until they end. Institutional categories (farm produce,
+  surplus, lost property, departmental) need a note of who authorised
+  them and are held for an admin check (moderation flag
+  "institutional_listing") — on every create AND edit, so an approved
+  listing can't be quietly changed into something else.
+*/
+const INSTITUTIONAL_FLAG = "institutional_listing";
+
+function checkMarketplaceCategory({ category, listingAuthority, currentCategory = null }) {
+  const cat = String(category || "").trim();
+  const isMarketplace = categoriesFor("event").includes(cat);
+  const keepsOldCategory = currentCategory != null && cat === currentCategory && legacyCategoriesFor("event").includes(cat);
+  if (!isMarketplace && !keepsOldCategory) {
+    const error = new Error("Campus Marketplace is for buying, selling and swapping on campus. Please choose one of the marketplace categories — lectures, parties, sports and club meetings don't belong here.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const institutional = INSTITUTIONAL_EVENT_CATEGORIES.includes(cat);
+  if (institutional && !MARKETPLACE.institutionalListingsEnabled) {
+    const error = new Error("Institutional listings aren't being accepted right now.");
+    error.statusCode = 403;
+    throw error;
+  }
+  const authority = String(listingAuthority || "").trim().slice(0, 300);
+  if (institutional && authority.length < 5) {
+    const error = new Error("Please say who authorised this — for example the department or office, and the person's role.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return { institutional, authority: institutional ? authority : null };
+}
+
+/* Adds the institutional flag to a content-moderation result. */
+function withInstitutionalReview(flaggedCategories, institutional) {
+  const flags = [...(flaggedCategories || [])];
+  if (institutional && !flags.includes(INSTITUTIONAL_FLAG)) flags.push(INSTITUTIONAL_FLAG);
+  return flags;
+}
+
+async function notifyInstitutionalReview({ eventId, organizerId, title, authority, edited = false }) {
+  await notificationService.notifyAllAdmins({
+    title: "Institutional Listing to Check",
+    message: `${edited ? "An edited" : "A new"} institutional Campus Marketplace listing, "${title.trim()}", needs an authorisation check before it's shown. Authorised by (as stated): "${authority}".`,
+    contextType: "event",
+    contextId: eventId,
+    email: true
+  });
+  await notificationService.createNotification({
+    userId: organizerId,
+    title: "Listing Held for an Authorisation Check",
+    message: `"${title.trim()}" is an institutional listing, so a Taskify admin checks the authorisation before it's shown. We'll let you know once it's approved.`,
+    contextType: "event",
+    contextId: eventId,
+    email: true
+  });
+}
 
 function toMysqlDatetime(value) {
   const date = new Date(value);
@@ -19,6 +81,7 @@ function toMysqlDatetime(value) {
 
 function parseImageUrls(row) {
   if (!row) return row;
+  row.is_institutional = INSTITUTIONAL_EVENT_CATEGORIES.includes(row.category);
   if (Array.isArray(row.image_urls)) return row;
   try {
     row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];
@@ -32,7 +95,7 @@ const SELECT_FIELDS = `
   e.id, e.organizer_id, e.title, e.description, e.category,
   e.section, e.location, e.event_date, e.capacity, e.status,
   e.created_at, e.image_urls, e.moderation_status,
-  e.has_food, e.has_refreshments,
+  e.has_food, e.has_refreshments, e.listing_authority,
   u.full_name AS organizer_name,
   u.profile_photo_url AS organizer_profile_photo,
   u.member_type AS organizer_member_type,
@@ -47,8 +110,9 @@ function toFlag(value) {
 
 async function createEvent({
   organizerId, title, description, category, section,
-  location, eventDate, capacity, hasFood, hasRefreshments, imageUrls = []
+  location, eventDate, capacity, hasFood, hasRefreshments, imageUrls = [], listingAuthority = null
 }) {
+  const { institutional, authority } = checkMarketplaceCategory({ category, listingAuthority });
   const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
 
   if (moderation.severe) {
@@ -71,30 +135,35 @@ async function createEvent({
     `INSERT INTO events (
        organizer_id, title, description, category, section,
        location, event_date, capacity, has_food, has_refreshments, image_urls,
-       moderation_status, moderation_flags
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       moderation_status, moderation_flags, listing_authority
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       organizerId, title.trim(), description.trim(), category.trim(),
       section || "General", location.trim(), toMysqlDatetime(eventDate),
       capacity ? Number(capacity) : null,
       toFlag(hasFood), toFlag(hasRefreshments),
       imageUrls.length ? JSON.stringify(imageUrls) : null,
-      moderation.flagged ? "pending_review" : "clean",
-      moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null
+      moderation.flagged || institutional ? "pending_review" : "clean",
+      moderation.flagged || institutional ? JSON.stringify(withInstitutionalReview(moderation.flaggedCategories, institutional)) : null,
+      authority
     ]
   );
+
+  if (institutional && !moderation.flagged) {
+    await notifyInstitutionalReview({ eventId: result.insertId, organizerId, title, authority });
+  }
 
   if (moderation.flagged) {
     await notificationService.notifyAllAdmins({
       title: "Content Flagged for Review",
-      message: `A new event, "${title.trim()}", was flagged for review (${moderation.flaggedCategories.join(", ")}).`,
+      message: `A new Campus Marketplace listing, "${title.trim()}", was flagged for review (${moderation.flaggedCategories.join(", ")}).`,
       contextType: "event",
       contextId: result.insertId,
       email: true
     });
     await notificationService.createNotification({
       userId: organizerId,
-      title: "Event Held for Review",
+      title: "Listing Held for Review",
       message: `Your event "${title.trim()}" was flagged by our moderation system and is held from public view until an admin reviews it. We'll let you know as soon as it's approved.`,
       contextType: "event",
       contextId: result.insertId,
@@ -229,10 +298,10 @@ async function cancelRsvp(eventId, userId) {
    Everyone going is told if the date/time or place changes. */
 async function updateEvent(eventId, userId, {
   title, description, category, section, location, eventDate, capacity,
-  hasFood, hasRefreshments, imageUrls = []
+  hasFood, hasRefreshments, imageUrls = [], listingAuthority = null
 }) {
   const [rows] = await pool.execute(
-    `SELECT e.id, e.organizer_id, e.title, e.status, e.location, e.moderation_status, e.moderation_flags,
+    `SELECT e.id, e.organizer_id, e.title, e.status, e.location, e.moderation_status, e.moderation_flags, e.category,
             DATE_FORMAT(e.event_date, '%Y-%m-%d %H:%i:%s') AS event_date_text,
             e.event_date < NOW() AS has_passed,
             (SELECT COUNT(*) FROM event_rsvps er WHERE er.event_id = e.id) AS rsvp_count
@@ -260,9 +329,18 @@ async function updateEvent(eventId, userId, {
     throw error;
   }
 
+  const { institutional, authority } = checkMarketplaceCategory({ category, listingAuthority, currentCategory: event.category });
   const moderation = await moderateListingEdit({
     contentType: "event", userId, title, description, imageUrls, current: event
   });
+  /* Institutional listings go back for an authorisation check on every edit. */
+  const needsInstitutionalReview = institutional && event.moderation_status !== "pending_review";
+  if (institutional) {
+    let existing = [];
+    try { existing = JSON.parse(moderation.moderationFlags || "[]"); } catch { existing = []; }
+    moderation.moderationStatus = "pending_review";
+    moderation.moderationFlags = JSON.stringify(withInstitutionalReview(existing, true));
+  }
 
   const newDate = toMysqlDatetime(eventDate);
   await pool.execute(
@@ -270,7 +348,7 @@ async function updateEvent(eventId, userId, {
      SET title = ?, description = ?, category = ?, section = ?,
          location = ?, event_date = ?, capacity = ?,
          has_food = ?, has_refreshments = ?, image_urls = ?,
-         moderation_status = ?, moderation_flags = ?
+         moderation_status = ?, moderation_flags = ?, listing_authority = ?
      WHERE id = ?`,
     [
       title.trim(), description.trim(), category.trim(),
@@ -278,10 +356,14 @@ async function updateEvent(eventId, userId, {
       capacity ? Number(capacity) : null,
       toFlag(hasFood), toFlag(hasRefreshments),
       imageUrls.length ? JSON.stringify(imageUrls) : null,
-      moderation.moderationStatus, moderation.moderationFlags,
+      moderation.moderationStatus, moderation.moderationFlags, authority,
       eventId
     ]
   );
+
+  if (needsInstitutionalReview && !moderation.newlyFlagged) {
+    await notifyInstitutionalReview({ eventId, organizerId: userId, title, authority, edited: true });
+  }
 
   if (moderation.newlyFlagged) {
     await notifyEditFlagged({
@@ -356,6 +438,7 @@ async function getEventByIdForViewing(eventId, viewerId = null, viewerRole = nul
 }
 
 module.exports = {
+  INSTITUTIONAL_FLAG,
   createEvent,
   updateEvent,
   getAllUpcomingEvents,

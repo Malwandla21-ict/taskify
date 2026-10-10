@@ -30,6 +30,29 @@ const CATEGORIES = {
     General:  ["Electronics & Gadgets", "Clothing & Shoes", "Furniture & Room Items", "Kitchen & Appliances",
                "Sports & Outdoor", "Other"]
   },
+  /* Campus Marketplace (stored in the events table — 2026-10-11). Only
+     goods, services and exchanges happening on campus; not a general
+     social calendar. The INSTITUTIONAL ones below need a "who authorised
+     this" note and an admin check before they appear. */
+  event: {
+    Academic: ["Departmental opportunity"],
+    General:  ["Campus market day", "Student stalls & pop-ups", "Swap & exchange",
+               "University farm-produce sale", "Institutional surplus sale", "Lost-property sale or auction",
+               "Other marketplace"]
+  }
+};
+
+/* Campus Marketplace categories only an authorised publisher should use —
+   held for an admin check, with the authority recorded. */
+const INSTITUTIONAL_EVENT_CATEGORIES = [
+  "University farm-produce sale", "Institutional surplus sale",
+  "Lost-property sale or auction", "Departmental opportunity"
+];
+
+/* The old general-events categories. No longer offered for new posts, but
+   existing events keep them (and can be edited without changing them)
+   until they've run their course. */
+const LEGACY_CATEGORIES = {
   event: {
     Academic: ["Workshop & Training", "Study Group / Revision", "Careers & Info Session",
                "Guest Lecture / Seminar", "Other academic"],
@@ -43,12 +66,18 @@ function categoriesFor(type) {
   return groups ? [...groups.Academic, ...groups.General] : [];
 }
 
-/* "Academic" or "General" for a valid category, otherwise null. */
+function legacyCategoriesFor(type) {
+  const groups = LEGACY_CATEGORIES[type];
+  return groups ? [...groups.Academic, ...groups.General] : [];
+}
+
+/* "Academic" or "General" for a valid (current or legacy) category, otherwise null. */
 function sectionFor(type, category) {
-  const groups = CATEGORIES[type];
-  if (!groups) return null;
-  if (groups.Academic.includes(category)) return "Academic";
-  if (groups.General.includes(category)) return "General";
+  for (const groups of [CATEGORIES[type], LEGACY_CATEGORIES[type]]) {
+    if (!groups) continue;
+    if (groups.Academic.includes(category)) return "Academic";
+    if (groups.General.includes(category)) return "General";
+  }
   return null;
 }
 
@@ -131,6 +160,9 @@ function mapLegacyCategory(type, { category, title, section }) {
 
 module.exports = {
   CATEGORIES,
+  LEGACY_CATEGORIES,
+  INSTITUTIONAL_EVENT_CATEGORIES,
+  legacyCategoriesFor,
   categoriesFor,
   sectionFor,
   applyCategorySection,

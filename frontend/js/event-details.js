@@ -35,7 +35,7 @@ async function loadEventDetails() {
     }
     renderEventDetails(eventRes.data, hasRsvped);
   } catch (err) {
-    eventDetailsContainer.innerHTML = errorState(err.message || "This event is no longer available.");
+    eventDetailsContainer.innerHTML = errorState(err.message || "This listing is no longer available.");
     showToast(err.message, "error");
   }
 }
@@ -57,17 +57,17 @@ function renderEventDetails(event, hasRsvped) {
       <div class="badge navy" style="margin-bottom:10px;"><i class="ti ti-user" aria-hidden="true"></i> Organizing</div>
       ${canEdit ? `
       <a href="./events.html?edit=${event.id}" class="secondary-button" style="margin-bottom:10px;">
-        <i class="ti ti-edit" aria-hidden="true"></i> Edit Event
+        <i class="ti ti-edit" aria-hidden="true"></i> Edit Listing
       </a>` : ""}
       <button class="secondary-button" id="deleteEventButton" style="color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
-        <i class="ti ti-trash" aria-hidden="true"></i> Delete Event
+        <i class="ti ti-trash" aria-hidden="true"></i> Delete Listing
       </button>`;
   } else if (hasRsvped) {
     actionArea = `<button class="primary-button" id="cancelRsvpButton" style="background:var(--ump-red);">
                      <i class="ti ti-x" aria-hidden="true"></i> Cancel RSVP
                    </button>`;
   } else if (isFull) {
-    actionArea = `<div class="badge red"><i class="ti ti-users" aria-hidden="true"></i> This event is full</div>`;
+    actionArea = `<div class="badge red"><i class="ti ti-users" aria-hidden="true"></i> This is full</div>`;
   } else if (event.status !== "Upcoming") {
     actionArea = statusBadge(event.status);
   } else {
@@ -80,7 +80,7 @@ function renderEventDetails(event, hasRsvped) {
     <div class="detail-layout">
       <div class="detail-main">
         <div class="detail-media">
-          ${renderImageGallery(event.image_urls, "ti-calendar-event")}
+          ${renderImageGallery(event.image_urls, "ti-building-store")}
           ${endorsementCornerBadge(event)}
           ${lecturerPostedCornerBadge(event.organizer_member_type)}
         </div>
@@ -88,23 +88,25 @@ function renderEventDetails(event, hasRsvped) {
         <h1 class="detail-title">${event.title}</h1>
         <p class="detail-description">${event.description}</p>
         <div class="market-tags" style="margin-top:18px;">
+          ${institutionalBadge(event)}
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${event.category}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
           <div class="market-tag"><i class="ti ti-clock" aria-hidden="true"></i> ${formatEventDate(event.event_date)}</div>
           ${eventFoodTags(event)}
           ${statusBadge(event.status)}
         </div>
+        ${event.is_institutional && event.listing_authority ? `<p class="pay-note institutional-note"><i class="ti ti-building-bank" aria-hidden="true"></i> Authorised by (as stated by the poster): <strong>${escapeReportText(event.listing_authority)}</strong>. A Taskify admin checked this before it was shown — it is not an official university announcement.</p>` : ""}
         ${endorsementDetailBlock(event)}
       </div>
       <div class="form-panel detail-summary">
         <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:7px;">
-          <i class="ti ti-receipt" aria-hidden="true"></i> Event Summary
+          <i class="ti ti-receipt" aria-hidden="true"></i> Summary
         </h3>
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${avatarHtml(event.organizer_name, event.organizer_profile_photo)}</div>
           <div>
             <div class="profile-link" data-user-id="${event.organizer_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${posterName(event.organizer_name, event.organizer_lecturer_title)}</div>
-            <div style="font-size:11px;color:var(--muted);">Organizer</div>
+            <div style="font-size:11px;color:var(--muted);">Posted by</div>
           </div>
         </div>
         <div style="margin-bottom:12px;">
@@ -119,7 +121,7 @@ function renderEventDetails(event, hasRsvped) {
         </div>
         ${actionArea}
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
-          <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Events
+          <i class="ti ti-arrow-left" aria-hidden="true"></i> Back to Campus Marketplace
         </button>
         ${reportTarget ? reportProblemButtonHtml() : ""}
       </div>
@@ -164,10 +166,10 @@ function renderEventDetails(event, hasRsvped) {
   });
 
   document.getElementById("deleteEventButton")?.addEventListener("click", async () => {
-    if (!confirm("Permanently delete this event?")) return;
+    if (!confirm("Permanently delete this listing?")) return;
     try {
       await apiRequest(`/events/${eventId}`, "DELETE");
-      showToast("Event deleted.");
+      showToast("Listing deleted.");
       setTimeout(() => window.location.href = "./events.html", 800);
     } catch (err) {
       showToast(err.message, "error");

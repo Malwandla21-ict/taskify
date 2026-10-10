@@ -105,7 +105,7 @@ const CONTENT_TYPE_LABELS = {
   task: "Task",
   sales_item: "Sales Listing",
   equipment: "Equipment",
-  event: "Event"
+  event: "Campus Marketplace"
 };
 
 function moderationDetailUrl(contentType, id) {
@@ -1116,7 +1116,12 @@ function getFilteredModeration() {
 
 function flaggedCategoriesCell(categories) {
   if (!categories || !categories.length) return `<span class="admin-table-muted">—</span>`;
-  const shown = categories.slice(0, 3).map(c => `<div class="badge gold" style="margin:0 4px 4px 0;">${c}</div>`).join("");
+  /* institutional_listing = a Campus Marketplace listing from an institution
+     (farm produce, surplus, lost property, departmental): open it to see who
+     the poster says authorised it, then approve or remove. */
+  const shown = categories.slice(0, 3).map(c => c === "institutional_listing"
+    ? `<div class="badge blue" style="margin:0 4px 4px 0;" title="Open the listing to see who authorised it">Institutional: check who authorised it</div>`
+    : `<div class="badge gold" style="margin:0 4px 4px 0;">${c}</div>`).join("");
   const rest = categories.length > 3 ? `<span class="admin-table-muted">+${categories.length - 3} more</span>` : "";
   return `<div style="display:flex;flex-wrap:wrap;align-items:center;">${shown}${rest}</div>`;
 }

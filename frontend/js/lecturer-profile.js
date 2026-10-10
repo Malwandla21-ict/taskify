@@ -268,7 +268,7 @@ async function selectStudent(student) {
         (tasks?.length ? `<optgroup label="Tasks">${tasks.map(t => `<option value="task:${t.id}">${t.title} (${t.status})</option>`).join("")}</optgroup>` : "") +
         (sales.length ? `<optgroup label="Sales Items">${sales.map(s => `<option value="sales_item:${s.id}">${s.title} (${s.status})</option>`).join("")}</optgroup>` : "") +
         (equipment.length ? `<optgroup label="Equipment">${equipment.map(e => `<option value="equipment:${e.id}">${e.name}</option>`).join("")}</optgroup>` : "") +
-        (events?.length ? `<optgroup label="Events">${events.map(ev => `<option value="event:${ev.id}">${ev.title} (${ev.status})</option>`).join("")}</optgroup>` : "");
+        (events?.length ? `<optgroup label="Campus Marketplace">${events.map(ev => `<option value="event:${ev.id}">${ev.title} (${ev.status})</option>`).join("")}</optgroup>` : "");
       contextListingGroup.style.display = "block";
     } else {
       contextListingGroup.style.display = "none";
