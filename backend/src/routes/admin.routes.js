@@ -2,6 +2,7 @@ const express = require("express");
 const { body, param, query } = require("express-validator");
 const adminController = require("../controllers/admin.controller");
 const { authenticate, authorize, requireTwoFactor } = require("../middleware/auth.middleware");
+const { REPORT_TYPES } = require("../services/reportExport.service");
 
 const router = express.Router();
 
@@ -13,6 +14,19 @@ const router = express.Router();
 router.use(authenticate, authorize("admin"), requireTwoFactor);
 
 router.get("/stats", adminController.getDashboardStats);
+
+/* Analytics & Reports — numbers for a date range (?from=YYYY-MM-DD&to=…),
+   and downloadable CSV reports. Every download is audit-logged. */
+const rangeRules = [
+  query("from").optional().isISO8601({ strict: true }).withMessage("from must be a date like 2026-10-01."),
+  query("to").optional().isISO8601({ strict: true }).withMessage("to must be a date like 2026-10-31.")
+];
+router.get("/analytics", rangeRules, adminController.getAnalytics);
+router.get(
+  "/exports/:type",
+  [param("type").isIn(REPORT_TYPES).withMessage(`Report must be one of: ${REPORT_TYPES.join(", ")}.`), ...rangeRules],
+  adminController.downloadExport
+);
 
 router.get(
   "/users",

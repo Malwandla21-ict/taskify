@@ -38,6 +38,9 @@
         <button type="button" class="admin-sidebar-link active" data-section="dashboard">
           <i class="ti ti-layout-dashboard" aria-hidden="true"></i> Dashboard
         </button>
+        <button type="button" class="admin-sidebar-link" data-section="analytics">
+          <i class="ti ti-chart-bar" aria-hidden="true"></i> Analytics &amp; Reports
+        </button>
         <button type="button" class="admin-sidebar-link" data-section="users">
           <i class="ti ti-users" aria-hidden="true"></i> Users
         </button>
@@ -158,6 +161,109 @@
           </div>
           <div class="admin-feed-list" id="recentActivityPreview">
             <p style="color:var(--muted);font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics & Reports -->
+      <section id="analyticsSection" class="admin-section">
+        <div class="admin-page-header">
+          <div>
+            <h1>Analytics &amp; Reports</h1>
+            <p>How Taskify is being used, compared with the period before — and downloadable reports.</p>
+          </div>
+          <div class="admin-page-header-meta analytics-controls">
+            <select id="analyticsRange" class="analytics-select" aria-label="Date range">
+              <option value="7">Last 7 days</option>
+              <option value="30" selected>Last 30 days</option>
+              <option value="90">Last 90 days</option>
+              <option value="year">This year</option>
+              <option value="custom">Custom dates…</option>
+            </select>
+            <span class="analytics-custom" id="analyticsCustom" hidden>
+              <input type="date" id="analyticsFrom" class="analytics-select" aria-label="From" />
+              <span aria-hidden="true">to</span>
+              <input type="date" id="analyticsTo" class="analytics-select" aria-label="To" />
+              <button type="button" class="admin-refresh-btn" id="analyticsApplyBtn">Apply</button>
+            </span>
+            <button type="button" class="admin-refresh-btn" id="analyticsRefreshBtn">
+              <i class="ti ti-refresh" aria-hidden="true"></i> Refresh
+            </button>
+            <button type="button" class="admin-refresh-btn" id="analyticsPrintBtn">
+              <i class="ti ti-printer" aria-hidden="true"></i> Print / Save as PDF
+            </button>
+          </div>
+        </div>
+
+        <p class="analytics-range-line" id="analyticsRangeLine"></p>
+
+        <div class="admin-stat-cards-row" id="analyticsKpis">
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading analytics…</h3></div>
+        </div>
+
+        <div class="admin-panels-grid">
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3><i class="ti ti-user-plus" aria-hidden="true"></i> New sign-ups</h3></div>
+            <div class="analytics-chart"><canvas id="chartSignups" role="img" aria-label="New sign-ups over time"></canvas></div>
+            <div class="analytics-chips" id="signupsByType"></div>
+          </div>
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3><i class="ti ti-list-details" aria-hidden="true"></i> New listings</h3></div>
+            <div class="analytics-chart"><canvas id="chartListings" role="img" aria-label="New listings by type over time"></canvas></div>
+          </div>
+        </div>
+
+        <div class="admin-panels-grid">
+          <div class="admin-panel">
+            <div class="admin-panel-header">
+              <h3><i class="ti ti-cash" aria-hidden="true"></i> Money moved</h3>
+              <span class="analytics-demo-tag">Demo payments</span>
+            </div>
+            <div class="analytics-chart"><canvas id="chartMoney" role="img" aria-label="Demo money released over time"></canvas></div>
+            <div class="analytics-list" id="moneyList"></div>
+          </div>
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3><i class="ti ti-filter" aria-hidden="true"></i> How far things got</h3></div>
+            <p class="analytics-hint">Of everything created in this period.</p>
+            <div id="analyticsFunnels"></div>
+          </div>
+        </div>
+
+        <div class="admin-panels-grid">
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3><i class="ti ti-clock" aria-hidden="true"></i> Speed</h3></div>
+            <div class="analytics-list" id="speedList"></div>
+          </div>
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3><i class="ti ti-shield-check" aria-hidden="true"></i> Trust &amp; safety</h3></div>
+            <div class="analytics-list" id="trustList"></div>
+          </div>
+        </div>
+
+        <div class="admin-panels-grid">
+          <div class="admin-panel">
+            <div class="admin-panel-header"><h3><i class="ti ti-category" aria-hidden="true"></i> Top categories</h3></div>
+            <div id="topCategories"></div>
+          </div>
+          <div class="admin-panel analytics-no-print">
+            <div class="admin-panel-header"><h3><i class="ti ti-file-download" aria-hidden="true"></i> Download a report</h3></div>
+            <p class="analytics-hint">A spreadsheet (CSV) for the same dates as above. Opens in Excel or Google Sheets.</p>
+            <label class="analytics-label" for="reportType">Report</label>
+            <select id="reportType" class="analytics-select analytics-select-wide">
+              <option value="transactions">Transactions — tasks, sales and rentals with amounts and status</option>
+              <option value="users">Users — sign-ups, account type and account status</option>
+              <option value="reports">Reports &amp; disputes — what was reported and how it was settled</option>
+              <option value="moderation">Moderation — flagged and blocked content</option>
+              <option value="audit">Admin audit log — every admin action</option>
+            </select>
+            <button type="button" class="btn btn-primary analytics-download-btn" id="reportDownloadBtn">
+              <i class="ti ti-download" aria-hidden="true"></i> Download CSV
+            </button>
+            <p class="analytics-privacy">
+              <i class="ti ti-lock" aria-hidden="true"></i>
+              Reports show names and IDs only — no email addresses, phone numbers or handover codes.
+              Every download is recorded in the Audit Log.
+            </p>
           </div>
         </div>
       </section>
@@ -424,5 +530,7 @@
 <script src="./js/helpers.js"></script>
 <script src="./js/navbar.js"></script>
 <script src="./js/admin.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="./js/admin-analytics.js"></script>
 </body>
 </html>

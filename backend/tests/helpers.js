@@ -133,4 +133,9 @@ async function concurrently(times, fn) {
   return Promise.all(Array.from({ length: times }, () => fn()));
 }
 
-module.exports = { start, stop, api, query, createUser, makeTask, makeSale, makeEquipment, apply, assignTask, concurrently, day, pool };
+/* Raw request (for non-JSON responses such as CSV downloads). */
+async function rawFetch(user, url) {
+  return fetch(baseUrl + url, { headers: user ? { Authorization: `Bearer ${user.token}` } : {} });
+}
+
+module.exports = { start, stop, api, rawFetch, query, createUser, makeTask, makeSale, makeEquipment, apply, assignTask, concurrently, day, pool };

@@ -3,6 +3,8 @@ const adminService = require("../services/admin.service");
 const auditLogService = require("../services/auditlog.service");
 const moderationService = require("../services/moderation.service");
 const taskService = require("../services/task.service");
+const analyticsService = require("../services/analytics.service");
+const reportExportService = require("../services/reportExport.service");
 
 async function getDashboardStats(req, res, next) {
   try {
@@ -28,6 +30,34 @@ async function promoteUser(req, res, next) {
 
     const user = await adminService.promoteUserToAdmin(Number(req.params.userId), req.user.id);
     return res.status(200).json({ success: true, message: "User promoted to admin.", data: user });
+  } catch (error) { next(error); }
+}
+
+async function getAnalytics(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+
+    const data = await analyticsService.getAnalytics({ from: req.query.from, to: req.query.to });
+    return res.status(200).json({ success: true, message: "Analytics fetched successfully.", data });
+  } catch (error) { next(error); }
+}
+
+/* Sends the CSV as a file download (audit-logged in reportExport.service). */
+async function downloadExport(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+
+    const file = await reportExportService.buildExport(req.params.type, { from: req.query.from, to: req.query.to }, req.user.id);
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${file.filename}"`);
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("X-Row-Count", String(file.rowCount));
+    /* The site and the API are on different domains, so the browser only
+       lets the page read these two headers if we say so. */
+    res.setHeader("Access-Control-Expose-Headers", "Content-Disposition, X-Row-Count");
+    return res.status(200).send(file.csv);
   } catch (error) { next(error); }
 }
 
@@ -155,6 +185,8 @@ async function getAuditLogs(req, res, next) {
 module.exports = {
   getDashboardStats,
   listUsers,
+  getAnalytics,
+  downloadExport,
   resolveTaskDispute,
   verifyLecturer,
   unverifyLecturer,
