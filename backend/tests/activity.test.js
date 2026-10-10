@@ -1,6 +1,6 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
-const { start, stop, api, createUser, makeTask, makeSale, makeEquipment, day } = require("./helpers");
+const { start, stop, api, createUser, makeTask, makeSale, makeEquipment, assignTask, day } = require("./helpers");
 
 before(start);
 after(stop);
@@ -23,7 +23,7 @@ test("a task shows the right next step to each person at every stage", async () 
   const task = await makeTask(poster);
   const key = `task-${task.id}`;
 
-  await api(worker, "PATCH", `/tasks/${task.id}/accept`);
+  await assignTask(poster, worker, task);
   let w = await activity(worker), p = await activity(poster);
   assert.equal(find(w.needsYou, key).action.label, "Start task");
   assert.ok(find(p.waitingOnOthers, key), "poster waits for the worker to start");

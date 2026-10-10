@@ -120,12 +120,21 @@
     return `<p class="offer-meta">${waiting} · ${timeLeft(offer.expires_in_seconds)} · ${counters}</p>`;
   }
 
+  /* On a task, an untouched offer at the listed price is an application
+     ("Apply for this task") — the poster chooses who does each task. */
+  function isApplication(offer) {
+    const listed = Number(state.data?.rules?.listed_price);
+    return offer.context_type === "task" && offer.history.length <= 1 && Math.abs(Number(offer.amount) - listed) < 0.005;
+  }
+
   function offerCard(offer) {
     const isOwnerView = offer.my_role === "owner";
-    const who = isOwnerView ? offer.offerer.name : "Your offer";
+    const application = isApplication(offer);
+    const who = isOwnerView ? offer.offerer.name : (application ? "Your application" : "Your offer");
+    const acceptLabel = application && isOwnerView ? `Choose ${esc(offer.offerer.name.split(" ")[0])}` : `Accept ${formatRand(offer.amount)}`;
     const actions = [
       offer.can_accept && `<button type="button" class="primary-button offer-btn" data-offer-action="accept" data-offer-id="${offer.id}">
-          <i class="ti ti-check" aria-hidden="true"></i> Accept ${formatRand(offer.amount)}</button>`,
+          <i class="ti ti-check" aria-hidden="true"></i> ${acceptLabel}</button>`,
       offer.can_counter && `<button type="button" class="secondary-button offer-btn" data-offer-action="counter" data-offer-id="${offer.id}">
           <i class="ti ti-arrows-exchange" aria-hidden="true"></i> Counter</button>`,
       offer.can_decline && `<button type="button" class="secondary-button offer-btn danger" data-offer-action="decline" data-offer-id="${offer.id}">
@@ -140,8 +149,9 @@
           ${isOwnerView ? `<div class="market-avatar offer-avatar">${avatarHtml(offer.offerer.name, offer.offerer.photo)}</div>` : ""}
           <div class="offer-card-who">
             <strong>${esc(who)}</strong>
-            <span>${new Date(offer.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}</span>
+            <span>${new Date(offer.created_at).toLocaleDateString("en-ZA", { day: "numeric", month: "short" })}${application ? " · applied at the listed price" : ""}</span>
           </div>
+          ${application ? `<span class="badge blue">Application</span>` : ""}
           ${statusBadge(offer.status)}
         </header>
         <div class="offer-trail" aria-label="Amounts proposed so far">${amountTrail(offer)}</div>
@@ -161,18 +171,23 @@
     if (!isOwner && !offers.length) { sectionEl.innerHTML = ""; return; }
 
     const waitingOnMe = offers.filter(o => o.can_accept).length;
+    const isTask = contextType === "task";
     const intro = isOwner
       ? (offers.length
-          ? `Offers can be between ${formatRand(rules.min_amount)} and ${formatRand(rules.max_amount)}. ${contextType === "task"
-              ? "Accepting assigns the task at that price and holds your payment (demo)."
-              : "Accepting reserves the item and holds the buyer's payment (demo)."}`
-          : `No offers yet. Students can offer between ${formatRand(rules.min_amount)} and ${formatRand(rules.max_amount)}.`)
+          ? (isTask
+              ? `Students apply at your price or offer a different one (${formatRand(rules.min_amount)} to ${formatRand(rules.max_amount)}). Choosing someone assigns the task to them at that price and holds your payment (demo); everyone else is told it's taken.`
+              : `Offers can be between ${formatRand(rules.min_amount)} and ${formatRand(rules.max_amount)}. Accepting reserves the item and holds the buyer's payment (demo).`)
+          : (isTask
+              ? `No applicants yet. Students apply at your price, or offer between ${formatRand(rules.min_amount)} and ${formatRand(rules.max_amount)}. You choose who does it.`
+              : `No offers yet. Students can offer between ${formatRand(rules.min_amount)} and ${formatRand(rules.max_amount)}.`))
       : `Only you and the ${words.owner} can see this.`;
+    const myApplication = !isOwner && offers.some(isApplication);
+    const heading = isOwner ? (isTask ? "Applicants &amp; offers" : "Offers") : (myApplication ? "Your application" : "Your offer");
 
     sectionEl.innerHTML = `
       <section class="offers-panel" aria-labelledby="offersPanelTitle">
         <div class="offers-panel-head">
-          <h3 id="offersPanelTitle"><i class="ti ti-tag" aria-hidden="true"></i> ${isOwner ? "Offers" : "Your offer"}</h3>
+          <h3 id="offersPanelTitle"><i class="ti ti-${isTask && isOwner ? "users" : "tag"}" aria-hidden="true"></i> ${heading}</h3>
           ${waitingOnMe ? `<span class="badge gold">${waitingOnMe} waiting for you</span>` : ""}
           <span class="badge gold offers-demo-chip">Demo</span>
         </div>
@@ -193,20 +208,28 @@
   }
 
   function refreshMakeOfferButton() {
-    const btn = state.makeOfferButton;
-    if (!btn) return;
     const rules = state.data?.rules;
     const myOpen = state.data?.offers?.find(o => o.status === "Pending" && o.my_role === "offerer");
+
+    /* "Apply for this task" — hidden once you have an open application or
+       offer (the panel shows it instead), or when you can't apply. */
+    const applyBtn = state.applyButton;
+    if (applyBtn) applyBtn.hidden = !!myOpen || (rules && !rules.can_make_offer);
+
+    const btn = state.makeOfferButton;
+    if (!btn) return;
     btn.hidden = false;
     btn.disabled = false;
     if (myOpen) {
       btn.innerHTML = myOpen.can_accept
         ? `<i class="ti ti-arrows-exchange" aria-hidden="true"></i> Reply to counter-offer`
-        : `<i class="ti ti-tag" aria-hidden="true"></i> View your offer`;
+        : `<i class="ti ti-tag" aria-hidden="true"></i> ${isApplication(myOpen) ? "View your application" : "View your offer"}`;
     } else if (rules && !rules.can_make_offer) {
       btn.hidden = true;
     } else {
-      btn.innerHTML = `<i class="ti ti-tag" aria-hidden="true"></i> Make an offer`;
+      btn.innerHTML = state.applyButton
+        ? `<i class="ti ti-tag" aria-hidden="true"></i> Offer a different price`
+        : `<i class="ti ti-tag" aria-hidden="true"></i> Make an offer`;
     }
   }
 
@@ -238,16 +261,23 @@
           ? `If the buyer accepts, the item is reserved for them and their payment is held by Taskify.`
           : `If the seller accepts, your payment (plus the ${rules.protection_fee_percent}% protection fee) is held by Taskify straight away and you get a handover code.`);
 
-    document.getElementById("offerModalTitle").textContent = mode === "counter" ? "Counter-offer" : "Make an offer";
+    /* "apply" = an offer at exactly the listed price (tasks only): the
+       amount is fixed, the student just adds an optional note. */
+    const applying = mode === "apply";
+    document.getElementById("offerModalTitle").textContent =
+      applying ? "Apply for this task" : mode === "counter" ? "Counter-offer" : "Make an offer";
     document.getElementById("offerAmountLabel").textContent = mode === "counter" ? "Your counter-offer (R)" : "Your offer (R)";
-    document.getElementById("offerModalIntro").innerHTML = `
+    document.getElementById("offerModalIntro").innerHTML = applying
+      ? `<p class="pay-note">You're applying to do this task at the listed price of <strong>${formatRand(rules.listed_price)}</strong>. The poster chooses who does it from everyone who applies. If they choose you, the task is yours and their payment is held by Taskify (demo). Want a different price? Cancel and use <strong>Offer a different price</strong> instead.</p>`
+      : `
       ${demoPaymentBanner("No real money moves — agreeing a price here simulates the payment being held.")}
       <p class="pay-note">${mode === "counter"
         ? `They proposed <strong>${formatRand(offer.amount)}</strong>. ${offer.rounds_left === 1 ? "This is the last counter-offer allowed." : `${offer.rounds_left} counter-offers left.`}`
         : `Listed at <strong>${formatRand(rules.listed_price)}</strong>.`} ${consequence}</p>`;
 
     const amountInput = document.getElementById("offerAmountInput");
-    amountInput.value = "";
+    amountInput.closest(".form-group").hidden = applying;
+    amountInput.value = applying ? rules.listed_price : "";
     amountInput.min = rules.min_amount;
     amountInput.max = rules.max_amount;
     document.getElementById("offerAmountHint").textContent =
@@ -265,7 +295,8 @@
     amountInput.oninput = () => { preview.innerHTML = buyerPays ? paymentPreview(Number(amountInput.value)) : ""; };
 
     const submit = document.getElementById("submitOfferButton");
-    submit.querySelector("span").textContent = mode === "counter" ? "Send counter" : "Send offer";
+    submit.querySelector("span").textContent = applying ? "Send application" : mode === "counter" ? "Send counter" : "Send offer";
+    if (applying) document.getElementById("offerMessageInput").placeholder = "Optional: why you're a good fit, or when you can do it";
 
     document.getElementById("offerForm").onsubmit = async (e) => {
       e.preventDefault();
@@ -289,7 +320,7 @@
           showToast("Counter-offer sent.");
         } else {
           await apiRequest("/offers", "POST", { contextType: state.contextType, contextId: Number(state.contextId), amount, message });
-          showToast(`Offer sent to the ${words.owner}.`);
+          showToast(applying ? "Application sent. The poster will choose who does it." : `Offer sent to the ${words.owner}.`);
         }
         closeModal(document.getElementById("offerModal"));
         await loadOffers();
@@ -304,7 +335,7 @@
     };
 
     openModal(document.getElementById("offerModal"));
-    setTimeout(() => amountInput.focus(), 50);
+    setTimeout(() => (applying ? messageInput : amountInput).focus(), 50);
   }
 
   /* ── Accept (shows what money is held before it happens) ── */
@@ -318,12 +349,14 @@
     let title, body, buttonText, heldMessage;
 
     if (isTask && role === "owner") {
-      title = "Accept & hold payment";
-      buttonText = "Accept & pay";
-      heldMessage = `Offer accepted. ${formatRand(offer.amount)} is held until you confirm the work is done.`;
+      title = isApplication(offer) ? `Choose ${offer.offerer.name}?` : "Accept & hold payment";
+      buttonText = isApplication(offer) ? "Choose & pay" : "Accept & pay";
+      heldMessage = isApplication(offer)
+        ? `${offer.offerer.name} is doing your task. ${formatRand(offer.amount)} is held until you confirm the work is done.`
+        : `Offer accepted. ${formatRand(offer.amount)} is held until you confirm the work is done.`;
       body = `${demoPaymentBanner("No real payment gateway is connected. This simulates your payment being held in escrow until the task is done and you confirm it.")}
         <div class="money-breakdown">${moneyRow("Agreed price — held now", offer.amount, { strong: true })}</div>
-        <p class="pay-note">The task is assigned to <strong>${esc(offer.offerer.name)}</strong> and every other offer is closed.</p>`;
+        <p class="pay-note">The task is assigned to <strong>${esc(offer.offerer.name)}</strong>, and everyone else who applied or made an offer is told it's taken.</p>`;
     } else if (isTask) {
       title = `Accept ${formatRand(offer.amount)}?`;
       buttonText = "Accept offer";
@@ -406,6 +439,16 @@
   window.initOffers = function initOffers(options) {
     state = { ...options, data: null };
     ensureModals();
+
+    if (state.applyButton) {
+      state.applyButton.addEventListener("click", () => {
+        if (!requireAuthAction("Sign in to apply for this task.")) return;
+        const myOpen = state.data?.offers?.find(o => o.status === "Pending" && o.my_role === "offerer");
+        if (myOpen) { state.sectionEl?.scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+        if (!state.data?.rules) { showToast("Applications couldn't be loaded. Please refresh the page.", "error"); return; }
+        openOfferForm({ mode: "apply" });
+      });
+    }
 
     if (state.makeOfferButton) {
       state.makeOfferButton.addEventListener("click", () => {

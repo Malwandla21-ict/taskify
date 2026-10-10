@@ -1,6 +1,6 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
-const { start, stop, api, query, createUser, makeTask, concurrently } = require("./helpers");
+const { start, stop, api, query, createUser, makeTask, apply, assignTask, concurrently } = require("./helpers");
 const { sendTaskReviewReminders } = require("../src/jobs/scheduler");
 
 let admin, poster, worker, outsider;
@@ -24,7 +24,7 @@ const countNotices = async (userId, taskId, title) => Number((await query(
 /* A task the worker has finished and the poster now has to review. */
 async function doneTask() {
   const task = await makeTask(poster);
-  await api(worker, "PATCH", `/tasks/${task.id}/accept`);
+  await assignTask(poster, worker, task);
   await api(worker, "PATCH", `/tasks/${task.id}/status`, { status: "In Progress" });
   await api(worker, "PATCH", `/tasks/${task.id}/status`, { status: "Awaiting Confirmation" });
   return task;
@@ -33,7 +33,7 @@ const dispute = (who, id, body = { reason }) => api(who, "POST", `/tasks/${id}/d
 
 test("only the poster can report a problem, and only once the work is marked done", async () => {
   const task = await makeTask(poster);
-  await api(worker, "PATCH", `/tasks/${task.id}/accept`);
+  await assignTask(poster, worker, task);
   assert.equal((await dispute(poster, task.id)).status, 400, "too early: the worker hasn't finished");
 
   await api(worker, "PATCH", `/tasks/${task.id}/status`, { status: "In Progress" });

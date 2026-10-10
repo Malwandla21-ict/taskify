@@ -38,8 +38,11 @@ function renderTaskDetails(task) {
 
   let primaryAction;
   if (!isOwn && task.status === "Posted") {
-    primaryAction = `<button class="primary-button" id="acceptTaskButton" data-task-id="${task.id}" data-task-price="${task.price}">
-                        <i class="ti ti-check" aria-hidden="true"></i> Accept Task
+    /* The poster chooses who does each task: students apply (an offer at
+       the listed price, see js/offers.js) and the poster picks one. Starts
+       hidden for signed-in users until offers.js knows they can apply. */
+    primaryAction = `<button class="primary-button" id="applyForTaskButton"${currentUser ? " hidden" : ""}>
+                        <i class="ti ti-hand-finger" aria-hidden="true"></i> Apply for this Task
                       </button>`;
   } else if (task.status === "Accepted" && isAcceptedByMe) {
     primaryAction = `<button class="primary-button" id="startTaskButton" data-task-id="${task.id}">
@@ -189,6 +192,7 @@ function renderTaskDetails(task) {
       listing: task,
       isOwner: isOwn,
       sectionEl: document.getElementById("offersSection"),
+      applyButton: document.getElementById("applyForTaskButton"),
       makeOfferButton: document.getElementById("makeOfferButton"),
       onListingChanged: loadTaskDetails
     });
@@ -256,55 +260,17 @@ function attachTaskActionEvents() {
     openTaskProblemModal();
   }
 
-  const accept   = document.getElementById("acceptTaskButton");
   const start    = document.getElementById("startTaskButton");
   const complete = document.getElementById("completeTaskButton");
   const confirmBtn = document.getElementById("confirmCompletionButton");
 
-  if (accept)   accept.addEventListener("click",   () => { if (!requireAuthAction("Sign in to accept this task.")) return; openPaymentSimulationModal(accept); });
-  if (start)    start.addEventListener("click",    () => updateTask(start,    `/tasks/${start.dataset.taskId}/status`,    "PATCH", { status: "In Progress" },         "Task started!",   "Starting…"));
+  if (start)   start.addEventListener("click",    () => updateTask(start,    `/tasks/${start.dataset.taskId}/status`,    "PATCH", { status: "In Progress" },         "Task started!",   "Starting…"));
   if (complete) complete.addEventListener("click", () => updateTask(complete, `/tasks/${complete.dataset.taskId}/status`, "PATCH", { status: "Awaiting Confirmation" },"Marked as done — awaiting confirmation.", "Submitting…"));
   if (confirmBtn) confirmBtn.addEventListener("click", () => {
     if (!window.confirm("Confirm this task is complete? This releases payment to the worker.")) return;
     updateTask(confirmBtn, `/tasks/${confirmBtn.dataset.taskId}/confirm-completion`, "PATCH", null, "Task completed and payment released!", "Confirming…",
       () => showPaymentMoment("released", `Task completed. ${formatRand(confirmBtn.dataset.taskPrice)} released to the worker.`));
   });
-}
-
-/* ── Demo payment simulation ──
-   There's no real payment gateway wired up yet, so accepting a task (which
-   the backend already marks as "payment held") is fronted by a clearly
-   labeled demo step rather than silently flipping the payment status with
-   no visible moment for it. Deliberately no card-entry fields — this can
-   be publicly reachable, and a form that invites someone to type a real
-   card number for a payment that doesn't exist is the wrong shape even as
-   a demo. */
-const paymentModal          = document.getElementById("paymentModal");
-const paymentModalAmount    = document.getElementById("paymentModalAmount");
-const cancelPaymentModalBtn = document.getElementById("cancelPaymentModal");
-const simulatePaymentButton = document.getElementById("simulatePaymentButton");
-
-cancelPaymentModalBtn?.addEventListener("click", () => closeModal(paymentModal));
-document.getElementById("overlay")?.addEventListener("click", () => closeModal(paymentModal));
-
-function openPaymentSimulationModal(acceptBtn) {
-  if (paymentModalAmount) paymentModalAmount.textContent = `R${acceptBtn.dataset.taskPrice}`;
-  openModal(paymentModal);
-
-  if (simulatePaymentButton) {
-    simulatePaymentButton.onclick = () => {
-      closeModal(paymentModal);
-      updateTask(
-        acceptBtn,
-        `/tasks/${acceptBtn.dataset.taskId}/accept`,
-        "PATCH",
-        null,
-        "Task accepted! Payment held in escrow (demo).",
-        "Accepting…",
-        () => showPaymentMoment("held", `Task accepted. ${formatRand(acceptBtn.dataset.taskPrice)} is held until the poster confirms the work is done.`)
-      );
-    };
-  }
 }
 
 function attachOwnerActionEvents() {
