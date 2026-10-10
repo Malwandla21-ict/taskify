@@ -66,7 +66,7 @@ function taskCard(task) {
           : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
         ${task.urgent ? `<div class="urgent-badge"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${endorsementCornerBadge(task, { shiftDown: task.urgent })}
-        ${lecturerPostedCornerBadge(task.created_by_member_type)}
+        ${lecturerPostedCornerBadge(task.created_by_member_type, task.created_by_lecturer_verified)}
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${task.id}" aria-label="Save task">
           <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
         </button>
@@ -106,7 +106,7 @@ function equipmentCard(item) {
           ? `<img src="${imageUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
-        ${lecturerPostedCornerBadge(item.owner_member_type)}
+        ${lecturerPostedCornerBadge(item.owner_member_type, item.owner_lecturer_verified)}
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${item.id}" aria-label="Save equipment">
           <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
         </button>
@@ -145,7 +145,7 @@ function saleCard(item) {
           ? `<img src="${imageUrl}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
-        ${lecturerPostedCornerBadge(item.seller_member_type)}
+        ${lecturerPostedCornerBadge(item.seller_member_type, item.seller_lecturer_verified)}
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${item.id}" aria-label="Save item">
           <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
         </button>

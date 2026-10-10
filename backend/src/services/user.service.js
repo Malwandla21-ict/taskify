@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const FEATURES = require("../config/features");
 const lecturerService = require("./lecturer.service");
 
 function parseJsonArray(value) {
@@ -112,7 +113,11 @@ async function getRecentActivity(userId, memberType) {
     .slice(0, 8);
 }
 
-async function getUserProfile(userId) {
+/* viewer: who is asking. Contact details (email, phone number, student
+   number) are private: only the person themselves and admins get them.
+   Internal callers that return the user their OWN profile pass self: true. */
+async function getUserProfile(userId, { viewerId = null, viewerRole = null, self = false } = {}) {
+  const canSeeContact = self || (viewerId != null && Number(viewerId) === Number(userId)) || viewerRole === "admin";
   const [userRows] = await pool.execute(
     `
       SELECT
@@ -120,7 +125,7 @@ async function getUserProfile(userId) {
         faculty, academic_year, profile_photo_url AS profilePhoto,
         role, rating_average, total_reviews, created_at,
         bio, skills, services, lecturer_title, years_experience,
-        office_location, consultation_mode, availability_note, is_verified
+        office_location, consultation_mode, availability_note, is_verified, lecturer_verified
       FROM users
       WHERE id = ?
       LIMIT 1
@@ -158,15 +163,13 @@ async function getUserProfile(userId) {
   const isLecturer = user.member_type === "Lecturer";
 
   const lecturerStats = isLecturer ? await lecturerService.getLecturerStats(userId) : null;
-  const endorsementsReceived = !isLecturer ? await lecturerService.getEndorsementsReceived(userId) : [];
+  const endorsementsReceived = !isLecturer && FEATURES.endorsements ? await lecturerService.getEndorsementsReceived(userId) : [];
 
   return {
     id: user.id,
     full_name: user.full_name,
-    student_number: user.student_number,
     member_type: user.member_type,
-    email: user.email,
-    phone_number: user.phone_number,
+    ...(canSeeContact ? { student_number: user.student_number, email: user.email, phone_number: user.phone_number } : {}),
     faculty: user.faculty,
     academic_year: user.academic_year,
     profilePhoto: user.profilePhoto,
@@ -185,7 +188,10 @@ async function getUserProfile(userId) {
     services: parseJsonArray(user.services),
     availability_note: user.availability_note,
 
-    lecturer_title: user.lecturer_title,
+    /* A lecturer's title and badge are only shown to others once an admin
+       has verified the account; they always see their own. */
+    lecturer_verified: !!user.lecturer_verified,
+    lecturer_title: canSeeContact || user.lecturer_verified ? user.lecturer_title : null,
     years_experience: user.years_experience,
     office_location: user.office_location,
     consultation_mode: user.consultation_mode,
@@ -232,7 +238,7 @@ async function updateProfileDetails(userId, {
     await pool.execute(`UPDATE users SET ${fields.join(", ")} WHERE id = ?`, values);
   }
 
-  return getUserProfile(userId);
+  return getUserProfile(userId, { self: true });
 }
 
 /* Marks the first-login onboarding modal as seen, permanently, so it never

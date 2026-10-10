@@ -127,7 +127,7 @@ function renderTaskDetails(task) {
         <div class="detail-media">
           ${renderImageGallery(task.image_urls, "ti-clipboard-list")}
           ${endorsementCornerBadge(task)}
-          ${lecturerPostedCornerBadge(task.created_by_member_type)}
+          ${lecturerPostedCornerBadge(task.created_by_member_type, task.created_by_lecturer_verified)}
         </div>
         ${task.urgent ? `<div class="urgent-badge" style="display:inline-flex;margin-bottom:12px;"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${sectionBadge(task.section || "General")}

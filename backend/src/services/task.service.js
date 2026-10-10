@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const FEATURES = require("../config/features");
 const notificationService = require("./notification.service");
 const contentModerationService = require("./contentModeration.service");
 const { moderateListingEdit, notifyEditFlagged } = require("./listingEdit.service");
@@ -37,11 +38,13 @@ const TASK_SELECT_FIELDS = `
   u.full_name AS created_by_name,
   u.profile_photo_url AS created_by_profile_photo,
   u.member_type AS created_by_member_type,
-  u.lecturer_title AS created_by_lecturer_title,
+  IF(u.lecturer_verified = 1, u.lecturer_title, NULL) AS created_by_lecturer_title,
+  u.lecturer_verified AS created_by_lecturer_verified,
   w.full_name AS accepted_by_name,
   w.profile_photo_url AS accepted_by_profile_photo,
   w.member_type AS accepted_by_member_type,
-  w.lecturer_title AS accepted_by_lecturer_title,
+  IF(w.lecturer_verified = 1, w.lecturer_title, NULL) AS accepted_by_lecturer_title,
+  w.lecturer_verified AS accepted_by_lecturer_verified,
   p.status AS payment_status,
   tle.endorsement_type,
   tle.message AS endorsement_message,
@@ -51,8 +54,13 @@ const TASK_SELECT_FIELDS = `
   endlect.profile_photo_url AS endorsed_by_lecturer_photo
 `;
 
+const ENDORSEMENT_FIELDS = ["endorsement_type", "endorsement_message", "endorsed_by_lecturer_id",
+  "endorsed_by_lecturer_name", "endorsed_by_lecturer_title", "endorsed_by_lecturer_photo"];
+
 function parseImageUrls(row) {
   if (!row) return row;
+  /* Endorsements switched off (config/features.js): don't send them. */
+  if (!FEATURES.endorsements) for (const field of ENDORSEMENT_FIELDS) delete row[field];
   if (Array.isArray(row.image_urls)) return row;
   try {
     row.image_urls = row.image_urls ? JSON.parse(row.image_urls) : [];

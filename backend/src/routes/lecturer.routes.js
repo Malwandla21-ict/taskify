@@ -2,30 +2,35 @@ const express = require("express");
 const { body, param } = require("express-validator");
 const lecturerController = require("../controllers/lecturer.controller");
 const { authenticate, requireLecturer } = require("../middleware/auth.middleware");
+const { requireFeature } = require("../middleware/feature.middleware");
+
+/* Everything to do with endorsements is behind the endorsements switch
+   (config/features.js, off by default). */
+const endorsementsOn = requireFeature("endorsements");
 
 const router = express.Router();
 
-router.get("/endorsed-students", authenticate, lecturerController.getEndorsedStudents);
+router.get("/endorsed-students", authenticate, endorsementsOn, lecturerController.getEndorsedStudents);
 router.get(
   "/endorsements/received/:userId",
-  authenticate,
+  authenticate, endorsementsOn,
   [ param("userId").isInt({ min: 1 }) ],
   lecturerController.getEndorsementsReceived
 );
 
-router.get("/search-students", authenticate, requireLecturer, lecturerController.searchStudents);
+router.get("/search-students", authenticate, endorsementsOn, requireLecturer, lecturerController.searchStudents);
 router.get(
   "/students/:userId/listings",
-  authenticate, requireLecturer,
+  authenticate, endorsementsOn, requireLecturer,
   [ param("userId").isInt({ min: 1 }) ],
   lecturerController.getStudentListings
 );
-router.get("/endorsements/given", authenticate, requireLecturer, lecturerController.getEndorsementsGiven);
+router.get("/endorsements/given", authenticate, endorsementsOn, requireLecturer, lecturerController.getEndorsementsGiven);
 router.get("/stats", authenticate, requireLecturer, lecturerController.getStats);
 
 router.post(
   "/endorsements",
-  authenticate, requireLecturer,
+  authenticate, endorsementsOn, requireLecturer,
   [
     body("endorsedUserId").isInt({ min: 1 }).withMessage("A student must be selected."),
     body("endorsementType").isIn(["Tutoring", "Toolkit", "General"]).withMessage("Invalid endorsement type."),
@@ -38,7 +43,7 @@ router.post(
 
 router.delete(
   "/endorsements/:id",
-  authenticate, requireLecturer,
+  authenticate, endorsementsOn, requireLecturer,
   [ param("id").isInt({ min: 1 }) ],
   lecturerController.revokeEndorsement
 );

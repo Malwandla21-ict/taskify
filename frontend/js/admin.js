@@ -31,6 +31,7 @@ function switchSection(sectionKey) {
      page load doesn't have to fetch everything up front. */
   if (sectionKey === "allowlist" && !allowlistLoaded) loadAllowlist();
   if (sectionKey === "analytics" && typeof loadAnalyticsOnce === "function") loadAnalyticsOnce();
+  if (sectionKey === "feedback") loadFeedback();
 
   /* On mobile the sidebar is a slide-in panel — picking a section should
      close it, same as any mobile nav drawer. No-op on desktop since it's
@@ -417,11 +418,63 @@ async function loadRecentActivityPreview() {
 }
 
 /* ═══════════════════════════════════════════
+   FEEDBACK ("Help shape Taskify")
+═══════════════════════════════════════════ */
+async function loadFeedback() {
+  const body = document.getElementById("feedbackTableBody");
+  const status = document.getElementById("feedbackStatusFilter")?.value || "";
+  body.innerHTML = `<tr><td colspan="6"><p class="admin-table-muted"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p></td></tr>`;
+  try {
+    const res = await apiRequest(`/admin/feedback${status ? `?status=${status}` : ""}`);
+    const rows = res.data || [];
+    body.innerHTML = rows.length ? rows.map((f) => `
+      <tr>
+        <td>
+          <span class="admin-table-name profile-link" data-user-id="${f.user_id}">${escapeReportText(f.user_name)}</span>
+          <div class="admin-table-muted">${escapeReportText(f.member_type)}${f.member_type === "Lecturer" ? (Number(f.lecturer_verified) ? " · verified" : " · not verified") : ""}</div>
+        </td>
+        <td>${badge(escapeReportText(f.kind_label), f.kind === "problem" ? "red" : f.kind === "testing" ? "blue" : f.kind === "consultation" ? "navy" : "")}</td>
+        <td style="max-width:420px;white-space:normal;">${escapeReportText(f.message)}</td>
+        <td class="admin-table-muted">${new Date(f.created_at).toLocaleDateString()}</td>
+        <td>${f.status === "New" ? badge("New", "gold") : badge("Reviewed", "")}${f.reviewed_by_name ? `<div class="admin-table-muted">by ${escapeReportText(f.reviewed_by_name)}</div>` : ""}</td>
+        <td>${f.status === "New" ? `<button type="button" class="table-icon-btn success feedback-reviewed-btn" data-feedback-id="${f.id}" title="Mark as reviewed"><i class="ti ti-check" aria-hidden="true"></i></button>` : ""}</td>
+      </tr>`).join("")
+      : `<tr><td colspan="6">${emptyState("ti-bulb", "No feedback here", "Feedback from \"Help shape Taskify\" appears here.")}</td></tr>`;
+    attachProfileLinkEvents();
+    body.querySelectorAll(".feedback-reviewed-btn").forEach((btn) => btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        await apiRequest(`/admin/feedback/${btn.dataset.feedbackId}/reviewed`, "PATCH");
+        showToast("Marked as reviewed.");
+        await Promise.all([loadFeedback(), refreshFeedbackCount()]);
+      } catch (err) { showToast(err.message, "error"); btn.disabled = false; }
+    }));
+  } catch (err) {
+    body.innerHTML = `<tr><td colspan="6">${errorState(err.message)}</td></tr>`;
+  }
+}
+
+async function refreshFeedbackCount() {
+  try {
+    const res = await apiRequest("/admin/feedback?status=New");
+    const n = (res.data || []).length;
+    const el = document.getElementById("sidebarFeedbackCount");
+    if (el) { el.textContent = n; el.style.display = n ? "" : "none"; }
+  } catch { /* the count is a nice-to-have */ }
+}
+document.getElementById("feedbackStatusFilter")?.addEventListener("change", loadFeedback);
+refreshFeedbackCount();
+
+/* ═══════════════════════════════════════════
    USERS
 ═══════════════════════════════════════════ */
-function roleBadge(role) {
-  const map = { user: badge("Student", ""), admin: badge("Admin", "navy"), suspended: badge("Suspended", "gold"), banned: badge("Banned", "red") };
-  return map[role] || badge(role, "");
+/* Account type (Student / Staff; lecturers get lecturerBadgeFor instead)
+   plus any special role. Was "Student" for every ordinary account, which
+   mislabelled lecturers and staff. */
+function roleBadge(user) {
+  const type = user.member_type === "Lecturer" ? "" : badge(user.member_type || "Student", "");
+  const special = { admin: badge("Admin", "navy"), suspended: badge("Suspended", "gold"), banned: badge("Banned", "red") }[user.role] || "";
+  return [user.role === "admin" ? "" : type, special].filter(Boolean).join(" ");
 }
 
 /* Compliance visibility (Stage 4) — an admin without 2FA reads as an
@@ -449,7 +502,12 @@ async function loadUsers() {
 function getFilteredUsers() {
   const q = document.getElementById("userSearchInput").value.trim().toLowerCase();
   return cachedUsers.filter(u => {
-    const matchesRole = userRoleFilterValue === "All" || u.role === userRoleFilterValue;
+    /* "type:Lecturer", "role:admin", "lecturer:unverified" or "All" */
+    const [kind, value] = userRoleFilterValue.split(":");
+    const matchesRole = userRoleFilterValue === "All"
+      || (kind === "type" && (u.member_type || "Student") === value)
+      || (kind === "role" && u.role === value)
+      || (kind === "lecturer" && u.member_type === "Lecturer" && !Number(u.lecturer_verified));
     const matchesSearch = !q || u.full_name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
     return matchesRole && matchesSearch;
   });
@@ -527,7 +585,7 @@ function renderUsersTable() {
             </div>
           </td>
           <td class="admin-table-muted">${u.email}</td>
-          <td>${roleBadge(u.role)} ${lecturerBadgeFor(u)}</td>
+          <td>${roleBadge(u)} ${lecturerBadgeFor(u)}</td>
           <td>${twoFactorBadge(u)}</td>
           <td class="admin-table-muted">${new Date(u.created_at).toLocaleDateString()}</td>
           <td>
@@ -677,7 +735,7 @@ async function openUserDetailModal(userId) {
       <div class="admin-user-detail-rows">
         <div class="admin-user-detail-row"><span>User ID</span><span>USR-${String(profile.id).padStart(4, "0")}</span></div>
         <div class="admin-user-detail-row"><span>Phone</span><span>${profile.phone_number || "Not provided"}</span></div>
-        <div class="admin-user-detail-row"><span>Role</span><span>${listUser.role === "user" ? "Student" : (listUser.role || "—")}</span></div>
+        <div class="admin-user-detail-row"><span>Account</span><span>${listUser.member_type || "Student"}${listUser.member_type === "Lecturer" ? (Number(listUser.lecturer_verified) ? " (verified)" : " (not verified)") : ""}${listUser.role !== "user" ? ` · ${listUser.role}` : ""}</span></div>
         <div class="admin-user-detail-row"><span>Two-Factor Auth</span><span>${twoFactorBadge(listUser)}</span></div>
         <div class="admin-user-detail-row"><span>Joined On</span><span>${new Date(profile.created_at).toLocaleDateString()}</span></div>
         <div class="admin-user-detail-row"><span>Total Tasks Completed</span><span>${profile.completed_tasks}</span></div>

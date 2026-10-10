@@ -6,6 +6,7 @@ async function loadNavbar() {
     const response = await fetch("./components/navbar.html");
     const navbarHtml = await response.text();
     navbarContainer.innerHTML = navbarHtml;
+    if (typeof applyFeatureSwitches === "function") applyFeatureSwitches(navbarContainer);
 
     ensureProfileModal();
     highlightActiveLink();

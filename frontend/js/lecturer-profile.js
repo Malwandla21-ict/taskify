@@ -501,7 +501,8 @@ document.addEventListener("click", (event) => {
 });
 
 loadProfile();
-loadEndorsementsGiven();
+/* Endorsements may be switched off (backend config/features.js). */
+loadFeatures().then((features) => { if (features.endorsements) loadEndorsementsGiven(); });
 
 /* ══════════════════════ Security: two-factor authentication ══════════════════════
    Ported from profile.js — same markup (twoFactorModal/changePasswordModal),

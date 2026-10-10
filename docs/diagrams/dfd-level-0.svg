@@ -80,15 +80,16 @@
   <text class="ent-sub" x="140" y="374" text-anchor="middle">student, lecturer or staff</text>
   <path class="flow" d="M240,343 L618,343"/>
   <path class="flow" d="M620,379 L242,379"/>
-  <text class="flabel" x="256" y="223">• registration, sign-in, two-factor &amp; profile details</text>
-  <text class="flabel" x="256" y="237">• photos (listings, rental condition, profile)</text>
-  <text class="flabel" x="256" y="251">• listings &amp; edits (with image URLs)</text>
-  <text class="flabel" x="256" y="265">• applications, offers, bookings, demo payments,</text>
-  <text class="flabel" x="266" y="279">handover codes &amp; problem reports</text>
-  <text class="flabel" x="256" y="293">• messages</text>
-  <text class="flabel" x="256" y="307">• push subscription &amp; read status</text>
-  <text class="flabel" x="256" y="321">• reviews &amp; endorsements</text>
-  <text class="flabel" x="256" y="335">• reports (users, listings, messages)</text>
+  <text class="flabel" x="256" y="209">• registration, sign-in, two-factor &amp; profile details</text>
+  <text class="flabel" x="256" y="223">• photos (listings, rental condition, profile)</text>
+  <text class="flabel" x="256" y="237">• listings &amp; edits (with image URLs)</text>
+  <text class="flabel" x="256" y="251">• applications, offers, bookings, demo payments,</text>
+  <text class="flabel" x="266" y="265">handover codes &amp; problem reports</text>
+  <text class="flabel" x="256" y="279">• messages</text>
+  <text class="flabel" x="256" y="293">• push subscription &amp; read status</text>
+  <text class="flabel" x="256" y="307">• reviews &amp; endorsements</text>
+  <text class="flabel" x="256" y="321">• reports (users, listings, messages)</text>
+  <text class="flabel" x="256" y="335">• feedback (ideas, problems, consultation, testing)</text>
   <text class="flabel" x="256" y="397">• session, profile &amp; account status</text>
   <text class="flabel" x="256" y="411">• image URLs or rejection</text>
   <text class="flabel" x="256" y="425">• listings, search results, booked dates &amp; terms</text>
@@ -97,6 +98,7 @@
   <text class="flabel" x="256" y="467">• conversations</text>
   <text class="flabel" x="256" y="481">• notifications &amp; reminders</text>
   <text class="flabel" x="256" y="495">• ratings &amp; endorsements</text>
+  <text class="flabel" x="256" y="509">• confirmation</text>
   
   <rect class="ent-shadow" x="665" y="727" width="200" height="70"/>
   <rect class="ent" x="660" y="722" width="200" height="70"/>
@@ -107,9 +109,11 @@
   <text class="flabel" x="700" y="622" text-anchor="end">• admin alerts</text>
   <text class="flabel" x="700" y="636" text-anchor="end">• reports, flagged content &amp; conversations</text>
   <text class="flabel" x="700" y="650" text-anchor="end">• analytics, CSV reports &amp; audit log</text>
+  <text class="flabel" x="700" y="664" text-anchor="end">• feedback list</text>
   <text class="flabel" x="820" y="622">• moderation, account, dispute, damage &amp; refund</text>
   <text class="flabel" x="830" y="636">decisions</text>
   <text class="flabel" x="820" y="650">• report requests (date range, report type)</text>
+  <text class="flabel" x="820" y="664">• feedback marked reviewed</text>
   <text class="legend-b" x="40" y="842">Notation (Gane &amp; Sarson):</text>
   <text class="legend" x="230" y="842">shaded rectangle = external entity · rounded rectangle = process (0 = the whole system) · arrow = data flow.</text>
   <text class="legend" x="40" y="860">Each label lists the data flows that cross the system boundary; the Level 1 diagram shows the same flows, by process. Payments are a demo — no payment provider is connected.</text>

@@ -158,6 +158,18 @@ router.patch(
   adminController.removeContent
 );
 
+/* "Help shape Taskify" feedback: list it, and mark items reviewed. */
+router.get(
+  "/feedback",
+  [ query("status").optional().isIn(["New", "Reviewed"]).withMessage("Status must be New or Reviewed.") ],
+  adminController.listFeedback
+);
+router.patch(
+  "/feedback/:feedbackId/reviewed",
+  [ param("feedbackId").isInt({ min: 1 }).withMessage("Feedback ID must be a valid positive integer.") ],
+  adminController.markFeedbackReviewed
+);
+
 router.get(
   "/audit-logs",
   [

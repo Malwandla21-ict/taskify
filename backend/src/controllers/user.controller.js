@@ -16,7 +16,7 @@ async function getUserProfile(req, res, next) {
     }
 
     const userId = Number(req.params.id);
-    const profile = await userService.getUserProfile(userId);
+    const profile = await userService.getUserProfile(userId, { viewerId: req.user?.id ?? null, viewerRole: req.user?.role ?? null });
 
     return res.status(200).json({
       success: true,

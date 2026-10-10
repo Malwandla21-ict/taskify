@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="icon" type="image/x-icon" href="./favicon.ico" />
+  <link rel="icon" type="image/png" sizes="16x16" href="./assets/favicon/favicon-16x16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon/favicon-32x32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="./assets/favicon/favicon-48x48.png" />
+  <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png" />
+  <title>Taskify — Help shape Taskify</title>
+  <link rel="stylesheet" href="./css/main.css" />
+  <link rel="stylesheet" href="./css/profile.css" />
+  <link rel="stylesheet" href="./css/layout-v2.css" />
+</head>
+<body class="dashboard-body">
+<div id="navbarContainer"></div>
+<div class="dashboard-container">
+
+  <div class="section-header" style="margin-bottom:18px;">
+    <div>
+      <h2><i class="ti ti-bulb" aria-hidden="true"></i> Help shape Taskify</h2>
+      <p>Tell us what to build, what's broken, or offer to help test new features. The Taskify team reads every message.</p>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="dashboard-main">
+      <section class="form-panel">
+        <form id="feedbackForm">
+          <div class="form-group">
+            <label for="feedbackKind"><i class="ti ti-list" aria-hidden="true"></i> What would you like to send?</label>
+            <select id="feedbackKind" required>
+              <option value="idea">An idea or improvement</option>
+              <option value="problem">Something isn't working</option>
+              <option value="consultation">I'd like to be consulted on a feature or policy</option>
+              <option value="testing">I'd like to help test new features</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="feedbackMessage"><i class="ti ti-message" aria-hidden="true"></i> Your message</label>
+            <textarea id="feedbackMessage" rows="6" minlength="10" maxlength="2000" required
+              placeholder="e.g. It would help if rentals showed which days are free in a calendar."></textarea>
+            <small class="category-section-hint" id="feedbackCount">0 / 2000</small>
+          </div>
+          <p class="pay-note" id="feedbackMessageError" style="color:var(--ump-red);"></p>
+          <button type="submit" class="primary-button" id="feedbackSubmit">
+            <i class="ti ti-send" aria-hidden="true"></i> Send feedback
+          </button>
+        </form>
+      </section>
+    </div>
+
+    <aside class="dashboard-rail">
+      <div class="rail-card marketplace-guide">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-users-group" aria-hidden="true"></i> Lecturers and staff</h3>
+        </div>
+        <p class="rail-card-sub">We'd especially value your help with:</p>
+        <ul>
+          <li><i class="ti ti-message-question" aria-hidden="true"></i> <span>what students on your courses actually need</span></li>
+          <li><i class="ti ti-scale" aria-hidden="true"></i> <span>which university rules apply to rentals, sales and payments</span></li>
+          <li><i class="ti ti-test-pipe" aria-hidden="true"></i> <span>usability testing and small pilots with a class</span></li>
+        </ul>
+      </div>
+      <div class="rail-card">
+        <p class="rail-card-sub" style="margin:0;">
+          <i class="ti ti-info-circle" aria-hidden="true"></i>
+          Sending feedback is a way to help improve Taskify. It doesn't publish anything or give your account any extra
+          permissions, and Taskify isn't an official university service.
+        </p>
+      </div>
+    </aside>
+  </div>
+</div>
+<div id="overlay"></div>
+<div id="toastContainer" class="toast-container"></div>
+<script src="./js/api.js"></script>
+<script src="./js/helpers.js"></script>
+<script src="./js/navbar.js"></script>
+<script src="./js/feedback.js"></script>
+</body>
+</html>

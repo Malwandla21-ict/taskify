@@ -60,6 +60,17 @@ app.use("/api/admin/allowlist", adminAllowlistRoutes);
 app.use("/api/lecturer",        lecturerRoutes);
 app.use("/api/offers",          offerRoutes);
 app.use("/api/activity",        activityRoutes);
+app.use("/api/feedback",        require("./routes/feedback.routes"));
+
+/* Which switchable features are on (config/features.js and
+   config/marketplace.js) — public, so pages can hide what's off. */
+const FEATURES = require("./config/features");
+const MARKETPLACE = require("./config/marketplace");
+app.get("/api/features", (req, res) => res.json({ success: true, data: {
+  endorsements: !!FEATURES.endorsements,
+  feedback: !!FEATURES.feedback,
+  institutionalMarketplaceListings: !!MARKETPLACE.institutionalListingsEnabled
+} }));
 
 app.use(errorHandler);
 

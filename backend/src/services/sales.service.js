@@ -29,7 +29,8 @@ const SELECT_FIELDS = `
   u.full_name AS seller_name,
   u.profile_photo_url AS seller_profile_photo,
   u.member_type AS seller_member_type,
-  u.lecturer_title AS seller_lecturer_title
+  IF(u.lecturer_verified = 1, u.lecturer_title, NULL) AS seller_lecturer_title,
+  u.lecturer_verified AS seller_lecturer_verified
 `;
 
 async function createSalesItem({

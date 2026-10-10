@@ -1,7 +1,7 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const userController = require("../controllers/user.controller");
-const { authenticate } = require("../middleware/auth.middleware");
+const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 const upload = require("../middleware/upload.middleware");
 
 const router = express.Router();
@@ -51,8 +51,12 @@ router.patch(
   userController.markOnboardingSeen
 );
 
+/* Public profile. optionalAuthenticate tells the service who is looking:
+   email, phone number and student number are only returned to the person
+   themselves or an admin (see user.service.js getUserProfile). */
 router.get(
   "/:id/profile",
+  optionalAuthenticate,
   [
     param("id")
       .isInt({ min: 1 })

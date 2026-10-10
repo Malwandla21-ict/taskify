@@ -246,7 +246,7 @@ function taskCard(task) {
           : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
         ${task.urgent ? `<div class="urgent-badge"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${endorsementCornerBadge(task, { shiftDown: task.urgent && isEndorsed })}
-        ${lecturerPostedCornerBadge(task.created_by_member_type)}
+        ${lecturerPostedCornerBadge(task.created_by_member_type, task.created_by_lecturer_verified)}
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${task.id}" aria-label="Save task">
           <i class="ti ${isSaved ? "ti-heart-filled" : "ti-heart"}" aria-hidden="true"></i>
         </button>
@@ -356,7 +356,7 @@ function historyCard(task) {
           ? `<img src="${task.image_urls[0]}" alt="${task.title}" class="lightbox-img" data-gallery="task-history-${task.id}" data-full="${task.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(task)}
-        ${lecturerPostedCornerBadge(task.created_by_member_type)}
+        ${lecturerPostedCornerBadge(task.created_by_member_type, task.created_by_lecturer_verified)}
       </div>
       <div class="market-content">
         <div class="market-top">

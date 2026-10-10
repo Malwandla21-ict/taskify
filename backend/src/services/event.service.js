@@ -99,7 +99,8 @@ const SELECT_FIELDS = `
   u.full_name AS organizer_name,
   u.profile_photo_url AS organizer_profile_photo,
   u.member_type AS organizer_member_type,
-  u.lecturer_title AS organizer_lecturer_title,
+  IF(u.lecturer_verified = 1, u.lecturer_title, NULL) AS organizer_lecturer_title,
+  u.lecturer_verified AS organizer_lecturer_verified,
   (SELECT COUNT(*) FROM event_rsvps er WHERE er.event_id = e.id) AS rsvp_count
 `;
 

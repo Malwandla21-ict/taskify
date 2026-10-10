@@ -154,6 +154,30 @@ function statusBadge(status) {
   return `<div class="badge ${map[status] ?? ""}">${status}</div>`;
 }
 
+/* ── Feature switches (backend config/features.js, GET /api/features) ──
+   Anything marked data-feature="name" stays hidden (layout-v2.css) unless
+   that feature is on. The server refuses switched-off features anyway;
+   this just keeps their buttons out of sight. */
+let taskifyFeaturesPromise = null;
+function loadFeatures() {
+  if (!taskifyFeaturesPromise) {
+    taskifyFeaturesPromise = fetch(`${API_BASE_URL}/features`)
+      .then((res) => res.json())
+      .then((json) => json.data || {})
+      .catch(() => ({}));
+  }
+  return taskifyFeaturesPromise;
+}
+
+async function applyFeatureSwitches(scope = document) {
+  const features = await loadFeatures();
+  scope.querySelectorAll("[data-feature]").forEach((el) => {
+    el.classList.toggle("feature-on", !!features[el.dataset.feature]);
+  });
+  return features;
+}
+document.addEventListener("DOMContentLoaded", () => applyFeatureSwitches());
+
 /* ── Rentals: dates, deadlines and terms ──
    Shared by the rental pages. Times are always shown in South African
    time, whatever timezone the viewer's device is set to. */
@@ -318,8 +342,10 @@ function endorsementCornerBadge(item, { shiftDown = false } = {}) {
 
 /* Small ribbon (top-right) shown when the poster/organizer/owner/seller
    themselves is a verified lecturer account. */
-function lecturerPostedCornerBadge(memberType) {
-  if (memberType !== "Lecturer") return "";
+/* Only for lecturers an admin has verified — choosing "Lecturer" at
+   sign-up isn't enough (verified comes from the API's *_lecturer_verified). */
+function lecturerPostedCornerBadge(memberType, verified) {
+  if (memberType !== "Lecturer" || !Number(verified)) return "";
   return `<div class="corner-badge corner-badge-right lecturer" title="Posted by a verified lecturer">
             <i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Lecturer
           </div>`;
@@ -455,7 +481,7 @@ async function loadUserProfile(userId) {
         <div class="market-avatar" style="width:48px;height:48px;font-size:16px;">${avatarHtml(profile.full_name, profile.profilePhoto)}</div>
         <div>
           <div style="font-weight:700;font-size:15px;">${posterName(profile.full_name, profile.lecturer_title)}</div>
-          <div style="font-size:12px;color:var(--muted);">${profile.email}</div>
+          ${profile.email ? `<div style="font-size:12px;color:var(--muted);">${escapeReportText(profile.email)}</div>` : ""}
         </div>
       </div>
       ${lecturerBlock}
@@ -478,10 +504,13 @@ async function loadUserProfile(userId) {
       <div class="market-tags" style="margin-bottom:14px;">
         <div class="badge"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified</div>
         <div class="badge blue">${profile.member_type || "Student"}</div>
+        ${isLecturer ? (profile.lecturer_verified
+          ? `<div class="badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified lecturer</div>`
+          : `<div class="badge gold">Lecturer — not yet verified</div>`) : ""}
         ${profile.role === "admin" ? `<div class="badge navy"><i class="ti ti-shield-lock" aria-hidden="true"></i> Admin</div>` : ""}
       </div>
       <div style="background:var(--background);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:13px;">
-        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Student/Staff No.</span><strong>${profile.student_number || "Not provided"}</strong></div>
+        ${profile.student_number !== undefined ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Student/Staff No.</span><strong>${escapeReportText(profile.student_number || "Not provided")}</strong></div>` : ""}
         <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Faculty</span><strong>${profile.faculty || "Not provided"}</strong></div>
         ${profile.member_type === "Student" ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Academic Year</span><strong>${profile.academic_year || "Not provided"}</strong></div>` : ""}
       </div>
