@@ -359,10 +359,15 @@ async function createOffer({ contextType, contextId, offererId, amount, message 
   }
 
   const name = await userName(offererId);
+  /* On a task, an offer at the listed price is an application ("Apply for
+     this task") — the poster chooses who does each task. */
+  const isApplication = contextType === "task" && Math.abs(cleanAmount - Number(listing.price)) < 0.005;
   await notificationService.createNotification({
     userId: listing.owner_id,
-    title: "New Offer",
-    message: `${name} offered R${cleanAmount.toFixed(2)} on your ${cfg.noun} "${listing.title}" (listed at R${Number(listing.price).toFixed(2)}). Accept, counter or decline it on the ${cfg.noun} page.`,
+    title: isApplication ? "New Application" : "New Offer",
+    message: isApplication
+      ? `${name} applied to do your task "${listing.title}" at your price of R${cleanAmount.toFixed(2)}. Choose who does it on the task page.`
+      : `${name} offered R${cleanAmount.toFixed(2)} on your ${cfg.noun} "${listing.title}" (listed at R${Number(listing.price).toFixed(2)}). Accept, counter or decline it on the ${cfg.noun} page.`,
     contextType: contextType === "sales_item" ? "sales_item" : "task",
     contextId
   });

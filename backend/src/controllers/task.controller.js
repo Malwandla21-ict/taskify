@@ -66,14 +66,14 @@ async function getTaskById(req, res, next) {
   } catch (error) { next(error); }
 }
 
-async function acceptTask(req, res, next) {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
-
-    const task = await taskService.acceptTask(Number(req.params.id), req.user.id);
-    return res.status(200).json({ success: true, message: "Task accepted successfully.", data: task });
-  } catch (error) { next(error); }
+/* Students can no longer take a task straight away: the poster chooses
+   who does it from the applications and offers (offer.service.js, which
+   assigns the task through taskService.acceptTask when the poster accepts). */
+async function acceptTask(req, res) {
+  return res.status(400).json({
+    success: false,
+    message: "The poster chooses who does each task. Apply for it instead, and the poster will pick from the applicants."
+  });
 }
 
 async function updateTaskStatus(req, res, next) {

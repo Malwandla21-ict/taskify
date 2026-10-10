@@ -107,9 +107,9 @@ async function taskItems(userId) {
 async function offerItems(userId) {
   const [rows] = await pool.execute(
     `SELECT o.id, o.context_type, o.context_id, o.offerer_id, o.owner_id, o.amount,
-            o.last_proposed_by, o.expires_at, o.updated_at,
+            o.last_proposed_by, o.counter_rounds, o.expires_at, o.updated_at,
             offerer.full_name AS offerer_name, owner.full_name AS owner_name,
-            COALESCE(t.title, si.title) AS listing_title
+            COALESCE(t.title, si.title) AS listing_title, t.price AS task_price
      FROM offers o
      INNER JOIN users offerer ON offerer.id = o.offerer_id
      INNER JOIN users owner ON owner.id = o.owner_id
@@ -129,13 +129,27 @@ async function offerItems(userId) {
     const isTask = o.context_type === "task";
     const href = isTask ? `./task-details.html?id=${o.context_id}` : `./sale-details.html?id=${o.context_id}`;
     const amount = `R${Number(o.amount).toFixed(2)}`;
+    /* An untouched offer at a task's listed price is an application
+       ("Apply for this task") — the poster chooses who does each task. */
+    const isApplication = isTask && Number(o.counter_rounds) === 0
+      && Math.abs(Number(o.amount) - Number(o.task_price)) < 0.005;
     const base = {
       key: `offer-${o.id}`, kind: "offer", title: o.listing_title || "Offer", href,
-      role: isOwner ? (isTask ? "Offer on your task" : "Offer on your item") : (isTask ? "Your offer on a task" : "Your offer on an item"),
+      role: isApplication
+        ? (isOwner ? "Application for your task" : "Your application")
+        : isOwner ? (isTask ? "Offer on your task" : "Offer on your item") : (isTask ? "Your offer on a task" : "Your offer on an item"),
       amount: money(o.amount), payment: null,
       deadline: o.expires_at, deadlineLabel: myTurn ? "Respond by" : "Expires", overdue: false,
       updatedAt: o.updated_at
     };
+    if (isApplication) {
+      return myTurn
+        ? { ...base, status: "Choose a worker", tone: "action", nextBy: "you",
+            step: `${other} applied to do it at your price of ${amount}. Accept to assign them (your payment is held), or decline.`,
+            action: { type: "link", label: "Review applicants", href } }
+        : { ...base, status: "Applied", tone: "waiting", nextBy: other,
+            step: `You applied at ${amount}. Waiting for ${other} to choose who does it.` };
+    }
     return myTurn
       ? { ...base, status: "Your turn to respond", tone: "action", nextBy: "you",
           step: `${other} proposed ${amount}. Accept, counter or decline.`,

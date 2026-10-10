@@ -112,10 +112,25 @@ async function makeEquipment(owner, overrides = {}) {
   return r.data;
 }
 
+/* The poster chooses who does each task: the worker applies (an offer at
+   the listed price) and the poster accepts that application. */
+async function apply(worker, task) {
+  const r = await api(worker, "POST", "/offers", { contextType: "task", contextId: task.id, amount: Number(task.price) });
+  if (r.status !== 201) throw new Error(`apply failed: ${r.status} ${r.message}`);
+  return r.data;
+}
+
+async function assignTask(poster, worker, task) {
+  const application = await apply(worker, task);
+  const r = await api(poster, "PATCH", `/offers/${application.id}/accept`, { expectedAmount: Number(task.price) });
+  if (r.status !== 200) throw new Error(`assignTask failed: ${r.status} ${r.message}`);
+  return r;
+}
+
 /* Fires the same request `times` times at once and returns the statuses —
    used to prove that double clicks / simultaneous requests can't both win. */
 async function concurrently(times, fn) {
   return Promise.all(Array.from({ length: times }, () => fn()));
 }
 
-module.exports = { start, stop, api, query, createUser, makeTask, makeSale, makeEquipment, concurrently, day, pool };
+module.exports = { start, stop, api, query, createUser, makeTask, makeSale, makeEquipment, apply, assignTask, concurrently, day, pool };
