@@ -33,6 +33,16 @@ module.exports = {
      protection pot, instead of asking for a big deposit. */
   RENTAL_PROTECTION_FEE: { percent: 5, min: 5, max: 50 },
 
+  RENTALS: {
+    /* A booking request the owner hasn't confirmed or declined within this
+       many hours expires: the (demo) payment is refunded and the item
+       becomes bookable again. Checked lazily whenever equipment is listed,
+       viewed or booked (there's no scheduled job on the free hosting). */
+    requestExpiryHours: 48,
+    /* Booking dates are checked against today's date in this timezone. */
+    timeZone: "Africa/Johannesburg"
+  },
+
   SALES: {
     /* At or above this price, a sale must go through Taskify Protection
        (money held + 4-digit handover code). Below it, cash in person. */
