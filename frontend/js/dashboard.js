@@ -293,7 +293,7 @@ async function loadDashboard() {
     const upcoming = events.slice(0, 3);
     spotlightEventsContainer.innerHTML = upcoming.length
       ? upcoming.map(spotlightItem).join("")
-      : `<p class="rail-loading">No upcoming events yet.</p>`;
+      : `<p class="rail-loading">Nothing coming up on the Campus Marketplace yet.</p>`;
 
     /* Shuffled + widened pool per category (was a flat .slice(0, 4) off
        whatever order the API returned — always the same first few items,
@@ -302,7 +302,7 @@ async function loadDashboard() {
        category below. */
     const eventItems = shuffleArray(events).slice(0, 6).map(ev => ({
       type: "event",
-      tag: "Event",
+      tag: "Marketplace",
       image: ev.image_urls?.[0] || null,
       title: ev.title,
       meta: `${new Date(ev.event_date).toLocaleDateString([], { month: "short", day: "numeric" })} · ${ev.location}`,

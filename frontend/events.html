@@ -8,7 +8,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="./assets/favicon/favicon-32x32.png" />
   <link rel="icon" type="image/png" sizes="48x48" href="./assets/favicon/favicon-48x48.png" />
   <link rel="apple-touch-icon" href="./assets/favicon/apple-touch-icon.png" />
-  <title>Taskify — Campus Events</title>
+  <title>Taskify — Campus Marketplace</title>
   <link rel="stylesheet" href="./css/main.css" />
   <link rel="stylesheet" href="./css/profile.css" />
   <link rel="stylesheet" href="./css/layout-v2.css" />
@@ -19,10 +19,10 @@
 
   <section class="hero-section-v2">
     <div class="hero-v2-text">
-      <h1>Campus Events</h1>
-      <p>Discover workshops, society meetups, sports and academic talks — and RSVP in one tap.</p>
+      <h1>Campus Marketplace</h1>
+      <p>Market days, student stalls, swaps and approved campus sales — buy, sell and exchange on campus.</p>
       <div class="hero-v2-actions">
-        <a href="#eventsGridAnchor" class="hero-btn-primary"><i class="ti ti-list-search" aria-hidden="true"></i> Explore Events</a>
+        <a href="#eventsGridAnchor" class="hero-btn-primary"><i class="ti ti-list-search" aria-hidden="true"></i> Explore the marketplace</a>
       </div>
     </div>
     <div class="hero-v2-media">
@@ -36,15 +36,15 @@
       <section class="section-block" id="eventsGridAnchor">
         <div class="section-header">
           <div>
-            <h2><i class="ti ti-list-search" aria-hidden="true"></i> Upcoming Events</h2>
-            <p>Browse and RSVP to what's coming up</p>
+            <h2><i class="ti ti-building-store" aria-hidden="true"></i> Coming up on campus</h2>
+            <p>Market days, stalls, swaps and approved sales — RSVP to say you're coming</p>
           </div>
         </div>
 
         <div class="tasks-toolbar">
           <div class="toolbar-search-box">
             <i class="ti ti-search" aria-hidden="true"></i>
-            <input type="text" id="eventSearch" placeholder="Search workshops, sports, societies..." />
+            <input type="text" id="eventSearch" placeholder="Search market days, stalls, swaps..." />
           </div>
           <select id="eventCategoryFilter" class="toolbar-select" aria-label="Filter by category">
             <option value="All">All Categories</option>
@@ -57,24 +57,24 @@
 
         <div class="filters-row">
           <button class="filter-pill active" data-section="All"><i class="ti ti-layout-grid" aria-hidden="true"></i> All</button>
-          <button class="filter-pill" data-section="Academic"><i class="ti ti-school" aria-hidden="true"></i> Academic</button>
+          <button class="filter-pill" data-section="Academic"><i class="ti ti-building-bank" aria-hidden="true"></i> Departmental</button>
           <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
         </div>
 
         <div id="eventsContainer" class="marketplace-grid">
-          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading events…</h3></div>
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading the marketplace…</h3></div>
         </div>
       </section>
 
       <section class="section-block">
         <div class="section-header">
           <div>
-            <h2><i class="ti ti-history" aria-hidden="true"></i> Past Events</h2>
-            <p>Events you organized or attended that have ended</p>
+            <h2><i class="ti ti-history" aria-hidden="true"></i> Past listings</h2>
+            <p>Listings you posted or went to that have ended</p>
           </div>
         </div>
         <div id="pastEventsContainer" class="marketplace-grid">
-          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-clock" aria-hidden="true"></i></div><h3>No past events yet</h3></div>
+          <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-clock" aria-hidden="true"></i></div><h3>Nothing past yet</h3></div>
         </div>
       </section>
 
@@ -83,21 +83,34 @@
     <aside class="dashboard-rail">
       <div class="rail-card">
         <div class="rail-card-header">
-          <h3><i class="ti ti-calendar-plus" aria-hidden="true"></i> Post Event</h3>
+          <h3><i class="ti ti-building-store" aria-hidden="true"></i> Post to the marketplace</h3>
         </div>
-        <p class="rail-card-sub">Create and share your event with the campus.</p>
-        <div class="rail-art"><div class="media-placeholder light green"><i class="ti ti-calendar-event" aria-hidden="true"></i></div></div>
+        <p class="rail-card-sub">A market day, a stall, a swap — or an approved institutional sale.</p>
+        <div class="rail-art"><div class="media-placeholder light green"><i class="ti ti-building-store" aria-hidden="true"></i></div></div>
         <button type="button" class="primary-button" id="openCreateEventButton" style="margin-top:14px;">
-          <i class="ti ti-plus" aria-hidden="true"></i> Create Event
+          <i class="ti ti-plus" aria-hidden="true"></i> Create listing
         </button>
+      </div>
+
+      <div class="rail-card marketplace-guide">
+        <div class="rail-card-header">
+          <h3><i class="ti ti-info-circle" aria-hidden="true"></i> What goes where</h3>
+        </div>
+        <ul>
+          <li><i class="ti ti-building-store" aria-hidden="true"></i> <span><strong>Campus Marketplace</strong> — market days, stalls, swaps and approved campus sales</span></li>
+          <li><i class="ti ti-tag" aria-hidden="true"></i> <span><strong><a href="./sales.html">Sales</a></strong> — selling one item of your own</span></li>
+          <li><i class="ti ti-package" aria-hidden="true"></i> <span><strong><a href="./equipment.html">Rentals</a></strong> — lending equipment for a few days</span></li>
+          <li><i class="ti ti-clipboard-list" aria-hidden="true"></i> <span><strong><a href="./tasks.html">Tasks</a></strong> — paying someone to do a job</span></li>
+        </ul>
+        <p class="rail-card-sub">Lectures, parties, sports and club meetings don't belong here.</p>
       </div>
 
       <div class="rail-card">
         <div class="rail-card-header">
-          <h3><i class="ti ti-calendar-time" aria-hidden="true"></i> My Events</h3>
+          <h3><i class="ti ti-calendar-time" aria-hidden="true"></i> My listings</h3>
           <span class="view-all-link small" id="myEventsCountBadge"></span>
         </div>
-        <p class="rail-card-sub">Events you're organizing or attending</p>
+        <p class="rail-card-sub">Listings you posted or said you'll go to</p>
         <div id="myEventsMiniContainer" class="mini-history-list">
           <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
         </div>
@@ -107,13 +120,13 @@
         <div class="rail-card-header">
           <h3><i class="ti ti-category" aria-hidden="true"></i> Popular Categories</h3>
         </div>
-        <p class="rail-card-sub">Explore top event categories</p>
+        <p class="rail-card-sub">Explore marketplace categories</p>
         <div id="popularCategoriesContainer" class="popular-categories-grid"></div>
       </div>
 
       <div class="rail-cta-card">
-        <h4><i class="ti ti-bell-ringing" aria-hidden="true"></i> Never miss an event</h4>
-        <p>Check your notifications for updates about new events on campus.</p>
+        <h4><i class="ti ti-bell-ringing" aria-hidden="true"></i> Never miss a market day</h4>
+        <p>Check your notifications for updates on listings you're going to.</p>
         <a href="./notifications.html" class="primary-button" style="background:var(--ump-green);">
           <i class="ti ti-bell" aria-hidden="true"></i> View Notifications
         </a>
@@ -126,7 +139,7 @@
 <div id="toastContainer" class="toast-container"></div>
 
 <div id="bookingModal" style="width:600px;">
-  <h2 id="eventModalTitle"><i class="ti ti-calendar-plus" aria-hidden="true"></i> Post an Event</h2>
+  <h2 id="eventModalTitle"><i class="ti ti-building-store" aria-hidden="true"></i> Post to Campus Marketplace</h2>
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
     <span id="eventStepText" class="step-label">Step 1 of 3</span>
     <div style="display:flex;gap:5px;">
@@ -141,24 +154,31 @@
   <form id="eventForm">
     <div class="event-step" id="eventStep1">
       <div class="form-group">
-        <label for="eventTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Event Title</label>
-        <input type="text" id="eventTitle" placeholder="e.g. Career Readiness Workshop" required />
+        <label for="eventTitle"><i class="ti ti-pencil" aria-hidden="true"></i> Title</label>
+        <input type="text" id="eventTitle" placeholder="e.g. Second-hand textbook stall" required />
       </div>
       <div class="form-group">
         <label for="eventCategory"><i class="ti ti-tag" aria-hidden="true"></i> Category</label>
         <select id="eventCategory" required></select>
         <small class="category-section-hint" id="eventCategoryHint"></small>
+        <small class="category-section-hint">For buying, selling and swapping on campus. Lectures, parties, sports and club meetings don't belong here.</small>
+      </div>
+      <!-- Institutional categories only (farm produce, surplus, lost property, departmental) -->
+      <div class="form-group" id="eventAuthorityGroup" hidden>
+        <label for="eventAuthority"><i class="ti ti-building-bank" aria-hidden="true"></i> Who authorised this?</label>
+        <input type="text" id="eventAuthority" maxlength="300" placeholder="e.g. Farm manager, Faculty of Agriculture" />
+        <small class="category-section-hint">Institutional listings are checked by a Taskify admin before they appear. This doesn't make them official university announcements.</small>
       </div>
       <button type="button" class="primary-button" id="nextEventStep2">Continue <i class="ti ti-arrow-right" aria-hidden="true"></i></button>
     </div>
     <div class="event-step" id="eventStep2" style="display:none;">
       <div class="form-group">
         <label for="eventDescription"><i class="ti ti-align-left" aria-hidden="true"></i> Description</label>
-        <textarea id="eventDescription" placeholder="What's it about, who should attend..." required></textarea>
+        <textarea id="eventDescription" placeholder="What's being sold or swapped, prices, how to pay..." required></textarea>
       </div>
       <div class="form-group">
         <label for="eventLocation"><i class="ti ti-map-pin" aria-hidden="true"></i> Location</label>
-        <input type="text" id="eventLocation" placeholder="e.g. UMP Auditorium, Mbombela Campus" required />
+        <input type="text" id="eventLocation" placeholder="e.g. Student Centre courtyard, Mbombela Campus" required />
       </div>
       <div class="form-row">
         <button type="button" class="secondary-button" id="backEventStep1"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
@@ -200,7 +220,7 @@
       <div id="eventPolicyNotice"></div>
       <div class="form-row">
         <button type="button" class="secondary-button" id="backEventStep2"><i class="ti ti-arrow-left" aria-hidden="true"></i> Back</button>
-        <button type="submit" class="primary-button"><i class="ti ti-send" aria-hidden="true"></i> Post Event</button>
+        <button type="submit" class="primary-button"><i class="ti ti-send" aria-hidden="true"></i> Post Listing</button>
       </div>
     </div>
   </form>

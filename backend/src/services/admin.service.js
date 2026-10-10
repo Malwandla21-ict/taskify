@@ -18,7 +18,7 @@ const CONTENT_LABELS = {
   task: "task",
   sales_item: "sales listing",
   equipment: "equipment listing",
-  event: "event"
+  event: "Campus Marketplace listing"
 };
 
 function parseModerationFlags(raw) {
