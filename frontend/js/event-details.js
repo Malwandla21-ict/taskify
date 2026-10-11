@@ -40,7 +40,7 @@ async function loadEventDetails() {
   }
 }
 
-function renderEventDetails(event, hasRsvped) {
+async function renderEventDetails(event, hasRsvped) {
   const isOwn  = !!currentUser && Number(event.organizer_id) === Number(currentUser.id);
 
   /* Anyone signed in, except the organiser, can report this event. */
@@ -52,7 +52,9 @@ function renderEventDetails(event, hasRsvped) {
   let actionArea;
   if (isOwn) {
     /* Editable only while upcoming — same rule as the server. */
-    const canEdit = event.status === "Upcoming" && new Date(event.event_date) >= new Date();
+    const features = await loadFeatures();
+    const canEdit = event.status === "Upcoming" && new Date(event.event_date) >= new Date()
+      && (!features.marketplaceAdminsOnly || currentUser?.role === "admin");
     actionArea = `
       <div class="badge navy" style="margin-bottom:10px;"><i class="ti ti-user" aria-hidden="true"></i> Organizing</div>
       ${canEdit ? `

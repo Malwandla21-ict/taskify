@@ -124,6 +124,14 @@ Each step is one commit on `main`. Database changes are made by an **idempotent 
 - **`backend/schema.sql`:** replaced with a pointer. Its old `ALTER` statements would have removed `Disputed` from `tasks.status`.
 - **Docs:** `DEPLOYMENT.md` updated; `docs/state-machines.md`, `docs/money-rules.md`, `docs/open-questions.md` and this report added.
 
+### After the brief: admin-only Campus Marketplace and tidier history (11 October 2026)
+- **Campus Marketplace:**
+  - only admins with two-factor sign-in can post or edit (`config/marketplace.js` `adminsOnlyPosting`, checked on the server in `event.routes.js`);
+  - students see "Posted by Taskify" with links to Sales, Rentals and "Suggest a listing";
+  - an admin's institutional listing still records who authorised it, but isn't held for a second check;
+  - older listings by others stay until they end, and their organisers can delete but not edit them.
+- **History cards:** task, rental and sale history are now rows with a small square photo instead of a wide banner image (`history-row` in `layout-v2.css`).
+
 ### After the brief: waiting for an overdue item (11 October 2026)
 - **Why:** next step 4. When a rental is overdue, the next renter had no warning and could even "confirm pickup" of an item that wasn't there.
 - **Behaviour:**
@@ -150,13 +158,13 @@ Run from `backend/` with `npm test`. Tests use the local practice database only:
 | `sales.test.js` | 7 | Handover code: right code, wrong code, lockout, released once; the seller never receives the code. |
 | `sale-disputes.test.js` | 14 | Failed meetup, admin release, refund or retry (new code), the buyer can't cancel while disputed. |
 | `rentals.test.js` | 30 | Dates and costs, clashes including simultaneous requests, approve → pay, unpaid approvals lapse, extensions, return deadline, reminders, no charges under unapproved rules, policy-version check, the next renter waiting for an overdue item. |
-| `marketplace.test.js` | 7 | Marketplace categories, institutional listings need authority and review. |
+| `marketplace.test.js` | 10 | Only admins post or edit (server-enforced); marketplace categories; institutional listings need authority (and review when posted by non-admins). |
 | `lecturers.test.js` | 6 | Lecturer verification. |
 | `participation.test.js` | 7 | Feature switches enforced by the server, profile privacy, feedback. |
 | `activity.test.js` | 5 | Action Centre shows the next action for each side. |
 | `analytics.test.js` | 9 | Admin-only access, date ranges, CSV escaping, no personal contact details in exports. |
 
-**Result (11 October 2026): 109 tests, 109 passed, 0 failed.**
+**Result (11 October 2026): 112 tests, 112 passed, 0 failed.**
 
 Also checked:
 - `repair-all.js` runs cleanly on practice;

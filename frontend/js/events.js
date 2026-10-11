@@ -76,8 +76,23 @@ function syncAuthorityField() {
 eventCategorySelect?.addEventListener("change", syncAuthorityField);
 eventForm?.addEventListener("reset", () => setTimeout(syncAuthorityField, 0));
 
+/* Who may post or edit listings: only admins while the server's
+   marketplace switch says so (it refuses anyone else either way). */
+let canPostToMarketplace = false;
+async function loadMarketplacePosting() {
+  const features = await loadFeatures();
+  canPostToMarketplace = !features.marketplaceAdminsOnly || currentUser?.role === "admin";
+  const postCard = document.getElementById("marketplacePostCard");
+  const adminNote = document.getElementById("marketplaceAdminNote");
+  if (postCard) postCard.hidden = !canPostToMarketplace;
+  if (adminNote) adminNote.hidden = canPostToMarketplace;
+  return canPostToMarketplace;
+}
+const marketplacePostingReady = loadMarketplacePosting();
+
 openCreateEventButton?.addEventListener("click", () => {
   if (!requireAuthAction("Sign in to post to the marketplace.")) return;
+  if (!canPostToMarketplace) { showToast("Campus Marketplace listings are posted by Taskify admins.", "error"); return; }
   editingEventId = null;
   eventForm.reset();
   eventMessage.textContent = "";
@@ -114,6 +129,7 @@ function openEventEditModal(event) {
 
 async function openEventEditById(eventId) {
   if (!currentUser) return;
+  if (!(await marketplacePostingReady)) { showToast("Campus Marketplace listings can only be edited by Taskify admins.", "error"); return; }
   try {
     const res = await apiRequest(`/events/${eventId}`);
     const event = res.data;
@@ -201,9 +217,9 @@ function eventCard(event) {
   if (isOwn) {
     actionArea = `
       <div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Organizing</div>
-      <button class="market-action-btn outline edit-event-btn" data-event-id="${event.id}">
+      ${canPostToMarketplace ? `<button class="market-action-btn outline edit-event-btn" data-event-id="${event.id}">
         <i class="ti ti-edit" aria-hidden="true"></i> Edit
-      </button>
+      </button>` : ""}
       <button class="market-action-btn outline delete-event-btn" data-event-id="${event.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
         <i class="ti ti-trash" aria-hidden="true"></i> Delete
       </button>`;
@@ -320,7 +336,9 @@ function renderEvents() {
 
   eventsContainer.innerHTML = filtered.length
     ? filtered.map(eventCard).join("")
-    : emptyState("ti-building-store", "Nothing here yet", "Try a different filter, or post a market day, stall or swap yourself.");
+    : emptyState("ti-building-store", "Nothing here yet", canPostToMarketplace
+        ? "Try a different filter, or post a market day, stall or swap."
+        : "Try a different filter. New market days and campus sales are posted by Taskify admins.");
   attachEventButtonEvents(eventsContainer);
   attachProfileLinkEvents();
 }
@@ -441,6 +459,7 @@ function attachEventButtonEvents(scope = document) {
 }
 
 async function loadEvents() {
+  await marketplacePostingReady;
   try {
     /* /events/rsvp-status requires an account — fetched separately (and
        only when logged in) so a guest still gets the event list even
@@ -475,6 +494,7 @@ async function loadEvents() {
 }
 
 async function loadMyEvents() {
+  await marketplacePostingReady;
   if (!currentUser) {
     myEventsMiniContainer.innerHTML = `<p class="rail-loading">Sign in to see events you're organizing or attending.</p>`;
     pastEventsContainer.innerHTML = emptyState("ti-lock", "Sign in to see past events", "Create an account or log in to track events you've organized or attended.");

@@ -278,7 +278,7 @@ function myListingCard(item) {
   const isSold = item.status !== "Available";
   const imageUrl = Array.isArray(item.image_urls) && item.image_urls.length ? item.image_urls[0] : null;
   return `
-    <div class="market-card">
+    <div class="market-card history-row">
       <div class="market-image" style="position:relative;">
         ${imageUrl
           ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="mylisting-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
@@ -292,7 +292,7 @@ function myListingCard(item) {
           ${pendingReviewBadge(item.moderation_status)}
         </div>
         <h3>${item.title}</h3>
-        <p style="color:var(--muted);font-size:13px;margin:8px 0 12px;">${item.description}</p>
+        <p class="history-desc">${item.description}</p>
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
           ${conditionBadge(item.condition_status)}

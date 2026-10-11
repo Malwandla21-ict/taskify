@@ -13,7 +13,8 @@ async function createEvent(req, res, next) {
       eventDate: req.body.eventDate, capacity: req.body.capacity,
       hasFood: req.body.hasFood, hasRefreshments: req.body.hasRefreshments,
       imageUrls: req.body.imageUrls || [],
-      listingAuthority: req.body.listingAuthority
+      listingAuthority: req.body.listingAuthority,
+      byAdmin: req.user.role === "admin"
     });
 
     return res.status(201).json({ success: true, message: "Event created successfully.", data: event });
@@ -32,7 +33,8 @@ async function updateEvent(req, res, next) {
       capacity: req.body.capacity,
       hasFood: req.body.hasFood, hasRefreshments: req.body.hasRefreshments,
       imageUrls: req.body.imageUrls || [],
-      listingAuthority: req.body.listingAuthority
+      listingAuthority: req.body.listingAuthority,
+      byAdmin: req.user.role === "admin"
     });
 
     return res.status(200).json({ success: true, message: "Event updated successfully.", data: event });

@@ -13,7 +13,10 @@ const MARKETPLACE = require("../config/marketplace");
   surplus, lost property, departmental) need a note of who authorised
   them and are held for an admin check (moderation flag
   "institutional_listing") — on every create AND edit, so an approved
-  listing can't be quietly changed into something else.
+  listing can't be quietly changed into something else. When an admin
+  posts it (the only people who can, while config/marketplace.js
+  adminsOnlyPosting is on), they ARE that check: the authorisation note
+  is still required and saved, but the listing isn't held.
 */
 const INSTITUTIONAL_FLAG = "institutional_listing";
 
@@ -111,9 +114,10 @@ function toFlag(value) {
 
 async function createEvent({
   organizerId, title, description, category, section,
-  location, eventDate, capacity, hasFood, hasRefreshments, imageUrls = [], listingAuthority = null
+  location, eventDate, capacity, hasFood, hasRefreshments, imageUrls = [], listingAuthority = null, byAdmin = false
 }) {
-  const { institutional, authority } = checkMarketplaceCategory({ category, listingAuthority });
+  const { institutional: isInstitutional, authority } = checkMarketplaceCategory({ category, listingAuthority });
+  const institutional = isInstitutional && !byAdmin; // needs the admin check
   const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
 
   if (moderation.severe) {
@@ -299,7 +303,7 @@ async function cancelRsvp(eventId, userId) {
    Everyone going is told if the date/time or place changes. */
 async function updateEvent(eventId, userId, {
   title, description, category, section, location, eventDate, capacity,
-  hasFood, hasRefreshments, imageUrls = [], listingAuthority = null
+  hasFood, hasRefreshments, imageUrls = [], listingAuthority = null, byAdmin = false
 }) {
   const [rows] = await pool.execute(
     `SELECT e.id, e.organizer_id, e.title, e.status, e.location, e.moderation_status, e.moderation_flags, e.category,
@@ -330,7 +334,8 @@ async function updateEvent(eventId, userId, {
     throw error;
   }
 
-  const { institutional, authority } = checkMarketplaceCategory({ category, listingAuthority, currentCategory: event.category });
+  const { institutional: isInstitutional, authority } = checkMarketplaceCategory({ category, listingAuthority, currentCategory: event.category });
+  const institutional = isInstitutional && !byAdmin; // needs the admin check
   const moderation = await moderateListingEdit({
     contentType: "event", userId, title, description, imageUrls, current: event
   });

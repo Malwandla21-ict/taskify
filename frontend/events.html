@@ -81,7 +81,19 @@
     </div>
 
     <aside class="dashboard-rail">
-      <div class="rail-card">
+      <!-- Shown instead of "Post to the marketplace" when only admins can post -->
+      <div class="rail-card" id="marketplaceAdminNote" hidden>
+        <div class="rail-card-header">
+          <h3><i class="ti ti-shield-check" aria-hidden="true"></i> Posted by Taskify</h3>
+        </div>
+        <p class="rail-card-sub">Campus Marketplace listings are posted by Taskify admins, so every market day and campus sale here has been checked.</p>
+        <p class="rail-card-sub">Selling something of your own? Use <a href="./sales.html">Sales</a> or <a href="./equipment.html">Rentals</a>.</p>
+        <a href="./feedback.html?kind=idea" class="secondary-button" style="margin-top:14px;">
+          <i class="ti ti-bulb" aria-hidden="true"></i> Suggest a listing
+        </a>
+      </div>
+
+      <div class="rail-card" id="marketplacePostCard" hidden>
         <div class="rail-card-header">
           <h3><i class="ti ti-building-store" aria-hidden="true"></i> Post to the marketplace</h3>
         </div>

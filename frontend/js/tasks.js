@@ -350,7 +350,7 @@ function historyCard(task) {
   const roleLabel = isPoster ? "You posted this" : "You accepted this";
 
   return `
-    <div class="market-card">
+    <div class="market-card history-row">
       <div class="market-image" style="position:relative;">
         ${task.image_urls?.length
           ? `<img src="${task.image_urls[0]}" alt="${task.title}" class="lightbox-img" data-gallery="task-history-${task.id}" data-full="${task.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
@@ -365,7 +365,7 @@ function historyCard(task) {
           ${pendingReviewBadge(task.moderation_status)}
         </div>
         <h3>${task.title}</h3>
-        <p style="color:var(--muted);font-size:13px;margin:6px 0 10px;">${task.description}</p>
+        <p class="history-desc">${task.description}</p>
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
