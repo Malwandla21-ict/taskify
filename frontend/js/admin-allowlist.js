@@ -11,9 +11,9 @@ function entryCard(entry) {
     <div class="market-card">
       <div class="market-content">
         <div class="market-top">
-          <div class="badge blue"><i class="ti ti-mail" aria-hidden="true"></i> ${entry.email}</div>
+          <div class="badge blue"><i class="ti ti-mail" aria-hidden="true"></i> ${escapeHtml(entry.email)}</div>
         </div>
-        <p style="color:var(--muted);font-size:13px;margin:8px 0 4px;">${entry.note || "No note provided."}</p>
+        <p style="color:var(--muted);font-size:13px;margin:8px 0 4px;">${escapeHtml(entry.note || "No note provided.")}</p>
         <div class="market-tags" style="margin-top:10px;">
           <div class="market-tag"><i class="ti ti-terminal" aria-hidden="true"></i> Added via server script</div>
           <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${new Date(entry.created_at).toLocaleDateString()}</div>

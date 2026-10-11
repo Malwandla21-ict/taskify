@@ -51,13 +51,13 @@ function protectionExplainerPanel(rules) {
    held between the buyer and seller — see sales.service.js. */
 function contactLine(label, phone) {
   if (!phone) return "";
-  return `<p class="pay-note" style="display:flex;align-items:center;gap:6px;"><i class="ti ti-phone" aria-hidden="true"></i> ${label}: <strong>${phone}</strong></p>`;
+  return `<p class="pay-note" style="display:flex;align-items:center;gap:6px;"><i class="ti ti-phone" aria-hidden="true"></i> ${label}: <strong>${escapeHtml(phone)}</strong></p>`;
 }
 
 /* Text people typed (the problem description) goes into the page as text,
    never as HTML. */
 function escapeSaleText(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return escapeHtml(value);
 }
 
 const reportSaleProblemButton = (order) => `
@@ -90,7 +90,7 @@ function orderPanel(item, order) {
         <h4><i class="ti ti-shield-check" aria-hidden="true"></i> Your payment is held <span class="badge gold" style="margin-left:auto;">Demo</span></h4>
         ${disputed ? disputeNotice(order) : ""}
         <p class="pay-note" style="margin-bottom:4px;">Your handover code:</p>
-        <div class="handover-code">${order.handover_code}</div>
+        <div class="handover-code">${escapeHtml(order.handover_code)}</div>
         <p class="pay-note"><strong>Only show this code once you have the item and you're happy with it.</strong> The seller can't get paid without it. Nobody from Taskify will ever ask you for it.</p>
         ${contactLine("Seller", item.seller_phone_number)}
         ${order.locked ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked.${disputed ? "" : " If you didn't get the item, cancel for a refund."}</p>` : ""}
@@ -287,12 +287,12 @@ function renderSaleDetails(item) {
           ${lecturerPostedCornerBadge(item.seller_member_type, item.seller_lecturer_verified)}
         </div>
         ${sectionBadge(item.section || "General")}
-        <h1 class="detail-title">${item.title}</h1>
-        <p class="detail-description">${item.description}</p>
+        <h1 class="detail-title">${escapeHtml(item.title)}</h1>
+        <p class="detail-description">${escapeHtml(item.description)}</p>
         <div class="market-tags" style="margin-top:18px;">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${item.location}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(item.location)}</div>
           ${statusBadge(item.status)}
         </div>
         ${endorsementDetailBlock(item)}
@@ -305,7 +305,7 @@ function renderSaleDetails(item) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
           <div>
-            <div class="profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${posterName(item.seller_name, item.seller_lecturer_title)}</div>
+            <div class="profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${escapeHtml(posterName(item.seller_name, item.seller_lecturer_title))}</div>
             <div style="font-size:11px;color:var(--muted);">Student Seller</div>
           </div>
         </div>
@@ -316,12 +316,12 @@ function renderSaleDetails(item) {
         <div style="margin-bottom:12px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Location</div>
           <div style="font-size:13px;font-weight:600;display:flex;align-items:center;gap:5px;">
-            <i class="ti ti-map-pin" aria-hidden="true"></i> ${item.location}
+            <i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(item.location)}
           </div>
         </div>
         <div style="margin-bottom:20px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Price</div>
-          <div class="market-price">R${item.price}</div>
+          <div class="market-price">R${escapeHtml(item.price)}</div>
         </div>
         ${actionArea}
         <button type="button" class="secondary-button" id="backButtonBottom" style="margin-top:10px;display:flex;">
@@ -362,7 +362,7 @@ function renderSaleDetails(item) {
     if (!requireAuthAction("Sign in to buy this item.")) return;
     buyModalBody.innerHTML = `
       ${demoPaymentBanner("No real payment gateway is connected. This simulates Taskify holding your money until you receive the item.")}
-      <p class="pay-note">You're buying <strong>${item.title}</strong> from ${posterName(item.seller_name, item.seller_lecturer_title)}.</p>
+      <p class="pay-note">You're buying <strong>${escapeHtml(item.title)}</strong> from ${escapeHtml(posterName(item.seller_name, item.seller_lecturer_title))}.</p>
       <div class="money-breakdown">
         ${moneyRow("Item price", rules.itemPrice, { hint: "goes to the seller after handover" })}
         ${moneyRow(`Protection fee (${rules.protectionFeePercent}%)`, rules.protectionFee, { hint: "keeps your money safe until you have the item" })}

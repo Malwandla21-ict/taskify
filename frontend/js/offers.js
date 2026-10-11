@@ -22,9 +22,7 @@
 
   let state = null;
 
-  function esc(value) {
-    return String(value ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  }
+  const esc = escapeHtml;
 
   function timeLeft(seconds) {
     if (seconds == null) return "";

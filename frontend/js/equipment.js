@@ -264,15 +264,15 @@ function updateEquipmentPreview() {
   const dailyPrice = document.getElementById("equipmentDailyPrice").value.trim();
 
   equipmentPreview.innerHTML = `
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${name || "Equipment name"}</h3>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">${desc || "Equipment description will appear here."}</p>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${escapeHtml(name || "Equipment name")}</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">${escapeHtml(desc || "Equipment description will appear here.")}</p>
     <div class="market-tags">
       ${sectionBadge(section)}
-      <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${category || "Category"}</div>
+      <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(category || "Category")}</div>
       ${conditionBadge(condition)}
     </div>
     <div style="margin-top:14px;font-size:13px;color:var(--muted);">
-      Daily rate: <strong style="color:var(--ump-green);font-size:16px;">R${dailyPrice || "0"}/day</strong>
+      Daily rate: <strong style="color:var(--ump-green);font-size:16px;">R${escapeHtml(dailyPrice || "0")}/day</strong>
     </div>`;
 }
 
@@ -357,7 +357,7 @@ function equipmentCard(item) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${imageUrl
-          ? `<img src="${imageUrl}" alt="${item.name}" class="lightbox-img" data-gallery="equip-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" class="lightbox-img" data-gallery="equip-${item.id}" data-full="${escapeHtml(imageUrl)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
         ${lecturerPostedCornerBadge(item.owner_member_type, item.owner_lecturer_verified)}
@@ -370,21 +370,21 @@ function equipmentCard(item) {
           <div class="market-user">
             <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;">${posterName(item.owner_name, item.owner_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;">${escapeHtml(posterName(item.owner_name, item.owner_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-package" aria-hidden="true"></i> Equipment Owner</div>
             </div>
           </div>
           ${sectionBadge(item.section || "General")}
         </div>
-        <h3>${item.name}</h3>
+        <h3>${escapeHtml(item.name)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
           <div class="market-tag green"><i class="ti ti-circle-check" aria-hidden="true"></i> Available</div>
           ${endorsementBadge(item)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${item.daily_price} <span>/day</span></div>
+          <div class="market-price">R${escapeHtml(item.daily_price)} <span>/day</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <a href="./equipment-details.html?id=${item.id}" class="market-action-btn">
               <i class="ti ti-eye" aria-hidden="true"></i> View
@@ -483,7 +483,7 @@ function bookingMoneyLine(booking, isOwner) {
       ${Number(booking.deposit_amount) > 0
         ? `<div><i class="ti ti-shield-lock" aria-hidden="true"></i> Deposit <strong>${formatRand(booking.deposit_amount)}</strong> — ${depositText} <span style="opacity:.7;">(demo)</span></div>`
         : `<div><i class="ti ti-shield-lock" aria-hidden="true"></i> No deposit</div>`}
-      ${booking.pickup_condition ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> Condition at pickup: <strong>${booking.pickup_condition}</strong> (confirmed by renter)</div>` : ""}
+      ${booking.pickup_condition ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> Condition at pickup: <strong>${escapeHtml(booking.pickup_condition)}</strong> (confirmed by renter)</div>` : ""}
       ${conditionText ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> ${conditionText}</div>` : ""}
       ${booking.damage_note ? `<div style="color:var(--ump-red);"><i class="ti ti-alert-triangle" aria-hidden="true"></i> "${escapeReportText(booking.damage_note)}"</div>` : ""}
       ${booking.pickup_photos?.length ? `<div style="margin-top:6px;">Pickup photos</div>${conditionPhotoStrip(booking.pickup_photos, `pickup-${booking.id}`)}` : ""}
@@ -594,7 +594,7 @@ function rentalActions(b, isOwner, isRenter) {
   } else if (b.status === "Confirmed" && !b.out_on_rent) {
     if (isRenter && b.waiting_for_return) buttons.push(rentalBtn("cancel", id, "ti-x", "Cancel (full refund)", "outline danger"));
     else if (isRenter) buttons.push(
-      `<button type="button" class="market-action-btn pickup-equipment-btn" data-booking-id="${id}" data-listed-condition="${b.equipment_condition || ""}"><i class="ti ti-camera" aria-hidden="true"></i> Confirm pickup (add photos)</button>`,
+      `<button type="button" class="market-action-btn pickup-equipment-btn" data-booking-id="${id}" data-listed-condition="${escapeHtml(b.equipment_condition || "")}"><i class="ti ti-camera" aria-hidden="true"></i> Confirm pickup (add photos)</button>`,
       rentalBtn("refuse", id, "ti-alert-triangle", "Item faulty? Don't take it", "outline danger"),
       rentalBtn("cancel", id, "ti-x", "Cancel (full refund)", "outline danger")
     );
@@ -642,7 +642,7 @@ function historyCard(booking) {
     <div class="market-card history-row" id="booking-${booking.id}">
       <div class="market-image" style="position:relative;">
         ${imageUrl
-          ? `<img src="${imageUrl}" alt="${escapeReportText(booking.equipment_name)}" class="lightbox-img" data-gallery="equip-history-${booking.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeReportText(booking.equipment_name)}" class="lightbox-img" data-gallery="equip-history-${booking.id}" data-full="${escapeHtml(imageUrl)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
       </div>
       <div class="market-content">
@@ -653,7 +653,7 @@ function historyCard(booking) {
         <h3>${escapeReportText(booking.equipment_name)}</h3>
         <div class="market-tags" style="margin:10px 0;">
           <div class="market-tag"><i class="ti ti-user" aria-hidden="true"></i> ${roleLabel}</div>
-          <div class="market-tag"><i class="ti ti-currency-dollar" aria-hidden="true"></i> R${booking.daily_price}/day</div>
+          <div class="market-tag"><i class="ti ti-currency-dollar" aria-hidden="true"></i> R${escapeHtml(booking.daily_price)}/day</div>
         </div>
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${rentalDate(booking.start_date)} → ${rentalDate(booking.end_date)}</div>
@@ -670,7 +670,7 @@ function historyMiniCard(booking) {
   return `
     <a href="./equipment-details.html?id=${booking.equipment_id}" class="mini-history-item">
       <div class="mini-history-thumb">${Array.isArray(booking.image_urls) && booking.image_urls.length
-        ? `<img src="${booking.image_urls[0]}" alt="${booking.equipment_name}" style="width:100%;height:100%;object-fit:cover;" />`
+        ? `<img src="${escapeHtml(booking.image_urls[0])}" alt="${escapeHtml(booking.equipment_name)}" style="width:100%;height:100%;object-fit:cover;" />`
         : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
@@ -678,7 +678,7 @@ function historyMiniCard(booking) {
           <div class="badge ${rentalStage(booking).tone}">${rentalStage(booking).label}</div>
         </div>
         <div class="mini-history-title">${escapeReportText(booking.equipment_name)}</div>
-        <div class="mini-history-meta">${isOwner ? "You own this" : "You rented this"} &middot; R${booking.daily_price}/day</div>
+        <div class="mini-history-meta">${isOwner ? "You own this" : "You rented this"} &middot; R${escapeHtml(booking.daily_price)}/day</div>
       </div>
     </a>`;
 }

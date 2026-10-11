@@ -86,16 +86,16 @@ function carouselSlideHtml({ type, tag, image, title, meta, href }) {
      it's keyed off "does this item have an image" rather than "is this a
      rental". Items without one keep the plain white/icon card. */
   const hasImage = Boolean(image);
-  const bgAttr = hasImage ? ` style="background-image:url('${image}')"` : "";
+  const bgAttr = hasImage ? ` style="background-image:${escapeHtml(detailBackdropUrl(image))}"` : "";
   return `
-    <a href="${href}" class="spotlight-card ${type}${hasImage ? " has-image" : ""}"${bgAttr}>
+    <a href="${escapeHtml(href)}" class="spotlight-card ${type}${hasImage ? " has-image" : ""}"${bgAttr}>
       <div class="spotlight-card-top">
-        <span class="spotlight-card-pill ${type}">${tag}</span>
+        <span class="spotlight-card-pill ${type}">${escapeHtml(tag)}</span>
         <span class="spotlight-card-icon"><i class="ti ${spotlightIconFor(type)}" aria-hidden="true"></i></span>
       </div>
       <div>
-        <div class="spotlight-card-title">${title}</div>
-        <div class="spotlight-card-meta">${meta}</div>
+        <div class="spotlight-card-title">${escapeHtml(title)}</div>
+        <div class="spotlight-card-meta">${escapeHtml(meta)}</div>
       </div>
     </a>`;
 }
@@ -215,7 +215,7 @@ function featureTaskCard(task) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${task.image_urls?.length
-          ? `<img src="${task.image_urls[0]}" alt="${task.title}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(task.image_urls[0])}" alt="${escapeHtml(task.title)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light ${placeholderColorFor(task.category)}"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
         ${task.urgent ? `<div class="urgent-badge"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${endorsementCornerBadge(task, { shiftDown: task.urgent })}
@@ -229,20 +229,20 @@ function featureTaskCard(task) {
           <div class="market-user">
             <div class="market-avatar">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${posterName(task.created_by_name, task.created_by_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${escapeHtml(posterName(task.created_by_name, task.created_by_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> ${task.created_by_member_type === "Lecturer" ? "Verified Lecturer" : "Verified Student"}</div>
             </div>
           </div>
           ${sectionBadge(task.section || "General")}
         </div>
-        <h3>${task.title}</h3>
+        <h3>${escapeHtml(task.title)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(task.category)}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(task.location)}</div>
           ${endorsementBadge(task)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${task.price} <span>/task</span></div>
+          <div class="market-price">R${escapeHtml(task.price)} <span>/task</span></div>
           <a href="./task-details.html?id=${task.id}" class="market-action-btn"><i class="ti ti-eye" aria-hidden="true"></i> View</a>
         </div>
       </div>
@@ -258,13 +258,13 @@ function spotlightItem(ev) {
     <a href="./event-details.html?id=${ev.id}" class="spotlight-item">
       <div class="spotlight-thumb">
         ${ev.image_urls?.length
-          ? `<img src="${ev.image_urls[0]}" alt="${ev.title}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(ev.image_urls[0])}" alt="${escapeHtml(ev.title)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light navy"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}
         <div class="spotlight-date-badge"><span>${month}</span><strong>${day}</strong></div>
       </div>
       <div class="spotlight-info">
-        <div class="spotlight-title">${ev.title}</div>
-        <div class="spotlight-meta">${time} &middot; ${ev.location}</div>
+        <div class="spotlight-title">${escapeHtml(ev.title)}</div>
+        <div class="spotlight-meta">${time} &middot; ${escapeHtml(ev.location)}</div>
       </div>
     </a>`;
 }
@@ -274,8 +274,8 @@ function activityRow(item) {
     <div class="profile-activity-item">
       <div class="profile-activity-icon"><i class="ti ${activityIconFor(item.type)}" aria-hidden="true"></i></div>
       <div class="profile-activity-body">
-        <div class="profile-activity-title">${item.title}</div>
-        ${item.subtitle ? `<div class="profile-activity-sub">${item.subtitle}</div>` : ""}
+        <div class="profile-activity-title">${escapeHtml(item.title)}</div>
+        ${item.subtitle ? `<div class="profile-activity-sub">${escapeHtml(item.subtitle)}</div>` : ""}
       </div>
       <div class="profile-activity-time">${timeAgo(item.created_at)}</div>
     </div>`;

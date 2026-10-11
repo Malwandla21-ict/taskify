@@ -48,8 +48,8 @@ function activityRow(item) {
     <div class="profile-activity-item">
       <div class="profile-activity-icon"><i class="ti ${activityIcon(item.type)}" aria-hidden="true"></i></div>
       <div class="profile-activity-body">
-        <div class="profile-activity-title">${item.title}</div>
-        ${item.subtitle ? `<div class="profile-activity-sub">${item.subtitle}</div>` : ""}
+        <div class="profile-activity-title">${escapeHtml(item.title)}</div>
+        ${item.subtitle ? `<div class="profile-activity-sub">${escapeHtml(item.subtitle)}</div>` : ""}
       </div>
       <div class="profile-activity-time">${timeAgo(item.created_at)}</div>
     </div>`;
@@ -74,12 +74,12 @@ async function loadProfile() {
             </div>
           </div>
           <div class="profile-header-info">
-            <h2>${profile.full_name}${profile.is_verified ? ` <i class="ti ti-rosette-discount-check" style="color:var(--ump-green);font-size:18px;" aria-hidden="true"></i>` : ""}</h2>
-            <p><i class="ti ti-mail" aria-hidden="true"></i> ${profile.email}</p>
-            <p style="margin-top:2px;"><i class="ti ti-calendar" aria-hidden="true"></i> Joined ${new Date(profile.created_at).toLocaleDateString()} · Member for ${profile.member_since_label}</p>
+            <h2>${escapeHtml(profile.full_name)}${profile.is_verified ? ` <i class="ti ti-rosette-discount-check" style="color:var(--ump-green);font-size:18px;" aria-hidden="true"></i>` : ""}</h2>
+            <p><i class="ti ti-mail" aria-hidden="true"></i> ${escapeHtml(profile.email)}</p>
+            <p style="margin-top:2px;"><i class="ti ti-calendar" aria-hidden="true"></i> Joined ${new Date(profile.created_at).toLocaleDateString()} · Member for ${escapeHtml(profile.member_since_label)}</p>
             <div class="profile-header-badges">
               <span class="profile-badge verified"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student</span>
-              <span class="profile-badge"><i class="ti ti-user" aria-hidden="true"></i> ${profile.member_type || "Student"}</span>
+              <span class="profile-badge"><i class="ti ti-user" aria-hidden="true"></i> ${escapeHtml(profile.member_type || "Student")}</span>
               <span class="profile-badge"><i class="ti ti-star" aria-hidden="true"></i> ${Number(profile.rating_average || 0).toFixed(1)} Rating</span>
             </div>
           </div>
@@ -96,11 +96,11 @@ async function loadProfile() {
 
     document.getElementById("aboutMeText").textContent = profile.bio || "No bio added yet. Click Edit Profile to introduce yourself.";
     document.getElementById("skillsTagsRow").innerHTML = profile.skills.length
-      ? profile.skills.map(s => `<div class="profile-tag">${s}</div>`).join("")
+      ? profile.skills.map(s => `<div class="profile-tag">${escapeHtml(s)}</div>`).join("")
       : `<p style="color:var(--muted);font-size:12px;">No skills added yet.</p>`;
 
     document.getElementById("emailVerifiedBadge").innerHTML = profile.is_verified ? badge("Verified", "") : badge("Pending", "gold");
-    document.getElementById("accountTypeBadge").innerHTML = badge(profile.member_type, "blue");
+    document.getElementById("accountTypeBadge").innerHTML = badge(escapeHtml(profile.member_type), "blue");
     const resendBtn = document.getElementById("resendVerificationBtn");
     if (resendBtn) resendBtn.style.display = profile.is_verified ? "none" : "block";
 
@@ -143,14 +143,14 @@ function renderReviews(reviews) {
             <div class="market-user">
               <div class="market-avatar">${avatarHtml(r.reviewer_name, r.reviewer_profile_photo)}</div>
               <div>
-                <div class="market-user-name profile-link" data-user-id="${r.reviewer_id}" style="cursor:pointer;">${r.reviewer_name}</div>
+                <div class="market-user-name profile-link" data-user-id="${r.reviewer_id}" style="cursor:pointer;">${escapeHtml(r.reviewer_name)}</div>
                 <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified Student</div>
               </div>
             </div>
-            <div class="badge"><i class="ti ti-star" aria-hidden="true"></i> ${r.rating}/5</div>
+            <div class="badge"><i class="ti ti-star" aria-hidden="true"></i> ${escapeHtml(r.rating)}/5</div>
           </div>
           <p style="color:var(--ump-gold);font-size:16px;margin-bottom:8px;letter-spacing:1px;">${stars}</p>
-          <p style="color:var(--muted);font-size:13px;line-height:1.6;">${r.comment || "No comment provided."}</p>
+          <p style="color:var(--muted);font-size:13px;line-height:1.6;">${escapeHtml(r.comment || "No comment provided.")}</p>
         </div>
       </div>`;
   }).join("");
@@ -168,14 +168,14 @@ function renderEndorsements(endorsements) {
       <div class="endorsement-card-top">
         <div class="market-avatar" style="width:38px;height:38px;">${avatarHtml(e.lecturer_name, e.lecturer_photo)}</div>
         <div>
-          <div class="profile-link" data-user-id="${e.lecturer_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${posterName(e.lecturer_name, e.lecturer_title)}</div>
+          <div class="profile-link" data-user-id="${e.lecturer_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${escapeHtml(posterName(e.lecturer_name, e.lecturer_title))}</div>
           <div style="font-size:11px;color:var(--muted);">${new Date(e.created_at).toLocaleDateString()}</div>
         </div>
-        <div class="endorsement-badge ${e.endorsement_type.toLowerCase()}" style="margin-left:auto;">
-          <i class="ti ti-certificate" aria-hidden="true"></i> ${e.endorsement_type}
+        <div class="endorsement-badge ${escapeHtml(e.endorsement_type.toLowerCase())}" style="margin-left:auto;">
+          <i class="ti ti-certificate" aria-hidden="true"></i> ${escapeHtml(e.endorsement_type)}
         </div>
       </div>
-      ${e.message ? `<p style="font-size:13px;color:var(--text);">"${e.message}"</p>` : ""}
+      ${e.message ? `<p style="font-size:13px;color:var(--text);">"${escapeHtml(e.message)}"</p>` : ""}
     </div>`).join("");
   attachProfileLinkEvents();
 }
@@ -197,9 +197,9 @@ async function loadMyListings() {
         <div class="market-card">
           <div class="market-content">
             <div class="market-top">${sectionBadge(item.section)}${statusBadge(item.status)}</div>
-            <h3>${item.title}</h3>
+            <h3>${escapeHtml(item.title)}</h3>
             <div class="market-footer">
-              <div class="market-price">R${item.price}</div>
+              <div class="market-price">R${escapeHtml(item.price)}</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                 <a href="./sale-details.html?id=${item.id}" class="market-action-btn outline">View</a>
                 ${item.status === "Available" ? `
@@ -217,9 +217,9 @@ async function loadMyListings() {
         <div class="market-card">
           <div class="market-content">
             <div class="market-top">${sectionBadge(item.section)}<div class="badge ${item.is_available ? "green" : "gold"}">${item.is_available ? "Taking bookings" : "Paused"}</div></div>
-            <h3>${item.name}</h3>
+            <h3>${escapeHtml(item.name)}</h3>
             <div class="market-footer">
-              <div class="market-price">R${item.daily_price}/day</div>
+              <div class="market-price">R${escapeHtml(item.daily_price)}/day</div>
               <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                 <a href="./equipment-details.html?id=${item.id}" class="market-action-btn outline">View</a>
                 ${item.is_available ? `
@@ -306,8 +306,8 @@ function renderEditSkillsTags() {
   editSkillsTagsRow.innerHTML = editSkills.length
     ? editSkills.map((s, i) => `
         <div class="profile-tag editable">
-          ${s}
-          <button type="button" data-index="${i}" aria-label="Remove ${s}"><i class="ti ti-x" aria-hidden="true"></i></button>
+          ${escapeHtml(s)}
+          <button type="button" data-index="${i}" aria-label="Remove ${escapeHtml(s)}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>`).join("")
     : `<p style="color:var(--muted);font-size:12px;">No skills added yet.</p>`;
 
@@ -579,9 +579,9 @@ async function startTwoFactorSetup() {
 function renderTwoFactorSetupStep(qrCodeDataUrl, manualEntryKey) {
   twoFactorModalBody.innerHTML = `
     <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">1. Scan this QR code with your authenticator app.</p>
-    <div class="qr-code-box"><img src="${qrCodeDataUrl}" alt="Two-factor QR code" /></div>
+    <div class="qr-code-box"><img src="${escapeHtml(qrCodeDataUrl)}" alt="Two-factor QR code" /></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">Can't scan it? Enter this key manually:</p>
-    <div class="manual-key-box">${manualEntryKey}</div>
+    <div class="manual-key-box">${escapeHtml(manualEntryKey)}</div>
     <p style="font-size:13px;color:var(--muted);margin:14px 0 6px;">2. Enter the 6-digit code your app shows:</p>
     <div class="form-group">
       <input type="text" id="twoFactorEnableCode" inputmode="numeric" maxlength="6" placeholder="123456" />
@@ -630,7 +630,7 @@ async function startEmailTwoFactorSetup() {
 function renderEmailTwoFactorSetupStep(sentMessage) {
   twoFactorModalBody.innerHTML = `
     <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
-      ${sentMessage || "We've sent a 6-digit code to your email."}
+      ${escapeHtml(sentMessage || "We've sent a 6-digit code to your email.")}
     </p>
     <div class="form-group">
       <label>6-digit code</label>
@@ -702,7 +702,7 @@ function renderTwoFactorBackupCodes(codes, opts = {}) {
       ${subtext}
     </p>
     <div class="backup-codes-grid">
-      ${codes.map(c => `<div class="backup-code-chip">${c}</div>`).join("")}
+      ${codes.map(c => `<div class="backup-code-chip">${escapeHtml(c)}</div>`).join("")}
     </div>
     <button type="button" class="secondary-button" id="copyBackupCodesBtn" style="width:100%;margin-top:12px;">
       <i class="ti ti-copy" aria-hidden="true"></i> Copy codes
@@ -746,7 +746,7 @@ async function renderTrustedDevicesSection() {
         ${devices.map(d => `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
             <div>
-              <div style="font-size:12.5px;font-weight:600;">${d.device_label || "Unknown device"}</div>
+              <div style="font-size:12.5px;font-weight:600;">${escapeHtml(d.device_label || "Unknown device")}</div>
               <div style="font-size:11px;color:var(--muted);">Last used ${formatDeviceDate(d.last_used_at)} · Expires ${formatDeviceDate(d.expires_at)}</div>
             </div>
             <button type="button" class="secondary-button" data-device-id="${d.id}" style="padding:4px 10px;font-size:11px;flex-shrink:0;">Forget</button>

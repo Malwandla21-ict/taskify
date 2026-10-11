@@ -43,7 +43,7 @@ function attachSaveHeartEvents() {
 function populateFacultyFilter(students) {
   const faculties = [...new Set(students.map(s => s.faculty).filter(Boolean))].sort();
   studentFacultyFilter.innerHTML = `<option value="All">All Faculties</option>` +
-    faculties.map(f => `<option value="${f}">${f}</option>`).join("");
+    faculties.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join("");
 }
 
 function studentCard(student) {
@@ -56,7 +56,7 @@ function studentCard(student) {
     <div class="student-card-v2">
       <div class="student-card-v2-media">
         ${student.student_photo
-          ? `<img src="${student.student_photo}" alt="${student.student_name}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(student.student_photo)}" alt="${escapeHtml(student.student_name)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light green"><i class="ti ti-user" aria-hidden="true"></i></div>`}
         <div class="corner-badge corner-badge-left student-endorsed"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Endorsed</div>
         <button type="button" class="save-heart-btn ${isSaved ? "saved" : ""}" data-save-id="${student.student_id}" aria-label="Save student">
@@ -64,15 +64,15 @@ function studentCard(student) {
         </button>
       </div>
       <div class="student-card-v2-body">
-        <div class="student-card-v2-name">${student.student_name}</div>
-        <div class="student-card-v2-subject">${student.faculty || "Faculty not set"}</div>
+        <div class="student-card-v2-name">${escapeHtml(student.student_name)}</div>
+        <div class="student-card-v2-subject">${escapeHtml(student.faculty || "Faculty not set")}</div>
         <div class="student-card-v2-meta">
           <span><i class="ti ti-certificate" aria-hidden="true"></i> ${endorsementCount} lecturer endorsement${endorsementCount === 1 ? "" : "s"}</span>
-          <span class="rating"><i class="ti ti-star" aria-hidden="true"></i> ${Number(student.rating_average || 0).toFixed(1)} (${student.total_reviews} review${student.total_reviews === 1 ? "" : "s"})</span>
+          <span class="rating"><i class="ti ti-star" aria-hidden="true"></i> ${Number(student.rating_average || 0).toFixed(1)} (${escapeHtml(student.total_reviews)} review${student.total_reviews === 1 ? "" : "s"})</span>
         </div>
         ${latestEndorsement?.message
-          ? `<div class="student-card-v2-quote">"${latestEndorsement.message}"<strong>— ${latestEndorsement.lecturer_title || ""} ${latestEndorsement.lecturer_name || ""}</strong></div>`
-          : `<div class="student-card-v2-quote">Endorsed by ${latestEndorsement?.lecturer_title || ""} ${latestEndorsement?.lecturer_name || ""}<strong>&nbsp;</strong></div>`}
+          ? `<div class="student-card-v2-quote">"${escapeHtml(latestEndorsement.message)}"<strong>— ${escapeHtml(latestEndorsement.lecturer_title || "")} ${escapeHtml(latestEndorsement.lecturer_name || "")}</strong></div>`
+          : `<div class="student-card-v2-quote">Endorsed by ${escapeHtml(latestEndorsement?.lecturer_title || "")} ${escapeHtml(latestEndorsement?.lecturer_name || "")}<strong>&nbsp;</strong></div>`}
         <button type="button" class="primary-button profile-link" data-user-id="${student.student_id}">
           <i class="ti ti-user" aria-hidden="true"></i> View Profile
         </button>

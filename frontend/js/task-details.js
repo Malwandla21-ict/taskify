@@ -56,7 +56,7 @@ function renderTaskDetails(task) {
     /* Review step: confirm (releases the payment) or report a problem
        (task becomes Disputed, payment stays held, an admin decides). */
     primaryAction = `<p class="pay-note" style="margin-bottom:10px;">${escapeTaskText(task.accepted_by_name || "The worker")} marked this as done. Check the work, then confirm, or report a problem if it isn't done properly.</p>
-                      <button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${task.price}" style="background:var(--ump-green);">
+                      <button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${escapeHtml(task.price)}" style="background:var(--ump-green);">
                         <i class="ti ti-circle-check" aria-hidden="true"></i> Confirm Completion
                       </button>
                       <button class="secondary-button" id="reportTaskProblemButton" data-task-id="${task.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
@@ -67,7 +67,7 @@ function renderTaskDetails(task) {
                         <h4><i class="ti ti-alert-triangle" aria-hidden="true" style="color:var(--ump-red);"></i> Problem reported</h4>
                         <p class="pay-note">${isOwn ? "You" : escapeTaskText(task.created_by_name || "The poster")} said: "${escapeTaskText(task.dispute_reason || "")}"</p>
                         <p class="pay-note" style="margin-bottom:${isOwn ? "10px" : "0"};">The payment stays held while a Taskify admin looks at it. They can release it to the worker, refund the poster, or send the task back to be finished.${isOwn ? " If it gets sorted out, you can still confirm." : " Message the poster to sort it out."}</p>
-                        ${isOwn ? `<button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${task.price}" style="background:var(--ump-green);">
+                        ${isOwn ? `<button class="primary-button" id="confirmCompletionButton" data-task-id="${task.id}" data-task-price="${escapeHtml(task.price)}" style="background:var(--ump-green);">
                           <i class="ti ti-circle-check" aria-hidden="true"></i> It's sorted: Confirm Completion
                         </button>` : ""}
                       </div>`;
@@ -92,7 +92,7 @@ function renderTaskDetails(task) {
     ? `<div style="margin-bottom:12px;">
          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Contact (payment held)</div>
          <div style="font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;">
-           <i class="ti ti-phone" aria-hidden="true"></i> ${otherPhone}
+           <i class="ti ti-phone" aria-hidden="true"></i> ${escapeHtml(otherPhone)}
          </div>
        </div>`
     : "";
@@ -131,11 +131,11 @@ function renderTaskDetails(task) {
         </div>
         ${task.urgent ? `<div class="urgent-badge" style="display:inline-flex;margin-bottom:12px;"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${sectionBadge(task.section || "General")}
-        <h1 class="detail-title">${task.title}</h1>
-        <p class="detail-description">${task.description}</p>
+        <h1 class="detail-title">${escapeHtml(task.title)}</h1>
+        <p class="detail-description">${escapeHtml(task.description)}</p>
         <div class="market-tags" style="margin-top:18px;">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(task.category)}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(task.location)}</div>
           ${statusBadge(task.status)}
         </div>
         ${endorsementDetailBlock(task)}
@@ -148,7 +148,7 @@ function renderTaskDetails(task) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
           <div>
-            <div class="profile-link" data-user-id="${task.created_by}" style="cursor:pointer;font-weight:600;font-size:13px;">${posterName(task.created_by_name, task.created_by_lecturer_title)}</div>
+            <div class="profile-link" data-user-id="${task.created_by}" style="cursor:pointer;font-weight:600;font-size:13px;">${escapeHtml(posterName(task.created_by_name, task.created_by_lecturer_title))}</div>
             <div style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:3px;">
               <i class="ti ti-shield-check" aria-hidden="true"></i> ${task.created_by_member_type === "Lecturer" ? "Verified Lecturer" : "Verified Student"}
             </div>
@@ -160,7 +160,7 @@ function renderTaskDetails(task) {
         </div>
         <div style="margin-bottom:20px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Budget</div>
-          <div class="market-price">R${task.price} <span>/task</span></div>
+          <div class="market-price">R${escapeHtml(task.price)} <span>/task</span></div>
         </div>
         ${contactRow}
         ${primaryAction}
@@ -207,7 +207,7 @@ function renderTaskDetails(task) {
 /* Text people typed (names, the problem reason) goes into the page as text,
    never as HTML. */
 function escapeTaskText(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return escapeHtml(value);
 }
 
 /* ── Report a problem (poster, instead of confirming) ── */

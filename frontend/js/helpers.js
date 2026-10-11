@@ -1,5 +1,15 @@
 /* ── helpers.js — shared UI utilities ── */
 
+/* Anything a person typed (titles, descriptions, messages, names, bios,
+   reviews…) goes into the page as text, never as HTML. Wrap it in
+   escapeHtml() wherever it's put into an innerHTML template — including
+   attribute values like alt="" and data-*. Safe for both. */
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 function showToast(message, type = "success") {
   const toastContainer = document.getElementById("toastContainer");
   if (!toastContainer) return;
@@ -7,7 +17,7 @@ function showToast(message, type = "success") {
   const icon = iconMap[type] || "ti-info-circle";
   const toast = document.createElement("div");
   toast.className = `toast ${type}`;
-  toast.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i> ${message}`;
+  toast.innerHTML = `<i class="ti ${icon}" aria-hidden="true"></i> ${escapeHtml(message)}`;
   toastContainer.appendChild(toast);
   /* Exit the way it entered (see .toast-leaving / toastOut in main.css) —
      add the leaving class first so it plays its own out-animation, then
@@ -33,7 +43,7 @@ function errorState(message) {
     <div class="empty-state">
       <div class="empty-state-icon"><i class="ti ti-alert-circle" aria-hidden="true"></i></div>
       <h3>Something went wrong</h3>
-      <p>${message}</p>
+      <p>${escapeHtml(message)}</p>
     </div>`;
 }
 
@@ -259,12 +269,12 @@ function avatarHtml(name = "", photoUrl = null, options = {}) {
 
   if (photoUrl && typeof photoUrl === "string" && photoUrl.trim()) {
     if (!lightbox) {
-      return `<img src="${photoUrl}" alt="${name || "User"}" />`;
+      return `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name || "User")}" />`;
     }
     const gallery = `avatar-${Math.random().toString(36).slice(2, 9)}`;
-    return `<img src="${photoUrl}" alt="${name || "User"}" class="lightbox-img" data-gallery="${gallery}" data-full="${photoUrl}" />`;
+    return `<img src="${escapeHtml(photoUrl)}" alt="${escapeHtml(name || "User")}" class="lightbox-img" data-gallery="${gallery}" data-full="${escapeHtml(photoUrl)}" />`;
   }
-  return avatarInitials(name);
+  return escapeHtml(avatarInitials(name));
 }
 
 function requireAuth() {
@@ -320,7 +330,7 @@ function badge(label, variant = "") {
 
 function sectionBadge(section) {
   const cls = section === "Academic" ? "" : "blue";
-  return `<div class="badge ${cls}">${section}</div>`;
+  return `<div class="badge ${cls}">${escapeHtml(section)}</div>`;
 }
 
 /* Sales use New/Excellent/Good/Fair/Used; equipment uses
@@ -330,7 +340,7 @@ function conditionBadge(condition) {
   if (!condition) return "";
   const map = { New: "", Excellent: "", Good: "blue", Functional: "blue", Fair: "gold", Used: "gold", Damaged: "red" };
   const icon = condition === "Damaged" ? `<i class="ti ti-alert-triangle" aria-hidden="true"></i> ` : "";
-  return `<div class="badge ${map[condition] ?? ""}">${icon}${condition}</div>`;
+  return `<div class="badge ${map[condition] ?? ""}">${icon}${escapeHtml(condition)}</div>`;
 }
 
 /* Equipment condition — keep in sync with EQUIPMENT_CONDITIONS in
@@ -363,7 +373,7 @@ function statusBadge(status) {
     /* offer statuses (Pending/Accepted above are shared) */
     Declined: "red", Withdrawn: "navy", Expired: "navy"
   };
-  return `<div class="badge ${map[status] ?? ""}">${status}</div>`;
+  return `<div class="badge ${map[status] ?? ""}">${escapeHtml(status)}</div>`;
 }
 
 /* ── Feature switches (backend config/features.js, GET /api/features) ──
@@ -494,7 +504,7 @@ function showPaymentMoment(type, message, options = {}) {
 /* Renter trust level chip — level key is "new" | "trusted" | "top". */
 function trustChip(level, label) {
   const icon = level === "top" ? "ti-crown" : level === "trusted" ? "ti-shield-check" : "ti-seedling";
-  return `<span class="trust-chip ${level || "new"}"><i class="ti ${icon}" aria-hidden="true"></i> ${label || "New"} renter</span>`;
+  return `<span class="trust-chip ${escapeHtml(level || "new")}"><i class="ti ${icon}" aria-hidden="true"></i> ${escapeHtml(label || "New")} renter</span>`;
 }
 
 /* Small row of clickable condition-photo thumbnails (pickup/return). */
@@ -502,7 +512,7 @@ function conditionPhotoStrip(urls = [], galleryId = "") {
   if (!Array.isArray(urls) || !urls.length) return "";
   return `
     <div class="condition-photo-strip">
-      ${urls.map(url => `<img src="${url}" alt="Condition photo" class="lightbox-img" data-gallery="${galleryId}" data-full="${url}" />`).join("")}
+      ${urls.map(url => `<img src="${escapeHtml(url)}" alt="Condition photo" class="lightbox-img" data-gallery="${escapeHtml(galleryId)}" data-full="${escapeHtml(url)}" />`).join("")}
     </div>`;
 }
 
@@ -535,9 +545,9 @@ function contentPolicyNotice() {
 
 function endorsementBadge(item) {
   if (!item || !item.endorsed_by_lecturer_name) return "";
-  const title = item.endorsed_by_lecturer_title ? `${item.endorsed_by_lecturer_title} ` : "";
+  const title = item.endorsed_by_lecturer_title ? `${escapeHtml(item.endorsed_by_lecturer_title)} ` : "";
   return `<div class="market-tag" style="background:rgba(108,61,255,0.10);color:#6c3dff;">
-            <i class="ti ti-certificate" aria-hidden="true"></i> Recommended by ${title}${item.endorsed_by_lecturer_name}
+            <i class="ti ti-certificate" aria-hidden="true"></i> Recommended by ${title}${escapeHtml(item.endorsed_by_lecturer_name)}
           </div>`;
 }
 
@@ -546,8 +556,8 @@ function endorsementBadge(item) {
    sits top-left. */
 function endorsementCornerBadge(item, { shiftDown = false } = {}) {
   if (!item || !item.endorsed_by_lecturer_name) return "";
-  const title = item.endorsed_by_lecturer_title ? `${item.endorsed_by_lecturer_title} ` : "";
-  return `<div class="corner-badge corner-badge-left${shiftDown ? " shift-down" : ""}" title="Recommended by ${title}${item.endorsed_by_lecturer_name}">
+  const title = item.endorsed_by_lecturer_title ? `${escapeHtml(item.endorsed_by_lecturer_title)} ` : "";
+  return `<div class="corner-badge corner-badge-left${shiftDown ? " shift-down" : ""}" title="Recommended by ${title}${escapeHtml(item.endorsed_by_lecturer_name)}">
             <i class="ti ti-certificate" aria-hidden="true"></i> Recommended
           </div>`;
 }
@@ -568,20 +578,20 @@ function lecturerPostedCornerBadge(memberType, verified) {
    rather than just a name in a small pill. */
 function endorsementDetailBlock(item) {
   if (!item || !item.endorsed_by_lecturer_name) return "";
-  const title = item.endorsed_by_lecturer_title ? `${item.endorsed_by_lecturer_title} ` : "";
+  const title = item.endorsed_by_lecturer_title ? `${escapeHtml(item.endorsed_by_lecturer_title)} ` : "";
   return `
     <div class="endorsement-detail-block">
       <div class="endorsement-detail-header">
         <div class="market-avatar" style="width:36px;height:36px;">${avatarHtml(item.endorsed_by_lecturer_name, item.endorsed_by_lecturer_photo)}</div>
         <div>
-          <div class="profile-link" data-user-id="${item.endorsed_by_lecturer_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${title}${item.endorsed_by_lecturer_name}</div>
-          <div class="endorsement-badge ${(item.endorsement_type || "General").toLowerCase()}" style="margin-top:3px;">
-            <i class="ti ti-certificate" aria-hidden="true"></i> ${item.endorsement_type || "General"} Endorsement
+          <div class="profile-link" data-user-id="${escapeHtml(item.endorsed_by_lecturer_id)}" style="cursor:pointer;font-weight:700;font-size:13px;">${title}${escapeHtml(item.endorsed_by_lecturer_name)}</div>
+          <div class="endorsement-badge ${escapeHtml((item.endorsement_type || "General").toLowerCase())}" style="margin-top:3px;">
+            <i class="ti ti-certificate" aria-hidden="true"></i> ${escapeHtml(item.endorsement_type || "General")} Endorsement
           </div>
         </div>
       </div>
       ${item.endorsement_message
-        ? `<p class="endorsement-detail-quote">"${item.endorsement_message}"</p>`
+        ? `<p class="endorsement-detail-quote">"${escapeHtml(item.endorsement_message)}"</p>`
         : `<p class="endorsement-detail-quote" style="font-style:italic;opacity:0.8;">Personally recommended by this lecturer.</p>`}
     </div>`;
 }
@@ -650,21 +660,21 @@ async function loadUserProfile(userId) {
       ? profile.recent_reviews.slice(0, 3).map(r => `
           <div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px;">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-              <span style="font-size:13px;font-weight:600;">${r.reviewer_name}</span>
-              <div class="badge"><i class="ti ti-star" aria-hidden="true"></i> ${r.rating}/5</div>
+              <span style="font-size:13px;font-weight:600;">${escapeHtml(r.reviewer_name)}</span>
+              <div class="badge"><i class="ti ti-star" aria-hidden="true"></i> ${escapeHtml(r.rating)}/5</div>
             </div>
-            <p style="font-size:13px;color:var(--muted);">${r.comment || "No comment provided."}</p>
+            <p style="font-size:13px;color:var(--muted);">${escapeHtml(r.comment || "No comment provided.")}</p>
           </div>`).join("")
       : `<p style="color:var(--muted);font-size:13px;">No reviews yet.</p>`;
 
     const lecturerBlock = isLecturer ? `
       <div class="market-tags" style="margin-bottom:14px;">
-        <div class="lecturer-title-badge"><i class="ti ti-chalkboard" aria-hidden="true"></i> ${profile.lecturer_title || ""} Verified Lecturer</div>
+        <div class="lecturer-title-badge"><i class="ti ti-chalkboard" aria-hidden="true"></i> ${escapeHtml(profile.lecturer_title || "")} Verified Lecturer</div>
       </div>
       ${profile.skills?.length ? `
         <div style="margin-bottom:14px;">
           <h4 style="font-size:12px;font-weight:700;margin-bottom:6px;">Expertise</h4>
-          <div class="market-tags">${profile.skills.map(s => `<div class="market-tag">${s}</div>`).join("")}</div>
+          <div class="market-tags">${profile.skills.map(s => `<div class="market-tag">${escapeHtml(s)}</div>`).join("")}</div>
         </div>` : ""}
       ${profile.lecturer_stats ? `
         <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;">
@@ -683,8 +693,8 @@ async function loadUserProfile(userId) {
       <div style="margin-bottom:14px;">
         <h4 style="font-size:12px;font-weight:700;margin-bottom:6px;">Lecturer Endorsements</h4>
         ${profile.endorsements_received.slice(0, 3).map(e => `
-          <div class="endorsement-badge ${e.endorsement_type.toLowerCase()}" style="margin:0 6px 6px 0;">
-            <i class="ti ti-certificate" aria-hidden="true"></i> ${e.endorsement_type} — ${e.lecturer_title || ""} ${e.lecturer_name}
+          <div class="endorsement-badge ${escapeHtml(e.endorsement_type.toLowerCase())}" style="margin:0 6px 6px 0;">
+            <i class="ti ti-certificate" aria-hidden="true"></i> ${escapeHtml(e.endorsement_type)} — ${escapeHtml(e.lecturer_title || "")} ${escapeHtml(e.lecturer_name)}
           </div>`).join("")}
       </div>` : "";
 
@@ -692,8 +702,8 @@ async function loadUserProfile(userId) {
       <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
         <div class="market-avatar" style="width:48px;height:48px;font-size:16px;">${avatarHtml(profile.full_name, profile.profilePhoto)}</div>
         <div>
-          <div style="font-weight:700;font-size:15px;">${posterName(profile.full_name, profile.lecturer_title)}</div>
-          ${profile.email ? `<div style="font-size:12px;color:var(--muted);">${escapeReportText(profile.email)}</div>` : ""}
+          <div style="font-weight:700;font-size:15px;">${escapeHtml(posterName(profile.full_name, profile.lecturer_title))}</div>
+          ${profile.email ? `<div style="font-size:12px;color:var(--muted);">${escapeHtml(profile.email)}</div>` : ""}
         </div>
       </div>
       ${lecturerBlock}
@@ -715,16 +725,16 @@ async function loadUserProfile(userId) {
       ${endorsementsBlock}
       <div class="market-tags" style="margin-bottom:14px;">
         <div class="badge"><i class="ti ti-shield-check" aria-hidden="true"></i> Verified</div>
-        <div class="badge blue">${profile.member_type || "Student"}</div>
+        <div class="badge blue">${escapeHtml(profile.member_type || "Student")}</div>
         ${isLecturer ? (profile.lecturer_verified
           ? `<div class="badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified lecturer</div>`
           : `<div class="badge gold">Lecturer — not yet verified</div>`) : ""}
         ${profile.role === "admin" ? `<div class="badge navy"><i class="ti ti-shield-lock" aria-hidden="true"></i> Admin</div>` : ""}
       </div>
       <div style="background:var(--background);border-radius:var(--radius);padding:12px 14px;margin-bottom:16px;font-size:13px;">
-        ${profile.student_number !== undefined ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Student/Staff No.</span><strong>${escapeReportText(profile.student_number || "Not provided")}</strong></div>` : ""}
-        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Faculty</span><strong>${profile.faculty || "Not provided"}</strong></div>
-        ${profile.member_type === "Student" ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Academic Year</span><strong>${profile.academic_year || "Not provided"}</strong></div>` : ""}
+        ${profile.student_number !== undefined ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Student/Staff No.</span><strong>${escapeHtml(profile.student_number || "Not provided")}</strong></div>` : ""}
+        <div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Faculty</span><strong>${escapeHtml(profile.faculty || "Not provided")}</strong></div>
+        ${profile.member_type === "Student" ? `<div style="display:flex;justify-content:space-between;padding:4px 0;"><span style="color:var(--muted);">Academic Year</span><strong>${escapeHtml(profile.academic_year || "Not provided")}</strong></div>` : ""}
       </div>
       ${!isLecturer ? `<h4 style="font-size:13px;font-weight:700;margin-bottom:6px;">Recent Reviews</h4>${reviews}` : ""}`;
   } catch (err) {
@@ -1131,21 +1141,21 @@ function renderImageGallery(imageUrls = [], fallbackIcon = "ti-image") {
 
   if (imageUrls.length === 1) {
     return `
-      <div class="detail-image-single" style="--detail-img:${detailBackdropUrl(imageUrls[0])}">
-        <img src="${imageUrls[0]}" alt="Listing image" class="lightbox-img" data-gallery="${galleryId}" data-full="${imageUrls[0]}" />
+      <div class="detail-image-single" style="--detail-img:${escapeHtml(detailBackdropUrl(imageUrls[0]))}">
+        <img src="${escapeHtml(imageUrls[0])}" alt="Listing image" class="lightbox-img" data-gallery="${galleryId}" data-full="${escapeHtml(imageUrls[0])}" />
       </div>`;
   }
 
   return `
     <div class="image-gallery">
-      <div class="image-gallery-main" style="--detail-img:${detailBackdropUrl(imageUrls[0])}">
-        <img src="${imageUrls[0]}" alt="Main image" id="galleryMain" class="lightbox-img" data-gallery="${galleryId}" data-full="${imageUrls[0]}" />
+      <div class="image-gallery-main" style="--detail-img:${escapeHtml(detailBackdropUrl(imageUrls[0]))}">
+        <img src="${escapeHtml(imageUrls[0])}" alt="Main image" id="galleryMain" class="lightbox-img" data-gallery="${galleryId}" data-full="${escapeHtml(imageUrls[0])}" />
       </div>
       <div class="image-gallery-thumbs">
         ${imageUrls.map((url, i) => `
           <div class="image-gallery-thumb ${i === 0 ? "active" : ""}"
-               onclick="switchGalleryImage('${url}', this)">
-            <img src="${url}" alt="Image ${i + 1}" class="lightbox-img" data-gallery="${galleryId}" data-full="${url}" />
+               data-url="${escapeHtml(url)}" onclick="switchGalleryImage(this.dataset.url, this)">
+            <img src="${escapeHtml(url)}" alt="Image ${i + 1}" class="lightbox-img" data-gallery="${galleryId}" data-full="${escapeHtml(url)}" />
           </div>`).join("")}
       </div>
     </div>`;
@@ -1363,10 +1373,9 @@ function reportCategoryLabel(category) {
   return (REPORT_CATEGORIES[category] || REPORT_CATEGORIES.other).label;
 }
 
+/* Older name for escapeHtml() (top of this file), kept for existing callers. */
 function escapeReportText(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  return escapeHtml(value);
 }
 
 /* The small "Report a problem" button that sits at the bottom of each

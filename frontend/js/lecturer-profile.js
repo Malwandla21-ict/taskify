@@ -45,8 +45,8 @@ function activityRow(item) {
     <div class="profile-activity-item">
       <div class="profile-activity-icon"><i class="ti ${activityIcon(item.type)}" aria-hidden="true"></i></div>
       <div class="profile-activity-body">
-        <div class="profile-activity-title">${item.title}</div>
-        ${item.subtitle ? `<div class="profile-activity-sub">${item.subtitle}</div>` : ""}
+        <div class="profile-activity-title">${escapeHtml(item.title)}</div>
+        ${item.subtitle ? `<div class="profile-activity-sub">${escapeHtml(item.subtitle)}</div>` : ""}
       </div>
       <div class="profile-activity-time">${timeAgo(item.created_at)}</div>
     </div>`;
@@ -71,9 +71,9 @@ async function loadProfile() {
             </div>
           </div>
           <div class="profile-header-info">
-            <h2>${posterName(profile.full_name, profile.lecturer_title)} <span class="lecturer-title-badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified Lecturer</span></h2>
-            <p><i class="ti ti-mail" aria-hidden="true"></i> ${profile.email}${profile.office_location ? ` &nbsp;·&nbsp; <i class="ti ti-map-pin" aria-hidden="true"></i> ${profile.office_location}` : ""}</p>
-            <p style="margin-top:2px;"><i class="ti ti-building" aria-hidden="true"></i> ${profile.faculty || "Faculty not set"}${profile.years_experience ? ` &nbsp;·&nbsp; ${profile.years_experience}+ years experience` : ""}</p>
+            <h2>${escapeHtml(posterName(profile.full_name, profile.lecturer_title))} <span class="lecturer-title-badge"><i class="ti ti-rosette-discount-check" aria-hidden="true"></i> Verified Lecturer</span></h2>
+            <p><i class="ti ti-mail" aria-hidden="true"></i> ${escapeHtml(profile.email)}${profile.office_location ? ` &nbsp;·&nbsp; <i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(profile.office_location)}` : ""}</p>
+            <p style="margin-top:2px;"><i class="ti ti-building" aria-hidden="true"></i> ${escapeHtml(profile.faculty || "Faculty not set")}${profile.years_experience ? ` &nbsp;·&nbsp; ${escapeHtml(profile.years_experience)}+ years experience` : ""}</p>
           </div>
         </div>
         <div class="profile-stats-inline">
@@ -89,10 +89,10 @@ async function loadProfile() {
 
     document.getElementById("aboutMeText").textContent = profile.bio || "No bio added yet. Click Edit Profile to introduce yourself.";
     document.getElementById("expertiseTagsRow").innerHTML = profile.skills.length
-      ? profile.skills.map(s => `<div class="profile-tag">${s}</div>`).join("")
+      ? profile.skills.map(s => `<div class="profile-tag">${escapeHtml(s)}</div>`).join("")
       : `<p style="color:var(--muted);font-size:12px;">No expertise tags added yet.</p>`;
     document.getElementById("servicesTagsRow").innerHTML = profile.services.length
-      ? profile.services.map(s => `<div class="profile-tag" style="background:rgba(0,155,114,0.10);color:var(--ump-green);">${s}</div>`).join("")
+      ? profile.services.map(s => `<div class="profile-tag" style="background:rgba(0,155,114,0.10);color:var(--ump-green);">${escapeHtml(s)}</div>`).join("")
       : `<p style="color:var(--muted);font-size:12px;">No services listed yet.</p>`;
     document.getElementById("availabilityText").textContent = profile.availability_note ||
       (profile.consultation_mode ? `Available for ${profile.consultation_mode}.` : "No availability set yet.");
@@ -126,12 +126,12 @@ function renderReviews(reviews) {
           <div class="market-top">
             <div class="market-user">
               <div class="market-avatar">${avatarHtml(r.reviewer_name, r.reviewer_profile_photo)}</div>
-              <div><div class="market-user-name profile-link" data-user-id="${r.reviewer_id}" style="cursor:pointer;">${r.reviewer_name}</div></div>
+              <div><div class="market-user-name profile-link" data-user-id="${r.reviewer_id}" style="cursor:pointer;">${escapeHtml(r.reviewer_name)}</div></div>
             </div>
-            <div class="badge"><i class="ti ti-star" aria-hidden="true"></i> ${r.rating}/5</div>
+            <div class="badge"><i class="ti ti-star" aria-hidden="true"></i> ${escapeHtml(r.rating)}/5</div>
           </div>
           <p style="color:var(--ump-gold);font-size:16px;margin-bottom:8px;">${stars}</p>
-          <p style="color:var(--muted);font-size:13px;">${r.comment || "No comment provided."}</p>
+          <p style="color:var(--muted);font-size:13px;">${escapeHtml(r.comment || "No comment provided.")}</p>
         </div>
       </div>`;
   }).join("");
@@ -149,14 +149,14 @@ async function loadEndorsementsGiven() {
             <div class="endorsement-card-top">
               <div class="market-avatar" style="width:38px;height:38px;">${avatarHtml(e.endorsed_user_name, e.endorsed_user_photo)}</div>
               <div>
-                <div class="profile-link" data-user-id="${e.endorsed_user_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${e.endorsed_user_name}</div>
+                <div class="profile-link" data-user-id="${e.endorsed_user_id}" style="cursor:pointer;font-weight:700;font-size:13px;">${escapeHtml(e.endorsed_user_name)}</div>
                 <div style="font-size:11px;color:var(--muted);">${new Date(e.created_at).toLocaleDateString()}</div>
               </div>
-              <div class="endorsement-badge ${e.endorsement_type.toLowerCase()}" style="margin-left:auto;">
-                <i class="ti ti-certificate" aria-hidden="true"></i> ${e.endorsement_type}
+              <div class="endorsement-badge ${escapeHtml(e.endorsement_type.toLowerCase())}" style="margin-left:auto;">
+                <i class="ti ti-certificate" aria-hidden="true"></i> ${escapeHtml(e.endorsement_type)}
               </div>
             </div>
-            ${e.message ? `<p style="font-size:13px;color:var(--text);margin-bottom:10px;">"${e.message}"</p>` : ""}
+            ${e.message ? `<p style="font-size:13px;color:var(--text);margin-bottom:10px;">"${escapeHtml(e.message)}"</p>` : ""}
             <button type="button" class="market-action-btn outline revoke-endorsement-btn" data-endorsement-id="${e.id}" style="color:var(--ump-red);border-color:rgba(224,58,62,0.25);">
               <i class="ti ti-trash" aria-hidden="true"></i> Revoke
             </button>
@@ -224,11 +224,11 @@ studentSearchInput?.addEventListener("input", () => {
       const students = res.data;
       studentSearchResults.innerHTML = students.length
         ? students.map(s => `
-            <div class="student-search-result-row" data-student-id="${s.id}" data-student-name="${s.full_name}" data-student-photo="${s.profile_photo_url || ""}">
+            <div class="student-search-result-row" data-student-id="${s.id}" data-student-name="${escapeHtml(s.full_name)}" data-student-photo="${escapeHtml(s.profile_photo_url || "")}">
               <div class="market-avatar" style="width:28px;height:28px;">${avatarHtml(s.full_name, s.profile_photo_url)}</div>
               <div>
-                <div style="font-weight:600;">${s.full_name}</div>
-                <div style="font-size:11px;color:var(--muted);">${s.email}</div>
+                <div style="font-weight:600;">${escapeHtml(s.full_name)}</div>
+                <div style="font-size:11px;color:var(--muted);">${escapeHtml(s.email)}</div>
               </div>
             </div>`).join("")
         : `<div style="padding:10px 12px;font-size:12px;color:var(--muted);">No matching students.</div>`;
@@ -251,7 +251,7 @@ async function selectStudent(student) {
   selectedStudentChip.className = "selected-student-chip";
   selectedStudentChip.innerHTML = `
     <div class="market-avatar" style="width:32px;height:32px;">${avatarHtml(student.name, student.photo)}</div>
-    <span style="font-weight:600;font-size:13px;">${student.name}</span>
+    <span style="font-weight:600;font-size:13px;">${escapeHtml(student.name)}</span>
     <button type="button" id="clearSelectedStudent"><i class="ti ti-x" aria-hidden="true"></i></button>`;
   document.getElementById("clearSelectedStudent").addEventListener("click", () => {
     selectedStudent = null;
@@ -265,10 +265,10 @@ async function selectStudent(student) {
     const hasAny = sales.length || equipment.length || (tasks?.length) || (events?.length);
     if (hasAny) {
       contextListingSelect.innerHTML = `<option value="">No specific listing</option>` +
-        (tasks?.length ? `<optgroup label="Tasks">${tasks.map(t => `<option value="task:${t.id}">${t.title} (${t.status})</option>`).join("")}</optgroup>` : "") +
-        (sales.length ? `<optgroup label="Sales Items">${sales.map(s => `<option value="sales_item:${s.id}">${s.title} (${s.status})</option>`).join("")}</optgroup>` : "") +
-        (equipment.length ? `<optgroup label="Equipment">${equipment.map(e => `<option value="equipment:${e.id}">${e.name}</option>`).join("")}</optgroup>` : "") +
-        (events?.length ? `<optgroup label="Campus Marketplace">${events.map(ev => `<option value="event:${ev.id}">${ev.title} (${ev.status})</option>`).join("")}</optgroup>` : "");
+        (tasks?.length ? `<optgroup label="Tasks">${tasks.map(t => `<option value="task:${t.id}">${escapeHtml(t.title)} (${t.status})</option>`).join("")}</optgroup>` : "") +
+        (sales.length ? `<optgroup label="Sales Items">${sales.map(s => `<option value="sales_item:${s.id}">${escapeHtml(s.title)} (${s.status})</option>`).join("")}</optgroup>` : "") +
+        (equipment.length ? `<optgroup label="Equipment">${equipment.map(e => `<option value="equipment:${e.id}">${escapeHtml(e.name)}</option>`).join("")}</optgroup>` : "") +
+        (events?.length ? `<optgroup label="Campus Marketplace">${events.map(ev => `<option value="event:${ev.id}">${escapeHtml(ev.title)} (${ev.status})</option>`).join("")}</optgroup>` : "");
       contextListingGroup.style.display = "block";
     } else {
       contextListingGroup.style.display = "none";
@@ -324,8 +324,8 @@ function renderEditSkillsTags() {
   editSkillsTagsRow.innerHTML = editSkills.length
     ? editSkills.map((s, i) => `
         <div class="profile-tag editable">
-          ${s}
-          <button type="button" data-index="${i}" aria-label="Remove ${s}"><i class="ti ti-x" aria-hidden="true"></i></button>
+          ${escapeHtml(s)}
+          <button type="button" data-index="${i}" aria-label="Remove ${escapeHtml(s)}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>`).join("")
     : `<p style="color:var(--muted);font-size:12px;">No expertise tags added yet.</p>`;
 
@@ -341,8 +341,8 @@ function renderEditServicesTags() {
   editServicesTagsRow.innerHTML = editServices.length
     ? editServices.map((s, i) => `
         <div class="profile-tag editable" style="background:rgba(0,155,114,0.10);color:var(--ump-green);">
-          ${s}
-          <button type="button" data-index="${i}" aria-label="Remove ${s}"><i class="ti ti-x" aria-hidden="true"></i></button>
+          ${escapeHtml(s)}
+          <button type="button" data-index="${i}" aria-label="Remove ${escapeHtml(s)}"><i class="ti ti-x" aria-hidden="true"></i></button>
         </div>`).join("")
     : `<p style="color:var(--muted);font-size:12px;">No services listed yet.</p>`;
 
@@ -624,9 +624,9 @@ async function startTwoFactorSetup() {
 function renderTwoFactorSetupStep(qrCodeDataUrl, manualEntryKey) {
   twoFactorModalBody.innerHTML = `
     <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">1. Scan this QR code with your authenticator app.</p>
-    <div class="qr-code-box"><img src="${qrCodeDataUrl}" alt="Two-factor QR code" /></div>
+    <div class="qr-code-box"><img src="${escapeHtml(qrCodeDataUrl)}" alt="Two-factor QR code" /></div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:6px;">Can't scan it? Enter this key manually:</p>
-    <div class="manual-key-box">${manualEntryKey}</div>
+    <div class="manual-key-box">${escapeHtml(manualEntryKey)}</div>
     <p style="font-size:13px;color:var(--muted);margin:14px 0 6px;">2. Enter the 6-digit code your app shows:</p>
     <div class="form-group">
       <input type="text" id="twoFactorEnableCode" inputmode="numeric" maxlength="6" placeholder="123456" />
@@ -675,7 +675,7 @@ async function startEmailTwoFactorSetup() {
 function renderEmailTwoFactorSetupStep(sentMessage) {
   twoFactorModalBody.innerHTML = `
     <p style="font-size:13px;color:var(--muted);margin-bottom:14px;">
-      ${sentMessage || "We've sent a 6-digit code to your email."}
+      ${escapeHtml(sentMessage || "We've sent a 6-digit code to your email.")}
     </p>
     <div class="form-group">
       <label>6-digit code</label>
@@ -747,7 +747,7 @@ function renderTwoFactorBackupCodes(codes, opts = {}) {
       ${subtext}
     </p>
     <div class="backup-codes-grid">
-      ${codes.map(c => `<div class="backup-code-chip">${c}</div>`).join("")}
+      ${codes.map(c => `<div class="backup-code-chip">${escapeHtml(c)}</div>`).join("")}
     </div>
     <button type="button" class="secondary-button" id="copyBackupCodesBtn" style="width:100%;margin-top:12px;">
       <i class="ti ti-copy" aria-hidden="true"></i> Copy codes
@@ -791,7 +791,7 @@ async function renderTrustedDevicesSection() {
         ${devices.map(d => `
           <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--border, #e5e7eb);border-radius:8px;">
             <div>
-              <div style="font-size:12.5px;font-weight:600;">${d.device_label || "Unknown device"}</div>
+              <div style="font-size:12.5px;font-weight:600;">${escapeHtml(d.device_label || "Unknown device")}</div>
               <div style="font-size:11px;color:var(--muted);">Last used ${formatDeviceDate(d.last_used_at)} · Expires ${formatDeviceDate(d.expires_at)}</div>
             </div>
             <button type="button" class="secondary-button" data-device-id="${d.id}" style="padding:4px 10px;font-size:11px;flex-shrink:0;">Forget</button>

@@ -10,7 +10,7 @@ let analyticsRange = { from: null, to: null };
 const analyticsCharts = {};
 
 function escapeAnalyticsText(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return escapeHtml(value);
 }
 
 /* Today's date (YYYY-MM-DD) in South African time, n days from now. */

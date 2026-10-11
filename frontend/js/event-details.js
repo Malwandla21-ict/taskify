@@ -87,12 +87,12 @@ async function renderEventDetails(event, hasRsvped) {
           ${lecturerPostedCornerBadge(event.organizer_member_type, event.organizer_lecturer_verified)}
         </div>
         ${sectionBadge(event.section || "General")}
-        <h1 class="detail-title">${event.title}</h1>
-        <p class="detail-description">${event.description}</p>
+        <h1 class="detail-title">${escapeHtml(event.title)}</h1>
+        <p class="detail-description">${escapeHtml(event.description)}</p>
         <div class="market-tags" style="margin-top:18px;">
           ${institutionalBadge(event)}
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${event.category}</div>
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(event.category)}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(event.location)}</div>
           <div class="market-tag"><i class="ti ti-clock" aria-hidden="true"></i> ${formatEventDate(event.event_date)}</div>
           ${eventFoodTags(event)}
           ${statusBadge(event.status)}
@@ -107,7 +107,7 @@ async function renderEventDetails(event, hasRsvped) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${avatarHtml(event.organizer_name, event.organizer_profile_photo)}</div>
           <div>
-            <div class="profile-link" data-user-id="${event.organizer_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${posterName(event.organizer_name, event.organizer_lecturer_title)}</div>
+            <div class="profile-link" data-user-id="${event.organizer_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${escapeHtml(posterName(event.organizer_name, event.organizer_lecturer_title))}</div>
             <div style="font-size:11px;color:var(--muted);">Posted by</div>
           </div>
         </div>

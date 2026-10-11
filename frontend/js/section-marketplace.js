@@ -62,7 +62,7 @@ function taskCard(task) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${task.image_urls?.length
-          ? `<img src="${task.image_urls[0]}" alt="${task.title}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(task.image_urls[0])}" alt="${escapeHtml(task.title)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
         ${task.urgent ? `<div class="urgent-badge"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${endorsementCornerBadge(task, { shiftDown: task.urgent })}
@@ -76,20 +76,20 @@ function taskCard(task) {
           <div class="market-user">
             <div class="market-avatar">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${posterName(task.created_by_name, task.created_by_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${escapeHtml(posterName(task.created_by_name, task.created_by_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> ${task.created_by_member_type === "Lecturer" ? "Verified Lecturer" : "Verified Student"}</div>
             </div>
           </div>
           ${statusBadge(task.status)}
         </div>
-        <h3>${task.title}</h3>
+        <h3>${escapeHtml(task.title)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(task.category)}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(task.location)}</div>
           ${endorsementBadge(task)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${task.price} <span>/task</span></div>
+          <div class="market-price">R${escapeHtml(task.price)} <span>/task</span></div>
           <a href="./task-details.html?id=${task.id}" class="market-action-btn"><i class="ti ti-eye" aria-hidden="true"></i> View</a>
         </div>
       </div>
@@ -103,7 +103,7 @@ function equipmentCard(item) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${imageUrl
-          ? `<img src="${imageUrl}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light blue"><i class="ti ti-package" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
         ${lecturerPostedCornerBadge(item.owner_member_type, item.owner_lecturer_verified)}
@@ -116,19 +116,19 @@ function equipmentCard(item) {
           <div class="market-user">
             <div class="market-avatar" style="background:rgba(0,114,206,0.12);color:var(--ump-blue);">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;">${posterName(item.owner_name, item.owner_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;">${escapeHtml(posterName(item.owner_name, item.owner_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-package" aria-hidden="true"></i> Equipment Owner</div>
             </div>
           </div>
         </div>
-        <h3>${item.name}</h3>
+        <h3>${escapeHtml(item.name)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
           ${endorsementBadge(item)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${item.daily_price} <span>/day</span></div>
+          <div class="market-price">R${escapeHtml(item.daily_price)} <span>/day</span></div>
           <a href="./equipment-details.html?id=${item.id}" class="market-action-btn"><i class="ti ti-eye" aria-hidden="true"></i> View</a>
         </div>
       </div>
@@ -142,7 +142,7 @@ function saleCard(item) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${imageUrl
-          ? `<img src="${imageUrl}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
         ${lecturerPostedCornerBadge(item.seller_member_type, item.seller_lecturer_verified)}
@@ -155,19 +155,19 @@ function saleCard(item) {
           <div class="market-user">
             <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${posterName(item.seller_name, item.seller_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${escapeHtml(posterName(item.seller_name, item.seller_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
             </div>
           </div>
         </div>
-        <h3>${item.title}</h3>
+        <h3>${escapeHtml(item.title)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
           ${endorsementBadge(item)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${item.price}</div>
+          <div class="market-price">R${escapeHtml(item.price)}</div>
           <a href="./sale-details.html?id=${item.id}" class="market-action-btn"><i class="ti ti-eye" aria-hidden="true"></i> View</a>
         </div>
       </div>
@@ -263,9 +263,9 @@ function renderCategoryCards() {
     const count = counts[name] || 0;
     const active = selectedCategory === name;
     return `
-      <div class="category-card${active ? " active" : ""}" data-category="${name}" role="button" tabindex="0" aria-pressed="${active}">
+      <div class="category-card${active ? " active" : ""}" data-category="${escapeHtml(name)}" role="button" tabindex="0" aria-pressed="${active}">
         <div class="category-icon ${CATEGORY_ICON_COLORS[i % CATEGORY_ICON_COLORS.length]}"><i class="ti ${details.icon}" aria-hidden="true"></i></div>
-        <h3>${name}</h3>
+        <h3>${escapeHtml(name)}</h3>
         <p>${details.blurb}</p>
         <p class="category-card-meta">${types.join(" · ")} · ${count} listing${count === 1 ? "" : "s"}</p>
       </div>`;
