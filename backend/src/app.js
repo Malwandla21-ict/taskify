@@ -69,7 +69,8 @@ const MARKETPLACE = require("./config/marketplace");
 app.get("/api/features", (req, res) => res.json({ success: true, data: {
   endorsements: !!FEATURES.endorsements,
   feedback: !!FEATURES.feedback,
-  institutionalMarketplaceListings: !!MARKETPLACE.institutionalListingsEnabled
+  institutionalMarketplaceListings: !!MARKETPLACE.institutionalListingsEnabled,
+  marketplaceAdminsOnly: !!MARKETPLACE.adminsOnlyPosting
 } }));
 
 app.use(errorHandler);

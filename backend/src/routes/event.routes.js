@@ -1,7 +1,8 @@
 const express = require("express");
 const { body, param } = require("express-validator");
 const eventController = require("../controllers/event.controller");
-const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
+const { authenticate, optionalAuthenticate, requireTwoFactor } = require("../middleware/auth.middleware");
+const MARKETPLACE = require("../config/marketplace");
 const { categoriesFor, legacyCategoriesFor, applyCategorySection } = require("../config/categories");
 
 const router = express.Router();
@@ -37,12 +38,27 @@ const eventFieldRules = [
   applyCategorySection("event")
 ];
 
-router.post("/", authenticate, eventFieldRules, eventController.createEvent);
+/* Who may post or edit (config/marketplace.js adminsOnlyPosting): checked
+   here on the server, not only by hiding the button. Read on every
+   request, so flipping the switch needs no other change. */
+function marketplacePoster(req, res, next) {
+  if (!MARKETPLACE.adminsOnlyPosting) return next();
+  if (req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Campus Marketplace listings are posted by Taskify admins. To sell or rent out something of your own, use Sales or Rentals."
+    });
+  }
+  return requireTwoFactor(req, res, next);
+}
+
+router.post("/", authenticate, marketplacePoster, eventFieldRules, eventController.createEvent);
 
 /* Edit — only the organizer, only while the event is still upcoming. */
 router.put(
   "/:id",
   authenticate,
+  marketplacePoster,
   [
     param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer."),
     ...eventFieldRules,

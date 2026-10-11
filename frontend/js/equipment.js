@@ -639,7 +639,7 @@ function historyCard(booking) {
   const stage = rentalStage(booking);
 
   return `
-    <div class="market-card" id="booking-${booking.id}">
+    <div class="market-card history-row" id="booking-${booking.id}">
       <div class="market-image" style="position:relative;">
         ${imageUrl
           ? `<img src="${imageUrl}" alt="${escapeReportText(booking.equipment_name)}" class="lightbox-img" data-gallery="equip-history-${booking.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`

@@ -91,6 +91,7 @@ Today steps 2 and 5 don't exist, so even a rule marked `approved` would still no
 |---|---|---|---|
 | `endorsements` | `backend/src/config/features.js` | **off** | Lecturers endorsing students and their listings. When off, the server refuses the endorsement routes (`requireFeature`), strips endorsement fields from listings and profiles, and the website hides the links. Existing endorsements stay in the database. |
 | `feedback` | `backend/src/config/features.js` | on | The "Help shape Taskify" form. Sending feedback never gives anyone extra permissions. |
+| `adminsOnlyPosting` | `backend/src/config/marketplace.js` | **on** | Only admins (with two-factor sign-in) can post or edit Campus Marketplace listings. Everyone can still browse and say they're going. Older listings by others stay until they end, and their organisers can still delete them. |
 | `institutionalListingsEnabled` | `backend/src/config/marketplace.js` | on | Institutional Campus Marketplace categories (farm produce, surplus, lost property, departmental). Each one needs an admin check and a note of who authorised it, and is labelled "Reviewed institutional listing", never "official". |
 | `depositsEnabled` | `paymentSettings.js` → `RENTALS` | **off** | Security deposits (see above). |
 

@@ -1980,3 +1980,49 @@ body.dashboard-body {
 
 /* ── Feature switches (helpers.js applyFeatureSwitches) ── */
 [data-feature]:not(.feature-on) { display: none !important; }
+
+/* ── History rows (task, rental and sale history) ──
+   The browse card's wide 160px banner image made a stacked history list
+   mostly empty picture. Here each entry is a row: a small square photo on
+   the left, the details beside it. Same card colours and border. */
+.history-list > .market-card.history-row,
+.history-row {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr); /* 16px gap + 112px photo */
+  align-items: start;
+}
+.history-row:hover { transform: none; }
+.history-row > .market-image {
+  width: 112px;
+  height: 112px;
+  margin: 16px 0 16px 16px;
+  border-radius: var(--radius);
+}
+.history-row > .market-image .media-placeholder i { font-size: 28px; }
+.history-row > .market-image .corner-badge { display: none; } /* shown as tags in the details instead */
+.history-row > .market-content { padding: 16px 18px 16px 16px; }
+.history-row h3 { margin-bottom: 4px; }
+.history-row .market-top { flex-wrap: wrap; gap: 6px; justify-content: flex-start; }
+.history-row .history-desc {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 2px 0 10px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.history-row .market-tags { margin: 8px 0; }
+.history-row .market-footer { margin-top: 10px; gap: 10px; flex-wrap: wrap; }
+
+@media (max-width: 600px) {
+  .history-list > .market-card.history-row,
+  .history-row { grid-template-columns: 82px minmax(0, 1fr); } /* 14px gap + 68px photo */
+  .history-row > .market-image { width: 68px; height: 68px; margin: 14px 0 0 14px; }
+  .history-row > .market-image .media-placeholder i { font-size: 22px; }
+  .history-row > .market-content { padding: 14px; }
+  /* Buttons and the timeline use the card's full width under the photo. */
+  .history-row .rental-timeline,
+  .history-row .rental-actions,
+  .history-row .market-footer { margin-left: -82px; }
+}

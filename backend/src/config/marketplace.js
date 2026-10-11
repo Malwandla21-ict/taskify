@@ -9,7 +9,14 @@
       never "official" or "endorsed by UMP".
   Set institutionalListingsEnabled to false to stop new institutional
   listings altogether (e.g. if the university says no).
+
+  adminsOnlyPosting — only Taskify admins (with two-factor sign-in) can
+  post or edit Campus Marketplace listings. Everyone can still browse
+  and mark themselves as going. Students sell things through Sales and
+  Rentals instead. Listings posted before this keep showing until they
+  end, and their organizers can still delete them.
 */
 module.exports = {
-  institutionalListingsEnabled: true
+  institutionalListingsEnabled: true,
+  adminsOnlyPosting: true
 };
