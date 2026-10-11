@@ -159,7 +159,7 @@ twoFactorForm.addEventListener("submit", async (event) => {
 
   const originalHtml = verifyButton.innerHTML;
   verifyButton.disabled = true;
-  verifyButton.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Verifying…`;
+  verifyButton.innerHTML = `<i class="ti ti-shield-check busy-icon busy-scan" aria-hidden="true"></i> Verifying…`;
   showMessage("Verifying…", "#687280");
 
   try {

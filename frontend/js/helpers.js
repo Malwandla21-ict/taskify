@@ -37,6 +37,218 @@ function errorState(message) {
     </div>`;
 }
 
+/* ── Taskify mark loader ──
+   The brand symbol (geometry from assets/taskify-2d-badge) with the
+   trolley tracing itself in on a loop and a gold arc orbiting it. Used
+   for whole-section loads and the slow-network pill; sized like an icon
+   (1em), so set font-size on the parent. Styles: .tk-loader in main.css. */
+function taskifyMarkLoader(label = "") {
+  const a11y = label ? `role="img" aria-label="${label}"` : `aria-hidden="true"`;
+  return `
+    <svg class="tk-loader" viewBox="-12 -12 124 124" ${a11y}>
+      <circle class="tkl-orbit" cx="50" cy="50" r="57" fill="none" stroke="#F5B400" stroke-width="5"
+              stroke-linecap="round" pathLength="1" stroke-dasharray="0.22 0.78"></circle>
+      <circle cx="50" cy="50" r="48" fill="#12A66E"></circle>
+      <g transform="translate(3 4)">
+        <rect x="33" y="18" width="36" height="10" rx="2.5" fill="#FFFFFF"></rect>
+        <rect x="46" y="18" width="10" height="32" rx="1.5" fill="#FFFFFF"></rect>
+        <path class="tkl-cart" d="M22 35 H30 L39.5 62 H66 L71.5 48 H43" fill="none" stroke="#FFFFFF"
+              stroke-width="6" stroke-linecap="round" stroke-linejoin="round" pathLength="1"></path>
+        <circle class="tkl-wheel" cx="44" cy="71.5" r="4.4" fill="#FFFFFF"></circle>
+        <circle class="tkl-wheel w2" cx="62" cy="71.5" r="4.4" fill="#FFFFFF"></circle>
+      </g>
+    </svg>`;
+}
+
+/* ── Skeleton placeholders ──
+   A container opts in with data-skeleton="<kind>" (and optionally
+   data-skeleton-count). On page load its "Loading…" placeholder is
+   swapped for grey shapes shaped like the content that's coming, so the
+   page looks nearly ready instead of empty. Each page's own script still
+   replaces the container's innerHTML exactly as before — nothing else
+   needs to know skeletons exist. When that happens the new content
+   eases in once (see .sk-revealing in main.css). */
+const SKELETON_TEMPLATES = {
+  cards: () => `
+    <div class="sk-card" aria-hidden="true">
+      <div class="sk sk-media"></div>
+      <div class="sk-card-body">
+        <div class="sk-row-flex sk-user">
+          <span class="sk sk-circle" style="width:32px;height:32px;"></span>
+          <div><span class="sk sk-line sk-w45"></span><span class="sk sk-line sk-w30" style="margin:0;"></span></div>
+        </div>
+        <span class="sk sk-line lg sk-w90"></span>
+        <span class="sk sk-line lg sk-w60"></span>
+        <div class="sk-tags">
+          <span class="sk sk-pill" style="width:72px;"></span>
+          <span class="sk sk-pill" style="width:88px;"></span>
+          <span class="sk sk-pill" style="width:58px;"></span>
+        </div>
+        <div class="sk-footer">
+          <span class="sk sk-line xl" style="width:76px;margin:0;"></span>
+          <span class="sk" style="width:78px;height:32px;border-radius:999px;"></span>
+        </div>
+      </div>
+    </div>`,
+  rows: () => `
+    <div class="sk-hrow" aria-hidden="true">
+      <div class="sk sk-media"></div>
+      <div>
+        <span class="sk sk-line lg sk-w60"></span>
+        <span class="sk sk-line sk-w90"></span>
+        <span class="sk sk-line sk-w75"></span>
+        <div class="sk-row-flex" style="margin-top:12px;">
+          <span class="sk sk-pill" style="width:70px;"></span>
+          <span class="sk sk-pill" style="width:90px;"></span>
+        </div>
+      </div>
+    </div>`,
+  mini: () => `
+    <div class="sk-mini" aria-hidden="true">
+      <div class="sk sk-media"></div>
+      <div><span class="sk sk-line sk-w75"></span><span class="sk sk-line sk-w45"></span></div>
+    </div>`,
+  items: () => `
+    <div class="sk-item" aria-hidden="true">
+      <span class="sk sk-circle" style="width:38px;height:38px;"></span>
+      <div>
+        <span class="sk sk-line lg sk-w45"></span>
+        <span class="sk sk-line sk-w90"></span>
+        <span class="sk sk-line sk-w20" style="margin:0;"></span>
+      </div>
+    </div>`,
+  detail: () => `
+    <div class="detail-layout sk-detail" aria-hidden="true">
+      <div class="detail-main">
+        <div class="sk sk-media"></div>
+        <span class="sk sk-pill" style="width:84px;margin-bottom:14px;"></span>
+        <span class="sk sk-line xl sk-w75" style="height:28px;margin-bottom:16px;"></span>
+        <span class="sk sk-line sk-w90"></span>
+        <span class="sk sk-line sk-w90"></span>
+        <span class="sk sk-line sk-w60"></span>
+        <div class="sk-row-flex" style="margin-top:18px;">
+          <span class="sk sk-pill" style="width:80px;"></span>
+          <span class="sk sk-pill" style="width:96px;"></span>
+          <span class="sk sk-pill" style="width:64px;"></span>
+        </div>
+      </div>
+      <div class="sk-side">
+        <span class="sk sk-line sk-w45"></span>
+        <span class="sk sk-line xl sk-w60" style="height:30px;margin-bottom:18px;"></span>
+        <div class="sk-row-flex" style="margin-bottom:14px;">
+          <span class="sk sk-circle" style="width:40px;height:40px;"></span>
+          <div style="flex:1;"><span class="sk sk-line sk-w60"></span><span class="sk sk-line sk-w45" style="margin:0;"></span></div>
+        </div>
+        <span class="sk sk-line sk-w90"></span>
+        <span class="sk sk-line sk-w75"></span>
+        <div class="sk sk-btn"></div>
+      </div>
+    </div>`,
+  profile: () => `
+    <div aria-hidden="true" style="width:100%;max-width:340px;">
+      <span class="sk sk-line xl sk-w60" style="height:24px;margin-bottom:12px;"></span>
+      <span class="sk sk-line sk-w90"></span>
+      <span class="sk sk-line sk-w45"></span>
+    </div>`
+};
+
+const SKELETON_DEFAULT_COUNT = { cards: 6, rows: 3, mini: 3, items: 5, detail: 1, profile: 1 };
+
+function skeletonHtml(kind, count) {
+  const template = SKELETON_TEMPLATES[kind];
+  if (!template) return "";
+  const n = count || SKELETON_DEFAULT_COUNT[kind] || 3;
+  return Array.from({ length: n }, template).join("");
+}
+
+/* Put a skeleton into a container right now (also used by pages that
+   reload a list after the first load, e.g. opening a chat thread). */
+function showSkeleton(container, kind, { count, label = "Loading…" } = {}) {
+  if (!container) return;
+  container.innerHTML = `${skeletonHtml(kind, count)}<span class="sr-only" role="status">${label}</span>`;
+  watchSkeletonReveal(container);
+}
+
+function watchSkeletonReveal(container) {
+  if (container._skObserver) container._skObserver.disconnect();
+  const observer = new MutationObserver(() => {
+    if (container.querySelector(".sk")) return;   // still (or again) a skeleton
+    observer.disconnect();
+    container._skObserver = null;
+    container.classList.add("sk-revealing");
+    setTimeout(() => container.classList.remove("sk-revealing"), 700);
+  });
+  observer.observe(container, { childList: true });
+  container._skObserver = observer;
+}
+
+function hydrateSkeletons(scope = document) {
+  scope.querySelectorAll("[data-skeleton]").forEach(container => {
+    /* Only replace the static "Loading…" placeholder — if the page's own
+       script has already rendered real content, leave it alone. */
+    const placeholder = container.querySelector(".ti-loader");
+    if (!placeholder) return;
+    const label = (container.querySelector("h3, .rail-loading, p")?.textContent || "Loading…").trim();
+    showSkeleton(container, container.dataset.skeleton, {
+      count: Number(container.dataset.skeletonCount) || undefined,
+      label
+    });
+  });
+
+  /* Any other big "Loading…" panel gets the Taskify mark instead of the
+     generic ring. */
+  scope.querySelectorAll(".empty-state-icon > .ti-loader").forEach(icon => {
+    icon.outerHTML = taskifyMarkLoader();
+  });
+}
+
+hydrateSkeletons();
+
+/* ── Images fade in instead of painting in strips ──
+   Listing and detail photos come from Cloudinary and can take a moment
+   on mobile data. While one is still downloading, its frame shimmers;
+   when it lands it fades in. Watches the whole page, so cards rendered
+   later by any page script are covered without changes there. Images
+   that are already loaded (cache) are left alone — no flash. */
+const FADE_IMAGE_SELECTOR = ".market-image img, .detail-image-single img, .image-gallery-main img, .image-gallery-thumb img";
+
+function prepareFadeImage(img) {
+  if (img.dataset.fadeBound || !img.matches(FADE_IMAGE_SELECTOR)) return;
+  img.dataset.fadeBound = "1";
+  if (img.complete && img.naturalWidth) return;
+
+  const frame = img.parentElement;
+  img.classList.add("img-fade", "img-pending");
+  frame?.classList.add("media-loading");
+  const done = () => {
+    img.classList.remove("img-pending");
+    frame?.classList.remove("media-loading");
+  };
+  img.addEventListener("load", done, { once: true });
+  img.addEventListener("error", done, { once: true });
+}
+
+/* Gallery thumbnails swap the main image's src; re-arm the fade for it. */
+function rearmFadeImage(img) {
+  if (!img || (img.complete && img.naturalWidth)) return;
+  delete img.dataset.fadeBound;
+  prepareFadeImage(img);
+}
+
+(function watchImagesForFade() {
+  if (!("MutationObserver" in window)) return;
+  document.querySelectorAll(FADE_IMAGE_SELECTOR).forEach(prepareFadeImage);
+  new MutationObserver(mutations => {
+    for (const m of mutations) {
+      m.addedNodes.forEach(node => {
+        if (node.nodeType !== 1) return;
+        if (node.tagName === "IMG") prepareFadeImage(node);
+        else if (node.querySelector) node.querySelectorAll("img").forEach(prepareFadeImage);
+      });
+    }
+  }).observe(document.body, { childList: true, subtree: true });
+})();
+
 function avatarInitials(name = "") {
   const parts = name.trim().split(" ");
   return ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
@@ -392,7 +604,7 @@ async function startConversationAndRedirect(contextType, contextId, triggerBtn =
   if (triggerBtn) {
     originalHtml = triggerBtn.innerHTML;
     triggerBtn.disabled = true;
-    triggerBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Opening chat…`;
+    triggerBtn.innerHTML = `<span class="busy-icon busy-dots" aria-hidden="true"><span></span><span></span><span></span></span> Opening chat…`;
   }
   try {
     const res = await apiRequest("/conversations/start", "POST", { contextType, contextId: Number(contextId) });
@@ -549,6 +761,163 @@ function attachProfileLinkEvents() {
   }
 }
 
+/* ── Client-side photo shrinking ──
+   The server stores listing photos at max 1200×900 regardless, so a
+   12-megapixel phone photo is ~90% wasted upload. Anything big is redrawn
+   at up to 1600px on its longest side as a JPEG before it's sent. If the
+   browser can't decode it, or the result isn't actually smaller, the
+   original file is sent unchanged. */
+const SHRINK_MAX_SIDE = 1600;
+const SHRINK_MIN_BYTES = 1.2 * 1024 * 1024;
+
+function shouldShrinkImage(file) {
+  return file.size > SHRINK_MIN_BYTES && /^image\/(jpe?g|png|webp)$/.test(file.type);
+}
+
+async function shrinkImageForUpload(file) {
+  if (!shouldShrinkImage(file)) return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((resolve, reject) => {
+      const el = new Image();
+      el.onload = () => resolve(el);
+      el.onerror = reject;
+      el.src = url;
+    });
+    const scale = Math.min(1, SHRINK_MAX_SIDE / Math.max(img.naturalWidth, img.naturalHeight));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(img.naturalWidth * scale);
+    canvas.height = Math.round(img.naturalHeight * scale);
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#FFFFFF";   // PNG transparency becomes white, not black
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg", 0.85));
+    if (!blob || blob.size >= file.size) return file;
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg", lastModified: Date.now() });
+  } catch {
+    return file;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/* The visible side of an upload: the ring overlay on the drop zone, the
+   per-thumbnail fill, and the submit button's progress. Returned as a
+   small controller so initImageUploader's upload() reads as a list of
+   stages. */
+function uploadProgressUi(uploadArea, thumbs, noun) {
+  const overlay = document.createElement("div");
+  overlay.className = "upload-area-loading-overlay";
+  overlay.setAttribute("role", "status");
+  overlay.setAttribute("aria-live", "polite");
+  overlay.innerHTML = `
+    <div class="upload-ring">
+      <svg viewBox="0 0 58 58" aria-hidden="true">
+        <circle class="track" cx="29" cy="29" r="25"></circle>
+        <circle class="fill" cx="29" cy="29" r="25" pathLength="1"></circle>
+      </svg>
+      <div class="pct"><i class="ti ti-cloud-upload busy-icon busy-lift" aria-hidden="true"></i></div>
+    </div>
+    <span class="upload-stage">Getting ready…</span>
+    <span class="upload-stage-hint"></span>`;
+  uploadArea.classList.add("uploading");
+  uploadArea.appendChild(overlay);
+
+  const ring = overlay.querySelector(".upload-ring");
+  const fill = overlay.querySelector(".fill");
+  const pct = overlay.querySelector(".pct");
+  const stageEl = overlay.querySelector(".upload-stage");
+  const hintEl = overlay.querySelector(".upload-stage-hint");
+
+  thumbs.forEach(item => {
+    item.classList.add("is-uploading");
+    item.insertAdjacentHTML("beforeend", `<div class="upload-thumb-progress"></div>`);
+  });
+
+  /* Mirror progress on the form's submit button (if it's mid-submit). */
+  const button = uploadArea.closest("form")?.querySelector("button[type='submit']");
+  const buttonBusy = button && button.disabled;
+  const buttonHtml = buttonBusy ? button.innerHTML : "";
+  if (buttonBusy) button.classList.add("has-progress");
+
+  function setButton(label, fraction) {
+    if (!buttonBusy) return;
+    button.innerHTML = `<i class="ti ti-cloud-upload busy-icon busy-lift" aria-hidden="true"></i> ${label}`;
+    button.style.setProperty("--btn-progress", String(fraction));
+  }
+
+  let savingTimer = null;
+
+  return {
+    stage(text, hint = "") {
+      stageEl.textContent = text;
+      hintEl.textContent = hint;
+      setButton(text, 0);
+    },
+    progress(fraction, sizes) {
+      const percent = Math.min(99, Math.round(fraction * 100));
+      fill.style.strokeDashoffset = String(1 - fraction);
+      pct.textContent = `${percent}%`;
+      setButton(`Uploading ${noun}… ${percent}%`, fraction);
+
+      /* Thumbnails clear in order, each by its own share of the bytes. */
+      const total = sizes.reduce((a, b) => a + b, 0) || 1;
+      let sent = fraction * total;
+      thumbs.forEach((item, i) => {
+        const size = sizes[i] || 0;
+        const own = size ? Math.max(0, Math.min(1, sent / size)) : 1;
+        sent -= size;
+        const shade = item.querySelector(".upload-thumb-progress");
+        if (shade) shade.style.transform = `scaleY(${1 - own})`;
+      });
+    },
+    processing(text, hint) {
+      if (ring.classList.contains("is-processing")) return;
+      ring.classList.add("is-processing");
+      pct.innerHTML = "";
+      thumbs.forEach(item => {
+        const shade = item.querySelector(".upload-thumb-progress");
+        if (shade) shade.style.transform = "scaleY(0)";
+      });
+      this.stage(text, hint);
+      if (buttonBusy) button.style.setProperty("--btn-progress", "1");
+      savingTimer = setTimeout(() => {
+        stageEl.textContent = `Saving your ${noun}…`;
+        hintEl.textContent = "Nearly done.";
+      }, 3500);
+    },
+    done(text) {
+      clearTimeout(savingTimer);
+      ring.classList.remove("is-processing");
+      fill.style.strokeDashoffset = "0";
+      pct.innerHTML = `<i class="ti ti-check" aria-hidden="true"></i>`;
+      stageEl.textContent = text;
+      hintEl.textContent = "";
+      thumbs.forEach(item => {
+        item.querySelector(".upload-thumb-progress")?.remove();
+        item.insertAdjacentHTML("beforeend", `<span class="upload-thumb-done" aria-hidden="true"><i class="ti ti-check"></i></span>`);
+      });
+    },
+    remove() {
+      clearTimeout(savingTimer);
+      overlay.remove();
+      uploadArea.classList.remove("uploading");
+      thumbs.forEach(item => {
+        item.classList.remove("is-uploading");
+        item.querySelector(".upload-thumb-progress")?.remove();
+        item.querySelector(".upload-thumb-done")?.remove();
+      });
+      if (buttonBusy) {
+        button.classList.remove("has-progress");
+        button.style.removeProperty("--btn-progress");
+        button.innerHTML = buttonHtml;
+      }
+    }
+  };
+}
+
 function initImageUploader(uploadAreaId, previewGridId) {
   const uploadArea  = document.getElementById(uploadAreaId);
   const previewGrid = document.getElementById(previewGridId);
@@ -567,11 +936,17 @@ function initImageUploader(uploadAreaId, previewGridId) {
   fileInput.style.display = "none";
   document.body.appendChild(fileInput);
 
-  uploadArea.addEventListener("click", () => fileInput.click());
+  /* Object URLs for the new files' previews — instant (no base64 encode
+     of a 10MB phone photo) and kept in the order the files were picked. */
+  const previewUrls = new Map();
+  let justAdded = new Set();
+  let uploading = false;
+
+  uploadArea.addEventListener("click", () => { if (!uploading) fileInput.click(); });
 
   uploadArea.addEventListener("dragover", e => {
     e.preventDefault();
-    uploadArea.classList.add("drag-over");
+    if (!uploading) uploadArea.classList.add("drag-over");
   });
 
   uploadArea.addEventListener("dragleave", () => {
@@ -581,13 +956,24 @@ function initImageUploader(uploadAreaId, previewGridId) {
   uploadArea.addEventListener("drop", e => {
     e.preventDefault();
     uploadArea.classList.remove("drag-over");
-    handleFiles(Array.from(e.dataTransfer.files));
+    if (!uploading) handleFiles(Array.from(e.dataTransfer.files));
   });
 
   fileInput.addEventListener("change", () => {
     handleFiles(Array.from(fileInput.files));
     fileInput.value = "";
   });
+
+  function previewUrlFor(file) {
+    if (!previewUrls.has(file)) previewUrls.set(file, URL.createObjectURL(file));
+    return previewUrls.get(file);
+  }
+
+  function forgetPreview(file) {
+    const url = previewUrls.get(file);
+    if (url) URL.revokeObjectURL(url);
+    previewUrls.delete(file);
+  }
 
   function handleFiles(newFiles) {
     const imageFiles = newFiles.filter(f =>
@@ -607,7 +993,9 @@ function initImageUploader(uploadAreaId, previewGridId) {
       showToast(`Only ${remaining} more image(s) can be added.`, "warning");
     }
     selectedFiles = [...selectedFiles, ...toAdd];
+    justAdded = new Set(toAdd);
     renderPreviews();
+    justAdded = new Set();
   }
 
   function renderPreviews() {
@@ -628,22 +1016,21 @@ function initImageUploader(uploadAreaId, previewGridId) {
       previewGrid.appendChild(item);
     });
     selectedFiles.forEach((file, index) => {
-      const reader = new FileReader();
-      reader.onload = e => {
-        const item = document.createElement("div");
-        item.className = "upload-preview-item";
-        item.innerHTML = `
-          <img src="${e.target.result}" alt="Preview ${index + 1}" />
-          <button type="button" class="upload-remove-btn" data-index="${index}" aria-label="Remove image">
-            <i class="ti ti-x" aria-hidden="true"></i>
-          </button>`;
-        item.querySelector(".upload-remove-btn").addEventListener("click", () => {
-          selectedFiles.splice(index, 1);
-          renderPreviews();
-        });
-        previewGrid.appendChild(item);
-      };
-      reader.readAsDataURL(file);
+      const item = document.createElement("div");
+      item.className = `upload-preview-item${justAdded.has(file) ? " is-new" : ""}`;
+      item.dataset.newIndex = String(index);
+      item.innerHTML = `
+        <img alt="Preview ${index + 1}" />
+        <button type="button" class="upload-remove-btn" data-index="${index}" aria-label="Remove image">
+          <i class="ti ti-x" aria-hidden="true"></i>
+        </button>`;
+      item.querySelector("img").src = previewUrlFor(file);
+      item.querySelector(".upload-remove-btn").addEventListener("click", () => {
+        forgetPreview(file);
+        selectedFiles.splice(index, 1);
+        renderPreviews();
+      });
+      previewGrid.appendChild(item);
     });
     const total = existingUrls.length + selectedFiles.length;
     uploadArea.classList.toggle("has-files", total > 0);
@@ -651,34 +1038,63 @@ function initImageUploader(uploadAreaId, previewGridId) {
     if (counter) counter.textContent = `${total}/5 images`;
   }
 
+  /* ── Upload with visible progress ──
+     Stages the person sees, in order:
+       1. "Preparing photos…"   big phone photos are shrunk in the browser
+                                 first (the server caps them at 1200×900
+                                 anyway), which can make the upload many
+                                 times faster on mobile data
+       2. "Uploading… 42%"      real bytes sent; each thumbnail clears
+                                 from the bottom as its own bytes go out
+       3. "Checking photos…"    all bytes sent; the server runs the
+                                 content-safety check, then saves them
+       4. "Photos uploaded"     ticks on every thumbnail, then the caller
+                                 carries on (e.g. posting the listing)
+     The form's submit button mirrors the same progress, because on some
+     forms the drop zone has scrolled out of view by the time you submit. */
   async function upload(folder = "general") {
     if (!selectedFiles.length) return [];
-    const formData = new FormData();
-    selectedFiles.forEach(file => formData.append("images", file));
-    const token = localStorage.getItem("taskifyToken");
+    uploading = true;
 
-    const overlay = document.createElement("div");
-    overlay.className = "upload-area-loading-overlay";
     const count = selectedFiles.length;
-    overlay.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i><span>Uploading ${count} image${count > 1 ? "s" : ""}…</span>`;
-    uploadArea.classList.add("uploading");
-    uploadArea.appendChild(overlay);
+    const noun = count > 1 ? "photos" : "photo";
+    const thumbs = Array.from(previewGrid.querySelectorAll(".upload-preview-item[data-new-index]"));
+    const ui = uploadProgressUi(uploadArea, thumbs, noun);
 
     try {
-      const response = await fetch(
-        `${API_BASE_URL}/upload?folder=${folder}`,
-        { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData }
-      );
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Image upload failed.");
-      return data.data.urls;
+      const needsShrinking = selectedFiles.some(shouldShrinkImage);
+      if (needsShrinking) ui.stage(`Preparing ${noun}…`, "Making them lighter so they upload faster.");
+      const prepared = await Promise.all(selectedFiles.map(shrinkImageForUpload));
+
+      const tooBig = prepared.findIndex(file => file.size > 5 * 1024 * 1024);
+      if (tooBig !== -1) throw new Error(`Image ${tooBig + 1} is larger than 5MB. Choose a smaller photo.`);
+
+      const formData = new FormData();
+      prepared.forEach(file => formData.append("images", file));
+      const sizes = prepared.map(file => file.size);
+
+      ui.stage(`Uploading ${count} ${noun}…`);
+      const response = await apiMultipartRequest(`/upload?folder=${encodeURIComponent(folder)}`, "POST", formData, null, {
+        onUploadProgress: fraction => {
+          if (fraction >= 1) {
+            ui.processing(`Checking your ${noun}…`, "A quick safety check before they go live.");
+          } else {
+            ui.progress(fraction, sizes);
+          }
+        }
+      });
+
+      ui.done(`${count > 1 ? "Photos" : "Photo"} uploaded`);
+      await new Promise(resolve => setTimeout(resolve, 450));
+      return response.data.urls;
     } finally {
-      uploadArea.classList.remove("uploading");
-      overlay.remove();
+      uploading = false;
+      ui.remove();
     }
   }
 
   function reset() {
+    selectedFiles.forEach(forgetPreview);
     selectedFiles = [];
     existingUrls = [];
     previewGrid.innerHTML = "";
@@ -691,6 +1107,7 @@ function initImageUploader(uploadAreaId, previewGridId) {
 
   function setExisting(urls = []) {
     existingUrls = Array.isArray(urls) ? urls.slice(0, 5) : [];
+    selectedFiles.forEach(forgetPreview);
     selectedFiles = [];
     renderPreviews();
   }
@@ -745,6 +1162,7 @@ function switchGalleryImage(url, thumbEl) {
   const main = document.getElementById("galleryMain");
   if (main) {
     main.src = url;
+    rearmFadeImage(main);
     main.dataset.full = url;
     main.parentElement?.style.setProperty("--detail-img", detailBackdropUrl(url));
   }

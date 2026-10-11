@@ -70,7 +70,7 @@
           <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
         </div>
 
-        <div id="equipmentContainer" class="marketplace-grid">
+        <div id="equipmentContainer" class="marketplace-grid" data-skeleton="cards">
           <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading rentals…</h3></div>
         </div>
       </section>
@@ -106,7 +106,7 @@
           <h3><i class="ti ti-history" aria-hidden="true"></i> My Equipment History</h3>
         </div>
         <p class="rail-card-sub">Every rental you've booked or listed, with full details</p>
-        <div id="equipmentHistoryMiniContainer" class="mini-history-list">
+        <div id="equipmentHistoryMiniContainer" class="mini-history-list" data-skeleton="mini">
           <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
         </div>
         <a href="#fullEquipmentHistorySection" id="viewAllEquipmentHistoryLink" class="view-all-link small" style="margin-top:12px;display:inline-flex;">
@@ -123,8 +123,8 @@
         <p>Every rental you've booked or listed, with full details</p>
       </div>
     </div>
-    <div id="equipmentHistoryContainer" class="history-list">
-      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-clock" aria-hidden="true"></i></div><h3>No bookings yet</h3></div>
+    <div id="equipmentHistoryContainer" class="history-list" data-skeleton="rows">
+      <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading your bookings…</p>
     </div>
   </section>
 </div>

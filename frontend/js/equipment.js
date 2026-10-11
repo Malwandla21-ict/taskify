@@ -1168,13 +1168,12 @@ equipmentForm?.addEventListener("submit", async e => {
 
   const submitBtn = equipmentForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingEquipmentId ? "Saving…" : "Publishing…"}`;
+  submitBtn.innerHTML = `${taskifyMarkLoader()} ${editingEquipmentId ? "Saving…" : "Publishing…"}`;
 
   try {
     /* In edit mode, keep the saved photos the owner didn't remove. */
     let imageUrls = equipmentUploader ? equipmentUploader.getExisting() : [];
     if (equipmentUploader && equipmentUploader.getFiles().length) {
-      showToast("Uploading images…", "warning");
       imageUrls = [...imageUrls, ...await equipmentUploader.upload("equipment")];
     }
 

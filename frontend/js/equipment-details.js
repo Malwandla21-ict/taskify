@@ -255,7 +255,7 @@ bookingForm?.addEventListener("submit", async e => {
   const submitBtn = bookingForm.querySelector("button[type='submit']");
   const originalHtml = submitBtn.innerHTML;
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Sending request…`;
+  submitBtn.innerHTML = `<i class="ti ti-send busy-icon busy-fly" aria-hidden="true"></i> Sending request…`;
   try {
     await apiRequest(`/equipment/${bookingEquipmentIdInput.value}/book`, "POST", {
       startDate: bookingStartDateInput.value,

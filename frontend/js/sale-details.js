@@ -377,7 +377,7 @@ function renderSaleDetails(item) {
     simulateBuyButton.onclick = async () => {
       const originalHtml = simulateBuyButton.innerHTML;
       simulateBuyButton.disabled = true;
-      simulateBuyButton.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Holding payment…`;
+      simulateBuyButton.innerHTML = `<i class="ti ti-shield-lock busy-icon busy-guard" aria-hidden="true"></i> Holding payment…`;
       try {
         await apiRequest(`/sales/${saleId}/buy`, "POST");
         closeModal(buyModal);

@@ -473,13 +473,12 @@ salesForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const submitBtn = salesForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingSalesId ? "Saving…" : "Publishing…"}`;
+  submitBtn.innerHTML = `${taskifyMarkLoader()} ${editingSalesId ? "Saving…" : "Publishing…"}`;
 
   try {
     /* In edit mode, keep the saved photos the seller didn't remove. */
     let imageUrls = salesUploader ? salesUploader.getExisting() : [];
     if (salesUploader && salesUploader.getFiles().length) {
-      showToast("Uploading images…", "warning");
       imageUrls = [...imageUrls, ...await salesUploader.upload("sales")];
     }
 

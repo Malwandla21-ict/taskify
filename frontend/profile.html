@@ -20,7 +20,7 @@
     <div id="profileMainCard">
       <div class="profile-header-card">
         <div class="profile-avatar-large"><i class="ti ti-user" aria-hidden="true"></i></div>
-        <div class="profile-header-info">
+        <div class="profile-header-info" data-skeleton="profile">
           <p style="opacity:0.65;font-size:13px;"><i class="ti ti-loader" aria-hidden="true"></i> Loading profile…</p>
         </div>
       </div>
@@ -146,7 +146,7 @@
     </div>
 
     <div id="listingsTab" class="profile-tab-panel">
-      <div id="myListingsContainer" class="marketplace-grid">
+      <div id="myListingsContainer" class="marketplace-grid" data-skeleton="cards" data-skeleton-count="3">
         <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading listings…</h3></div>
       </div>
     </div>
