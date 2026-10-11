@@ -51,6 +51,10 @@
         <a href="./login.html" class="landing-hero-secondary"><i class="ti ti-login" aria-hidden="true"></i> Sign In</a>
         <a href="./tasks.html" class="landing-hero-secondary"><i class="ti ti-eye" aria-hidden="true"></i> Browse as Guest</a>
       </div>
+      <button type="button" class="landing-tour-link" data-tour-open>
+        <span class="landing-tour-link-icon"><i class="ti ti-player-play-filled" aria-hidden="true"></i></span>
+        Watch the 75-second tour
+      </button>
       <div class="ump-badge landing-hero-ump">
         <span>Built for students of</span>
         <img src="./assets/logo/UMPLogoWhite.png" alt="University of Mpumalanga" />
@@ -130,9 +134,16 @@
           </div>
         </div>
       </div>
-      <div class="landing-split-media reveal-img">
-        <img src="./assets/images/UMP-Buildings-62.jpg" alt="UMP campus library" />
-      </div>
+      <!-- The product tour (made in explainer/). Opens the player dialog below;
+           the video itself only downloads once someone presses play. -->
+      <button type="button" class="landing-split-media landing-tour-card reveal-img" data-tour-open aria-label="Play the 75-second Taskify tour">
+        <img src="./assets/videos/taskify-tour-poster.jpg" alt="" loading="lazy" />
+        <span class="landing-tour-play" aria-hidden="true"><i class="ti ti-player-play-filled"></i></span>
+        <span class="landing-tour-caption">
+          <strong>See Taskify in 75 seconds</strong>
+          <span>Tasks, sales and rentals, start to finish</span>
+        </span>
+      </button>
     </div>
   </section>
 
@@ -185,6 +196,7 @@
   </footer>
 
   <script src="./js/taskify-motion.js"></script>
+  <script src="./js/tour-video.js"></script>
   <script src="./js/landing.js"></script>
 </body>
 </html>

@@ -31,6 +31,26 @@ if (onboardingOverlay && currentUser && !currentUser.has_seen_onboarding) {
   onboardingOverlay.hidden = false;
   onboardingSkipBtn?.addEventListener("click", dismissOnboarding);
   onboardingGetStartedBtn?.addEventListener("click", dismissOnboarding);
+
+  /* "Watch the tour" counts as seeing the welcome too: close it and play the
+     product tour (js/tour-video.js). Under the video: where to start. */
+  if (window.TaskifyTour) {
+    TaskifyTour.init({
+      footerHtml: `
+        <span>Where would you like to start?</span>
+        <div class="tour-modal-actions">
+          <a href="./tasks.html" class="tour-modal-link green"><i class="ti ti-clipboard-list" aria-hidden="true"></i> Tasks</a>
+          <a href="./sales.html" class="tour-modal-link blue"><i class="ti ti-shopping-cart" aria-hidden="true"></i> Sales</a>
+          <a href="./equipment.html" class="tour-modal-link gold"><i class="ti ti-package" aria-hidden="true"></i> Rentals</a>
+        </div>`
+    });
+    document.getElementById("onboardingTourBtn")?.addEventListener("click", () => {
+      dismissOnboarding();
+      TaskifyTour.open(null);
+    });
+  } else {
+    document.getElementById("onboardingTourBtn")?.remove();
+  }
 }
 
 /* ── Hero spotlight: compact cards (3 per page) mixing events/tasks/rentals ──

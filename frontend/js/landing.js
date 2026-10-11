@@ -71,6 +71,23 @@ function setupHeroLogo() {
   TaskifyMotion.mountReveal(heroLogo, { color: "#FFFFFF", marketColor: "#6BE3B8" });
 }
 
+/* Product tour video: the hero link and the "How it works" card both open
+   the shared player (js/tour-video.js). index.html#tour opens it directly,
+   so the tour can be shared as a link. Under the video: sign-up buttons. */
+function setupTourVideo() {
+  if (!window.TaskifyTour) return;
+  TaskifyTour.init({
+    hashLink: true,
+    footerHtml: `
+      <span>Ready to try it?</span>
+      <div class="tour-modal-actions">
+        <a href="./tasks.html" class="landing-nav-signin">Browse as Guest</a>
+        <a href="./register.html" class="landing-nav-cta"><i class="ti ti-user-plus" aria-hidden="true"></i> Create Account</a>
+      </div>`
+  });
+}
+
 setupHeroLogo();
 setupScrollReveal();
 setupNavScrollSpy();
+setupTourVideo();

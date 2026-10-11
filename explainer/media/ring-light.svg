@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F2E9F7"/><stop offset="1" stop-color="#DCCDE9"/></linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5"><stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0"/><stop offset="0.75" stop-color="#FFFBEA" stop-opacity="0.9"/><stop offset="1" stop-color="#FFFBEA" stop-opacity="0"/></radialGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#3B2457" stop-opacity="0.3"/><stop offset="1" stop-color="#3B2457" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="560" rx="200" ry="22" fill="url(#shadow)"/>
+  <circle cx="400" cy="200" r="190" fill="url(#glow)"/>
+  <circle cx="400" cy="200" r="140" fill="none" stroke="#2A2D34" stroke-width="34"/>
+  <circle cx="400" cy="200" r="140" fill="none" stroke="#FFFDF2" stroke-width="22"/>
+  <!-- phone holder -->
+  <rect x="384" y="196" width="32" height="60" rx="6" fill="#2A2D34"/>
+  <rect x="352" y="250" width="96" height="170" rx="16" fill="#1B1D22"/>
+  <rect x="360" y="260" width="80" height="150" rx="10" fill="#0072CE"/>
+  <circle cx="400" cy="320" r="22" fill="#FFFFFF" opacity="0.85"/><rect x="376" y="350" width="48" height="30" rx="15" fill="#FFFFFF" opacity="0.85"/>
+  <!-- tripod -->
+  <rect x="392" y="420" width="16" height="70" fill="#2A2D34"/>
+  <g stroke="#2A2D34" stroke-width="12" stroke-linecap="round"><line x1="400" y1="486" x2="300" y2="556"/><line x1="400" y1="486" x2="500" y2="556"/><line x1="400" y1="486" x2="400" y2="562"/></g>
+  <rect x="380" y="476" width="40" height="18" rx="5" fill="#E03A3E"/>
+</svg>

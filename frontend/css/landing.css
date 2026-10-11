@@ -453,3 +453,85 @@
   color: var(--muted);
   margin-top: 8px;
 }
+
+/* ==============================
+   PRODUCT TOUR VIDEO
+   Hero link + "How it works" card both open #tourModal (landing.js).
+============================== */
+.landing-tour-link {
+  margin-top: 22px;
+  display: flex;
+  width: fit-content;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  background: none;
+  color: white;
+  font-weight: 600;
+  font-size: 14.5px;
+}
+.landing-tour-link-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.14);
+  border: 1.5px solid rgba(255,255,255,0.45);
+  font-size: 16px;
+  transition: background 0.15s ease, transform 0.2s var(--ease-out);
+}
+.landing-tour-link:hover .landing-tour-link-icon { background: var(--ump-green); border-color: var(--ump-green); transform: scale(1.06); }
+.landing-tour-link:active .landing-tour-link-icon { transform: scale(0.96); }
+
+.landing-tour-card {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  aspect-ratio: 16 / 9;
+  background: var(--ump-navy);
+  cursor: pointer;
+  text-align: left;
+}
+.landing-tour-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(6,19,51,0.85) 0%, rgba(6,19,51,0.15) 50%, rgba(6,19,51,0.05) 100%);
+}
+.landing-tour-play {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  z-index: 1;
+  width: 76px;
+  height: 76px;
+  margin: -38px 0 0 -38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 30px;
+  color: white;
+  background: var(--ump-green);
+  box-shadow: 0 0 0 10px rgba(0,155,114,0.25), 0 14px 34px rgba(0,0,0,0.35);
+  transition: transform 0.25s var(--ease-out);
+}
+.landing-tour-card:hover .landing-tour-play { transform: scale(1.08); }
+.landing-tour-card:active .landing-tour-play { transform: scale(0.97); }
+.landing-tour-caption {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  bottom: 18px;
+  z-index: 1;
+  color: white;
+}
+.landing-tour-caption strong { display: block; font-size: 17px; font-weight: 800; }
+.landing-tour-caption span { font-size: 13px; color: rgba(255,255,255,0.8); }
+
+/* The player dialog itself (.tour-modal) is shared with the dashboard; its
+   styles live in main.css. These only restyle the landing footer buttons. */
+.tour-modal-actions .landing-nav-signin { color: white; border-color: rgba(255,255,255,0.35); }
+.tour-modal-actions .landing-nav-signin:hover { background: rgba(255,255,255,0.1); border-color: white; }

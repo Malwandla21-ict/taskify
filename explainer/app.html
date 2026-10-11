@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1440" />
+  <title>Taskify — film app layer</title>
+  <!-- The real Taskify stylesheets, untouched. -->
+  <link rel="stylesheet" href="../frontend/css/main.css" />
+  <link rel="stylesheet" href="../frontend/css/profile.css" />
+  <link rel="stylesheet" href="../frontend/css/layout-v2.css" />
+  <!-- Film-only: freezes CSS transitions so every frame is driven by the film clock. -->
+  <link rel="stylesheet" href="./app-film.css" />
+</head>
+<body class="dashboard-body">
+
+<!-- Sidebar + topbar: frontend/components/navbar.html. The Campus Marketplace
+     (events) link and "Create Event" quick action are left out because the
+     film covers Tasks, Sales and Rentals only. -->
+<aside class="app-sidebar" id="appSidebar">
+  <div class="sidebar-header">
+    <a class="sidebar-brand">
+      <img src="../frontend/assets/taskify-2d-badge/taskify-mark-5-horizontal-reversed.svg" alt="Taskify Marketplace" class="sidebar-brand-logo" />
+    </a>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="sidebar-group-label">Discover</div>
+    <a class="nav-link" data-nav="dash"><i class="ti ti-home" aria-hidden="true"></i><span>Dashboard</span></a>
+    <a class="nav-link" data-nav="tasks"><i class="ti ti-clipboard-list" aria-hidden="true"></i><span>Tasks</span></a>
+    <a class="nav-link" data-nav="sales"><i class="ti ti-shopping-cart" aria-hidden="true"></i><span>Sales</span></a>
+    <a class="nav-link" data-nav="rentals"><i class="ti ti-building-store" aria-hidden="true"></i><span>Rentals</span></a>
+    <a class="nav-link" data-nav="messages">
+      <i class="ti ti-message-circle" aria-hidden="true"></i><span>Messages</span>
+      <span class="nav-badge">2</span>
+    </a>
+    <a class="nav-link"><i class="ti ti-school" aria-hidden="true"></i><span>Academic</span></a>
+    <a class="nav-link"><i class="ti ti-world" aria-hidden="true"></i><span>General</span></a>
+
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-group-label">Quick Actions</div>
+    <a class="qa-link"><span class="qa-dot green"><i class="ti ti-plus" aria-hidden="true"></i></span><span>Post a Task</span></a>
+    <a class="qa-link"><span class="qa-dot blue"><i class="ti ti-tag" aria-hidden="true"></i></span><span>Sell an Item</span></a>
+    <a class="qa-link"><span class="qa-dot gold"><i class="ti ti-package" aria-hidden="true"></i></span><span>Rent Equipment</span></a>
+  </nav>
+  <div class="sidebar-promo">
+    <h4>Grow your campus.</h4>
+    <p>Connect. Help. Earn. Grow together.</p>
+    <a class="sidebar-promo-btn"><i class="ti ti-arrow-right" aria-hidden="true"></i> Explore Marketplace</a>
+    <i class="ti ti-users-group sidebar-promo-art" aria-hidden="true"></i>
+  </div>
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar nav-avatar-target" id="navAvatar"></div>
+      <div class="sidebar-user-info">
+        <strong id="sidebarUserName">Student</strong>
+        <span>Student</span>
+      </div>
+      <i class="ti ti-chevron-down" aria-hidden="true"></i>
+    </div>
+  </div>
+</aside>
+
+<header class="app-topbar">
+  <div class="topbar-search">
+    <i class="ti ti-search" aria-hidden="true"></i>
+    <input type="text" placeholder="Search tasks, equipment, services..." tabindex="-1" />
+  </div>
+  <div class="topbar-actions">
+    <a class="topbar-icon-btn notification-link" aria-label="Notifications">
+      <i class="ti ti-bell" aria-hidden="true"></i>
+      <span class="notification-count">3</span>
+    </a>
+    <a class="topbar-icon-btn" aria-label="Messages">
+      <i class="ti ti-message-circle" aria-hidden="true"></i>
+      <span class="notification-count blue">2</span>
+    </a>
+    <a class="topbar-avatar nav-avatar-target" id="navAvatarTop" aria-label="My Profile"></a>
+  </div>
+</header>
+
+<!-- One layer per page; app-film.js shows, slides and scrolls them. -->
+<main id="screens"></main>
+
+<div id="overlay"></div>
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- offers.js ensureModals(): the "Apply for this task" form -->
+<div id="offerModal" role="dialog" aria-modal="true">
+  <h2><i class="ti ti-tag" aria-hidden="true"></i> <span id="offerModalTitle">Apply for this task</span></h2>
+  <div id="offerModalIntro"></div>
+  <form id="offerForm" novalidate onsubmit="return false">
+    <div class="form-group">
+      <label for="offerMessageInput">Note <span class="offer-optional">(optional)</span></label>
+      <textarea id="offerMessageInput" rows="3" style="min-height:76px;" tabindex="-1" placeholder="Optional: why you're a good fit, or when you can do it"></textarea>
+      <small class="offer-field-hint"><span id="offerMessageCount">0</span>/300 · phone numbers and emails are hidden</small>
+    </div>
+    <div class="form-row">
+      <button type="button" class="secondary-button"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+      <button type="button" id="submitOfferButton" class="primary-button"><i class="ti ti-send" aria-hidden="true"></i> <span>Send application</span></button>
+    </div>
+  </form>
+</div>
+
+<!-- sale-details.html: Taskify Protection (demo) -->
+<div id="buyModal">
+  <h2><i class="ti ti-shield-lock" aria-hidden="true"></i> Buy with Taskify Protection</h2>
+  <div id="buyModalBody"></div>
+  <div class="form-row">
+    <button type="button" class="secondary-button"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+    <button type="button" id="simulateBuyButton" class="primary-button"><i class="ti ti-shield-check" aria-hidden="true"></i> Simulate Payment</button>
+  </div>
+</div>
+
+<!-- equipment-details.html: booking request -->
+<div id="bookingModal">
+  <h2><i class="ti ti-calendar-plus" aria-hidden="true"></i> Request a Booking</h2>
+  <form id="bookingForm" onsubmit="return false">
+    <div class="form-group"><label><i class="ti ti-calendar" aria-hidden="true"></i> Start Date</label><input type="date" id="bookingStartDate" tabindex="-1" /></div>
+    <div class="form-group"><label><i class="ti ti-calendar" aria-hidden="true"></i> End Date</label><input type="date" id="bookingEndDate" tabindex="-1" /></div>
+    <div id="bookingQuote"></div>
+    <div class="form-row">
+      <button type="button" class="secondary-button"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
+      <button type="button" class="primary-button" id="bookingSubmitButton"><i class="ti ti-send" aria-hidden="true"></i> Send Request</button>
+    </div>
+  </form>
+</div>
+
+<!-- taskify-motion.js payment moment, rebuilt so the film clock can drive it -->
+<div class="tk-moment" id="filmMoment" style="display:none;"></div>
+
+<!-- Pointer + click ripple (film only) -->
+<div id="filmRipple"></div>
+<svg id="filmCursor" viewBox="0 0 28 28" aria-hidden="true">
+  <path d="M5 3 L5 22 L10 17.5 L13.6 25.2 L17 23.6 L13.5 16.2 L20.5 16.2 Z" fill="#0C1D4A" stroke="#FFFFFF" stroke-width="1.8" stroke-linejoin="round"/>
+</svg>
+
+<script>
+  /* helpers.js reads API_BASE_URL for its feature-switch request; the film
+     has no backend, so point it somewhere harmless (the request fails
+     quietly and every feature stays at its default). */
+  window.API_BASE_URL = "./no-api";
+</script>
+<script src="../frontend/js/helpers.js"></script>
+<script src="../frontend/js/taskify-motion.js"></script>
+<script src="./cues.js"></script>
+<script src="./app-data.js"></script>
+<script src="./app-film.js"></script>
+</body>
+</html>

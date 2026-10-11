@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EAF1F8"/><stop offset="1" stop-color="#D3E1EF"/></linearGradient>
+    <linearGradient id="cover" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9524F"/><stop offset="1" stop-color="#C62F33"/></linearGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#0C1D4A" stop-opacity="0.25"/><stop offset="1" stop-color="#0C1D4A" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <ellipse cx="400" cy="500" rx="300" ry="40" fill="url(#shadow)"/>
+  <g transform="rotate(-8 400 300)">
+    <rect x="232" y="104" width="340" height="400" rx="10" fill="#F6F2EA"/>
+    <rect x="220" y="96" width="340" height="400" rx="10" fill="url(#cover)"/>
+    <rect x="220" y="96" width="28" height="400" rx="8" fill="#A9272B"/>
+    <text x="276" y="166" font-family="Poppins, Arial, sans-serif" font-size="16" font-weight="600" fill="#FFE7A3" letter-spacing="3">PRINCIPLES OF</text>
+    <text x="276" y="218" font-family="Poppins, Arial, sans-serif" font-size="40" font-weight="800" fill="#FFFFFF">Financial</text>
+    <text x="276" y="264" font-family="Poppins, Arial, sans-serif" font-size="40" font-weight="800" fill="#FFFFFF">Accounting</text>
+    <g transform="translate(276 300)">
+      <rect x="0" y="80" width="34" height="70" rx="4" fill="#FFE7A3"/>
+      <rect x="50" y="50" width="34" height="100" rx="4" fill="#FFFFFF" opacity="0.9"/>
+      <rect x="100" y="20" width="34" height="130" rx="4" fill="#FFE7A3"/>
+      <rect x="150" y="0" width="34" height="150" rx="4" fill="#FFFFFF" opacity="0.9"/>
+    </g>
+    <text x="276" y="476" font-family="Poppins, Arial, sans-serif" font-size="14" font-weight="500" fill="#FFD0CE">SA edition · IFRS</text>
+  </g>
+  <!-- pencil -->
+  <g transform="rotate(28 600 470)"><rect x="520" y="462" width="180" height="16" rx="3" fill="#F5B400"/><polygon points="700,462 724,470 700,478" fill="#E8C9A0"/><polygon points="716,467 724,470 716,473" fill="#333"/><rect x="510" y="462" width="14" height="16" rx="3" fill="#E03A3E"/></g>
+</svg>

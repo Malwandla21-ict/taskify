@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taskify — Product Explainer</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="../frontend/assets/favicon/favicon-32x32.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <link rel="stylesheet" href="./film.css" />
+</head>
+<body>
+  <div id="viewport">
+    <div id="stage" aria-label="Taskify product explainer">
+      <div id="bg">
+        <div class="bg-glow g1"></div><div class="bg-glow g2"></div><div class="bg-glow g3"></div>
+        <div class="bg-dots"></div>
+      </div>
+
+      <!-- The laptop/browser the product lives in. The camera moves this. -->
+      <div id="world">
+        <div id="browser">
+          <div class="browser-bar">
+            <span class="dot r"></span><span class="dot y"></span><span class="dot g"></span>
+            <span class="browser-nav"><i class="ti ti-chevron-left"></i><i class="ti ti-chevron-right"></i><i class="ti ti-refresh"></i></span>
+            <div class="browser-url"><i class="ti ti-lock"></i><span id="urlText">taskify-marketplace.co.za/dashboard.html</span></div>
+            <span class="browser-tab-icon"><img src="../frontend/assets/taskify-2d-badge/taskify-favicon.svg" alt="" /></span>
+          </div>
+          <iframe id="app" src="./app.html" title="Taskify app" scrolling="no" tabindex="-1"></iframe>
+          <div id="browserDim"></div>
+        </div>
+      </div>
+
+      <!-- Everything drawn over the product -->
+      <div id="overlays">
+        <div id="intro">
+          <div class="intro-logo" id="introLogo"></div>
+          <p class="intro-tagline" id="introTagline">Your campus. Your opportunities.</p>
+        </div>
+
+        <div id="highlights"></div>
+        <div id="callouts"></div>
+
+        <div class="kicker" id="kicker">
+          <div class="kicker-num" id="kickerNum">01</div>
+          <div class="kicker-icon" id="kickerIcon"><i class="ti ti-clipboard-list"></i></div>
+          <div>
+            <div class="kicker-title" id="kickerTitle">Tasks</div>
+            <div class="kicker-line" id="kickerLine">Find help. Offer your skills.</div>
+          </div>
+        </div>
+
+        <div class="journey" id="journey">
+          <div class="journey-head">
+            <span class="journey-chip" id="journeyChip">Tasks</span>
+            <h2 id="journeyTitle">How a task moves</h2>
+          </div>
+          <div class="journey-track" id="journeyTrack"></div>
+          <p class="journey-note" id="journeyNote"></p>
+        </div>
+
+        <div id="modules"></div>
+
+        <div id="endcard">
+          <div class="end-logo" id="endLogo"></div>
+          <div class="end-lines" id="endLines">
+            <span class="end-word"><i class="end-dot green"></i>Tasks.</span>
+            <span class="end-word"><i class="end-dot blue"></i>Sales.</span>
+            <span class="end-word"><i class="end-dot gold"></i>Rentals.</span>
+          </div>
+          <p class="end-tagline" id="endTagline">Your campus. Your opportunities.</p>
+        </div>
+
+        <div id="fade"></div>
+      </div>
+
+      <div id="captions" aria-live="off"><span id="captionText"></span></div>
+    </div>
+  </div>
+
+  <!-- Player controls (hidden in export mode) -->
+  <div id="poster" hidden>
+    <button type="button" id="bigPlay" aria-label="Play the Taskify explainer"><i class="ti ti-player-play-filled"></i></button>
+    <p>Taskify product explainer · 1:15</p>
+  </div>
+  <div id="controls" hidden>
+    <button type="button" id="playBtn" aria-label="Play"><i class="ti ti-player-play-filled"></i></button>
+    <button type="button" id="replayBtn" aria-label="Replay from the start"><i class="ti ti-rotate"></i></button>
+    <span id="timeText">0:00 / 1:15</span>
+    <div id="scrubWrap">
+      <div id="sceneMarks"></div>
+      <input type="range" id="scrub" min="0" max="75" step="0.01" value="0" aria-label="Seek" />
+    </div>
+    <select id="voiceMode" aria-label="Voice-over">
+      <option value="track">Voice: recorded</option>
+      <option value="live">Voice: natural (browser)</option>
+      <option value="off">Voice: off</option>
+    </select>
+    <button type="button" id="ccBtn" aria-label="Captions" aria-pressed="false">CC</button>
+    <button type="button" id="muteBtn" aria-label="Mute"><i class="ti ti-volume"></i></button>
+    <button type="button" id="fsBtn" aria-label="Full screen"><i class="ti ti-maximize"></i></button>
+  </div>
+  <audio id="track" preload="auto"></audio>
+
+  <script src="../frontend/js/taskify-motion.js"></script>
+  <script src="./cues.js"></script>
+  <script src="./film.js"></script>
+</body>
+</html>

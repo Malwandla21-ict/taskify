@@ -12,6 +12,12 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["backend/scripts/start-test-server.js"],
       "port": 5000
+    },
+    {
+      "name": "explainer",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["explainer/tools/serve.mjs"],
+      "port": 5502
     }
   ]
 }
