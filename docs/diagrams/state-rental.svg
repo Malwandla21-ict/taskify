@@ -136,6 +136,7 @@
   <path class="edge" d="M1035,304 L1035,438"/>
   <text class="label" x="1045" y="364">renter confirms pickup with</text>
   <text class="label" x="1045" y="378">photos and the condition</text>
+  <text class="guard" x="1045" y="392">[previous rental returned]</text>
 
   <!-- R9 extension (on the composite) -->
   <path class="edge" d="M1220,300 L1270,300 L1270,360 L1222,360"/>
@@ -179,13 +180,14 @@
   <path class="edge" d="M350,894 L350,946"/>
 
   <!-- Note: time events while out on rent -->
-  <rect class="note" x="1260" y="420" width="320" height="104" rx="4"/>
+  <rect class="note" x="1260" y="420" width="320" height="120" rx="4"/>
   <path d="M1260,470 L1152,470" stroke="#687280" stroke-width="1.2" stroke-dasharray="5,4" fill="none"/>
   <text class="note-text" x="1274" y="442" font-weight="700">Time events while Out on Rent (no state change)</text>
   <text class="note-text" x="1274" y="460">24 h before the deadline: renter reminded</text>
   <text class="note-text" x="1274" y="476">deadline passed: renter and owner told ("Overdue")</text>
   <text class="note-text" x="1274" y="492">72 h after the deadline: admins asked to follow up</text>
-  <text class="note-text" x="1274" y="508">Each is sent once. Nothing is ever charged.</text>
+  <text class="note-text" x="1274" y="508">overdue: the next booking's renter and owner told</text>
+  <text class="note-text" x="1274" y="524">Each is sent once. Nothing is ever charged.</text>
 
   <!-- ===== B. Extension ===== -->
   <line x1="40" y1="1000" x2="1560" y2="1000" stroke="#D1D5DB" stroke-width="1.2" stroke-dasharray="6,5"/>

@@ -57,7 +57,8 @@ const SCRIPTS = [
   "repair-sale-disputes-schema.js",
   "repair-rental-lifecycle-schema.js",
   "repair-marketplace-authority-schema.js",
-  "repair-feedback-schema.js"
+  "repair-feedback-schema.js",
+  "repair-rental-wait-schema.js"
 ];
 
 function main() {

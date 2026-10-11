@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const { SALES, RENTALS } = require("../config/paymentSettings");
 const { expireStaleBookingRequests } = require("./equipment.service");
+const { overdueRentalsByItem } = require("./rentalCore.service");
 
 /*
   Action Centre ("Waiting for you") — every open transaction the user is
@@ -237,8 +238,14 @@ async function rentalItems(userId) {
 
   const now = new Date();
   const historyHref = "./equipment.html#history";
+  /* Items still overdue with someone else — the next renter has to wait. */
+  const overdueItems = await overdueRentalsByItem(pool, rows
+    .filter((b) => ["Awaiting Payment", "Confirmed"].includes(b.status) && !b.picked_up_at && !b.legacy)
+    .map((b) => b.equipment_id));
 
   return rows.map((b) => {
+    const late = overdueItems.get(Number(b.equipment_id));
+    const itemNotBack = !!late && late.bookingId !== Number(b.id) && !b.picked_up_at && !b.legacy;
     const isOwner = Number(b.owner_id) === Number(userId);
     const renter = b.renter_name || "The renter";
     const owner = b.owner_name || "The owner";
@@ -280,9 +287,27 @@ async function rentalItems(userId) {
             step: `You approved it. Waiting for ${renter} to pay (demo) — if they don't in time, the dates are released.`,
             deadline: b.payment_due_at, deadlineLabel: "Pay by" }
         : { ...base, status: "Approved — pay to confirm", tone: "action", nextBy: "you",
-            step: `${owner} approved your request. Review the terms and pay (demo) to confirm the booking.`,
+            step: `${owner} approved your request. Review the terms and pay (demo) to confirm the booking.${itemNotBack ? " Heads-up: the item hasn't come back from the previous rental yet." : ""}`,
             deadline: b.payment_due_at, deadlineLabel: "Pay by",
             action: { type: "link", label: "Review & pay", href: historyHref } };
+    }
+
+    if (b.status === "Confirmed" && !b.picked_up_at && !b.legacy && itemNotBack) {
+      return isOwner
+        ? { ...base, status: "Waiting for return", tone: "problem", nextBy: "you",
+            step: `${renter} is booked from ${prettyDate(b.start_text)}, but the previous renter hasn't returned it yet. Record its return when you have it — or, if you can't hand it over in time, cancel and ${renter} is refunded in full (demo).`,
+            deadline: b.start_text, deadlineLabel: "Collection from",
+            action: { type: "link", label: "Open rental", href: historyHref },
+            secondaryAction: { type: "api", label: "Can't hand it over", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/owner-cancel`,
+                               body: { note: "The item wasn't back from the previous rental in time." },
+                               success: `Booking cancelled. ${renter} has been refunded in full (demo).`,
+                               confirm: `Cancel ${renter}'s booking? They'll get a full refund (demo).` } }
+        : { ...base, status: "Waiting for the item", tone: "problem", nextBy: owner,
+            step: `The previous renter hasn't returned it yet, so it may not be ready on ${prettyDate(b.start_text)}. The owner has been told and we'll let you know when it's back — or cancel now for a full refund (demo).`,
+            deadline: b.start_text, deadlineLabel: "Collection from",
+            action: { type: "api", label: "Cancel (full refund)", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/cancel`,
+                      success: "Booking cancelled. You've been refunded in full (demo).",
+                      confirm: "Cancel this booking? You'll get a full refund (demo)." } };
     }
 
     if (b.status === "Confirmed" && !b.picked_up_at && !b.legacy) {

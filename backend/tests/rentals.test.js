@@ -355,6 +355,61 @@ test("return reminders, overdue notices and admin follow-up each go out once —
   assert.equal(row.payment_status, "Held", "reminders never move money");
 });
 
+/* ── An overdue rental and the next renter ── */
+
+/* `late` is out on rent and overdue; `next` (outsider) is paid and due to be collected today. */
+async function overdueWithNextBooking() {
+  const item = await makeEquipment(owner);
+  const late = await onRent(item, renter, day(0), day(1));
+  const next = await confirmedBooking(item, outsider, day(3), day(4));
+  await query(`UPDATE equipment_bookings SET start_date = ?, end_date = ?, return_due_at = NOW() - INTERVAL 2 HOUR WHERE id = ?`, [day(-3), day(-1), late.id]);
+  await query(`UPDATE equipment_bookings SET start_date = ?, end_date = ? WHERE id = ?`, [day(0), day(1), next.id]);
+  return { item, late, next };
+}
+const actionCard = async (user, bookingId) => {
+  const data = (await api(user, "GET", "/activity")).data;
+  return [...data.needsYou, ...data.waitingOnOthers].find((i) => i.key === `rental-${bookingId}`);
+};
+
+test("when the item isn't back in time, the next renter and the owner are warned once — without saying who has it", async () => {
+  const { late, next } = await overdueWithNextBooking();
+  const later = await confirmedBooking(await makeEquipment(owner), outsider, day(5), day(6));
+  await sendRentalReminders();
+  await sendRentalReminders();
+  assert.equal(await notices(outsider.id, "Item Not Back Yet", next.id), 1);
+  assert.equal(await notices(owner.id, "Next Renter Waiting", next.id), 1);
+  assert.equal(await notices(outsider.id, "Item Not Back Yet", later.id), 0, "a booking whose item isn't overdue isn't warned");
+
+  const card = (await api(outsider, "GET", "/equipment/history")).data.find((b) => b.id === next.id);
+  assert.deepEqual(Object.keys(card.waiting_for_return), ["due_at"], "only when it was due — never who has it");
+  assert.equal((await api(outsider, "GET", "/equipment/history")).data.find((b) => b.id === late.id), undefined);
+
+  assert.equal((await actionCard(outsider, next.id)).status, "Waiting for the item");
+  assert.equal((await actionCard(owner, next.id)).status, "Waiting for return");
+  assert.equal((await bookingRow(late.id)).payment_status, "Held", "warnings never move money");
+});
+
+test("the next renter can't confirm pickup while the item is still out, but can cancel for a full refund", async () => {
+  const { next } = await overdueWithNextBooking();
+  assert.equal((await api(outsider, "PATCH", `/equipment/bookings/${next.id}/pickup`, photos)).status, 409);
+  assert.equal((await api(outsider, "PATCH", `/equipment/bookings/${next.id}/cancel`)).status, 200);
+  const row = await bookingRow(next.id);
+  assert.equal(row.status, "Cancelled");
+  assert.equal(row.payment_status, "Refunded");
+  assert.equal(row.cancel_reason, "item_not_returned", "recorded as not the renter's doing");
+});
+
+test("when the owner records the return, the waiting renter is told and can collect it", async () => {
+  const { late, next } = await overdueWithNextBooking();
+  await sendRentalReminders();
+  const back = await api(owner, "PATCH", `/equipment/bookings/${late.id}/return`, photos);
+  assert.equal(back.status, 200, back.message);
+  assert.ok((await bookingRow(late.id)).return_minutes_late > 0, "the lateness is on record (no fee)");
+  assert.equal(await notices(outsider.id, "Item Is Back", next.id), 1);
+  assert.equal((await api(outsider, "GET", "/equipment/history")).data.find((b) => b.id === next.id).waiting_for_return, null);
+  assert.equal((await api(outsider, "PATCH", `/equipment/bookings/${next.id}/pickup`, photos)).status, 200);
+});
+
 /* ── Problems and damage ── */
 
 test("a renter can report the owner isn't available to take it back — the attempt is recorded", async () => {
