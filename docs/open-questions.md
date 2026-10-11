@@ -97,5 +97,5 @@ None of the answers below are assumed. Where a question names a law, that's beca
 1. Are the numbers right? R300 for protection, a 3% sales fee, a 5% rental fee (R5–R50), 48 hours to answer a request, 24 hours to pay, an 18:00 return time.
 2. Should an unanswered task confirmation ever settle itself, or must an admin always decide? Today nothing is released automatically.
 3. Should the buyer be able to cancel a protected sale at any time before the seller enters the code? Today they can, unless a problem has already been reported.
-4. When a rental is overdue, should the next renter's booking be cancelled or moved automatically? Today admins are asked to follow up; nothing is moved.
+4. When a rental is overdue, should the next renter's booking be moved automatically, or should they get back part of the rent for days lost while waiting? Today they're warned, can't collect until the return is recorded, and can cancel for a full refund (demo); nothing is moved, and there's no partial refund.
 5. How many damage confirmations should lower a renter's trust level, and for how long?

@@ -12,7 +12,7 @@ const rentalExtensionService = require("./rentalExtension.service");
 const auditLogService = require("./auditlog.service");
 
 const {
-  todayInTaskifyTimezone, returnDueSql, endOfDaySql, findClash, clashError,
+  todayInTaskifyTimezone, returnDueSql, endOfDaySql, findClash, overdueRentalsByItem, clashError,
   cancelBookingRow, prettyDate, prettyDeadline
 } = require("./rentalCore.service");
 
@@ -190,6 +190,25 @@ function describeBooking(row, extension = null, now = new Date()) {
     };
   }
   return row;
+}
+
+/*
+  A booking that hasn't been collected yet (a request, an approval waiting
+  for payment, or a paid booking) whose item is still OVERDUE with the
+  previous renter gets waiting_for_return = { due_at } — when that rental
+  was due back. Nothing about who has it. Both the renter and the owner
+  see it, so they can decide to wait, record the return, or cancel.
+*/
+async function markWaitingForReturn(rows) {
+  const upcoming = rows.filter((r) => r && (["Pending", "Awaiting Payment"].includes(r.status)
+    || (r.status === "Confirmed" && !r.out_on_rent)));
+  const overdue = await overdueRentalsByItem(pool, upcoming.map((r) => r.equipment_id));
+  for (const row of rows) if (row) row.waiting_for_return = null;
+  for (const row of upcoming) {
+    const late = overdue.get(Number(row.equipment_id));
+    if (late && late.bookingId !== Number(row.id)) row.waiting_for_return = { due_at: late.returnDueAt };
+  }
+  return rows;
 }
 
 /* Date ranges already held on an item (approved/paid bookings, an overdue
@@ -747,9 +766,14 @@ async function declineBooking(bookingId, ownerId) {
    they haven't paid for, or a paid booking they haven't collected yet
    (full refund, demo — see config/rentalPolicy.js cancellation). */
 async function cancelBookingByRenter(bookingId, renterId) {
+  /* If the item is still overdue with the previous renter, record that as
+     the reason — it's not the renter's doing. */
+  const row = await getBookingWithOwner(bookingId);
+  const [current] = await markWaitingForReturn([{ ...row, out_on_rent: row.status === "Confirmed" && !!(row.picked_up_at || !row.payment_status) }]);
+  const itemNotBack = !!current.waiting_for_return;
   const booking = await cancelWithChecks(bookingId, {
     allowedStatuses: ["Pending", "Awaiting Payment", "Confirmed"],
-    reason: "renter_cancelled",
+    reason: itemNotBack ? "item_not_returned" : "renter_cancelled",
     check: (b) => {
       if (Number(b.renter_id) !== Number(renterId)) {
         const error = new Error("Only the renter can cancel this booking."); error.statusCode = 403; throw error;
@@ -764,7 +788,7 @@ async function cancelBookingByRenter(bookingId, renterId) {
   await notificationService.createNotification({
     userId: booking.owner_id,
     title: "Booking Cancelled",
-    message: `The renter cancelled their booking for "${booking.equipment_name}" (${prettyDate(booking.start_text)} to ${prettyDate(booking.end_text)}). Those dates are free again.`,
+    message: `The renter cancelled their booking for "${booking.equipment_name}" (${prettyDate(booking.start_text)} to ${prettyDate(booking.end_text)})${itemNotBack ? " because the item hasn't come back from the previous rental" : ""}. Those dates are free again.`,
     contextType: "equipment_booking",
     contextId: bookingId
   });
@@ -854,6 +878,27 @@ async function refusePickup(bookingId, renterId, note) {
   return getBookingById(bookingId);
 }
 
+/* The item came back: tell the renters who were warned it was overdue
+   (jobs/scheduler.js) and are still waiting to collect it. */
+async function tellWaitingRentersItemIsBack(equipmentId, equipmentName) {
+  const [waiting] = await pool.execute(
+    `SELECT id, renter_id FROM equipment_bookings
+     WHERE equipment_id = ? AND return_wait_notified_at IS NOT NULL AND picked_up_at IS NULL
+       AND status IN ('Awaiting Payment', 'Confirmed')`,
+    [equipmentId]
+  );
+  for (const b of waiting) {
+    await notificationService.createNotification({
+      userId: b.renter_id,
+      title: "Item Is Back",
+      message: `"${equipmentName}" has been returned to the owner, so your booking can go ahead. Arrange the collection with them.`,
+      contextType: "equipment_booking",
+      contextId: b.id,
+      email: true
+    });
+  }
+}
+
 /* Renter, when they collect the item: uploads "before" photos AND says
    what condition it's in. That confirmation becomes the listing's
    "last checked by" (the renter), and the owner is told if it doesn't
@@ -873,6 +918,14 @@ async function confirmPickup(bookingId, renterId, photoUrls, pickupCondition) {
 
   if (!EQUIPMENT_CONDITIONS.includes(pickupCondition)) {
     const error = new Error("Please confirm what condition the item is in."); error.statusCode = 400; throw error;
+  }
+
+  /* The item can't be with two renters at once: while the previous rental
+     is overdue and not recorded as returned, this one can't be collected. */
+  const late = (await overdueRentalsByItem(pool, [booking.equipment_id])).get(Number(booking.equipment_id));
+  if (late && late.bookingId !== Number(bookingId)) {
+    const error = new Error("This item hasn't come back from the previous rental yet. Once the owner records its return, you can collect it — or cancel now for a full refund.");
+    error.statusCode = 409; throw error;
   }
 
   const urls = cleanPhotoUrls(photoUrls);
@@ -948,6 +1001,7 @@ async function returnEquipment(bookingId, userId, photoUrls) {
       contextType: "equipment_booking",
       contextId: bookingId
     });
+    await tellWaitingRentersItemIsBack(booking.equipment_id, booking.equipment_name);
     return getBookingById(bookingId);
   }
 
@@ -1006,6 +1060,7 @@ async function returnEquipment(bookingId, userId, photoUrls) {
     contextType: "equipment_booking",
     contextId: bookingId
   });
+  await tellWaitingRentersItemIsBack(booking.equipment_id, booking.equipment_name);
 
   return after;
 }
@@ -1273,7 +1328,7 @@ async function getEquipmentHistory(userId) {
     [userId, userId, userId]
   );
   const extensions = await rentalExtensionService.getLatestExtensions(rows.map((r) => r.id));
-  return rows.map((row) => describeBooking(parseImageUrls(row), extensions.get(row.id) || null));
+  return markWaitingForReturn(rows.map((row) => describeBooking(parseImageUrls(row), extensions.get(row.id) || null)));
 }
 
 async function getEquipmentById(equipmentId) {
@@ -1377,7 +1432,8 @@ async function getBookingById(bookingId) {
   );
   if (!rows.length) return null;
   const extensions = await rentalExtensionService.getLatestExtensions([rows[0].id]);
-  return describeBooking(rows[0], extensions.get(rows[0].id) || null);
+  const [booking] = await markWaitingForReturn([describeBooking(rows[0], extensions.get(rows[0].id) || null)]);
+  return booking;
 }
 
 async function deleteEquipment(equipmentId, userId) {

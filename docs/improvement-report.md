@@ -115,7 +115,7 @@ Each step is one commit on `main`. Database changes are made by an **idempotent 
   - the endorsement routes return an error while the switch is off;
   - `GET /api/users/:id/profile` now reads who is asking.
 
-### Step 7: documents and database setup (this commit)
+### Step 7: documents and database setup (`d881d9a`)
 - **New `backend/scripts/repair-all.js`:** runs all 28 repair scripts in order and stops at the first failure. Run twice on practice, the second run changed nothing.
 - **New `backend/scripts/lib/widen-enum.js`:** adds allowed values to a column without removing any. It's now used by the four scripts that used to write fixed lists.
 - **`repair-messaging-schema.js`:** no longer re-adds the retired `reports.task_id`.
@@ -123,6 +123,19 @@ Each step is one commit on `main`. Database changes are made by an **idempotent 
 - **`taskify-schema.sql`:** regenerated from live (structure only, UTF-8, tables in foreign-key order, `CREATE TABLE IF NOT EXISTS`). It was checked by building it into temporary tables and comparing with live: 325 columns, 39 foreign keys and 76 indexes, all identical.
 - **`backend/schema.sql`:** replaced with a pointer. Its old `ALTER` statements would have removed `Disputed` from `tasks.status`.
 - **Docs:** `DEPLOYMENT.md` updated; `docs/state-machines.md`, `docs/money-rules.md`, `docs/open-questions.md` and this report added.
+
+### After the brief: waiting for an overdue item (11 October 2026)
+- **Why:** next step 4. When a rental is overdue, the next renter had no warning and could even "confirm pickup" of an item that wasn't there.
+- **Behaviour:**
+  - the next booking (starting today or tomorrow) gets one warning to its renter and the owner;
+  - the renter sees **Waiting for item** (never who has it) and can't confirm pickup until the return is recorded;
+  - they can cancel for a full refund (demo), recorded as `item_not_returned`;
+  - they're told when it's back;
+  - the owner can now record the return of any rental ("It's back: record return"), not only old-style ones;
+  - admins' follow-up says how many bookings are waiting.
+- **Files:** `rentalCore.service.js` (`overdueRentalsByItem`), `equipment.service.js`, `jobs/scheduler.js`, `activity.service.js`, `frontend/js/equipment.js`.
+- **Database:** `equipment_bookings.return_wait_notified_at` (`repair-rental-wait-schema.js`).
+- **API:** no new routes; booking views gain `waiting_for_return: { due_at }`.
 
 ---
 
@@ -136,14 +149,14 @@ Run from `backend/` with `npm test`. Tests use the local practice database only:
 | `task-disputes.test.js` | 12 | Report a problem, admin outcomes, review reminders, privacy of dispute details. |
 | `sales.test.js` | 7 | Handover code: right code, wrong code, lockout, released once; the seller never receives the code. |
 | `sale-disputes.test.js` | 14 | Failed meetup, admin release, refund or retry (new code), the buyer can't cancel while disputed. |
-| `rentals.test.js` | 27 | Dates and costs, clashes including simultaneous requests, approve → pay, unpaid approvals lapse, extensions, return deadline, reminders, no charges under unapproved rules, policy-version check. |
+| `rentals.test.js` | 30 | Dates and costs, clashes including simultaneous requests, approve → pay, unpaid approvals lapse, extensions, return deadline, reminders, no charges under unapproved rules, policy-version check, the next renter waiting for an overdue item. |
 | `marketplace.test.js` | 7 | Marketplace categories, institutional listings need authority and review. |
 | `lecturers.test.js` | 6 | Lecturer verification. |
 | `participation.test.js` | 7 | Feature switches enforced by the server, profile privacy, feedback. |
 | `activity.test.js` | 5 | Action Centre shows the next action for each side. |
 | `analytics.test.js` | 9 | Admin-only access, date ranges, CSV escaping, no personal contact details in exports. |
 
-**Result (10 October 2026): 106 tests, 106 passed, 0 failed.**
+**Result (11 October 2026): 109 tests, 109 passed, 0 failed.**
 
 Also checked:
 - `repair-all.js` runs cleanly on practice;
@@ -161,7 +174,7 @@ Also checked:
 
 **Workflow gaps**
 - **Sales:** a buyer can cancel a protected order (instant demo refund) at any time before the seller enters the code, unless a problem was already reported. A seller who travelled to a meetup can report a problem, but only if they do it before the buyer cancels.
-- **Overdue rentals:** an overdue rental keeps the item blocked for new requests. A *later* booking that was already confirmed isn't moved or cancelled automatically; admins are asked to follow up after 72 hours.
+- **Overdue rentals:** an overdue rental keeps the item blocked for new requests. The next renter is warned, can't collect until the return is recorded, and can cancel for a full refund (demo). Their dates are **not** moved automatically, and there's no partial refund for days lost while waiting, because that would be a new money rule.
 - **Institutional accounts:** departmental accounts are not built. Only individual accounts exist.
 - **Endorsements switch:** if it's switched back on, the lecturer "search students" screen shows students' email addresses (`lecturer.service.js`). Review that before switching it on.
 
@@ -191,7 +204,7 @@ Ordered by user impact, then implementation risk.
 1. **Get answers to the university questions** (no code). This unblocks lecturers, endorsements and institutional listings safely.
 2. **Update the terms and privacy page** with legal input: rental terms, photos, login records, exports, feedback. Low technical risk, high trust impact.
 3. **Decide the sale-cancellation rule** (business rule 3 in [open-questions.md](open-questions.md)), for example a short window after a reported meetup time. Small change, removes a fairness gap.
-4. **Tell the next renter when an item is overdue**, and give them a cancel-with-refund option. Medium change; it touches rental scheduling.
+4. ~~Tell the next renter when an item is overdue~~ **Done (11 October 2026)**, see below.
 5. **Talk to a payment provider** using the provider questions. Nothing changes in the code until there's a provider that can verify payments.
 6. **Connect the real provider** in the service functions named in [money-rules.md](money-rules.md), starting with tasks (simplest). High risk: it needs webhooks, reconciliation and new tests.
 7. **Switch on approved money rules one at a time** through the approval gate, each with its own tests.

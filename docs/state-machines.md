@@ -92,8 +92,8 @@ A `Reserved` item can't be edited, deleted or marked sold.
 | Awaiting Payment → Confirmed | renter pays (demo) | before the pay-by time; accepts the **current** policy version; dates still free. Overlapping requests are declined. | `POST /api/equipment/bookings/:bookingId/pay` |
 | Requested → Cancelled | owner declines · renter cancels · no answer in 48 h · start date passed · someone else paid for those dates | | `decline`, `cancel`, or the expiry check |
 | Awaiting Payment → Cancelled | the pay-by time passes · renter cancels · owner can't go ahead | nothing to refund | expiry check, `cancel`, `owner-cancel` |
-| Awaiting Collection → Cancelled | renter cancels · owner can't hand it over · renter refuses a faulty item (admins get a report) | full refund (demo) | `cancel`, `owner-cancel`, `refuse-pickup` |
-| Awaiting Collection → Out on Rent | renter confirms pickup | photos and the condition at pickup | `PATCH /api/equipment/bookings/:bookingId/pickup` |
+| Awaiting Collection → Cancelled | renter cancels · owner can't hand it over · renter refuses a faulty item (admins get a report) | full refund (demo). If the item was still overdue with the previous renter, the reason is recorded as `item_not_returned`, not the renter's doing. | `cancel`, `owner-cancel`, `refuse-pickup` |
+| Awaiting Collection → Out on Rent | renter confirms pickup | photos and the condition at pickup; **the previous rental of the item has been returned**. An item can't be out with two renters at once. | `PATCH /api/equipment/bookings/:bookingId/pickup` |
 | Out on Rent → Return Check | renter or owner records the return | photos. The rent is released to the owner (demo); minutes late are recorded, but **no late fee**. | `PATCH /api/equipment/bookings/:bookingId/return` |
 | Return Check → Completed | owner confirms the condition | | `PATCH /api/equipment/bookings/:bookingId/condition-ok` |
 | Return Check → Damage Reported | owner reports damage | a note; a report is filed for admins | `PATCH /api/equipment/bookings/:bookingId/report-damage` |
@@ -107,6 +107,12 @@ A `Reserved` item can't be edited, deleted or marked sold.
 - 72 h after the deadline, admins are asked to follow up.
 
 Nothing is ever charged. (`RENTALS` in `paymentSettings.js`; sent by `jobs/scheduler.js`.)
+
+**Waiting for the item (no state change):** if a rental is overdue and the *next* booking on the same item starts today or tomorrow (approved or paid, not collected), the next renter and the owner are each told once (`return_wait_notified_at`). The next renter sees **Waiting for item**, never who has it, and can:
+- **wait:** they're told when the return is recorded;
+- **cancel:** full refund (demo).
+
+The owner can record the return as soon as the item is back, or use "Can't hand it over" (full refund to the next renter). Admins' 72-hour follow-up says how many later bookings are waiting. The next booking's dates are **not** moved automatically.
 
 **Availability:** a booking blocks its dates from `Awaiting Payment` onwards. A rental that is collected and overdue keeps blocking the item until it's returned. A `Confirmed` booking that was never collected does not block it past its end date.
 

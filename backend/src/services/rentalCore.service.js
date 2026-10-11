@@ -57,6 +57,32 @@ async function findClash(connection, equipmentId, startDate, endDate, excludeBoo
   return rows[0] || null;
 }
 
+/*
+  For each of these items: the rental that is OVERDUE and still out with
+  someone (collected, or a legacy booking, past its return deadline and
+  not returned). Returns Map(equipmentId → { bookingId, returnDueAt }),
+  the earliest one per item. Used to warn the NEXT renter that the item
+  may not be back in time — never to reveal who has it.
+*/
+async function overdueRentalsByItem(connection, equipmentIds) {
+  const ids = [...new Set(equipmentIds.map(Number).filter(Boolean))];
+  const result = new Map();
+  if (!ids.length) return result;
+  const [rows] = await connection.query(
+    `SELECT id, equipment_id, return_due_at FROM equipment_bookings
+     WHERE equipment_id IN (?) AND status = 'Confirmed'
+       AND (picked_up_at IS NOT NULL OR payment_status IS NULL)
+       AND return_due_at <= NOW()
+     ORDER BY return_due_at`,
+    [ids]
+  );
+  for (const row of rows) {
+    const key = Number(row.equipment_id);
+    if (!result.has(key)) result.set(key, { bookingId: Number(row.id), returnDueAt: row.return_due_at });
+  }
+  return result;
+}
+
 function clashError(clash) {
   const error = new Error(`Those dates clash with another booking (${prettyDate(clash.start_text)} to ${prettyDate(clash.end_text)}). Please pick different dates.`);
   error.statusCode = 409;
@@ -111,6 +137,7 @@ module.exports = {
   returnDueSql,
   endOfDaySql,
   findClash,
+  overdueRentalsByItem,
   clashError,
   cancelBookingRow,
   prettyDate,

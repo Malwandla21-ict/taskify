@@ -1,6 +1,6 @@
 {
   "source": "live database (information_schema), structure only",
-  "takenAt": "2026-10-10",
+  "takenAt": "2026-10-11",
   "tables": {
     "admin_allowlist": {
       "columns": [
@@ -635,6 +635,12 @@
         },
         {
           "name": "damage_resolved_at",
+          "type": "timestamp",
+          "nullable": true,
+          "pk": false
+        },
+        {
+          "name": "return_wait_notified_at",
           "type": "timestamp",
           "nullable": true,
           "pk": false

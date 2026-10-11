@@ -1,6 +1,6 @@
 -- Taskify database structure (tables only, no data)
 --
--- Exported on 2026-10-10 (MySQL 8.4.8) by backend/scripts/export-schema.js.
+-- Exported on 2026-10-11 (MySQL 8.4.8) by backend/scripts/export-schema.js.
 -- 26 tables, in an order where every table comes after the
 -- tables it points to, so foreign keys can be created as it goes.
 --
@@ -185,6 +185,7 @@ CREATE TABLE IF NOT EXISTS `equipment_bookings` (
   `return_attempted_at` timestamp NULL DEFAULT NULL,
   `damage_outcome` enum('renter_not_at_fault','damage_confirmed') COLLATE utf8mb4_general_ci DEFAULT NULL,
   `damage_resolved_at` timestamp NULL DEFAULT NULL,
+  `return_wait_notified_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_equipment_booking_equipment` (`equipment_id`),
   KEY `fk_equipment_booking_renter` (`renter_id`),

@@ -73,7 +73,7 @@ const damageMessage = document.getElementById("damageMessage");
 
 /* listedCondition: what the owner's listing says, so the renter can
    simply confirm it (or change it if the item isn't as described). */
-function openRentalPhotoModal(bookingId, mode, listedCondition = "") {
+function openRentalPhotoModal(bookingId, mode, listedCondition = "", byOwner = false) {
   rentalPhotoBookingId.value = bookingId;
   rentalPhotoMode.value = mode;
   rentalPhotoMessage.textContent = "";
@@ -91,7 +91,9 @@ function openRentalPhotoModal(bookingId, mode, listedCondition = "") {
     submitRentalPhotosLabel.textContent = "Confirm Pickup";
   } else {
     rentalPhotoTitle.innerHTML = `<i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment`;
-    rentalPhotoIntro.textContent = "Take photos of the item as it's handed back. The owner compares these with the pickup photos before the deposit is released.";
+    rentalPhotoIntro.textContent = byOwner
+      ? "Record the return once the item is back with you. Take photos of it as you received it — they're compared with the pickup photos."
+      : "Take photos of the item as it's handed back. The owner compares these with the pickup photos before the deposit is released.";
     submitRentalPhotosLabel.textContent = "Confirm Return";
   }
   openModal(rentalPhotoModal);
@@ -492,6 +494,7 @@ function bookingMoneyLine(booking, isOwner) {
 const CANCEL_REASON_TEXT = {
   declined: "The owner declined this request.",
   renter_cancelled: "Cancelled by the renter.",
+  item_not_returned: "Cancelled by the renter because the item wasn't back from the previous rental.",
   owner_cancelled: "Cancelled by the owner.",
   request_expired: "The request expired without an answer.",
   payment_expired: "Not paid in time, so the approval lapsed.",
@@ -503,7 +506,9 @@ const CANCEL_REASON_TEXT = {
 function rentalStage(b) {
   if (b.status === "Pending") return { label: "Requested", tone: "gold" };
   if (b.status === "Awaiting Payment") return { label: "Awaiting payment", tone: "gold" };
-  if (b.status === "Confirmed" && !b.out_on_rent) return { label: "Ready for collection", tone: "blue" };
+  if (b.status === "Confirmed" && !b.out_on_rent) return b.waiting_for_return
+    ? { label: "Waiting for item", tone: "red" }
+    : { label: "Ready for collection", tone: "blue" };
   if (b.status === "Confirmed") return b.is_overdue ? { label: "Overdue", tone: "red" } : { label: "Out on rent", tone: "blue" };
   if (b.status === "Returned" && b.condition_status === "Pending") return { label: "Return check", tone: "gold" };
   if (b.status === "Returned" && b.condition_status === "Damaged" && !b.damage_outcome) return { label: "Damage reported", tone: "red" };
@@ -534,6 +539,11 @@ function rentalTimeline(b, isOwner) {
   }
   if (b.status === "Returned" && b.return_minutes_late != null) {
     line("ti-clock-check", `Returned ${lateLabel(b.return_minutes_late)}${b.return_minutes_late > 0 ? " — no late fee is charged (not in effect)" : ""}.`);
+  }
+  if (b.waiting_for_return) {
+    line("ti-hourglass", `The previous rental of this item is overdue (it was due back by <strong>${rentalDeadline(b.waiting_for_return.due_at)}</strong>). ${isOwner
+      ? "Record its return as soon as it's back. If you can't hand it over in time, use \"Can't hand it over\" — the renter is refunded in full (demo)."
+      : "The owner has been told, and you'll be notified when it's back. If you'd rather not wait, cancel for a full refund (demo)."}`, "overdue");
   }
   if (b.status === "Cancelled") {
     line("ti-circle-x", `${CANCEL_REASON_TEXT[b.cancel_reason] || "Cancelled."}${b.cancel_note ? ` "${escapeReportText(b.cancel_note)}"` : ""}`);
@@ -582,7 +592,8 @@ function rentalActions(b, isOwner, isRenter) {
     if (isRenter) buttons.push(rentalBtn("pay", id, "ti-credit-card", "Review terms & pay"), rentalBtn("cancel", id, "ti-x", "Cancel", "outline danger"));
     if (isOwner) buttons.push(rentalBtn("owner-cancel", id, "ti-ban", "Can't go ahead", "outline danger"));
   } else if (b.status === "Confirmed" && !b.out_on_rent) {
-    if (isRenter) buttons.push(
+    if (isRenter && b.waiting_for_return) buttons.push(rentalBtn("cancel", id, "ti-x", "Cancel (full refund)", "outline danger"));
+    else if (isRenter) buttons.push(
       `<button type="button" class="market-action-btn pickup-equipment-btn" data-booking-id="${id}" data-listed-condition="${b.equipment_condition || ""}"><i class="ti ti-camera" aria-hidden="true"></i> Confirm pickup (add photos)</button>`,
       rentalBtn("refuse", id, "ti-alert-triangle", "Item faulty? Don't take it", "outline danger"),
       rentalBtn("cancel", id, "ti-x", "Cancel (full refund)", "outline danger")
@@ -597,7 +608,9 @@ function rentalActions(b, isOwner, isRenter) {
     }
     if (isOwner) {
       if (x?.status === "Requested") buttons.push(rentalBtn("approve-extension", id, "ti-check", "Approve extension"), rentalBtn("decline-extension", id, "ti-x", "Decline extension", "outline danger"));
-      if (legacy) buttons.push(`<button type="button" class="market-action-btn return-equipment-btn" data-booking-id="${id}" data-new-flow=""><i class="ti ti-package-export" aria-hidden="true"></i> Mark returned</button>`);
+      buttons.push(legacy
+        ? `<button type="button" class="market-action-btn return-equipment-btn" data-booking-id="${id}" data-new-flow=""><i class="ti ti-package-export" aria-hidden="true"></i> Mark returned</button>`
+        : `<button type="button" class="market-action-btn ${b.is_overdue ? "" : "outline"} return-equipment-btn" data-booking-id="${id}" data-new-flow="1" data-by-owner="1"><i class="ti ti-package-import" aria-hidden="true"></i> It's back: record return</button>`);
     }
     if (!legacy) buttons.push(rentalBtn("problem", id, "ti-alert-triangle", "Report a problem", "outline"));
   } else if (b.status === "Returned" && b.condition_status === "Pending" && isOwner && !legacy) {
@@ -731,7 +744,7 @@ function attachReturnEquipmentButtonEvents(scope = document) {
     btn.addEventListener("click", async () => {
       /* New (payment simulation) bookings need "after" photos. */
       if (btn.dataset.newFlow) {
-        openRentalPhotoModal(btn.dataset.bookingId, "return");
+        openRentalPhotoModal(btn.dataset.bookingId, "return", "", !!btn.dataset.byOwner);
         return;
       }
       if (!confirm("Confirm equipment return?")) return;
