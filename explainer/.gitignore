@@ -1,0 +1,9 @@
+node_modules/
+output/stills/
+output/test-clip.mp4
+audio/samples/
+# Rebuilt by `npm run audio` and `npm run export` (too large for git).
+# The website copy of the video is committed in frontend/assets/videos/.
+audio/soundtrack.wav
+audio/music-sfx.wav
+output/*.mp4

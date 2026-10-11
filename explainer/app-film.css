@@ -1,0 +1,56 @@
+/* Film-only additions for app.html. The real Taskify CSS is loaded first
+   and left as it is; this file only makes it frame-exact and adds the
+   pointer. */
+
+/* Every frame is computed from the film clock, so the app's own CSS
+   transitions/animations are switched off (they would run on the wall
+   clock and differ between playback and export). */
+*, *::before, *::after { transition: none !important; animation: none !important; caret-color: transparent; }
+
+html { width: 1440px; height: 900px; overflow: hidden; }
+body { height: 900px; overflow: hidden; }
+body.dashboard-body { cursor: none; user-select: none; }
+a { cursor: none; }
+
+#screens { position: relative; height: calc(900px - var(--topbar-height)); overflow: hidden; }
+.film-screen { position: absolute; inset: 0; overflow: hidden; }
+.film-screen .dashboard-container { margin-top: 24px; }
+
+/* On the live task-details page this badge has no positioned parent, so it
+   lands at the page's top-left corner, under the sidebar, and nobody sees it.
+   The film's scroll layer would give it a parent and show it, so hide it. */
+.detail-main > .urgent-badge { display: none !important; }
+
+/* States the film switches on at given moments (the live app gets these
+   from :hover / :focus). */
+.market-card.film-hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: rgba(0,155,114,0.30); }
+.nav-link.film-hover:not(.active) { background: rgba(255,255,255,0.08); color: white; }
+.toolbar-search-box.film-focus,
+input.film-focus { border-color: var(--ump-green) !important; box-shadow: 0 0 0 3px rgba(0,155,114,0.14); }
+.film-caret::after { content: ""; display: inline-block; width: 1.5px; height: 1.1em; background: var(--ump-navy); vertical-align: -0.15em; margin-left: 1px; }
+
+/* Typed text inside inputs is drawn by a mirror span so the caret can be shown. */
+.film-typed { position: absolute; left: 40px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text); pointer-events: none; white-space: nowrap; }
+
+#filmCursor {
+  position: fixed; left: 0; top: 0; width: 30px; height: 30px; z-index: 6000; pointer-events: none;
+  filter: drop-shadow(0 2px 3px rgba(12,29,74,0.35)); transform-origin: 5px 3px; opacity: 0;
+}
+#filmRipple {
+  position: fixed; left: 0; top: 0; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%;
+  border: 2.5px solid rgba(0,155,114,0.9); background: rgba(0,155,114,0.16);
+  z-index: 5999; pointer-events: none; opacity: 0;
+}
+
+/* taskify-motion.js injectMomentStyles(), copied so the moment can be
+   placed on the page up front and driven frame by frame. */
+.tk-moment { position: fixed; left: 50%; bottom: 24px; z-index: 3000;
+  width: min(380px, calc(100vw - 32px)); display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 16px;
+  padding: 14px 18px 14px 12px; border-radius: 16px; background: #FFFFFF; color: #0E2238;
+  border: 1px solid rgba(14, 34, 56, 0.10); box-shadow: 0 18px 40px rgba(14, 34, 56, 0.18);
+  font-family: inherit; transform: translate(-50%, 0); }
+.tk-moment .tk-mark { width: 92px; height: 92px; margin: -14px; display: block; }
+.tk-moment strong { display: block; font-size: 15px; line-height: 1.3; }
+.tk-moment span { display: block; font-size: 13px; line-height: 1.45; color: #56677A; margin-top: 2px; }
+.tk-moment em { font-style: normal; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  color: #8A6A00; background: #FFF6DC; border-radius: 999px; padding: 1px 8px; margin-left: 6px; vertical-align: 2px; }

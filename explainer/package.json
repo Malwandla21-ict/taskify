@@ -1,0 +1,21 @@
+{
+  "name": "taskify-explainer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Animated 75-second Taskify product explainer (Tasks, Sales, Rentals), rendered from the real Taskify UI.",
+  "scripts": {
+    "serve": "node tools/serve.mjs",
+    "voice": "node tools/make-voice-neural.mjs",
+    "voice:samples": "node tools/make-voice-neural.mjs --samples",
+    "voice:windows": "powershell -ExecutionPolicy Bypass -File tools/make-voice.ps1 -Rate 1",
+    "audio": "node tools/build-audio.mjs",
+    "stills": "node tools/stills.mjs",
+    "export": "node tools/export-mp4.mjs",
+    "build": "npm run audio && npm run export"
+  },
+  "devDependencies": {
+    "ffmpeg-static": "5.2.0",
+    "kokoro-js": "1.2.1",
+    "puppeteer-core": "23.11.1"
+  }
+}
