@@ -103,7 +103,7 @@ messageForm?.addEventListener("submit", async e => {
   const submitBtn = messageForm.querySelector("button[type='submit']");
   const originalHtml = submitBtn.innerHTML;
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
+  submitBtn.innerHTML = `<i class="ti ti-send busy-icon busy-fly" aria-hidden="true"></i>`;
 
   try {
     const res = await apiRequest(`/conversations/${conversationId}/messages`, "POST", { body });

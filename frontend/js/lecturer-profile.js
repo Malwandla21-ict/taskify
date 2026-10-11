@@ -474,13 +474,26 @@ profilePhotoInput?.addEventListener("change", () => {
   openImageCropper(file, async (croppedFile) => {
     const editBtn = document.getElementById("changeProfilePhoto");
     const originalHtml = editBtn ? editBtn.innerHTML : null;
-    if (editBtn) { editBtn.disabled = true; editBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`; }
-    showToast("Uploading photo…", "warning");
+    if (editBtn) {
+      editBtn.disabled = true;
+      editBtn.classList.add("has-progress");
+      editBtn.innerHTML = `<i class="ti ti-cloud-upload busy-icon busy-lift" aria-hidden="true"></i> Uploading…`;
+    }
 
     const formData = new FormData();
     formData.append("profilePhoto", croppedFile);
     try {
-      const response = await apiMultipartRequest("/users/me/profile-photo", "PATCH", formData);
+      /* The button fills with the real upload progress, then says
+         "Saving…" while the server stores the photo. */
+      const response = await apiMultipartRequest("/users/me/profile-photo", "PATCH", formData, null, {
+        onUploadProgress: fraction => {
+          if (!editBtn) return;
+          editBtn.style.setProperty("--btn-progress", String(fraction));
+          editBtn.innerHTML = fraction >= 1
+            ? `<i class="ti ti-loader" aria-hidden="true"></i> Saving…`
+            : `<i class="ti ti-cloud-upload busy-icon busy-lift" aria-hidden="true"></i> Uploading ${Math.round(fraction * 100)}%`;
+        }
+      });
       const user = { ...currentUser, ...response.data };
       localStorage.setItem("taskifyUser", JSON.stringify(user));
       showToast("Profile photo updated.");
@@ -489,8 +502,15 @@ profilePhotoInput?.addEventListener("change", () => {
       refreshEditPhotoPreview();
     } catch (error) {
       showToast(error.message, "error");
-      if (editBtn) { editBtn.disabled = false; editBtn.innerHTML = originalHtml; }
     } finally {
+      /* Restored on success too — it used to stay disabled with a
+         spinner after a successful change until the page was reloaded. */
+      if (editBtn) {
+        editBtn.disabled = false;
+        editBtn.classList.remove("has-progress");
+        editBtn.style.removeProperty("--btn-progress");
+        editBtn.innerHTML = originalHtml;
+      }
       profilePhotoInput.value = "";
     }
   });
@@ -628,7 +648,7 @@ function renderTwoFactorSetupStep(qrCodeDataUrl, manualEntryKey) {
 
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Verifying…`;
+    btn.innerHTML = `<i class="ti ti-shield-check busy-icon busy-scan" aria-hidden="true"></i> Verifying…`;
 
     try {
       const res = await apiRequest("/auth/2fa/enable", "POST", { code });
@@ -681,7 +701,7 @@ function renderEmailTwoFactorSetupStep(sentMessage) {
 
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Verifying…`;
+    btn.innerHTML = `<i class="ti ti-shield-check busy-icon busy-scan" aria-hidden="true"></i> Verifying…`;
 
     try {
       const res = await apiRequest("/auth/2fa/enable-email", "POST", { code });
@@ -699,7 +719,7 @@ function renderEmailTwoFactorSetupStep(sentMessage) {
     const msgEl = document.getElementById("twoFactorEmailSetupMessage");
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
-    btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Sending…`;
+    btn.innerHTML = `<i class="ti ti-send busy-icon busy-fly" aria-hidden="true"></i> Sending…`;
 
     try {
       const res = await apiRequest("/auth/2fa/setup-email", "POST");

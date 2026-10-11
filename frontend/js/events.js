@@ -516,13 +516,12 @@ eventForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const submitBtn = eventForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingEventId ? "Saving…" : "Posting…"}`;
+  submitBtn.innerHTML = `${taskifyMarkLoader()} ${editingEventId ? "Saving…" : "Posting…"}`;
 
   try {
     /* In edit mode, keep the saved photos the organizer didn't remove. */
     let imageUrls = eventUploader ? eventUploader.getExisting() : [];
     if (eventUploader && eventUploader.getFiles().length) {
-      showToast("Uploading images…", "warning");
       imageUrls = [...imageUrls, ...await eventUploader.upload("events")];
     }
 

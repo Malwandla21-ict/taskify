@@ -136,9 +136,37 @@ function messageBubble(msg) {
     </div>`;
 }
 
+/* ── Optimistic sending ──
+   A sent message shows in the thread straight away with a small
+   "Sending…" clock, instead of the text vanishing from the box and
+   nothing happening until the server answers. They're kept here (not
+   only in the DOM) so the 8-second poll re-rendering the thread doesn't
+   wipe them out mid-send. A failed one stays, in red, with a Retry. */
+let pendingMessages = [];
+let pendingSeq = 0;
+
+function pendingBubble(p) {
+  const meta = p.failed
+    ? `<span class="message-pending-meta"><i class="ti ti-alert-circle" aria-hidden="true"></i> Not sent ·
+         <button type="button" class="message-retry-link" data-pending-id="${p.id}">Retry</button></span>`
+    : `<span class="message-pending-meta"><i class="ti ti-clock" aria-hidden="true"></i> Sending…</span>`;
+  return `
+    <div class="message-bubble-row mine ${p.failed ? "is-failed" : "is-pending"}" data-pending-row="${p.id}">
+      <div>
+        <div class="message-bubble">${escapeReportText(p.body)}</div>
+        <div class="message-meta">${meta}</div>
+      </div>
+    </div>`;
+}
+
+function pendingForThread() {
+  return pendingMessages.filter(p => Number(p.conversationId) === Number(activeConversationId));
+}
+
 function renderMessages(messages) {
   updateContactNote(messages);
-  if (!messages.length) {
+  const pending = pendingForThread();
+  if (!messages.length && !pending.length) {
     messagesThread.innerHTML = `<p style="color:var(--muted);font-size:13px;text-align:center;margin:auto;">No messages yet — say hello!</p>`;
     return;
   }
@@ -155,6 +183,7 @@ function renderMessages(messages) {
     html += `<div class="thread-day-label">${label}</div>`;
     html += items.map(messageBubble).join("");
   }
+  html += pending.map(pendingBubble).join("");
   messagesThread.innerHTML = html;
   messagesThread.scrollTop = messagesThread.scrollHeight;
   attachReportEvents();
@@ -234,6 +263,17 @@ async function openConversation(id) {
   }
 
   attachProfileLinkEvents();
+  /* Clear the previous chat right away — otherwise its messages stay on
+     screen under the new person's name until this one loads. */
+  messagesThread.innerHTML = `
+    <div class="sk-bubbles" aria-hidden="true">
+      <div class="sk sk-bubble theirs" style="width:46%;"></div>
+      <div class="sk sk-bubble theirs" style="width:30%;"></div>
+      <div class="sk sk-bubble mine" style="width:38%;"></div>
+      <div class="sk sk-bubble theirs" style="width:52%;"></div>
+      <div class="sk sk-bubble mine" style="width:26%;"></div>
+    </div>
+    <span class="sr-only" role="status">Loading messages…</span>`;
   await loadMessages();
 }
 
@@ -258,26 +298,52 @@ threadBackButton?.addEventListener("click", () => {
   document.body.classList.remove("thread-open");
 });
 
-messageForm?.addEventListener("submit", async e => {
-  e.preventDefault();
-  const body = messageBody.value.trim();
-  if (!body || !activeConversationId) return;
-
+async function sendPendingMessage(pending) {
   const submitBtn = messageForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
+  pending.failed = false;
+  renderPendingOnly();
 
   try {
-    const res = await apiRequest(`/conversations/${activeConversationId}/messages`, "POST", { body });
-    messageBody.value = "";
+    const res = await apiRequest(`/conversations/${pending.conversationId}/messages`, "POST", { body: pending.body });
+    pendingMessages = pendingMessages.filter(p => p !== pending);
     await loadMessages();
     if (res.data?.contact_masked) updateContactNote([], true);
     await loadConversations({ silent: true });
   } catch (err) {
+    pending.failed = true;
+    renderPendingOnly();
     showToast(err.message, "error");
   } finally {
     submitBtn.disabled = false;
     messageBody.focus();
   }
+}
+
+/* Redraw just the pending bubbles at the bottom of the thread. */
+function renderPendingOnly() {
+  messagesThread.querySelectorAll("[data-pending-row]").forEach(row => row.remove());
+  messagesThread.querySelector(":scope > p")?.remove();   // "No messages yet" line
+  messagesThread.insertAdjacentHTML("beforeend", pendingForThread().map(pendingBubble).join(""));
+  messagesThread.scrollTop = messagesThread.scrollHeight;
+}
+
+messagesThread?.addEventListener("click", e => {
+  const retry = e.target.closest(".message-retry-link");
+  if (!retry) return;
+  const pending = pendingMessages.find(p => String(p.id) === retry.dataset.pendingId);
+  if (pending) sendPendingMessage(pending);
+});
+
+messageForm?.addEventListener("submit", async e => {
+  e.preventDefault();
+  const body = messageBody.value.trim();
+  if (!body || !activeConversationId) return;
+
+  const pending = { id: ++pendingSeq, conversationId: activeConversationId, body, failed: false };
+  pendingMessages.push(pending);
+  messageBody.value = "";
+  await sendPendingMessage(pending);
 });
 
 async function loadConversations({ silent = false } = {}) {

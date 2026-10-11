@@ -562,13 +562,12 @@ taskForm?.addEventListener("submit", async e => {
 
   const submitBtn = taskForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> ${editingTaskId ? "Saving…" : "Posting…"}`;
+  submitBtn.innerHTML = `${taskifyMarkLoader()} ${editingTaskId ? "Saving…" : "Posting…"}`;
 
   try {
     /* In edit mode, keep the saved photos the owner didn't remove. */
     let imageUrls = taskUploader ? taskUploader.getExisting() : [];
     if (taskUploader && taskUploader.getFiles().length) {
-      showToast("Uploading images…", "warning");
       imageUrls = [...imageUrls, ...await taskUploader.upload("tasks")];
     }
 

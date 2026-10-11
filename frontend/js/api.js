@@ -38,20 +38,45 @@ function ensureTopLoader() {
   return bar;
 }
 
-function startTopLoader() {
+let topLoaderTrickleTimer = null;
+let topLoaderWidth = 0;
+/* Requests that already show their own progress (image uploads) don't
+   also trigger the "still working" pill. */
+let quietRequestCount = 0;
+
+function startTopLoader({ quiet = false } = {}) {
   activeRequestCount++;
+  if (quiet) quietRequestCount++;
   const bar = ensureTopLoader();
   clearTimeout(topLoaderHideTimer);
   bar.style.opacity = "1";
   /* Jump straight to 70% so it always reads as "in progress" even for
-     very fast requests, then finishes to 100% when the last request ends. */
-  requestAnimationFrame(() => { bar.style.width = "70%"; });
+     very fast requests, then keep creeping towards 94% while anything is
+     still running — a bar parked at 70% for ten seconds reads as stuck.
+     Finishes to 100% when the last request ends. */
+  requestAnimationFrame(() => {
+    topLoaderWidth = Math.max(topLoaderWidth, 70);
+    bar.style.width = `${topLoaderWidth}%`;
+  });
+  if (!topLoaderTrickleTimer) {
+    topLoaderTrickleTimer = setInterval(() => {
+      if (!activeRequestCount) return;
+      topLoaderWidth += (94 - topLoaderWidth) * 0.12;
+      bar.style.width = `${topLoaderWidth}%`;
+    }, 600);
+  }
+  scheduleSlowRequestNotice();
 }
 
-function stopTopLoader() {
+function stopTopLoader({ quiet = false } = {}) {
   activeRequestCount = Math.max(0, activeRequestCount - 1);
+  if (quiet) quietRequestCount = Math.max(0, quietRequestCount - 1);
   if (!topLoaderEl || activeRequestCount > 0) return;
 
+  clearInterval(topLoaderTrickleTimer);
+  topLoaderTrickleTimer = null;
+  topLoaderWidth = 0;
+  clearSlowRequestNotice();
   topLoaderEl.style.width = "100%";
   topLoaderHideTimer = setTimeout(() => {
     if (activeRequestCount > 0) return;
@@ -60,6 +85,90 @@ function stopTopLoader() {
       if (activeRequestCount === 0 && topLoaderEl) topLoaderEl.style.width = "0%";
     }, 250);
   }, 200);
+}
+
+/* ── Slow-request & offline pill ──
+   The backend runs on Render's free plan, which sleeps after 15 idle
+   minutes; the first request after that takes 30-60s while it wakes.
+   Without a word of explanation that looks exactly like a broken site,
+   so once anything has been running for a few seconds a small pill at
+   the bottom says what's going on, and says more if it keeps going.
+   The same pill tells people when their own connection drops. */
+const SLOW_REQUEST_STAGES = [
+  { after: 4000,  title: "Still working on it…", detail: "" },
+  { after: 10000, title: "Waking Taskify up…", detail: "The first visit after a quiet spell can take up to a minute. Hang tight." },
+  { after: 35000, title: "Almost there…", detail: "Thanks for your patience — the server is nearly ready." }
+];
+let slowRequestTimers = [];
+let netPillEl = null;
+let netPillMode = null;   // "slow" | "offline" | "online"
+let netPillHideTimer = null;
+
+function ensureNetPill() {
+  if (netPillEl) return netPillEl;
+  netPillEl = document.createElement("div");
+  netPillEl.className = "net-pill";
+  netPillEl.setAttribute("role", "status");
+  netPillEl.setAttribute("aria-live", "polite");
+  document.body.appendChild(netPillEl);
+  return netPillEl;
+}
+
+function showNetPill(mode, iconHtml, title, detail = "") {
+  const pill = ensureNetPill();
+  clearTimeout(netPillHideTimer);
+  netPillMode = mode;
+  pill.className = `net-pill ${mode}`;
+  pill.innerHTML = `${iconHtml}<div><span></span>${detail ? "<small></small>" : ""}</div>`;
+  /* Text set via textContent — it never contains markup. */
+  pill.querySelector("span").textContent = title;
+  if (detail) pill.querySelector("small").textContent = detail;
+  requestAnimationFrame(() => pill.classList.add("show"));
+}
+
+function hideNetPill(mode) {
+  if (!netPillEl || (mode && netPillMode !== mode)) return;
+  netPillEl.classList.remove("show");
+  netPillMode = null;
+}
+
+function netPillLoaderHtml() {
+  return typeof taskifyMarkLoader === "function"
+    ? taskifyMarkLoader()
+    : `<i class="ti ti-loader net-pill-icon" aria-hidden="true"></i>`;
+}
+
+function scheduleSlowRequestNotice() {
+  if (slowRequestTimers.length) return;
+  slowRequestTimers = SLOW_REQUEST_STAGES.map(stage => setTimeout(() => {
+    if (activeRequestCount <= quietRequestCount || netPillMode === "offline") return;
+    showNetPill("slow", netPillLoaderHtml(), stage.title, stage.detail);
+  }, stage.after));
+}
+
+function clearSlowRequestNotice() {
+  slowRequestTimers.forEach(clearTimeout);
+  slowRequestTimers = [];
+  hideNetPill("slow");
+}
+
+window.addEventListener("offline", () => {
+  showNetPill("offline", `<i class="ti ti-wifi-off net-pill-icon" aria-hidden="true"></i>`,
+    "You're offline", "Check your Wi-Fi or data. We'll pick up where you left off.");
+});
+window.addEventListener("online", () => {
+  if (netPillMode !== "offline") return;
+  showNetPill("online", `<i class="ti ti-wifi net-pill-icon" aria-hidden="true"></i>`, "Back online");
+  netPillHideTimer = setTimeout(() => hideNetPill("online"), 2500);
+});
+
+/* fetch() rejects with a bare TypeError ("Failed to fetch") when the
+   request never reached the server — no signal, DNS, CORS during a
+   deploy. Turn that into something a person can act on. */
+function networkErrorMessage() {
+  return navigator.onLine === false
+    ? "You're offline. Reconnect to the internet and try again."
+    : "Couldn't reach Taskify. Check your connection and try again.";
 }
 
 /* ── Session expiry handling ──
@@ -95,7 +204,12 @@ async function apiRequest(endpoint, method = "GET", body = null, token = null) {
     const config = { method, headers };
     if (body) config.body = JSON.stringify(body);
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    let response;
+    try {
+      response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+    } catch {
+      throw new Error(networkErrorMessage());
+    }
 
     /* If response is not JSON (e.g. HTML error page), catch it clearly */
     const contentType = response.headers.get("content-type");
@@ -118,29 +232,55 @@ async function apiRequest(endpoint, method = "GET", body = null, token = null) {
   }
 }
 
-async function apiMultipartRequest(endpoint, method, formData, token = null) {
-  startTopLoader();
-  try {
-    const resolvedToken = token || localStorage.getItem("taskifyToken");
-    const headers = {};
-    if (resolvedToken) headers.Authorization = `Bearer ${resolvedToken}`;
+/* Multipart uploads go through XMLHttpRequest rather than fetch, because
+   only XHR reports upload progress — that's what lets the image uploader
+   show a real percentage instead of an open-ended spinner. Pass
+   { onUploadProgress(fraction, loaded, total) } to receive it; it fires
+   with fraction 1 once every byte has been sent and the server is
+   working on the reply. */
+function apiMultipartRequest(endpoint, method, formData, token = null, { onUploadProgress } = {}) {
+  const quiet = !!onUploadProgress;
+  startTopLoader({ quiet });
+  const resolvedToken = token || localStorage.getItem("taskifyToken");
 
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, { method, headers, body: formData });
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error(`Server error (${response.status}). Is your backend running?`);
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open(method, `${API_BASE_URL}${endpoint}`);
+    if (resolvedToken) xhr.setRequestHeader("Authorization", `Bearer ${resolvedToken}`);
+
+    if (onUploadProgress) {
+      xhr.upload.addEventListener("progress", e => {
+        if (e.lengthComputable && e.total) onUploadProgress(e.loaded / e.total, e.loaded, e.total);
+      });
+      xhr.upload.addEventListener("load", () => onUploadProgress(1));
     }
 
-    const data = await response.json();
+    xhr.addEventListener("error", () => reject(new Error(networkErrorMessage())));
+    xhr.addEventListener("abort", () => reject(new Error("Upload cancelled.")));
+    xhr.addEventListener("load", () => {
+      const contentType = xhr.getResponseHeader("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        reject(new Error(`Server error (${xhr.status}). Is your backend running?`));
+        return;
+      }
 
-    if (response.status === 401 && resolvedToken) {
-      handleSessionExpired();
-      throw new Error("Your session has expired. Please log in again.");
-    }
+      let data;
+      try { data = JSON.parse(xhr.responseText); }
+      catch { reject(new Error("Something went wrong.")); return; }
 
-    if (!response.ok) throw new Error(data.message || "Something went wrong.");
-    return data;
-  } finally {
-    stopTopLoader();
-  }
+      if (xhr.status === 401 && resolvedToken) {
+        handleSessionExpired();
+        reject(new Error("Your session has expired. Please log in again."));
+        return;
+      }
+
+      if (xhr.status < 200 || xhr.status >= 300) {
+        reject(new Error(data.message || "Something went wrong."));
+        return;
+      }
+      resolve(data);
+    });
+
+    xhr.send(formData);
+  }).finally(() => stopTopLoader({ quiet }));
 }

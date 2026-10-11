@@ -27,7 +27,7 @@ feedbackForm.addEventListener("submit", async (e) => {
   feedbackError.textContent = "";
   const originalHtml = feedbackSubmit.innerHTML;
   feedbackSubmit.disabled = true;
-  feedbackSubmit.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Sending…`;
+  feedbackSubmit.innerHTML = `<i class="ti ti-send busy-icon busy-fly" aria-hidden="true"></i> Sending…`;
   try {
     const res = await apiRequest("/feedback", "POST", { kind: feedbackKind.value, message });
     showToast(res.message || "Thank you — your feedback has been sent.");

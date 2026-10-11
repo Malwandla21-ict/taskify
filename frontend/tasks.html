@@ -70,7 +70,7 @@
           <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
         </div>
 
-        <div id="tasksContainer" class="marketplace-grid">
+        <div id="tasksContainer" class="marketplace-grid" data-skeleton="cards">
           <div class="empty-state">
             <div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div>
             <h3>Loading tasks…</h3>
@@ -109,7 +109,7 @@
           <h3><i class="ti ti-history" aria-hidden="true"></i> My Task History</h3>
         </div>
         <p class="rail-card-sub">Everything you've posted or accepted, with full details</p>
-        <div id="taskHistoryMiniContainer" class="mini-history-list">
+        <div id="taskHistoryMiniContainer" class="mini-history-list" data-skeleton="mini">
           <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
         </div>
         <a href="#fullHistorySection" id="viewAllHistoryLink" class="view-all-link small" style="margin-top:12px;display:inline-flex;">
@@ -126,12 +126,8 @@
         <p>Everything you've posted or accepted, with full details</p>
       </div>
     </div>
-    <div id="historyContainer" class="history-list">
-      <div class="empty-state">
-        <div class="empty-state-icon"><i class="ti ti-clock" aria-hidden="true"></i></div>
-        <h3>No history yet</h3>
-        <p>Tasks you post or accept will show here.</p>
-      </div>
+    <div id="historyContainer" class="history-list" data-skeleton="rows">
+      <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading your task history…</p>
     </div>
   </section>
 </div>

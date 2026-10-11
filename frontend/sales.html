@@ -70,7 +70,7 @@
           <button class="filter-pill" data-section="General"><i class="ti ti-building-store" aria-hidden="true"></i> General</button>
         </div>
 
-        <div id="salesContainer" class="marketplace-grid">
+        <div id="salesContainer" class="marketplace-grid" data-skeleton="cards">
           <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-loader" aria-hidden="true"></i></div><h3>Loading items…</h3></div>
         </div>
       </section>
@@ -106,7 +106,7 @@
           <h3><i class="ti ti-list" aria-hidden="true"></i> My Listings</h3>
         </div>
         <p class="rail-card-sub">Manage items you listed for sale</p>
-        <div id="mySalesMiniContainer" class="mini-history-list">
+        <div id="mySalesMiniContainer" class="mini-history-list" data-skeleton="mini">
           <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading…</p>
         </div>
         <a href="#fullListingsSection" id="viewAllListingsLink" class="view-all-link small" style="margin-top:12px;display:inline-flex;">
@@ -123,8 +123,8 @@
         <p>Manage items you listed for sale</p>
       </div>
     </div>
-    <div id="mySalesContainer" class="history-list">
-      <div class="empty-state"><div class="empty-state-icon"><i class="ti ti-tag" aria-hidden="true"></i></div><h3>No listings yet</h3></div>
+    <div id="mySalesContainer" class="history-list" data-skeleton="rows">
+      <p class="rail-loading"><i class="ti ti-loader" aria-hidden="true"></i> Loading your listings…</p>
     </div>
   </section>
 </div>
