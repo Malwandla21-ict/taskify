@@ -15,7 +15,7 @@ function messageBubble(msg) {
   return `
     <div style="align-self:${isMine ? "flex-end" : "flex-start"};max-width:70%;">
       <div style="background:${isMine ? "var(--ump-navy)" : "var(--background)"};color:${isMine ? "white" : "var(--text)"};padding:10px 14px;border-radius:var(--radius-lg);font-size:13px;line-height:1.5;">
-        ${msg.body}
+        ${escapeHtml(msg.body)}
       </div>
       <div style="display:flex;gap:8px;align-items:center;margin-top:4px;${isMine ? "justify-content:flex-end;" : ""}">
         <span style="font-size:10px;color:var(--muted);">${new Date(msg.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
@@ -73,9 +73,9 @@ async function loadConversation() {
         <div style="display:flex;align-items:center;gap:12px;">
           <div class="market-avatar" style="width:44px;height:44px;">${avatarHtml(conv.other_user_name, conv.other_user_photo)}</div>
           <div>
-            <div class="profile-link" data-user-id="${conv.other_user_id}" style="cursor:pointer;font-weight:700;font-size:15px;">${conv.other_user_name}</div>
+            <div class="profile-link" data-user-id="${conv.other_user_id}" style="cursor:pointer;font-weight:700;font-size:15px;">${escapeHtml(conv.other_user_name)}</div>
             <a href="./${contextPath[conv.context_type]}?id=${conv.context_id}" style="font-size:12px;color:var(--ump-navy);font-weight:600;">
-              <i class="ti ti-external-link" aria-hidden="true"></i> ${conv.context_title}
+              <i class="ti ti-external-link" aria-hidden="true"></i> ${escapeHtml(conv.context_title)}
             </a>
           </div>
         </div>`;

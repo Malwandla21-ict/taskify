@@ -57,16 +57,16 @@ function updateSalesPreview() {
   const price     = document.getElementById("salesPrice").value.trim();
 
   salesPreview.innerHTML = `
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${title || "Item title"}</h3>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">${desc || "Item description will appear here."}</p>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${escapeHtml(title || "Item title")}</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">${escapeHtml(desc || "Item description will appear here.")}</p>
     <div class="market-tags">
       ${sectionBadge(section)}
-      <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${category || "Category"}</div>
+      <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(category || "Category")}</div>
       ${conditionBadge(condition)}
-      <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${location || "Location"}</div>
+      <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(location || "Location")}</div>
     </div>
     <div style="margin-top:14px;font-size:13px;color:var(--muted);">
-      Price: <strong style="color:var(--ump-green);font-size:16px;">R${price || "0"}</strong>
+      Price: <strong style="color:var(--ump-green);font-size:16px;">R${escapeHtml(price || "0")}</strong>
     </div>`;
 }
 
@@ -228,7 +228,7 @@ function saleCard(item) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${imageUrl
-          ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="sale-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title)}" class="lightbox-img" data-gallery="sale-${item.id}" data-full="${escapeHtml(imageUrl)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
         ${lecturerPostedCornerBadge(item.seller_member_type, item.seller_lecturer_verified)}
@@ -241,21 +241,21 @@ function saleCard(item) {
           <div class="market-user">
             <div class="market-avatar" style="background:rgba(245,180,0,0.14);color:#b38900;">${avatarHtml(item.seller_name, item.seller_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${posterName(item.seller_name, item.seller_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${item.seller_id}" style="cursor:pointer;">${escapeHtml(posterName(item.seller_name, item.seller_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-shopping-bag" aria-hidden="true"></i> Student Seller</div>
             </div>
           </div>
           ${sectionBadge(item.section)}
         </div>
-        <h3>${item.title}</h3>
+        <h3>${escapeHtml(item.title)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${item.location}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(item.location)}</div>
           ${endorsementBadge(item)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${item.price}</div>
+          <div class="market-price">R${escapeHtml(item.price)}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <a href="./sale-details.html?id=${item.id}" class="market-action-btn">
               <i class="ti ti-eye" aria-hidden="true"></i> View
@@ -281,7 +281,7 @@ function myListingCard(item) {
     <div class="market-card history-row">
       <div class="market-image" style="position:relative;">
         ${imageUrl
-          ? `<img src="${imageUrl}" alt="${item.title}" class="lightbox-img" data-gallery="mylisting-${item.id}" data-full="${imageUrl}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.title)}" class="lightbox-img" data-gallery="mylisting-${item.id}" data-full="${escapeHtml(imageUrl)}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(item)}
       </div>
@@ -291,13 +291,13 @@ function myListingCard(item) {
           ${statusBadge(item.status)}
           ${pendingReviewBadge(item.moderation_status)}
         </div>
-        <h3>${item.title}</h3>
-        <p class="history-desc">${item.description}</p>
+        <h3>${escapeHtml(item.title)}</h3>
+        <p class="history-desc">${escapeHtml(item.description)}</p>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
           ${endorsementBadge(item)}
-          <div class="market-price" style="font-size:16px;">R${item.price}</div>
+          <div class="market-price" style="font-size:16px;">R${escapeHtml(item.price)}</div>
         </div>
         <div style="display:flex;gap:8px;margin-top:14px;">
           ${item.status === "Reserved" ? `
@@ -319,7 +319,7 @@ function myListingMiniCard(item) {
   return `
     <a href="./sale-details.html?id=${item.id}" class="mini-history-item">
       <div class="mini-history-thumb">${Array.isArray(item.image_urls) && item.image_urls.length
-        ? `<img src="${item.image_urls[0]}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover;" />`
+        ? `<img src="${escapeHtml(item.image_urls[0])}" alt="${escapeHtml(item.title)}" style="width:100%;height:100%;object-fit:cover;" />`
         : `<div class="media-placeholder light gold"><i class="ti ti-shopping-bag" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
@@ -327,8 +327,8 @@ function myListingMiniCard(item) {
           ${statusBadge(item.status)}
           ${pendingReviewBadge(item.moderation_status)}
         </div>
-        <div class="mini-history-title">${item.title}</div>
-        <div class="mini-history-meta">R${item.price} &middot; ${item.condition_status}</div>
+        <div class="mini-history-title">${escapeHtml(item.title)}</div>
+        <div class="mini-history-meta">R${escapeHtml(item.price)} &middot; ${escapeHtml(item.condition_status)}</div>
       </div>
     </a>`;
 }

@@ -134,7 +134,7 @@ closeUserDetailBtn.addEventListener("click", closeAllAdminModals);
 closeMessageThreadModalButton?.addEventListener("click", closeAllAdminModals);
 
 function openActionModal({ title, confirmLabel = "Confirm", onConfirm }) {
-  actionModalTitle.innerHTML = `<i class="ti ti-alert-triangle" aria-hidden="true"></i> ${title}`;
+  actionModalTitle.innerHTML = `<i class="ti ti-alert-triangle" aria-hidden="true"></i> ${escapeHtml(title)}`;
   actionModalReason.value = "";
   actionModalConfirm.textContent = confirmLabel;
   pendingAction = onConfirm;
@@ -298,7 +298,7 @@ function renderTaskDonut(taskStatusCounts, total) {
       ${segments.map(seg => `
         <div class="admin-donut-legend-row">
           <span class="admin-donut-dot" style="background:${seg.color};"></span>
-          <span class="admin-donut-legend-label">${seg.label}</span>
+          <span class="admin-donut-legend-label">${escapeHtml(seg.label)}</span>
           <span class="admin-donut-legend-value">${seg.value} (${total ? Math.round((seg.value / total) * 100) : 0}%)</span>
         </div>`).join("")}
     </div>`;
@@ -326,10 +326,10 @@ async function loadPendingReportsPreview() {
                 <button type="button" class="table-icon-btn success qa-resolve-btn" data-report-id="${r.id}" title="Resolve">
                   <i class="ti ti-circle-check" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="table-icon-btn danger qa-suspend-btn" data-user-id="${r.reported_user_id}" data-user-name="${r.reported_user_name}" title="Suspend user">
+                <button type="button" class="table-icon-btn danger qa-suspend-btn" data-user-id="${r.reported_user_id}" data-user-name="${escapeHtml(r.reported_user_name)}" title="Suspend user">
                   <i class="ti ti-player-pause" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="table-icon-btn danger qa-ban-btn" data-user-id="${r.reported_user_id}" data-user-name="${r.reported_user_name}" title="Ban user">
+                <button type="button" class="table-icon-btn danger qa-ban-btn" data-user-id="${r.reported_user_id}" data-user-name="${escapeHtml(r.reported_user_name)}" title="Ban user">
                   <i class="ti ti-ban" aria-hidden="true"></i>
                 </button>
               </div>
@@ -405,8 +405,8 @@ async function loadRecentActivityPreview() {
             <div class="admin-feed-item">
               <div class="admin-feed-icon ${cls}"><i class="ti ${icon}" aria-hidden="true"></i></div>
               <div class="admin-feed-body">
-                <div class="admin-feed-title">${log.admin_name} — ${log.action}</div>
-                <div class="admin-feed-sub">${log.target_type} #${log.target_id ?? "—"}${log.reason ? ` · ${log.reason}` : ""}</div>
+                <div class="admin-feed-title">${escapeHtml(log.admin_name)} — ${escapeHtml(log.action)}</div>
+                <div class="admin-feed-sub">${escapeHtml(log.target_type)} #${log.target_id ?? "—"}${log.reason ? ` · ${escapeHtml(log.reason)}` : ""}</div>
               </div>
               <div class="admin-feed-time">${timeAgo(log.created_at)}</div>
             </div>`;
@@ -529,10 +529,10 @@ function lecturerBadgeFor(user) {
 function lecturerVerifyButtonFor(user) {
   if (user.member_type !== "Lecturer") return "";
   return Number(user.lecturer_verified)
-    ? `<button type="button" class="table-icon-btn danger qa-table-unverify-lecturer-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Remove lecturer verification">
+    ? `<button type="button" class="table-icon-btn danger qa-table-unverify-lecturer-btn" data-user-id="${user.id}" data-user-name="${escapeHtml(user.full_name)}" title="Remove lecturer verification">
          <i class="ti ti-school-off" aria-hidden="true"></i>
        </button>`
-    : `<button type="button" class="table-icon-btn success qa-table-verify-lecturer-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Verify lecturer">
+    : `<button type="button" class="table-icon-btn success qa-table-verify-lecturer-btn" data-user-id="${user.id}" data-user-name="${escapeHtml(user.full_name)}" title="Verify lecturer">
          <i class="ti ti-school" aria-hidden="true"></i>
        </button>`;
 }
@@ -546,22 +546,22 @@ function quickActionButtonsFor(user) {
 function roleActionButtonsFor(user) {
   if (user.role === "user") {
     return `
-      <button type="button" class="table-icon-btn danger qa-table-suspend-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Suspend">
+      <button type="button" class="table-icon-btn danger qa-table-suspend-btn" data-user-id="${user.id}" data-user-name="${escapeHtml(user.full_name)}" title="Suspend">
         <i class="ti ti-player-pause" aria-hidden="true"></i>
       </button>
-      <button type="button" class="table-icon-btn danger qa-table-ban-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Ban">
+      <button type="button" class="table-icon-btn danger qa-table-ban-btn" data-user-id="${user.id}" data-user-name="${escapeHtml(user.full_name)}" title="Ban">
         <i class="ti ti-ban" aria-hidden="true"></i>
       </button>`;
   }
   if (user.role === "suspended") {
     return `
-      <button type="button" class="table-icon-btn success qa-table-unsuspend-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Unsuspend">
+      <button type="button" class="table-icon-btn success qa-table-unsuspend-btn" data-user-id="${user.id}" data-user-name="${escapeHtml(user.full_name)}" title="Unsuspend">
         <i class="ti ti-player-play" aria-hidden="true"></i>
       </button>`;
   }
   if (user.role === "banned") {
     return `
-      <button type="button" class="table-icon-btn success qa-table-unban-btn" data-user-id="${user.id}" data-user-name="${user.full_name}" title="Unban">
+      <button type="button" class="table-icon-btn success qa-table-unban-btn" data-user-id="${user.id}" data-user-name="${escapeHtml(user.full_name)}" title="Unban">
         <i class="ti ti-player-play" aria-hidden="true"></i>
       </button>`;
   }
@@ -581,10 +581,10 @@ function renderUsersTable() {
           <td>
             <div class="admin-table-user-cell">
               <div class="market-avatar">${avatarHtml(u.full_name, u.profile_photo_url)}</div>
-              <span class="admin-table-name profile-link" data-user-id="${u.id}">${u.full_name}${Number(u.id) === Number(currentUser.id) ? " (you)" : ""}</span>
+              <span class="admin-table-name profile-link" data-user-id="${u.id}">${escapeHtml(u.full_name)}${Number(u.id) === Number(currentUser.id) ? " (you)" : ""}</span>
             </div>
           </td>
-          <td class="admin-table-muted">${u.email}</td>
+          <td class="admin-table-muted">${escapeHtml(u.email)}</td>
           <td>${roleBadge(u)} ${lecturerBadgeFor(u)}</td>
           <td>${twoFactorBadge(u)}</td>
           <td class="admin-table-muted">${new Date(u.created_at).toLocaleDateString()}</td>
@@ -728,14 +728,14 @@ async function openUserDetailModal(userId) {
       <div class="admin-user-detail-identity">
         <div class="market-avatar">${avatarHtml(profile.full_name, profile.profilePhoto)}</div>
         <div>
-          <h3>${profile.full_name}</h3>
-          <p>${profile.email}</p>
+          <h3>${escapeHtml(profile.full_name)}</h3>
+          <p>${escapeHtml(profile.email)}</p>
         </div>
       </div>
       <div class="admin-user-detail-rows">
         <div class="admin-user-detail-row"><span>User ID</span><span>USR-${String(profile.id).padStart(4, "0")}</span></div>
-        <div class="admin-user-detail-row"><span>Phone</span><span>${profile.phone_number || "Not provided"}</span></div>
-        <div class="admin-user-detail-row"><span>Account</span><span>${listUser.member_type || "Student"}${listUser.member_type === "Lecturer" ? (Number(listUser.lecturer_verified) ? " (verified)" : " (not verified)") : ""}${listUser.role !== "user" ? ` · ${listUser.role}` : ""}</span></div>
+        <div class="admin-user-detail-row"><span>Phone</span><span>${escapeHtml(profile.phone_number || "Not provided")}</span></div>
+        <div class="admin-user-detail-row"><span>Account</span><span>${escapeHtml(listUser.member_type || "Student")}${listUser.member_type === "Lecturer" ? (Number(listUser.lecturer_verified) ? " (verified)" : " (not verified)") : ""}${listUser.role !== "user" ? ` · ${listUser.role}` : ""}</span></div>
         <div class="admin-user-detail-row"><span>Two-Factor Auth</span><span>${twoFactorBadge(listUser)}</span></div>
         <div class="admin-user-detail-row"><span>Joined On</span><span>${new Date(profile.created_at).toLocaleDateString()}</span></div>
         <div class="admin-user-detail-row"><span>Total Tasks Completed</span><span>${profile.completed_tasks}</span></div>
@@ -971,10 +971,10 @@ function renderReportsTable() {
                 <button type="button" class="table-icon-btn success resolve-report-btn" data-report-id="${r.id}" title="Resolve">
                   <i class="ti ti-circle-check" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="table-icon-btn danger suspend-report-user-btn" data-user-id="${r.reported_user_id}" data-user-name="${r.reported_user_name}" title="Suspend user">
+                <button type="button" class="table-icon-btn danger suspend-report-user-btn" data-user-id="${r.reported_user_id}" data-user-name="${escapeHtml(r.reported_user_name)}" title="Suspend user">
                   <i class="ti ti-player-pause" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="table-icon-btn danger ban-report-user-btn" data-user-id="${r.reported_user_id}" data-user-name="${r.reported_user_name}" title="Ban user">
+                <button type="button" class="table-icon-btn danger ban-report-user-btn" data-user-id="${r.reported_user_id}" data-user-name="${escapeHtml(r.reported_user_name)}" title="Ban user">
                   <i class="ti ti-ban" aria-hidden="true"></i>
                 </button>
                 ${canRefund ? `
@@ -1179,7 +1179,7 @@ function flaggedCategoriesCell(categories) {
      the poster says authorised it, then approve or remove. */
   const shown = categories.slice(0, 3).map(c => c === "institutional_listing"
     ? `<div class="badge blue" style="margin:0 4px 4px 0;" title="Open the listing to see who authorised it">Institutional: check who authorised it</div>`
-    : `<div class="badge gold" style="margin:0 4px 4px 0;">${c}</div>`).join("");
+    : `<div class="badge gold" style="margin:0 4px 4px 0;">${escapeHtml(c)}</div>`).join("");
   const rest = categories.length > 3 ? `<span class="admin-table-muted">+${categories.length - 3} more</span>` : "";
   return `<div style="display:flex;flex-wrap:wrap;align-items:center;">${shown}${rest}</div>`;
 }
@@ -1197,20 +1197,20 @@ function renderModerationTable() {
         const title = item.title || "Untitled";
         return `
         <tr>
-          <td class="admin-table-name" style="max-width:220px;">${title}</td>
-          <td><div class="badge blue">${CONTENT_TYPE_LABELS[item.contentType] || item.contentType}</div></td>
+          <td class="admin-table-name" style="max-width:220px;">${escapeHtml(title)}</td>
+          <td><div class="badge blue">${escapeHtml(CONTENT_TYPE_LABELS[item.contentType] || item.contentType)}</div></td>
           <td>${item.ownerId
-              ? `<span class="admin-table-name profile-link" data-user-id="${item.ownerId}">${item.ownerName || "Unknown"}</span>`
+              ? `<span class="admin-table-name profile-link" data-user-id="${item.ownerId}">${escapeHtml(item.ownerName || "Unknown")}</span>`
               : `<span class="admin-table-muted">—</span>`}</td>
           <td>${flaggedCategoriesCell(item.flaggedCategories)}</td>
           <td class="admin-table-muted">${new Date(item.createdAt).toLocaleDateString()}</td>
           <td>
             <div class="admin-table-actions">
               ${detailUrl ? `<a href="${detailUrl}" class="table-icon-btn" title="View listing" target="_blank" rel="noopener"><i class="ti ti-external-link" aria-hidden="true"></i></a>` : ""}
-              <button type="button" class="table-icon-btn success clear-moderation-btn" data-content-type="${item.contentType}" data-content-id="${item.id}" data-title="${title}" title="Approve — publish this listing">
+              <button type="button" class="table-icon-btn success clear-moderation-btn" data-content-type="${escapeHtml(item.contentType)}" data-content-id="${item.id}" data-title="${escapeHtml(title)}" title="Approve — publish this listing">
                 <i class="ti ti-circle-check" aria-hidden="true"></i>
               </button>
-              <button type="button" class="table-icon-btn danger remove-moderation-btn" data-content-type="${item.contentType}" data-content-id="${item.id}" data-title="${title}" title="Remove content">
+              <button type="button" class="table-icon-btn danger remove-moderation-btn" data-content-type="${escapeHtml(item.contentType)}" data-content-id="${item.id}" data-title="${escapeHtml(title)}" title="Remove content">
                 <i class="ti ti-trash" aria-hidden="true"></i>
               </button>
             </div>
@@ -1265,10 +1265,10 @@ function conversationCard(conv) {
     <div class="market-card">
       <div class="market-content">
         <div class="market-top">
-          <div class="badge navy"><i class="ti ti-messages" aria-hidden="true"></i> ${conv.context_type}</div>
+          <div class="badge navy"><i class="ti ti-messages" aria-hidden="true"></i> ${escapeHtml(conv.context_type)}</div>
           <span style="font-size:11px;color:var(--muted);">${new Date(conv.updated_at).toLocaleString()}</span>
         </div>
-        <h3 style="font-size:14px;">${conv.user_a_name} &amp; ${conv.user_b_name}</h3>
+        <h3 style="font-size:14px;">${escapeHtml(conv.user_a_name)} &amp; ${escapeHtml(conv.user_b_name)}</h3>
         <div class="market-tags" style="margin:8px 0 12px;">
           <div class="market-tag"><i class="ti ti-message" aria-hidden="true"></i> ${conv.message_count} message${conv.message_count === 1 ? "" : "s"}</div>
           ${conv.flagged_count > 0 ? `<div class="market-tag" style="background:rgba(224,58,62,0.10);color:var(--ump-red);"><i class="ti ti-flag" aria-hidden="true"></i> ${conv.flagged_count} flagged</div>` : ""}
@@ -1311,7 +1311,7 @@ function messageBubble(msg) {
         <span class="profile-link" data-user-id="${msg.sender_id}" style="font-size:12px;font-weight:700;cursor:pointer;">${msg.sender_name}</span>
         <span style="font-size:10px;color:var(--muted);">${new Date(msg.created_at).toLocaleString()}</span>
       </div>
-      <p style="font-size:13px;color:var(--text);">${msg.body}</p>
+      <p style="font-size:13px;color:var(--text);">${escapeHtml(msg.body)}</p>
       ${msg.is_flagged ? `<div class="badge red" style="margin-top:5px;"><i class="ti ti-flag" aria-hidden="true"></i> Flagged</div>` : ""}
     </div>`;
 }
@@ -1363,10 +1363,10 @@ function renderAuditTable() {
   tbody.innerHTML = pageItems.length
     ? pageItems.map(log => `
         <tr>
-          <td><span class="admin-table-name profile-link" data-user-id="${log.admin_id}">${log.admin_name}</span></td>
-          <td><div class="badge navy">${log.action}</div></td>
-          <td class="admin-table-muted">${log.target_type} #${log.target_id ?? "—"}</td>
-          <td class="admin-table-muted">${log.reason || "—"}</td>
+          <td><span class="admin-table-name profile-link" data-user-id="${log.admin_id}">${escapeHtml(log.admin_name)}</span></td>
+          <td><div class="badge navy">${escapeHtml(log.action)}</div></td>
+          <td class="admin-table-muted">${escapeHtml(log.target_type)} #${log.target_id ?? "—"}</td>
+          <td class="admin-table-muted">${escapeHtml(log.reason || "—")}</td>
           <td class="admin-table-muted">${new Date(log.created_at).toLocaleString()}</td>
         </tr>`).join("")
     : `<tr><td colspan="5">${emptyState("ti-history", "No admin actions yet")}</td></tr>`;
@@ -1386,9 +1386,9 @@ function allowlistEntryCard(entry) {
     <div class="market-card">
       <div class="market-content">
         <div class="market-top">
-          <div class="badge blue"><i class="ti ti-mail" aria-hidden="true"></i> ${entry.email}</div>
+          <div class="badge blue"><i class="ti ti-mail" aria-hidden="true"></i> ${escapeHtml(entry.email)}</div>
         </div>
-        <p style="color:var(--muted);font-size:13px;margin:8px 0 4px;">${entry.note || "No note provided."}</p>
+        <p style="color:var(--muted);font-size:13px;margin:8px 0 4px;">${escapeHtml(entry.note || "No note provided.")}</p>
         <div class="market-tags" style="margin-top:10px;">
           <div class="market-tag"><i class="ti ti-terminal" aria-hidden="true"></i> Added via server script</div>
           <div class="market-tag"><i class="ti ti-calendar" aria-hidden="true"></i> ${new Date(entry.created_at).toLocaleDateString()}</div>

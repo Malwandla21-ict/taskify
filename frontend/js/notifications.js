@@ -145,8 +145,8 @@ function notificationItem(n) {
       <div class="notif-body">
         <div class="notif-top-row">
           <div>
-            <div class="notif-title">${n.title}</div>
-            <div class="notif-message">${n.message}</div>
+            <div class="notif-title">${escapeHtml(n.title)}</div>
+            <div class="notif-message">${escapeHtml(n.message)}</div>
           </div>
           <div class="notif-time">
             <span class="notif-time-dot ${n.is_read ? "gray" : ""}"></span>

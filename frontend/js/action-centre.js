@@ -23,7 +23,7 @@ const ACTION_KIND_ICONS = {
 const ACTION_TONE_BADGES = { action: "gold", waiting: "blue", problem: "red" };
 
 function escapeActionText(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  return escapeHtml(value);
 }
 
 /* "2026-10-17" (a date) or a full timestamp → "Fri 17 Oct" / "Fri 17 Oct, 14:00",

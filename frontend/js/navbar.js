@@ -264,8 +264,8 @@ function showNotificationModal(notification) {
       <div class="priority-notification-icon"><i class="ti ti-bell-ringing" aria-hidden="true"></i></div>
       <div>
         <p class="priority-notification-label">Action required</p>
-        <h2 id="priorityNotificationTitle">${notification.title}</h2>
-        <p>${notification.message}</p>
+        <h2 id="priorityNotificationTitle">${escapeHtml(notification.title)}</h2>
+        <p>${escapeHtml(notification.message)}</p>
       </div>
       <div class="priority-notification-actions">
         <a class="primary-button" href="./notifications.html">View notification</a>

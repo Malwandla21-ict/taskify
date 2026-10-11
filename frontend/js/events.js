@@ -110,7 +110,7 @@ function openEventEditModal(event) {
   fillCategorySelect(document.getElementById("eventCategory"), "event", event.category || "", document.getElementById("eventCategoryHint"));
   /* An older event keeps its old category (no longer offered for new listings). */
   if (LEGACY_EVENT_CATEGORIES.includes(event.category)) {
-    eventCategorySelect.insertAdjacentHTML("beforeend", `<optgroup label="Current (no longer offered)"><option value="${event.category}">${event.category}</option></optgroup>`);
+    eventCategorySelect.insertAdjacentHTML("beforeend", `<optgroup label="Current (no longer offered)"><option value="${escapeHtml(event.category)}">${escapeHtml(event.category)}</option></optgroup>`);
     eventCategorySelect.value = event.category;
   }
   if (eventAuthorityInput) eventAuthorityInput.value = event.listing_authority || "";
@@ -235,7 +235,7 @@ function eventCard(event) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${event.image_urls?.length
-          ? `<img src="${event.image_urls[0]}" alt="${event.title}" class="lightbox-img" data-gallery="event-${event.id}" data-full="${event.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(event.image_urls[0])}" alt="${escapeHtml(event.title)}" class="lightbox-img" data-gallery="event-${event.id}" data-full="${escapeHtml(event.image_urls[0])}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light green"><i class="ti ti-building-store" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(event)}
         ${lecturerPostedCornerBadge(event.organizer_member_type, event.organizer_lecturer_verified)}
@@ -245,17 +245,17 @@ function eventCard(event) {
           <div class="market-user">
             <div class="market-avatar">${avatarHtml(event.organizer_name, event.organizer_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${event.organizer_id}" style="cursor:pointer;">${posterName(event.organizer_name, event.organizer_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${event.organizer_id}" style="cursor:pointer;">${escapeHtml(posterName(event.organizer_name, event.organizer_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-building-store" aria-hidden="true"></i> Posted by</div>
             </div>
           </div>
           ${sectionBadge(event.section || "General")}
         </div>
-        <h3>${event.title}</h3>
+        <h3>${escapeHtml(event.title)}</h3>
         <div class="market-tags">
           ${institutionalBadge(event)}
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${event.category}</div>
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(event.category)}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(event.location)}</div>
           <div class="market-tag"><i class="ti ti-clock" aria-hidden="true"></i> ${formatEventDate(event.event_date)}</div>
           ${eventFoodTags(event)}
           ${endorsementBadge(event)}
@@ -282,7 +282,7 @@ function pastEventCard(event) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${event.image_urls?.length
-          ? `<img src="${event.image_urls[0]}" alt="${event.title}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(35%);opacity:0.85;" />`
+          ? `<img src="${escapeHtml(event.image_urls[0])}" alt="${escapeHtml(event.title)}" style="width:100%;height:100%;object-fit:cover;filter:grayscale(35%);opacity:0.85;" />`
           : `<div class="media-placeholder light navy"><i class="ti ti-calendar-off" aria-hidden="true"></i></div>`}
       </div>
       <div class="market-content">
@@ -290,9 +290,9 @@ function pastEventCard(event) {
           ${sectionBadge(event.section || "General")}
           <div class="badge">Ended</div>
         </div>
-        <h3>${event.title}</h3>
+        <h3>${escapeHtml(event.title)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${event.location}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(event.location)}</div>
           <div class="market-tag"><i class="ti ti-users" aria-hidden="true"></i> ${event.rsvp_count} went</div>
         </div>
       </div>
@@ -304,7 +304,7 @@ function myEventMiniCard(event) {
   return `
     <div class="mini-history-item">
       <div class="mini-history-thumb">${event.image_urls?.length
-        ? `<img src="${event.image_urls[0]}" alt="${event.title}" style="width:100%;height:100%;object-fit:cover;" />`
+        ? `<img src="${escapeHtml(event.image_urls[0])}" alt="${escapeHtml(event.title)}" style="width:100%;height:100%;object-fit:cover;" />`
         : `<div class="media-placeholder light green"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
@@ -312,7 +312,7 @@ function myEventMiniCard(event) {
           <div class="badge ${isOwn ? "navy" : ""}">${isOwn ? "Organizing" : "Attending"}</div>
           ${pendingReviewBadge(event.moderation_status)}
         </div>
-        <a href="./event-details.html?id=${event.id}" class="mini-history-title">${event.title}</a>
+        <a href="./event-details.html?id=${event.id}" class="mini-history-title">${escapeHtml(event.title)}</a>
         <div class="mini-history-meta">${formatEventDate(event.event_date)}</div>
       </div>
       ${isOwn ? `<button class="table-icon-btn danger delete-event-btn" data-event-id="${event.id}" title="Delete"><i class="ti ti-trash" aria-hidden="true"></i></button>` : ""}
@@ -370,10 +370,10 @@ function renderPopularCategories() {
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
   popularCategoriesContainer.innerHTML = top.length
     ? top.map(([cat, count], i) => `
-        <div class="popular-category-chip ${CHIP_COLORS[i % CHIP_COLORS.length]}" data-category="${cat}" role="button" tabindex="0" title="Show ${cat} events" style="cursor:pointer;">
+        <div class="popular-category-chip ${CHIP_COLORS[i % CHIP_COLORS.length]}" data-category="${escapeHtml(cat)}" role="button" tabindex="0" title="Show ${escapeHtml(cat)} events" style="cursor:pointer;">
           <i class="ti ti-tag" aria-hidden="true"></i>
           <div>
-            <strong>${cat}</strong>
+            <strong>${escapeHtml(cat)}</strong>
             <span>${count} listing${count === 1 ? "" : "s"}</span>
           </div>
         </div>`).join("")

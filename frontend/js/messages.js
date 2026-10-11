@@ -69,12 +69,12 @@ function conversationItem(conv) {
       <div class="conversation-item-avatar">${avatarHtml(conv.other_user_name, conv.other_user_photo)}</div>
       <div class="conversation-item-info">
         <div class="conversation-item-top">
-          <div class="conversation-item-name">${conv.other_user_name}</div>
+          <div class="conversation-item-name">${escapeHtml(conv.other_user_name)}</div>
           <div class="conversation-item-time">${timeText}</div>
         </div>
-        <div class="conversation-item-context"><i class="ti ${meta.icon}" aria-hidden="true"></i> ${conv.context_title}</div>
+        <div class="conversation-item-context"><i class="ti ${meta.icon}" aria-hidden="true"></i> ${escapeHtml(conv.context_title)}</div>
         <div class="conversation-item-bottom">
-          <div class="conversation-item-preview">${preview}</div>
+          <div class="conversation-item-preview">${escapeHtml(preview)}</div>
           ${unread ? `<span class="conversation-unread-count" aria-label="${unread} unread">${unread > 9 ? "9+" : unread}</span>` : ""}
         </div>
       </div>
@@ -127,7 +127,7 @@ function messageBubble(msg) {
   return `
     <div class="message-bubble-row ${isMine ? "mine" : ""}">
       <div>
-        <div class="message-bubble">${msg.body}</div>
+        <div class="message-bubble">${escapeHtml(msg.body)}</div>
         <div class="message-meta">
           <span>${timeLabel(msg.created_at)}</span>
           ${!isMine ? `<button type="button" class="message-report-link" data-message-id="${msg.id}">Report</button>` : ""}
@@ -153,7 +153,7 @@ function pendingBubble(p) {
   return `
     <div class="message-bubble-row mine ${p.failed ? "is-failed" : "is-pending"}" data-pending-row="${p.id}">
       <div>
-        <div class="message-bubble">${escapeReportText(p.body)}</div>
+        <div class="message-bubble">${escapeHtml(p.body)}</div>
         <div class="message-meta">${meta}</div>
       </div>
     </div>`;
@@ -232,9 +232,9 @@ async function loadContextCard(conv) {
     threadContextTitle.textContent = title;
     threadContextMeta.textContent = categoryLabel ? `${categoryLabel} · ${priceLabel}` : priceLabel;
     threadContextThumb.innerHTML = item.image_urls?.length
-      ? `<img src="${item.image_urls[0]}" alt="${title}" style="width:100%;height:100%;object-fit:cover;" />`
+      ? `<img src="${escapeHtml(item.image_urls[0])}" alt="${escapeHtml(title)}" style="width:100%;height:100%;object-fit:cover;" />`
       : `<i class="ti ${meta.icon}" aria-hidden="true"></i>`;
-    threadContextStatus.innerHTML = `<div class="badge ${statusColor}">${statusLabel}</div>`;
+    threadContextStatus.innerHTML = `<div class="badge ${statusColor}">${escapeHtml(statusLabel)}</div>`;
     threadContextCard.style.display = "flex";
   } catch (err) {
     threadContextTitle.textContent = conv.context_title || "Listing no longer available";

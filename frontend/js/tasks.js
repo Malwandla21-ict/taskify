@@ -144,16 +144,16 @@ function updateTaskPreview() {
   const urgent   = document.getElementById("urgent").checked;
 
   taskPreview.innerHTML = `
-    <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${title || "Task title"}</h3>
-    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">${desc || "Task description will appear here."}</p>
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${escapeHtml(title || "Task title")}</h3>
+    <p style="color:var(--muted);font-size:13px;margin-bottom:12px;">${escapeHtml(desc || "Task description will appear here.")}</p>
     <div class="market-tags">
       ${sectionBadge(section)}
-      <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${category || "Category"}</div>
-      <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${location || "Location"}</div>
+      <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(category || "Category")}</div>
+      <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(location || "Location")}</div>
       ${urgent ? `<div class="market-tag" style="background:rgba(224,58,62,0.10);color:var(--ump-red);"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
     </div>
     <div style="margin-top:14px;font-size:13px;color:var(--muted);">
-      Budget: <strong style="color:var(--ump-green);font-size:16px;">R${price || "0"}</strong>
+      Budget: <strong style="color:var(--ump-green);font-size:16px;">R${escapeHtml(price || "0")}</strong>
     </div>`;
 }
 
@@ -242,7 +242,7 @@ function taskCard(task) {
     <div class="market-card">
       <div class="market-image" style="position:relative;">
         ${task.image_urls?.length
-          ? `<img src="${task.image_urls[0]}" alt="${task.title}" class="lightbox-img" data-gallery="task-${task.id}" data-full="${task.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(task.image_urls[0])}" alt="${escapeHtml(task.title)}" class="lightbox-img" data-gallery="task-${task.id}" data-full="${escapeHtml(task.image_urls[0])}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
         ${task.urgent ? `<div class="urgent-badge"><i class="ti ti-flame" aria-hidden="true"></i> Urgent</div>` : ""}
         ${endorsementCornerBadge(task, { shiftDown: task.urgent && isEndorsed })}
@@ -256,21 +256,21 @@ function taskCard(task) {
           <div class="market-user">
             <div class="market-avatar">${avatarHtml(task.created_by_name, task.created_by_profile_photo)}</div>
             <div>
-              <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${posterName(task.created_by_name, task.created_by_lecturer_title)}</div>
+              <div class="market-user-name profile-link" data-user-id="${task.created_by}" style="cursor:pointer;">${escapeHtml(posterName(task.created_by_name, task.created_by_lecturer_title))}</div>
               <div class="market-user-meta"><i class="ti ti-shield-check" aria-hidden="true"></i> ${task.created_by_member_type === "Lecturer" ? "Verified Lecturer" : "Verified Student"}</div>
             </div>
           </div>
           ${sectionBadge(task.section || "General")}
         </div>
-        <h3>${task.title}</h3>
+        <h3>${escapeHtml(task.title)}</h3>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(task.category)}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(task.location)}</div>
           ${statusBadge(task.status)}
           ${endorsementBadge(task)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${task.price} <span>/task</span></div>
+          <div class="market-price">R${escapeHtml(task.price)} <span>/task</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
             <a href="./task-details.html?id=${task.id}" class="market-action-btn">
               <i class="ti ti-eye" aria-hidden="true"></i> View
@@ -353,7 +353,7 @@ function historyCard(task) {
     <div class="market-card history-row">
       <div class="market-image" style="position:relative;">
         ${task.image_urls?.length
-          ? `<img src="${task.image_urls[0]}" alt="${task.title}" class="lightbox-img" data-gallery="task-history-${task.id}" data-full="${task.image_urls[0]}" style="width:100%;height:100%;object-fit:cover;" />`
+          ? `<img src="${escapeHtml(task.image_urls[0])}" alt="${escapeHtml(task.title)}" class="lightbox-img" data-gallery="task-history-${task.id}" data-full="${escapeHtml(task.image_urls[0])}" style="width:100%;height:100%;object-fit:cover;" />`
           : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}
         ${endorsementCornerBadge(task)}
         ${lecturerPostedCornerBadge(task.created_by_member_type, task.created_by_lecturer_verified)}
@@ -364,22 +364,22 @@ function historyCard(task) {
           ${statusBadge(task.status)}
           ${pendingReviewBadge(task.moderation_status)}
         </div>
-        <h3>${task.title}</h3>
-        <p class="history-desc">${task.description}</p>
+        <h3>${escapeHtml(task.title)}</h3>
+        <p class="history-desc">${escapeHtml(task.description)}</p>
         <div class="market-tags">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${task.category}</div>
-          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${task.location}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(task.category)}</div>
+          <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(task.location)}</div>
           <div class="market-tag"><i class="ti ti-user" aria-hidden="true"></i> ${roleLabel}</div>
-          <div class="market-tag"><i class="ti ti-credit-card" aria-hidden="true"></i> ${task.payment_status || "N/A"}</div>
+          <div class="market-tag"><i class="ti ti-credit-card" aria-hidden="true"></i> ${escapeHtml(task.payment_status || "N/A")}</div>
           ${endorsementBadge(task)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${task.price} <span>/task</span></div>
+          <div class="market-price">R${escapeHtml(task.price)} <span>/task</span></div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             ${task.status !== "Completed"
               ? `<a href="./task-details.html?id=${task.id}" class="market-action-btn outline"><i class="ti ti-eye" aria-hidden="true"></i> View</a>`
               : task.my_review_id
-                ? `<button class="market-action-btn outline edit-review-btn" data-review-id="${task.my_review_id}" data-rating="${task.my_review_rating ?? ""}" data-comment="${(task.my_review_comment ?? "").replace(/"/g, "&quot;")}">
+                ? `<button class="market-action-btn outline edit-review-btn" data-review-id="${task.my_review_id}" data-rating="${task.my_review_rating ?? ""}" data-comment="${escapeHtml(task.my_review_comment ?? "")}">
                      <i class="ti ti-edit" aria-hidden="true"></i> Edit Review
                    </button>
                    <button class="market-action-btn outline delete-review-btn" data-review-id="${task.my_review_id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
@@ -398,7 +398,7 @@ function historyMiniCard(task) {
   return `
     <a href="./task-details.html?id=${task.id}" class="mini-history-item">
       <div class="mini-history-thumb">${task.image_urls?.length
-        ? `<img src="${task.image_urls[0]}" alt="${task.title}" style="width:100%;height:100%;object-fit:cover;" />`
+        ? `<img src="${escapeHtml(task.image_urls[0])}" alt="${escapeHtml(task.title)}" style="width:100%;height:100%;object-fit:cover;" />`
         : `<div class="media-placeholder light"><i class="ti ti-clipboard-list" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
@@ -406,8 +406,8 @@ function historyMiniCard(task) {
           ${statusBadge(task.status)}
           ${pendingReviewBadge(task.moderation_status)}
         </div>
-        <div class="mini-history-title">${task.title}</div>
-        <div class="mini-history-meta">R${task.price} &middot; ${task.payment_status || "N/A"}</div>
+        <div class="mini-history-title">${escapeHtml(task.title)}</div>
+        <div class="mini-history-meta">R${escapeHtml(task.price)} &middot; ${escapeHtml(task.payment_status || "N/A")}</div>
       </div>
     </a>`;
 }

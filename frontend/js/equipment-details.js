@@ -30,7 +30,7 @@ function renderQuote(q) {
     ${demoPaymentBanner("Sending a request is free. You'll only be asked to pay (demo) once the owner approves.")}
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
       ${trustChip(q.trust.level, q.trust.label)}
-      <span style="font-size:12px;color:var(--muted);">${q.trust.goodRentals} good rental${q.trust.goodRentals === 1 ? "" : "s"}</span>
+      <span style="font-size:12px;color:var(--muted);">${escapeHtml(q.trust.goodRentals)} good rental${q.trust.goodRentals === 1 ? "" : "s"}</span>
     </div>
     ${q.allowed ? `
       <div class="money-breakdown">
@@ -67,7 +67,7 @@ async function refreshQuote() {
     renderQuote(res.data);
   } catch (err) {
     if (requestId !== quoteRequestId) return;
-    bookingQuote.innerHTML = `<p class="pay-note blocked">${err.message}</p>`;
+    bookingQuote.innerHTML = `<p class="pay-note blocked">${escapeHtml(err.message)}</p>`;
     bookingSubmitButton.disabled = true;
   }
 }
@@ -149,10 +149,10 @@ function renderEquipmentDetails(item) {
           ${lecturerPostedCornerBadge(item.owner_member_type, item.owner_lecturer_verified)}
         </div>
         ${sectionBadge(item.section || "General")}
-        <h1 class="detail-title">${item.name}</h1>
-        <p class="detail-description">${item.description}</p>
+        <h1 class="detail-title">${escapeHtml(item.name)}</h1>
+        <p class="detail-description">${escapeHtml(item.description)}</p>
         <div class="market-tags" style="margin-top:18px;">
-          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${item.category}</div>
+          <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
           ${item.is_available
             ? `<div class="market-tag green"><i class="ti ti-circle-check" aria-hidden="true"></i> Taking bookings</div>`
@@ -172,13 +172,13 @@ function renderEquipmentDetails(item) {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border);">
           <div class="market-avatar" style="width:40px;height:40px;flex-shrink:0;">${avatarHtml(item.owner_name, item.owner_profile_photo)}</div>
           <div>
-            <div class="profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${posterName(item.owner_name, item.owner_lecturer_title)}</div>
+            <div class="profile-link" data-user-id="${item.owner_id}" style="cursor:pointer;font-weight:600;font-size:13px;">${escapeHtml(posterName(item.owner_name, item.owner_lecturer_title))}</div>
             <div style="font-size:11px;color:var(--muted);">Equipment Owner</div>
           </div>
         </div>
         <div style="margin-bottom:12px;">
           <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Daily rate</div>
-          <div class="market-price">R${item.daily_price} <span>/day</span></div>
+          <div class="market-price">R${escapeHtml(item.daily_price)} <span>/day</span></div>
         </div>
         ${item.item_value != null ? `
         <div style="margin-bottom:12px;">
@@ -194,7 +194,7 @@ function renderEquipmentDetails(item) {
             ? conditionBadge(item.condition_status)
             : `<div class="badge navy">Not stated</div>`}
           <div class="condition-checked-note">
-            <i class="ti ti-user-check" aria-hidden="true"></i> ${equipmentConditionCheckedText(item)}
+            <i class="ti ti-user-check" aria-hidden="true"></i> ${escapeHtml(equipmentConditionCheckedText(item))}
           </div>
         </div>
         <div style="margin-bottom:20px;">
