@@ -139,6 +139,7 @@ function renderTaskDetails(task) {
           ${statusBadge(task.status)}
         </div>
         ${endorsementDetailBlock(task)}
+        ${!isOwn && task.status === "Posted" ? noticeHtml("taskWorker") : ""}
         <div id="offersSection"></div>
       </div>
       <div class="form-panel detail-summary">

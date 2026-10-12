@@ -1,4 +1,5 @@
 const { validationResult } = require("express-validator");
+const { recordAcknowledgements } = require("../services/acknowledgement.service");
 const salesService = require("../services/sales.service");
 
 async function createSalesItem(req, res, next) {
@@ -14,6 +15,7 @@ async function createSalesItem(req, res, next) {
       imageUrls: req.body.imageUrls || [], quantity: req.body.quantity
     });
 
+    await recordAcknowledgements(req.user.id, req.acknowledgementKinds || [], "sales_item", item.id);
     return res.status(201).json({ success: true, message: "Sales item listed successfully.", data: item });
   } catch (error) { next(error); }
 }

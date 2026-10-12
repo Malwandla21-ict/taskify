@@ -1,4 +1,5 @@
 const { validationResult } = require("express-validator");
+const { recordAcknowledgements } = require("../services/acknowledgement.service");
 const taskService = require("../services/task.service");
 
 async function createTask(req, res, next) {
@@ -14,6 +15,7 @@ async function createTask(req, res, next) {
       imageUrls: req.body.imageUrls || []
     });
 
+    await recordAcknowledgements(req.user.id, req.acknowledgementKinds || [], "task", task.id);
     return res.status(201).json({ success: true, message: "Task created successfully.", data: task });
   } catch (error) { next(error); }
 }

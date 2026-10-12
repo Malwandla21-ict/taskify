@@ -4,6 +4,7 @@ const taskController = require("../controllers/task.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 const { TASK_DISPUTE_CATEGORIES } = require("../services/task.service");
 const { categoriesFor, applyCategorySection } = require("../config/categories");
+const { requireAcknowledgements } = require("../middleware/acknowledgement.middleware");
 
 const router = express.Router();
 
@@ -27,7 +28,10 @@ const taskFieldRules = [
   applyCategorySection("task")
 ];
 
-router.post("/", authenticate, taskFieldRules, taskController.createTask);
+/* Academic tasks need the academic-honesty tick (config/acknowledgements.js). */
+router.post("/", authenticate, taskFieldRules,
+  requireAcknowledgements(req => (req.body.section === "Academic" ? ["academic_integrity"] : [])),
+  taskController.createTask);
 
 router.patch(
   "/:id/accept",

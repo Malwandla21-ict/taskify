@@ -29,6 +29,11 @@ if (process.env.SMTP_HOST) {
 const app = require("../src/app");
 const pool = require("../src/config/db");
 const { signAccessToken } = require("../src/utils/jwt");
+const { ACKNOWLEDGEMENTS } = require("../src/config/acknowledgements");
+
+/* Every "read and tick" box, ticked at its current version — what the
+   real forms send (config/acknowledgements.js). */
+const ACKS = Object.fromEntries(Object.entries(ACKNOWLEDGEMENTS).map(([kind, a]) => [kind, a.version]));
 
 let server = null;
 let baseUrl = null;
@@ -88,7 +93,7 @@ const day = (n) => new Date(Date.now() + n * 86400000).toISOString().slice(0, 10
 async function makeTask(owner, overrides = {}) {
   const r = await api(owner, "POST", "/tasks", {
     title: "Test task", description: "A task created by the automated tests.", category: "Other",
-    section: "General", price: 150, location: "Library", urgent: false, ...overrides
+    section: "General", price: 150, location: "Library", urgent: false, acknowledgements: ACKS, ...overrides
   });
   if (r.status !== 201) throw new Error(`makeTask failed: ${r.status} ${r.message}`);
   return r.data;
@@ -97,7 +102,7 @@ async function makeTask(owner, overrides = {}) {
 async function makeSale(seller, overrides = {}) {
   const r = await api(seller, "POST", "/sales", {
     title: "Test item", description: "An item listed by the automated tests.", category: "Other",
-    section: "General", price: 400, conditionStatus: "Good", location: "Library", ...overrides
+    section: "General", price: 400, conditionStatus: "Good", location: "Library", acknowledgements: ACKS, ...overrides
   });
   if (r.status !== 201) throw new Error(`makeSale failed: ${r.status} ${r.message}`);
   return r.data;
@@ -106,7 +111,7 @@ async function makeSale(seller, overrides = {}) {
 async function makeEquipment(owner, overrides = {}) {
   const r = await api(owner, "POST", "/equipment", {
     name: "Test tripod", description: "Equipment listed by the automated tests.", category: "Other",
-    section: "General", condition: "Functional", dailyPrice: 50, itemValue: 1000, ...overrides
+    section: "General", condition: "Functional", dailyPrice: 50, itemValue: 1000, acknowledgements: ACKS, ...overrides
   });
   if (r.status !== 201) throw new Error(`makeEquipment failed: ${r.status} ${r.message}`);
   return r.data;
@@ -138,4 +143,4 @@ async function rawFetch(user, url) {
   return fetch(baseUrl + url, { headers: user ? { Authorization: `Bearer ${user.token}` } : {} });
 }
 
-module.exports = { start, stop, api, rawFetch, query, createUser, makeTask, makeSale, makeEquipment, apply, assignTask, concurrently, day, pool };
+module.exports = { start, stop, api, rawFetch, query, createUser, makeTask, makeSale, makeEquipment, apply, assignTask, concurrently, day, pool, ACKS };

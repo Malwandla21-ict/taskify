@@ -1,4 +1,5 @@
 const { validationResult } = require("express-validator");
+const { recordAcknowledgements } = require("../services/acknowledgement.service");
 const equipmentService = require("../services/equipment.service");
 const trustService = require("../services/trust.service");
 const rentalExtensionService = require("../services/rentalExtension.service");
@@ -16,6 +17,7 @@ async function createEquipment(req, res, next) {
       imageUrls: req.body.imageUrls || []
     });
 
+    await recordAcknowledgements(req.user.id, req.acknowledgementKinds || [], "equipment", equipment.id);
     return res.status(201).json({ success: true, message: "Equipment listed successfully.", data: equipment });
   } catch (error) { next(error); }
 }
@@ -95,6 +97,7 @@ async function bookEquipment(req, res, next) {
       startDate: req.body.startDate, endDate: req.body.endDate
     });
 
+    await recordAcknowledgements(req.user.id, req.acknowledgementKinds || [], "equipment_booking", booking.id);
     return res.status(201).json({ success: true, message: "Booking request sent. Nothing is paid until the owner approves.", data: booking });
   } catch (error) { next(error); }
 }

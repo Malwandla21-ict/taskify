@@ -3,6 +3,7 @@ const { body, param } = require("express-validator");
 const salesController = require("../controllers/sales.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 const { categoriesFor, applyCategorySection } = require("../config/categories");
+const { requireAcknowledgements } = require("../middleware/acknowledgement.middleware");
 const { SALE_DISPUTE_CATEGORIES } = require("../services/sales.service");
 
 const router = express.Router();
@@ -32,7 +33,7 @@ const salesFieldRules = [
   applyCategorySection("sales")
 ];
 
-router.post("/", authenticate, salesFieldRules, salesController.createSalesItem);
+router.post("/", authenticate, salesFieldRules, requireAcknowledgements(["selling_rules"]), salesController.createSalesItem);
 
 /* Edit — only the seller, only while it's still for sale ("Available"). */
 router.put(

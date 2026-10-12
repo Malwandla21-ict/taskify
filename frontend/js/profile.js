@@ -1005,7 +1005,14 @@ function showAdminTwoFactorBanner() {
   profileMainCard?.insertAdjacentElement("beforebegin", banner);
 }
 
-loadProfile();
+loadProfile().then(() => {
+  /* Arriving from an "Add a profile photo" nudge opens the editor. */
+  if (window.location.hash === "#edit-photo") {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    openEditProfileModal();
+    document.getElementById("changeProfilePhoto")?.focus();
+  }
+});
 refreshTwoFactorStatus().then(({ enabled }) => {
   if (currentUser?.role === "admin" && !enabled) {
     showAdminTwoFactorBanner();

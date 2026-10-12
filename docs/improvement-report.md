@@ -160,7 +160,20 @@ Each step is one commit on `main`. Database changes are made by an **idempotent 
   - a student's email fills itself in from their student number.
   - API validation errors now return the actual reason instead of "Validation failed." across controllers.
 - **UMP faculties:** the made-up list is replaced with the University of Mpumalanga's three faculties (Agriculture and Natural Sciences; Economics, Development and Business Sciences; Education), with their schools shown as a hint, plus support departments for staff. Shared by sign-up and both profile edit forms; checked on the server. `repair-ump-faculties.js` moves existing accounts onto the new names.
-- **Campus Marketplace leftovers:** the sidebar's "Create Event" quick action is now "Campus Market Days" (admins get "Post to Marketplace", which opens the form); "RSVP" is now "I'm going"; food options read "Food stalls" / "Drinks on sale"; remaining "event" wording in messages, admin screens and the terms is now "listing".
+- **Campus Marketplace leftovers (12 October):** the sidebar's "Create Event" quick action is now "Campus Market Days" (admins get "Post to Marketplace", which opens the form); "RSVP" is now "I'm going"; food options read "Food stalls" / "Drinks on sale"; remaining "event" wording in messages, admin screens and the terms is now "listing".
+
+### After the brief: "you were told" — warnings, confirmations and photo nudges (12 October 2026)
+- **Why:** so nobody can say "I didn't know" about the things that get students into trouble, and so there's a record when it matters.
+- **Must tick, checked and recorded by the server** (`config/acknowledgements.js`, `middleware/acknowledgement.middleware.js`, table `user_acknowledgements`):
+  - **Academic honesty** — posting a task in an Academic category: help with learning only; doing someone's marked work is misconduct for both people;
+  - **Before you sell** — it's mine, it's allowed (no alcohol, drugs, medicine, weapons, fakes, exam papers…), honest description, in-person handover;
+  - **Before you rent this out** — it's mine, works and is safe, check it at pickup and return, Taskify doesn't insure;
+  - **Before you rent** — responsible from pickup to return, check and photograph it, return on time, confirmed damage stays on record.
+  The browser shows the server's own text (`GET /api/acknowledgements`). Each tick is stored with its version, time and listing/booking; an out-of-date tick is refused so people re-read changed rules. Admins see what someone agreed to in the user detail panel (`GET /api/admin/users/:id/acknowledgements`). Editing a listing doesn't ask again.
+- **Plain warnings where the decision is made:** before applying for a task (agree scope, meet safely, never pay to get a job, academic rule); buying valuable items (proof of ownership, serial/IMEI, stolen-goods risk); a line above every chat box (no money, banking details, passwords or codes in chat); market days (food safety is the stallholder's, "I'm going" reserves nothing); sign-up (who sees your phone number).
+- **Terms:** new "1.5 Your responsibilities" section, linked from every tick box.
+- **Profile photo nudges** (only for people without one): a dashboard banner that can be put away for a week, in the create forms, the rental request, the handover panels, and at sign-up ("Add a photo (recommended)"). They link to `profile.html#edit-photo`, which opens the photo editor.
+- **Database:** `user_acknowledgements` (`repair-acknowledgements-schema.js`).
 
 ---
 
@@ -174,6 +187,7 @@ Run from `backend/` with `npm test`. Tests use the local practice database only:
 | `task-disputes.test.js` | 12 | Report a problem, admin outcomes, review reminders, privacy of dispute details. |
 | `sales.test.js` | 7 | Handover code: right code, wrong code, lockout, released once; the seller never receives the code. |
 | `sale-quantity.test.js` | 11 | One item vs several: a single item leaves once sold; several stay up until the last; simultaneous buyers can't over-hold; cash "sold one" / "sold the rest"; quantity can't be edited below what's sold or held. |
+| `acknowledgements.test.js` | 6 | Academic tasks, sales, rental listings and rental requests are refused without the tick, out-of-date ticks are refused, each tick is recorded, only admins can read them. |
 | `registration.test.js` | 5 | 9-digit student and 5-digit staff numbers, student email must match the number, students must pick a UMP faculty. |
 | `sale-disputes.test.js` | 14 | Failed meetup, admin release, refund or retry (new code), the buyer can't cancel while disputed. |
 | `rentals.test.js` | 30 | Dates and costs, clashes including simultaneous requests, approve → pay, unpaid approvals lapse, extensions, return deadline, reminders, no charges under unapproved rules, policy-version check, the next renter waiting for an overdue item. |
@@ -183,7 +197,7 @@ Run from `backend/` with `npm test`. Tests use the local practice database only:
 | `activity.test.js` | 5 | Action Centre shows the next action for each side. |
 | `analytics.test.js` | 9 | Admin-only access, date ranges, CSV escaping, no personal contact details in exports. |
 
-**Result (12 October 2026): 128 tests, 128 passed, 0 failed.**
+**Result (12 October 2026): 134 tests, 134 passed, 0 failed.**
 
 Also checked:
 - `repair-all.js` runs cleanly on practice;

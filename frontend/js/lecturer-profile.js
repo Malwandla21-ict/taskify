@@ -525,7 +525,14 @@ document.addEventListener("click", (event) => {
   if (event.target.closest("#changeProfilePhoto")) profilePhotoInput?.click();
 });
 
-loadProfile();
+loadProfile().then(() => {
+  /* Arriving from an "Add a profile photo" nudge opens the editor. */
+  if (window.location.hash === "#edit-photo") {
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    openEditProfileModal();
+    document.getElementById("changeProfilePhoto")?.focus();
+  }
+});
 /* Endorsements may be switched off (backend config/features.js). */
 loadFeatures().then((features) => { if (features.endorsements) loadEndorsementsGiven(); });
 

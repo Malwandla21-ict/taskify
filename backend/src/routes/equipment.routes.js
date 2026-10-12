@@ -3,6 +3,7 @@ const { body, param, query } = require("express-validator");
 const equipmentController = require("../controllers/equipment.controller");
 const { EQUIPMENT_CONDITIONS, RENTAL_PROBLEM_CATEGORIES } = require("../services/equipment.service");
 const { categoriesFor, applyCategorySection } = require("../config/categories");
+const { requireAcknowledgements } = require("../middleware/acknowledgement.middleware");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 
 const router = express.Router();
@@ -39,7 +40,7 @@ const equipmentFieldRules = [
   applyCategorySection("equipment")
 ];
 
-router.post("/", authenticate, equipmentFieldRules, equipmentController.createEquipment);
+router.post("/", authenticate, equipmentFieldRules, requireAcknowledgements(["rental_owner"]), equipmentController.createEquipment);
 
 /* Edit — only the owner. Allowed any time: every booking saved its own
    rent/fee/deposit when it was made, so existing bookings don't change. */
@@ -75,6 +76,7 @@ router.post(
     body("startDate").notEmpty().withMessage("Start date is required.").isISO8601().withMessage("Start date must be valid."),
     body("endDate").notEmpty().withMessage("End date is required.").isISO8601().withMessage("End date must be valid.")
   ],
+  requireAcknowledgements(["rental_renter"]),
   equipmentController.bookEquipment
 );
 

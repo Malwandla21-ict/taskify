@@ -198,6 +198,11 @@ function openSalesCreateModal() {
   showSalesStep(1);
   if (salesUploader) salesUploader.reset();
   syncQuantityUI();
+  /* "Before you sell" must be ticked to publish (not when editing). */
+  const salesAckBox = document.getElementById("salesAckBox");
+  if (salesAckBox) { salesAckBox.hidden = false; salesAckBox.innerHTML = ""; renderAcknowledgementBox(salesAckBox, "selling_rules"); }
+  const salesNudge = document.getElementById("salesPhotoNudge");
+  if (salesNudge) salesNudge.innerHTML = profilePhotoNudgeHtml("Buyers trust a face, and can spot you at the handover.");
   salesCreateOverlay?.classList.add("open");
   salesCreateModal?.classList.add("open");
 }
@@ -217,6 +222,8 @@ function openSalesEditModal(item) {
   if (modeInput) modeInput.checked = true;
   if (salesQuantityInput) salesQuantityInput.value = multiple ? item.quantity : "";
   syncQuantityUI();
+  const editAckBox = document.getElementById("salesAckBox");
+  if (editAckBox) { editAckBox.hidden = true; editAckBox.innerHTML = ""; }
   if (salesUploader) salesUploader.setExisting(item.image_urls || []);
   updateSalesPreview();
   setSalesSubmitLabel();
@@ -566,6 +573,7 @@ document.getElementById("viewAllListingsLink")?.addEventListener("click", (e) =>
 salesForm?.addEventListener("submit", async e => {
   e.preventDefault();
   if (!validateSalesStep3()) return;
+  if (!editingSalesId && !checkAcknowledgementBoxes(salesForm)) return;
   const submitBtn = salesForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
   submitBtn.innerHTML = `${taskifyMarkLoader()} ${editingSalesId ? "Saving…" : "Publishing…"}`;
@@ -586,7 +594,8 @@ salesForm?.addEventListener("submit", async e => {
       conditionStatus: document.getElementById("salesCondition").value,
       location:        document.getElementById("salesLocation").value.trim(),
       quantity:        selectedQuantity(),
-      imageUrls
+      imageUrls,
+      ...(editingSalesId ? {} : { acknowledgements: readAcknowledgements(salesForm) })
     };
 
     if (editingSalesId) {
@@ -605,6 +614,7 @@ salesForm?.addEventListener("submit", async e => {
     await loadSalesItems();
     await loadMySalesItems();
   } catch (err) {
+    await handleAcknowledgementError(salesForm, err);
     salesMessage.textContent = err.message;
     salesMessage.style.color = "red";
     showToast(err.message, "error");

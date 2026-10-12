@@ -195,11 +195,18 @@ function openEquipmentCreateModal() {
   setEquipmentSubmitLabel();
   showEquipmentStep(1);
   if (equipmentUploader) equipmentUploader.reset();
+  /* "Before you rent this out" must be ticked to list (not when editing). */
+  const equipmentAckBox = document.getElementById("equipmentAckBox");
+  if (equipmentAckBox) { equipmentAckBox.hidden = false; equipmentAckBox.innerHTML = ""; renderAcknowledgementBox(equipmentAckBox, "rental_owner"); }
+  const equipmentNudge = document.getElementById("equipmentPhotoNudge");
+  if (equipmentNudge) equipmentNudge.innerHTML = profilePhotoNudgeHtml("Renters can recognise you at pickup and return.");
   equipmentCreateOverlay?.classList.add("open");
   equipmentCreateModal?.classList.add("open");
 }
 
 function openEquipmentEditModal(item) {
+  const editAckBox = document.getElementById("equipmentAckBox");
+  if (editAckBox) { editAckBox.hidden = true; editAckBox.innerHTML = ""; }
   editingEquipmentId = item.id;
   equipmentForm?.reset();
   equipmentMessage.textContent = "";
@@ -1165,6 +1172,7 @@ equipmentForm?.addEventListener("submit", async e => {
   if (!price) { showToast("Please enter a rental price.", "error"); return; }
   const itemValue = document.getElementById("equipmentItemValue").value.trim();
   if (!itemValue || Number(itemValue) <= 0) { showToast("Please enter roughly what the item is worth.", "error"); return; }
+  if (!editingEquipmentId && !checkAcknowledgementBoxes(equipmentForm)) return;
 
   const submitBtn = equipmentForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
@@ -1185,7 +1193,8 @@ equipmentForm?.addEventListener("submit", async e => {
       condition:   document.getElementById("equipmentCondition").value,
       dailyPrice:  Number(price),
       itemValue:   Number(itemValue),
-      imageUrls
+      imageUrls,
+      ...(editingEquipmentId ? {} : { acknowledgements: readAcknowledgements(equipmentForm) })
     };
 
     if (editingEquipmentId) {
@@ -1204,6 +1213,7 @@ equipmentForm?.addEventListener("submit", async e => {
     await loadEquipment();
     await loadEquipmentHistory();
   } catch (err) {
+    await handleAcknowledgementError(equipmentForm, err);
     equipmentMessage.textContent = err.message;
     equipmentMessage.style.color = "red";
     showToast(err.message, "error");
