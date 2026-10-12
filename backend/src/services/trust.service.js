@@ -13,6 +13,8 @@ const { isEnforceable } = require("./rentalPolicy.service");
     goodRentals   — bookings they rented that reached 'Returned' and the
                     owner did NOT report damage on
     damageReports — bookings where the owner reported damage
+    notReturned   — rentals an admin closed as never returned. Any one of
+                    these stops the renter renting at all (buildRentalQuote)
     rating        — users.rating_average, only counted once they have at
                     least one review (a brand-new account with 0 reviews
                     isn't punished for having no rating yet)
@@ -28,7 +30,8 @@ async function getRenterStats(userId) {
        SUM(CASE WHEN status = 'Returned'
                  AND (condition_status IS NULL OR condition_status <> 'Damaged')
                 THEN 1 ELSE 0 END) AS good_rentals,
-       SUM(CASE WHEN condition_status = 'Damaged' THEN 1 ELSE 0 END) AS damage_reports
+       SUM(CASE WHEN condition_status = 'Damaged' THEN 1 ELSE 0 END) AS damage_reports,
+       SUM(CASE WHEN status = 'Not Returned' THEN 1 ELSE 0 END) AS not_returned
      FROM equipment_bookings
      WHERE renter_id = ?`,
     [userId]
@@ -41,6 +44,7 @@ async function getRenterStats(userId) {
   return {
     goodRentals:   Number(bookingRows[0]?.good_rentals || 0),
     damageReports: Number(bookingRows[0]?.damage_reports || 0),
+    notReturned:   Number(bookingRows[0]?.not_returned || 0),
     rating:        Number(userRows[0]?.rating_average || 0),
     totalReviews:  Number(userRows[0]?.total_reviews || 0)
   };
@@ -48,7 +52,7 @@ async function getRenterStats(userId) {
 
 function meetsLevel(level, stats) {
   if (stats.goodRentals < level.minGoodRentals) return false;
-  if (level.requireNoDamage && stats.damageReports > 0) return false;
+  if (level.requireNoDamage && (stats.damageReports > 0 || stats.notReturned > 0)) return false;
   if (stats.totalReviews > 0 && stats.rating < level.minRating) return false;
   return true;
 }
@@ -131,6 +135,9 @@ async function buildRentalQuote({ renterId, equipment, startDate, endDate }) {
   if (!(days > 0)) {
     allowed = false;
     reason = "End date cannot be before start date.";
+  } else if (trust.notReturned > 0) {
+    allowed = false;
+    reason = "A rental of yours was closed as not returned, so you can't rent equipment on Taskify. If you've since returned the item, or think this is wrong, contact a Taskify admin.";
   } else if (itemValue != null && trust.maxItemValue != null && itemValue > trust.maxItemValue) {
     allowed = false;
     reason = `This item is worth R${itemValue.toFixed(2)}. As a "${trust.label}" renter you can rent items worth up to R${Number(trust.maxItemValue).toFixed(2)}.` +

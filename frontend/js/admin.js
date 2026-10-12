@@ -133,9 +133,24 @@ actionModalCancel.addEventListener("click", closeAllAdminModals);
 closeUserDetailBtn.addEventListener("click", closeAllAdminModals);
 closeMessageThreadModalButton?.addEventListener("click", closeAllAdminModals);
 
-function openActionModal({ title, confirmLabel = "Confirm", onConfirm }) {
+/* amount (optional): { max, hint } — shows a Rand field for a payout from
+   the Taskify Protection Fund; onConfirm then gets (reason, amount). The
+   server enforces the limit too. */
+const actionModalAmountGroup = document.getElementById("adminActionModalAmountGroup");
+const actionModalAmount      = document.getElementById("adminActionModalAmount");
+const actionModalAmountHint  = document.getElementById("adminActionModalAmountHint");
+let pendingAmount = null;
+
+function openActionModal({ title, confirmLabel = "Confirm", onConfirm, amount = null }) {
   actionModalTitle.innerHTML = `<i class="ti ti-alert-triangle" aria-hidden="true"></i> ${escapeHtml(title)}`;
   actionModalReason.value = "";
+  pendingAmount = amount;
+  if (actionModalAmountGroup) {
+    actionModalAmountGroup.hidden = !amount;
+    actionModalAmount.value = "";
+    actionModalAmount.max = amount ? String(amount.max) : "";
+    actionModalAmountHint.textContent = amount?.hint || "";
+  }
   actionModalConfirm.textContent = confirmLabel;
   pendingAction = onConfirm;
   actionModal.style.display = "block";
@@ -145,11 +160,19 @@ function openActionModal({ title, confirmLabel = "Confirm", onConfirm }) {
 actionModalConfirm.addEventListener("click", async () => {
   if (!pendingAction) return;
   const reason = actionModalReason.value.trim();
+  let amount = 0;
+  if (pendingAmount) {
+    amount = Number(actionModalAmount.value || 0);
+    if (!(amount >= 0) || amount > pendingAmount.max) {
+      showToast(`Enter an amount from R0 to ${formatRand(pendingAmount.max)}.`, "error");
+      return;
+    }
+  }
   const originalLabel = actionModalConfirm.innerHTML;
   actionModalConfirm.disabled = true;
   actionModalConfirm.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Working…`;
   try {
-    await pendingAction(reason);
+    await pendingAction(reason, amount);
     closeAllAdminModals();
   } catch (err) {
     showToast(err.message, "error");
@@ -966,6 +989,10 @@ function renderReportsTable() {
         const isDisputedSale = r.context_type === "sales_item" && r.context_status === "Disputed" && r.context_order_id;
         /* An owner's damage report after a rental (condition check). */
         const isRentalDamage = r.context_type === "equipment_booking" && r.context_status === "DamageReported";
+        /* A rental whose return is in doubt (hand-back not confirmed or
+           disputed, or overdue): confirm it was returned, or close it as
+           not returned. */
+        const rentalReturn = r.context_type === "equipment_booking" && r.context_status === "ReturnOpen" ? r.context_rental : null;
         const canRefund = r.context_type === "task" && r.status === "Pending" && !isDisputedTask;
         const itemType = reportItemType(r);
         const reasonShort = r.reason.length > 80 ? r.reason.slice(0, 80) + "…" : r.reason;
@@ -1029,8 +1056,16 @@ function renderReportsTable() {
                 <button type="button" class="table-icon-btn success rental-damage-btn" data-booking-id="${r.context_id}" data-outcome="renter_not_at_fault" title="Renter not at fault (removes the damage mark)">
                   <i class="ti ti-user-check" aria-hidden="true"></i>
                 </button>
-                <button type="button" class="table-icon-btn rental-damage-btn" data-booking-id="${r.context_id}" data-outcome="damage_confirmed" title="Damage confirmed (stays on the renter's record, nothing charged)">
+                <button type="button" class="table-icon-btn rental-damage-btn" data-booking-id="${r.context_id}" data-outcome="damage_confirmed" data-payout-limit="${r.context_rental?.payoutLimit ?? 0}" data-item-value="${r.context_rental?.itemValue ?? ""}" data-fund-balance="${r.context_rental?.fundBalance ?? 0}" data-claim-cap="${r.context_rental?.maxPayoutPerClaim ?? 0}" title="Damage confirmed (stays on the renter's record; you can pay the owner from the protection fund)">
                   <i class="ti ti-alert-octagon" aria-hidden="true"></i>
+                </button>` : ""}
+              ${rentalReturn?.canConfirm ? `
+                <button type="button" class="table-icon-btn success rental-return-btn" data-booking-id="${r.context_id}" data-outcome="returned" title="It was handed back (completes the rental, pays the owner the rent)">
+                  <i class="ti ti-package-import" aria-hidden="true"></i>
+                </button>` : ""}
+              ${rentalReturn?.canCloseMissing ? `
+                <button type="button" class="table-icon-btn danger rental-return-btn" data-booking-id="${r.context_id}" data-outcome="not_returned" data-payout-limit="${rentalReturn.payoutLimit}" data-item-value="${rentalReturn.itemValue ?? ""}" data-fund-balance="${rentalReturn.fundBalance}" data-claim-cap="${rentalReturn.maxPayoutPerClaim}" title="Close as not returned (owner keeps the rent, can be paid from the protection fund)">
+                  <i class="ti ti-package-off" aria-hidden="true"></i>
                 </button>` : ""}
             </div>
           </td>
@@ -1061,19 +1096,58 @@ const SALE_DISPUTE_OUTCOME_TEXT = {
 
 const RENTAL_DAMAGE_OUTCOME_TEXT = {
   renter_not_at_fault: { title: "Renter not at fault? The damage mark comes off their record.", label: "Not at fault", done: "Marked as not the renter's fault." },
-  damage_confirmed: { title: "Confirm the damage? It stays on the renter's record. Nothing is charged — damage charges aren't an approved policy.", label: "Confirm damage", done: "Damage confirmed." }
+  damage_confirmed: { title: "Confirm the damage? It stays on the renter's record. The renter isn't charged; you can pay the owner (e.g. the repair cost) from the Taskify Protection Fund.", label: "Confirm damage", done: "Damage confirmed." }
 };
+
+const RENTAL_RETURN_OUTCOME_TEXT = {
+  returned: { title: "Satisfied it was handed back? This completes the rental as if the owner had confirmed it: the owner gets the rent, and lateness counts to the renter's hand-back.", label: "It was returned", done: "Return confirmed." },
+  not_returned: { title: "Close this rental as not returned? The owner keeps the rent, the listing is taken down, later bookings are refunded, and the renter can't rent again. The renter isn't charged.", label: "Close as not returned", done: "Closed as not returned." }
+};
+
+/* The payout field for an outcome that can pay from the fund. The limit
+   is the smallest of the per-claim cap, the item's value and the balance. */
+function fundPayoutField(btn) {
+  const max = Number(btn.dataset.payoutLimit || 0);
+  const limits = [`the per-claim limit is ${formatRand(btn.dataset.claimCap)}`];
+  if (btn.dataset.itemValue) limits.push(`the item is listed at ${formatRand(btn.dataset.itemValue)}`);
+  limits.push(`the fund holds ${formatRand(btn.dataset.fundBalance)}`);
+  return {
+    max,
+    hint: max > 0
+      ? `You can pay up to ${formatRand(max)} (${limits.join("; ")}). Leave it empty to pay nothing.`
+      : `The fund can't pay anything for this one right now (${limits.join("; ")}).`
+  };
+}
 
 function attachReportRowEvents() {
   document.querySelectorAll(".rental-damage-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const text = RENTAL_DAMAGE_OUTCOME_TEXT[btn.dataset.outcome];
+      const paysOut = btn.dataset.outcome === "damage_confirmed";
       openActionModal({
         title: text.title,
         confirmLabel: text.label,
-        onConfirm: async (note) => {
-          await apiRequest(`/admin/rental-bookings/${btn.dataset.bookingId}/resolve-damage`, "PATCH", { outcome: btn.dataset.outcome, note });
-          showToast(`${text.done} Both people have been told.`);
+        amount: paysOut ? fundPayoutField(btn) : null,
+        onConfirm: async (note, compensation) => {
+          await apiRequest(`/admin/rental-bookings/${btn.dataset.bookingId}/resolve-damage`, "PATCH", { outcome: btn.dataset.outcome, note, compensation });
+          showToast(`${text.done}${compensation ? ` ${formatRand(compensation)} paid to the owner from the protection fund.` : ""} Both people have been told.`);
+          await Promise.all([loadReports(), loadStats(), loadPendingReportsPreview()]);
+        }
+      });
+    });
+  });
+
+  document.querySelectorAll(".rental-return-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const text = RENTAL_RETURN_OUTCOME_TEXT[btn.dataset.outcome];
+      const paysOut = btn.dataset.outcome === "not_returned";
+      openActionModal({
+        title: text.title,
+        confirmLabel: text.label,
+        amount: paysOut ? fundPayoutField(btn) : null,
+        onConfirm: async (note, compensation) => {
+          await apiRequest(`/admin/rental-bookings/${btn.dataset.bookingId}/resolve-return`, "PATCH", { outcome: btn.dataset.outcome, note, compensation });
+          showToast(`${text.done}${compensation ? ` ${formatRand(compensation)} paid to the owner from the protection fund.` : ""} Both people have been told.`);
           await Promise.all([loadReports(), loadStats(), loadPendingReportsPreview()]);
         }
       });

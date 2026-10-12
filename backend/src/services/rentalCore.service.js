@@ -117,6 +117,21 @@ async function cancelBookingRow(connection, bookingId, fromStatuses, reason, not
   return true;
 }
 
+/* Can an admin settle this rental's return? Used by the admin action
+   (equipment.service.js resolveReturn) and to show its buttons in the
+   admin Reports table (report.service.js).
+     canConfirm      — the renter reported handing it back, so an admin can
+                       confirm the return on the owner's behalf;
+     canCloseMissing — it's out on rent and past the return deadline, so an
+                       admin can close it as never returned. */
+function returnDecisionsFor(booking, now = new Date()) {
+  const open = booking.status === "Confirmed" && !!booking.picked_up_at && !!booking.payment_status;
+  return {
+    canConfirm: open && !!booking.return_reported_at,
+    canCloseMissing: open && booking.return_due_at != null && new Date(booking.return_due_at) < now
+  };
+}
+
 /* "Sat 11 Oct" for a "YYYY-MM-DD" date. */
 function prettyDate(dateText) {
   const [y, m, d] = String(dateText).slice(0, 10).split("-").map(Number);
@@ -140,6 +155,7 @@ module.exports = {
   overdueRentalsByItem,
   clashError,
   cancelBookingRow,
+  returnDecisionsFor,
   prettyDate,
   prettyDeadline
 };

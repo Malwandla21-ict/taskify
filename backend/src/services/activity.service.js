@@ -220,7 +220,7 @@ async function rentalItems(userId) {
             DATE_FORMAT(eb.start_date, '%Y-%m-%d') AS start_text,
             DATE_FORMAT(eb.end_date, '%Y-%m-%d') AS end_text,
             eb.picked_up_at, eb.condition_status, eb.payment_status, eb.payment_status IS NULL AS legacy,
-            eb.payment_due_at, eb.return_due_at,
+            eb.payment_due_at, eb.return_due_at, eb.return_reported_at, eb.return_disputed_at,
             eb.rental_amount, eb.protection_fee, eb.deposit_amount,
             x.status AS extension_status, DATE_FORMAT(x.new_end_date, '%Y-%m-%d') AS extension_end,
             x.extra_amount AS extension_amount, x.extra_fee AS extension_fee, x.payment_due_at AS extension_due_at,
@@ -327,6 +327,29 @@ async function rentalItems(userId) {
       const overdue = !!due && due < now;
       const dueSoon = !overdue && !!due && due - now <= RENTALS.returnReminderHours * 3600 * 1000;
       const deadlineBits = { deadline: b.return_due_at, deadlineLabel: "Return by", overdue };
+
+      /* The renter said they've handed it back: the owner confirms (that
+         completes the rental and releases the rent) or says they don't
+         have it, and an admin decides. */
+      if (b.return_reported_at && b.return_disputed_at) {
+        return isOwner
+          ? { ...base, status: "Return disputed", tone: "problem", nextBy: "Taskify admin",
+              step: `You told us you don't have it, though ${renter} says they handed it back. A Taskify admin will decide. If you do get it back, record the return on the rental.`,
+              action: { type: "link", label: "Open rental", href: historyHref } }
+          : { ...base, status: "Return disputed", tone: "problem", nextBy: "Taskify admin",
+              step: `${owner} says they don't have it back. A Taskify admin will compare the photos and decide. If it's still with you, return it and message ${owner}.` };
+      }
+      if (b.return_reported_at) {
+        return isOwner
+          ? { ...base, status: "Confirm the return", tone: "action", nextBy: "you",
+              step: `${renter} says they've handed it back. If you have it, confirm to complete the rental and get your R${Number(b.rental_amount).toFixed(2)} (demo). If you don't, say so on the rental.`,
+              action: { type: "api", label: "Yes, it's back", method: "PATCH", endpoint: `/equipment/bookings/${b.id}/return`, body: {}, moment: "released",
+                        success: "Return confirmed. Your rent has been released (demo). Please check the item's condition.",
+                        confirm: "Confirm you have the item back? This completes the rental and releases your rent (demo)." },
+              secondaryAction: { type: "link", label: "I don't have it", href: historyHref } }
+          : { ...base, status: "Waiting for the owner", tone: "waiting", nextBy: owner,
+              step: `You said you've handed it back. Waiting for ${owner} to confirm they have it — that completes the rental. If they don't, a Taskify admin will step in.` };
+      }
 
       if (b.extension_status === "Requested") {
         return isOwner

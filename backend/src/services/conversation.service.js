@@ -64,7 +64,7 @@ async function messagingAccess(contextType, contextId, userId) {
     );
   } else if (contextType === "equipment") {
     [rows] = await pool.execute(
-      `SELECT 1 FROM equipment_bookings WHERE equipment_id = ? AND renter_id = ? AND status IN ('Pending','Confirmed','Returned') LIMIT 1`,
+      `SELECT 1 FROM equipment_bookings WHERE equipment_id = ? AND renter_id = ? AND status IN ('Pending','Confirmed','Returned','Not Returned') LIMIT 1`,
       [contextId, userId]
     );
   }

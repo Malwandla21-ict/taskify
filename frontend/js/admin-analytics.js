@@ -103,14 +103,18 @@ function renderAnalytics(d) {
     Object.entries(L).map(([k, v]) => ({ label: k[0].toUpperCase() + k.slice(1), data: v.series.values, backgroundColor: colours[k] })), true);
 
   const m = d.transactions.money;
+  const fund = d.transactions.protectionFund;
   drawChart("chartMoney", "bar", d.transactions.releasedSeries.labels,
     [{ label: "Released (R)", data: d.transactions.releasedSeries.values, backgroundColor: "#009B72" }]);
   document.getElementById("moneyList").innerHTML = [
     listRow("Released to people", formatRand(m.released)),
     listRow("Refunded", formatRand(m.refunded)),
-    listRow("Protection fees", formatRand(m.protectionFees)),
+    listRow("Sale protection fees (Taskify)", formatRand(m.saleProtectionFees)),
     listRow("Held right now", formatRand(m.heldNow)),
-    `<p class="analytics-hint">Demo payments — no real money has moved.</p>`
+    listRow("Rental fees into the protection fund", formatRand(fund.feesIn)),
+    listRow("Paid to owners from the fund", formatRand(fund.paidOut)),
+    listRow("Protection fund balance (all time)", formatRand(fund.balance)),
+    `<p class="analytics-hint">Demo payments — no real money has moved. Rental protection fees go into the fund that pays owners for confirmed damage or items not returned (up to ${formatRand(fund.maxPayoutPerClaim)} each), so they aren't Taskify's revenue.</p>`
   ].join("");
 
   const f = d.funnels;

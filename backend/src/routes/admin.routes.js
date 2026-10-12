@@ -122,17 +122,39 @@ router.patch(
   adminController.resolveSaleDispute
 );
 
-/* Settle a rental damage report from the owner's condition check. Never
-   deducts money (deposit deductions aren't an approved policy). */
+const compensationRule = body("compensation").optional({ values: "falsy" })
+  .isFloat({ min: 0, max: 1000000 }).withMessage("Compensation must be an amount in Rand.");
+
+/* Settle a rental damage report from the owner's condition check. The
+   renter is never charged; on damage_confirmed the owner can be paid
+   `compensation` from the Taskify Protection Fund. */
 router.patch(
   "/rental-bookings/:bookingId/resolve-damage",
   [
     param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer."),
     body("outcome").isIn(["renter_not_at_fault", "damage_confirmed"]).withMessage("Outcome must be renter_not_at_fault or damage_confirmed."),
-    body("note").optional().trim().isLength({ max: 500 }).withMessage("Note must not exceed 500 characters.")
+    body("note").optional().trim().isLength({ max: 500 }).withMessage("Note must not exceed 500 characters."),
+    compensationRule
   ],
   adminController.resolveRentalDamage
 );
+
+/* Settle a rental whose return is in doubt: confirm it was handed back,
+   or close it as not returned (owner keeps the rent, optional payout
+   from the Taskify Protection Fund, listing taken down). */
+router.patch(
+  "/rental-bookings/:bookingId/resolve-return",
+  [
+    param("bookingId").isInt({ min: 1 }).withMessage("Booking ID must be a valid positive integer."),
+    body("outcome").isIn(["returned", "not_returned"]).withMessage("Outcome must be returned or not_returned."),
+    body("note").optional().trim().isLength({ max: 500 }).withMessage("Note must not exceed 500 characters."),
+    compensationRule
+  ],
+  adminController.resolveRentalReturn
+);
+
+/* Where the Taskify Protection Fund stands (demo). */
+router.get("/protection-fund", adminController.getProtectionFund);
 
 router.patch(
   "/tasks/:taskId/refund",

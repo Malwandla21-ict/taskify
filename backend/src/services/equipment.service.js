@@ -10,10 +10,11 @@ const { RENTALS } = require("../config/paymentSettings");
 const rentalPolicy = require("./rentalPolicy.service");
 const rentalExtensionService = require("./rentalExtension.service");
 const auditLogService = require("./auditlog.service");
+const protectionFund = require("./protectionFund.service");
 
 const {
   todayInTaskifyTimezone, returnDueSql, endOfDaySql, findClash, overdueRentalsByItem, clashError,
-  cancelBookingRow, prettyDate, prettyDeadline
+  cancelBookingRow, returnDecisionsFor, prettyDate, prettyDeadline
 } = require("./rentalCore.service");
 
 function assertBookingDates(startDate, endDate) {
@@ -163,7 +164,7 @@ const BOOKING_LIFECYCLE_FIELDS = `
   eb.return_due_at, eb.return_minutes_late, eb.cancelled_at, eb.cancel_reason, eb.cancel_note,
   eb.policy_version, eb.terms_snapshot,
   eb.problem_reported_at, eb.problem_reported_by, eb.problem_category, eb.problem_note, eb.return_attempted_at,
-  eb.damage_outcome, eb.damage_resolved_at, eb.return_reported_at, eb.not_returned_at,
+  eb.damage_outcome, eb.damage_resolved_at, eb.return_reported_at, eb.return_disputed_at, eb.not_returned_at,
   (SELECT -f.amount FROM protection_fund_entries f WHERE f.booking_id = eb.id AND f.kind = 'payout') AS fund_payout
 `;
 
@@ -1013,20 +1014,82 @@ async function returnEquipment(bookingId, userId, photoUrls) {
     const error = new Error("Pickup must be confirmed (with photos) before the item can be returned."); error.statusCode = 400; throw error;
   }
 
-  const urls = cleanPhotoUrls(photoUrls);
-  const depositHeld = booking.deposit_status === "Held";
+  /* The renter's side is only "I've handed it back". The rental completes,
+     and the rent is released, once the owner confirms they have it (or an
+     admin does) — so nobody can close a rental, and have the next renter
+     told it's back, while the item is still with them. */
+  if (isRenter) return reportHandback(booking, photoUrls);
 
-  /* DEMO: the owner's rental payment is released on return. The deposit
-     (if any) stays held until the owner checks the item's condition. The
-     actual return time is recorded against the agreed deadline — no late
-     fee is charged (config/rentalPolicy.js lateFee isn't in effect). */
+  /* The owner: it's back with them. Photos are needed, unless the renter
+     already took them when handing it back (then the owner's are extra). */
+  const ownerPhotos = booking.return_reported_at && !(Array.isArray(photoUrls) && photoUrls.length)
+    ? []
+    : cleanPhotoUrls(photoUrls);
+  const urls = [...(booking.return_photos || []), ...ownerPhotos].slice(0, 10);
+
+  /* Lateness is measured to when the renter handed it back, so a renter
+     isn't counted late because the owner was slow to confirm. If the owner
+     had said "I don't have it", it's measured to now instead. */
+  return completeReturn(booking, urls, { lateTo: booking.return_disputed_at ? "now" : "handback" });
+}
+
+/* Renter: "I've handed it back", with photos. The rent stays held until
+   the owner confirms. Reminders about the deadline stop (jobs/scheduler.js);
+   if the owner doesn't confirm in time, admins are asked to decide. */
+async function reportHandback(booking, photoUrls) {
+  if (booking.return_reported_at) {
+    const error = new Error("You've already told the owner you handed it back. They need to confirm they have it."); error.statusCode = 400; throw error;
+  }
+  const urls = cleanPhotoUrls(photoUrls);
+
+  const [reported] = await pool.execute(
+    `UPDATE equipment_bookings SET return_reported_at = NOW(), return_photos = ?
+     WHERE id = ? AND status = 'Confirmed' AND return_reported_at IS NULL`,
+    [JSON.stringify(urls), booking.id]
+  );
+  if (!reported.affectedRows) {
+    const error = new Error("You've already told the owner you handed it back. They need to confirm they have it."); error.statusCode = 400; throw error;
+  }
+  /* More days make no sense once it's handed back. */
+  await pool.execute(
+    `UPDATE booking_extensions SET status = 'Cancelled', responded_at = COALESCE(responded_at, NOW())
+     WHERE booking_id = ? AND status IN ('Requested', 'Awaiting Payment')`, [booking.id]
+  );
+
+  await notificationService.createNotification({
+    userId: booking.owner_id,
+    title: "Confirm the Return",
+    message: `${booking.renter_name || "The renter"} says they've handed back "${booking.equipment_name}" and added ${urls.length} photo${urls.length === 1 ? "" : "s"}. Check you have it, then press "Yes, it's back" on the rental: that completes it and releases R${Number(booking.rental_amount).toFixed(2)} to you (demo). If you don't have it, press "I don't have it" so an admin can step in.`,
+    contextType: "equipment_booking",
+    contextId: booking.id,
+    email: true
+  });
+
+  return getBookingById(booking.id);
+}
+
+/*
+  Completes a rental: status 'Returned', the owner's rent released (demo),
+  and the protection fee added to the Taskify Protection Fund. Any deposit
+  stays held until the owner checks the item's condition. The return time
+  is recorded against the agreed deadline — no late fee is charged
+  (config/rentalPolicy.js lateFee isn't in effect).
+    lateTo: "handback" — lateness up to when the renter handed it back;
+            "now"      — up to this moment.
+    byAdmin: an admin confirmed it on the owner's behalf.
+*/
+async function completeReturn(booking, urls, { lateTo = "handback", byAdmin = false } = {}) {
+  const bookingId = booking.id;
+  const depositHeld = booking.deposit_status === "Held";
+  const returnMoment = lateTo === "handback" ? "COALESCE(return_reported_at, NOW())" : "NOW()";
+
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
     const [returned] = await connection.execute(
       `UPDATE equipment_bookings
        SET status = 'Returned', return_photos = ?, returned_at = NOW(),
-           return_minutes_late = GREATEST(0, TIMESTAMPDIFF(MINUTE, return_due_at, NOW())),
+           return_minutes_late = GREATEST(0, TIMESTAMPDIFF(MINUTE, return_due_at, ${returnMoment})),
            payment_status = 'Released', condition_status = 'Pending'
        WHERE id = ? AND status = 'Confirmed'`,
       [JSON.stringify(urls), bookingId]
@@ -1038,6 +1101,7 @@ async function returnEquipment(bookingId, userId, photoUrls) {
       `UPDATE booking_extensions SET status = 'Cancelled', responded_at = COALESCE(responded_at, NOW())
        WHERE booking_id = ? AND status IN ('Requested', 'Awaiting Payment')`, [bookingId]
     );
+    await protectionFund.addRentalFee(connection, bookingId);
     await connection.commit();
   } catch (error) {
     await connection.rollback();
@@ -1049,18 +1113,19 @@ async function returnEquipment(bookingId, userId, photoUrls) {
   const after = await getBookingById(bookingId);
   const timing = lateText(Number(after.return_minutes_late || 0));
   const lateNote = after.return_minutes_late > 0 ? " Late fees are not in effect, so nothing extra is charged." : "";
+  const who = byAdmin ? "A Taskify admin confirmed" : "You confirmed";
 
   await notificationService.createNotification({
     userId: booking.owner_id,
     title: "Equipment Returned",
-    message: `"${booking.equipment_name}" was returned (${timing}) with ${urls.length} condition photo${urls.length === 1 ? "" : "s"}. R${Number(booking.rental_amount).toFixed(2)} has been released to you (demo). Please check the item and confirm its condition${depositHeld ? " so the renter's deposit can be released" : ""}.${lateNote}`,
+    message: `${who} "${booking.equipment_name}" is back (returned ${timing}). R${Number(booking.rental_amount).toFixed(2)} has been released to you (demo). Please check the item against the pickup photos and confirm its condition${depositHeld ? " so the renter's deposit can be released" : ""}.${lateNote}`,
     contextType: "equipment_booking",
     contextId: bookingId
   });
   await notificationService.createNotification({
     userId: booking.renter_id,
     title: "Rental Closed",
-    message: `Your rental of "${booking.equipment_name}" has been completed (returned ${timing}).${depositHeld ? ` Your R${Number(booking.deposit_amount).toFixed(2)} deposit will be released once the owner confirms the item's condition.` : ""}${lateNote}`,
+    message: `${byAdmin ? "A Taskify admin" : "The owner"} confirmed "${booking.equipment_name}" is back, so your rental is complete (returned ${timing}).${depositHeld ? ` Your R${Number(booking.deposit_amount).toFixed(2)} deposit will be released once the owner confirms the item's condition.` : ""}${lateNote}`,
     contextType: "equipment_booking",
     contextId: bookingId
   });
@@ -1172,6 +1237,7 @@ const RENTAL_PROBLEM_CATEGORIES = {
   owner_unavailable:  { label: "The owner isn't available to take it back", who: ["renter"], report: "no_show" },
   item_faulty:        { label: "The item stopped working or is faulty", who: ["renter"], report: "damaged_item" },
   renter_unreachable: { label: "The renter isn't responding about the return", who: ["owner"], report: "no_show" },
+  not_handed_back:    { label: "The renter says it's back, but I don't have it", who: ["owner"], report: "no_show" },
   other:              { label: "Something else", who: ["renter", "owner"], report: "other" }
 };
 
@@ -1193,14 +1259,25 @@ async function reportRentalProblem(bookingId, userId, { category, note }) {
   if (booking.status !== "Confirmed") {
     const error = new Error("You can report a problem while the booking is active. For damage found after the return, use the condition check."); error.statusCode = 400; throw error;
   }
+  /* "I don't have it" answers the renter's "I've handed it back": it puts
+     the hand-back in dispute, and an admin decides (resolveReturn). */
+  const disputesHandback = category === "not_handed_back";
+  if (disputesHandback && !booking.return_reported_at) {
+    const error = new Error("This is for when the renter says they've handed it back. If they haven't, choose \"The renter isn't responding about the return\"."); error.statusCode = 400; throw error;
+  }
+  if (disputesHandback && booking.return_disputed_at) {
+    const error = new Error("You've already told us you don't have it. An admin is looking at it."); error.statusCode = 409; throw error;
+  }
   const cleanNote = String(note || "").trim().slice(0, 500);
 
   await pool.execute(
     `UPDATE equipment_bookings
      SET problem_reported_at = NOW(), problem_reported_by = ?, problem_category = ?, problem_note = ?,
-         return_attempted_at = IF(? = 'owner_unavailable', COALESCE(return_attempted_at, NOW()), return_attempted_at)
+         return_attempted_at = IF(? = 'owner_unavailable', COALESCE(return_attempted_at, NOW()), return_attempted_at),
+         return_disputed_at = IF(? = 'not_handed_back', NOW(), return_disputed_at),
+         return_report_escalated_at = IF(? = 'not_handed_back', COALESCE(return_report_escalated_at, NOW()), return_report_escalated_at)
      WHERE id = ?`,
-    [role, category, cleanNote, category, bookingId]
+    [role, category, cleanNote, category, category, category, bookingId]
   );
 
   const otherId = role === "renter" ? booking.owner_id : booking.renter_id;
@@ -1217,7 +1294,9 @@ async function reportRentalProblem(bookingId, userId, { category, note }) {
   await notificationService.createNotification({
     userId: otherId,
     title: "Rental Problem Reported",
-    message: `The ${role} reported a problem with the rental of "${booking.equipment_name}": ${kind.label.toLowerCase()}. A Taskify admin will look at it. Please message each other to sort it out.`,
+    message: disputesHandback
+      ? `The owner says they don't have "${booking.equipment_name}" back yet, so the rental isn't complete. A Taskify admin will compare the photos and decide. If it's still with you, return it and message the owner.`
+      : `The ${role} reported a problem with the rental of "${booking.equipment_name}": ${kind.label.toLowerCase()}. A Taskify admin will look at it. Please message each other to sort it out.`,
     contextType: "equipment_booking",
     contextId: bookingId,
     email: true
@@ -1226,20 +1305,25 @@ async function reportRentalProblem(bookingId, userId, { category, note }) {
   return getBookingById(bookingId);
 }
 
-/* Admin settles a damage report from the condition check. No money is
-   deducted under either outcome (deposit deductions aren't an approved
-   policy), and any held deposit is released:
+/* Admin settles a damage report from the condition check. The renter is
+   never charged (deposit deductions aren't an approved policy), and any
+   held deposit is released:
      renter_not_at_fault — the damage mark comes off the renter's record;
-     damage_confirmed    — the damage stays on the renter's record. */
-async function resolveRentalDamage(bookingId, adminId, outcome, note = "") {
+     damage_confirmed    — the damage stays on the renter's record, and the
+                           admin can pay the owner `compensation` (e.g. the
+                           repair cost) from the Taskify Protection Fund,
+                           up to protectionFund.payoutLimit. */
+async function resolveRentalDamage(bookingId, adminId, outcome, note = "", compensation = 0) {
   if (!["renter_not_at_fault", "damage_confirmed"].includes(outcome)) {
     const error = new Error("Choose renter_not_at_fault or damage_confirmed."); error.statusCode = 400; throw error;
   }
+  if (outcome === "renter_not_at_fault" && Number(compensation) > 0) {
+    const error = new Error("The fund only pays out when the damage is confirmed."); error.statusCode = 400; throw error;
+  }
   const booking = await getBookingWithOwner(bookingId);
+  const cleanNote = String(note || "").trim().slice(0, 500) || null;
 
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
+  const paid = await protectionFund.withFundLock(async (connection) => {
     const [settled] = await connection.execute(
       `UPDATE equipment_bookings
        SET damage_outcome = ?, damage_resolved_at = NOW(),
@@ -1251,33 +1335,36 @@ async function resolveRentalDamage(bookingId, adminId, outcome, note = "") {
     if (!settled.affectedRows) {
       const error = new Error("This rental has no open damage report (it may already have been settled)."); error.statusCode = 400; throw error;
     }
+    const amount = await protectionFund.payOwner(connection, {
+      bookingId, ownerId: booking.owner_id, itemValue: booking.item_value,
+      amount: outcome === "damage_confirmed" ? compensation : 0, reason: "damage", adminId, note: cleanNote
+    });
     await connection.execute(
       `UPDATE reports SET status = 'Resolved'
        WHERE context_type = 'equipment_booking' AND context_id = ? AND status = 'Pending'`, [bookingId]
     );
-    await connection.commit();
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+    return amount;
+  });
 
   await auditLogService.createAuditLog({
     adminId,
     action: `rental.damage_${outcome}`,
     targetType: "equipment_booking",
     targetId: Number(bookingId),
-    reason: String(note || "").trim().slice(0, 500) || null
+    reason: [cleanNote, paid ? `Paid the owner R${paid.toFixed(2)} from the protection fund.` : null].filter(Boolean).join(" ") || null
   });
 
   const deposit = booking.deposit_status === "Held" || booking.deposit_status === "Disputed"
     ? ` The R${Number(booking.deposit_amount).toFixed(2)} deposit has been released to the renter (demo) — deductions aren't an approved policy.` : "";
+  const fundToRenter = paid ? ` The owner has been paid R${paid.toFixed(2)} from the Taskify Protection Fund, which rental protection fees pay into.` : "";
+  const fundToOwner = paid
+    ? ` R${paid.toFixed(2)} has been paid to you from the Taskify Protection Fund (demo). The renter isn't charged.`
+    : " No payout from the Taskify Protection Fund was made for it.";
   const texts = outcome === "renter_not_at_fault"
     ? [`An admin reviewed the damage report on "${booking.equipment_name}" and found you weren't at fault. It's been removed from your renter record.${deposit}`,
        `An admin reviewed your damage report on "${booking.equipment_name}" and found the renter wasn't at fault.${deposit}`]
-    : [`An admin reviewed the damage report on "${booking.equipment_name}" and confirmed the damage. It stays on your renter record. Nothing has been charged.${deposit}`,
-       `An admin reviewed your damage report on "${booking.equipment_name}" and confirmed the damage. It's recorded on the renter's record. Taskify can't charge for damage yet — please talk to the renter directly.${deposit}`];
+    : [`An admin reviewed the damage report on "${booking.equipment_name}" and confirmed the damage. It stays on your renter record. Nothing has been charged to you.${fundToRenter}${deposit}`,
+       `An admin reviewed your damage report on "${booking.equipment_name}" and confirmed the damage. It's recorded on the renter's record.${fundToOwner}${deposit}`];
   await notificationService.createNotification({
     userId: booking.renter_id, title: "Damage Report Settled", message: texts[0],
     contextType: "equipment_booking", contextId: bookingId, email: true
@@ -1286,6 +1373,156 @@ async function resolveRentalDamage(bookingId, adminId, outcome, note = "") {
     userId: booking.owner_id, title: "Damage Report Settled", message: texts[1],
     contextType: "equipment_booking", contextId: bookingId, email: true
   });
+
+  return getBookingById(bookingId);
+}
+
+/*
+  Admin settles a rental whose return is in doubt (the owner hasn't
+  confirmed a hand-back, says they don't have it, or the item is overdue):
+
+    returned     — the admin is satisfied it was handed back: the rental
+                   completes as if the owner had confirmed it, with the
+                   lateness measured to the renter's hand-back.
+    not_returned — the item isn't coming back. The rental closes as
+                   'Not Returned'; the owner keeps the rent and can be paid
+                   `compensation` from the Taskify Protection Fund (up to
+                   protectionFund.payoutLimit); the listing is taken down
+                   and later bookings for it are cancelled and refunded.
+                   It goes on the renter's record and stops them renting
+                   (trust.service.js). The renter is never charged.
+*/
+async function resolveReturn(bookingId, adminId, outcome, note = "", compensation = 0) {
+  if (!["returned", "not_returned"].includes(outcome)) {
+    const error = new Error("Choose returned or not_returned."); error.statusCode = 400; throw error;
+  }
+  const booking = await getBookingWithOwner(bookingId);
+  const can = returnDecisionsFor(booking);
+  const cleanNote = String(note || "").trim().slice(0, 500) || null;
+
+  if (outcome === "returned") {
+    if (!can.canConfirm) {
+      const error = new Error("Only a rental the renter says they've handed back can be confirmed as returned."); error.statusCode = 400; throw error;
+    }
+    if (Number(compensation) > 0) {
+      const error = new Error("The fund doesn't pay out for a returned item. If it came back damaged, the owner reports that in the condition check."); error.statusCode = 400; throw error;
+    }
+    const after = await completeReturn(booking, booking.return_photos || [], { lateTo: "handback", byAdmin: true });
+    await pool.execute(
+      `UPDATE reports SET status = 'Resolved' WHERE context_type = 'equipment_booking' AND context_id = ? AND status = 'Pending'`, [bookingId]
+    );
+    await auditLogService.createAuditLog({
+      adminId, action: "rental.return_confirmed", targetType: "equipment_booking", targetId: Number(bookingId), reason: cleanNote
+    });
+    return after;
+  }
+
+  if (!can.canCloseMissing) {
+    const error = new Error("A rental can only be closed as not returned once it's out on rent and past its return deadline."); error.statusCode = 400; throw error;
+  }
+
+  const result = await protectionFund.withFundLock(async (connection) => {
+    const [closed] = await connection.execute(
+      `UPDATE equipment_bookings
+       SET status = 'Not Returned', not_returned_at = NOW(),
+           payment_status = IF(payment_status = 'Held', 'Released', payment_status),
+           deposit_status = IF(deposit_status IN ('Held', 'Disputed'), 'Refunded', deposit_status),
+           return_reminder_sent_at = COALESCE(return_reminder_sent_at, NOW()),
+           overdue_notified_at = COALESCE(overdue_notified_at, NOW()),
+           overdue_escalated_at = COALESCE(overdue_escalated_at, NOW()),
+           return_report_escalated_at = COALESCE(return_report_escalated_at, NOW())
+       WHERE id = ? AND status = 'Confirmed'`,
+      [bookingId]
+    );
+    if (!closed.affectedRows) {
+      const error = new Error("This rental has already been settled."); error.statusCode = 400; throw error;
+    }
+    await connection.execute(
+      `UPDATE booking_extensions SET status = 'Cancelled', responded_at = COALESCE(responded_at, NOW())
+       WHERE booking_id = ? AND status IN ('Requested', 'Awaiting Payment')`, [bookingId]
+    );
+    await protectionFund.addRentalFee(connection, bookingId);
+    const paid = await protectionFund.payOwner(connection, {
+      bookingId, ownerId: booking.owner_id, itemValue: booking.item_value,
+      amount: compensation, reason: "not_returned", adminId, note: cleanNote
+    });
+
+    /* The item is gone: take the listing down, and cancel (with a full
+       refund) anyone else booked to rent it. */
+    await connection.execute(`UPDATE equipment SET is_available = 0 WHERE id = ?`, [booking.equipment_id]);
+    const [later] = await connection.execute(
+      `SELECT id, renter_id, payment_status FROM equipment_bookings
+       WHERE equipment_id = ? AND id <> ? AND picked_up_at IS NULL AND payment_status IS NOT NULL
+         AND status IN ('Pending', 'Awaiting Payment', 'Confirmed')`,
+      [booking.equipment_id, bookingId]
+    );
+    const cancelled = [];
+    for (const b of later) {
+      if (await cancelBookingRow(connection, b.id, ["Pending", "Awaiting Payment", "Confirmed"], "item_lost")) cancelled.push(b);
+    }
+    /* The renter can't rent any more (trust.service.js), so their other
+       bookings that haven't been collected are cancelled and refunded too. */
+    const [theirs] = await connection.execute(
+      `SELECT eb.id, eb.payment_status, e.owner_id, e.name
+       FROM equipment_bookings eb INNER JOIN equipment e ON e.id = eb.equipment_id
+       WHERE eb.renter_id = ? AND eb.id <> ? AND eb.picked_up_at IS NULL AND eb.payment_status IS NOT NULL
+         AND eb.status IN ('Pending', 'Awaiting Payment', 'Confirmed')`,
+      [booking.renter_id, bookingId]
+    );
+    const renterCancelled = [];
+    for (const b of theirs) {
+      if (await cancelBookingRow(connection, b.id, ["Pending", "Awaiting Payment", "Confirmed"], "renter_blocked")) renterCancelled.push(b);
+    }
+    await connection.execute(
+      `UPDATE reports SET status = 'Resolved' WHERE context_type = 'equipment_booking' AND context_id = ? AND status = 'Pending'`, [bookingId]
+    );
+    return { paid, cancelled, renterCancelled };
+  });
+
+  await auditLogService.createAuditLog({
+    adminId,
+    action: "rental.not_returned",
+    targetType: "equipment_booking",
+    targetId: Number(bookingId),
+    reason: [cleanNote, result.paid ? `Paid the owner R${result.paid.toFixed(2)} from the protection fund.` : null].filter(Boolean).join(" ") || null
+  });
+
+  const rent = `R${Number(booking.rental_amount).toFixed(2)}`;
+  await notificationService.createNotification({
+    userId: booking.owner_id,
+    title: "Rental Closed: Not Returned",
+    message: `A Taskify admin has closed the rental of "${booking.equipment_name}" as not returned. The ${rent} rent has been released to you (demo)${result.paid ? `, and R${result.paid.toFixed(2)} has been paid to you from the Taskify Protection Fund` : ""}. The listing has been taken down${result.cancelled.length ? ` and ${result.cancelled.length} later booking${result.cancelled.length === 1 ? " was" : "s were"} cancelled with a full refund` : ""}. If you get the item back, you can list it again.`,
+    contextType: "equipment_booking",
+    contextId: bookingId,
+    email: true
+  });
+  await notificationService.createNotification({
+    userId: booking.renter_id,
+    title: "Rental Closed: Not Returned",
+    message: `A Taskify admin has closed your rental of "${booking.equipment_name}" as not returned. This is on your Taskify record, and you can't rent equipment on Taskify while it is. If you still have the item, return it to the owner and contact a Taskify admin.`,
+    contextType: "equipment_booking",
+    contextId: bookingId,
+    email: true
+  });
+  for (const b of result.cancelled) {
+    await notificationService.createNotification({
+      userId: b.renter_id,
+      title: "Booking Cancelled",
+      message: `Your booking for "${booking.equipment_name}" has been cancelled because the item wasn't returned by the previous renter.${b.payment_status === "Held" ? " You've been refunded in full (demo)." : " Nothing was charged."} Sorry about that — have a look for something similar.`,
+      contextType: "equipment_booking",
+      contextId: b.id,
+      email: true
+    });
+  }
+  for (const b of result.renterCancelled) {
+    await notificationService.createNotification({
+      userId: b.owner_id,
+      title: "Booking Cancelled",
+      message: `A booking for "${b.name}" has been cancelled by Taskify because the renter can no longer rent equipment.${b.payment_status === "Held" ? " They've been refunded (demo)." : ""} Those dates are free again.`,
+      contextType: "equipment_booking",
+      contextId: b.id
+    });
+  }
 
   return getBookingById(bookingId);
 }
@@ -1409,7 +1646,8 @@ async function getBookingWithOwner(bookingId) {
             ${BOOKING_PAYMENT_FIELDS},
             ${BOOKING_LIFECYCLE_FIELDS},
             e.owner_id, e.name AS equipment_name, e.condition_status AS equipment_condition,
-            e.daily_price, e.item_value
+            e.daily_price, e.item_value,
+            (SELECT u.full_name FROM users u WHERE u.id = eb.renter_id) AS renter_name
      FROM equipment_bookings eb
      INNER JOIN equipment e ON eb.equipment_id = e.id
      WHERE eb.id = ? LIMIT 1`,
@@ -1493,6 +1731,7 @@ module.exports = {
   reportDamage,
   reportRentalProblem,
   resolveRentalDamage,
+  resolveReturn,
   getEquipmentHistory,
   getMyEquipment,
   getEquipmentByIdForViewing,
