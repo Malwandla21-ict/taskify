@@ -125,6 +125,15 @@ function toggleAdminLink() {
     const raw  = localStorage.getItem("taskifyUser");
     const user = raw ? JSON.parse(raw) : null;
     adminLink.style.display = user?.role === "admin" ? "flex" : "none";
+
+    /* Only admins post to Campus Marketplace, so their quick action opens
+       the posting form; everyone else's just browses. */
+    const qaMarketplace = document.getElementById("qaMarketplaceLink");
+    if (qaMarketplace && user?.role === "admin") {
+      qaMarketplace.href = "./events.html?create=1";
+      qaMarketplace.querySelector(".qa-dot").innerHTML = `<i class="ti ti-plus" aria-hidden="true"></i>`;
+      qaMarketplace.querySelector("span:last-child").textContent = "Post to Marketplace";
+    }
   } catch (e) {
     adminLink.style.display = "none";
   }

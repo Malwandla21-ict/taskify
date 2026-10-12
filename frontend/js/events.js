@@ -133,8 +133,8 @@ async function openEventEditById(eventId) {
   try {
     const res = await apiRequest(`/events/${eventId}`);
     const event = res.data;
-    if (Number(event.organizer_id) !== Number(currentUser.id)) { showToast("You can only edit your own events.", "error"); return; }
-    if (event.status !== "Upcoming" || new Date(event.event_date) < new Date()) { showToast("Only upcoming events can be edited.", "error"); return; }
+    if (Number(event.organizer_id) !== Number(currentUser.id)) { showToast("You can only edit your own listings.", "error"); return; }
+    if (event.status !== "Upcoming" || new Date(event.event_date) < new Date()) { showToast("Only upcoming listings can be edited.", "error"); return; }
     openEventEditModal(event);
   } catch (err) {
     showToast(err.message, "error");
@@ -142,6 +142,15 @@ async function openEventEditById(eventId) {
 }
 
 function openEventEditFromUrl() {
+  /* events.html?create=1 — the admin "Post to Marketplace" quick action. */
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("create") === "1") {
+    params.delete("create");
+    history.replaceState(null, "", `${window.location.pathname}${params.toString() ? `?${params}` : ""}`);
+    marketplacePostingReady.then(canPost => { if (canPost) openCreateEventButton?.click(); });
+    return;
+  }
+
   const editId = getEditIdFromUrl();
   if (!editId) return;
   clearEditParam();
@@ -224,11 +233,11 @@ function eventCard(event) {
         <i class="ti ti-trash" aria-hidden="true"></i> Delete
       </button>`;
   } else if (hasRsvped) {
-    actionArea = `<button class="market-action-btn outline cancel-rsvp-btn" data-event-id="${event.id}"><i class="ti ti-x" aria-hidden="true"></i> Cancel RSVP</button>`;
+    actionArea = `<button class="market-action-btn outline cancel-rsvp-btn" data-event-id="${event.id}"><i class="ti ti-x" aria-hidden="true"></i> Not going</button>`;
   } else if (isFull) {
     actionArea = `<div class="badge red"><i class="ti ti-users" aria-hidden="true"></i> Full</div>`;
   } else {
-    actionArea = `<button class="market-action-btn rsvp-btn" data-event-id="${event.id}"><i class="ti ti-calendar-plus" aria-hidden="true"></i> RSVP</button>`;
+    actionArea = `<button class="market-action-btn rsvp-btn" data-event-id="${event.id}"><i class="ti ti-check" aria-hidden="true"></i> I'm going</button>`;
   }
 
   return `
@@ -305,7 +314,7 @@ function myEventMiniCard(event) {
     <div class="mini-history-item">
       <div class="mini-history-thumb">${event.image_urls?.length
         ? `<img src="${escapeHtml(event.image_urls[0])}" alt="${escapeHtml(event.title)}" style="width:100%;height:100%;object-fit:cover;" />`
-        : `<div class="media-placeholder light green"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}</div>
+        : `<div class="media-placeholder light green"><i class="ti ti-building-store" aria-hidden="true"></i></div>`}</div>
       <div class="mini-history-info">
         <div class="mini-history-top">
           ${sectionBadge(event.section || "General")}
@@ -348,7 +357,7 @@ function renderPastEvents() {
   const past = myEvents.filter(e => new Date(e.event_date) < now).slice(0, 8);
   pastEventsContainer.innerHTML = past.length
     ? past.map(pastEventCard).join("")
-    : emptyState("ti-calendar-off", "No past events yet", "Events you organized or attended will show here once they end.");
+    : emptyState("ti-building-store", "No past listings yet", "Listings you posted or went to will show here once they've ended.");
 }
 
 function renderMyEventsRail() {
@@ -357,7 +366,7 @@ function renderMyEventsRail() {
   myEventsCountBadge.textContent = myEvents.length ? `${myEvents.length} total` : "";
   myEventsMiniContainer.innerHTML = upcomingMine.length
     ? upcomingMine.map(myEventMiniCard).join("")
-    : `<p class="rail-loading">No upcoming events yet.</p>`;
+    : `<p class="rail-loading">Nothing coming up yet.</p>`;
   attachEventButtonEvents(myEventsMiniContainer);
 }
 
@@ -370,7 +379,7 @@ function renderPopularCategories() {
   const top = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 6);
   popularCategoriesContainer.innerHTML = top.length
     ? top.map(([cat, count], i) => `
-        <div class="popular-category-chip ${CHIP_COLORS[i % CHIP_COLORS.length]}" data-category="${escapeHtml(cat)}" role="button" tabindex="0" title="Show ${escapeHtml(cat)} events" style="cursor:pointer;">
+        <div class="popular-category-chip ${CHIP_COLORS[i % CHIP_COLORS.length]}" data-category="${escapeHtml(cat)}" role="button" tabindex="0" title="Show ${escapeHtml(cat)} listings" style="cursor:pointer;">
           <i class="ti ti-tag" aria-hidden="true"></i>
           <div>
             <strong>${escapeHtml(cat)}</strong>
@@ -399,17 +408,17 @@ function attachEventButtonEvents(scope = document) {
     if (btn.dataset.bound) return;
     btn.dataset.bound = "1";
     btn.addEventListener("click", async () => {
-      if (!requireAuthAction("Sign in to RSVP to this event.")) return;
+      if (!requireAuthAction("Sign in to say you're going.")) return;
       btn.disabled = true;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
       try {
         await apiRequest(`/events/${btn.dataset.eventId}/rsvp`, "POST");
-        showToast("RSVP confirmed!");
+        showToast("You're going! We'll let you know if anything changes.");
         await Promise.all([loadEvents(), loadMyEvents()]);
       } catch (err) {
         showToast(err.message, "error");
         btn.disabled = false;
-        btn.innerHTML = `<i class="ti ti-calendar-plus" aria-hidden="true"></i> RSVP`;
+        btn.innerHTML = `<i class="ti ti-check" aria-hidden="true"></i> I'm going`;
       }
     });
   });
@@ -422,12 +431,12 @@ function attachEventButtonEvents(scope = document) {
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
       try {
         await apiRequest(`/events/${btn.dataset.eventId}/rsvp`, "DELETE");
-        showToast("RSVP cancelled.");
+        showToast("Okay, you're no longer going.");
         await Promise.all([loadEvents(), loadMyEvents()]);
       } catch (err) {
         showToast(err.message, "error");
         btn.disabled = false;
-        btn.innerHTML = `<i class="ti ti-x" aria-hidden="true"></i> Cancel RSVP`;
+        btn.innerHTML = `<i class="ti ti-x" aria-hidden="true"></i> Not going`;
       }
     });
   });
@@ -447,7 +456,7 @@ function attachEventButtonEvents(scope = document) {
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
       try {
         await apiRequest(`/events/${btn.dataset.eventId}`, "DELETE");
-        showToast("Event deleted.");
+        showToast("Listing deleted.");
         await Promise.all([loadEvents(), loadMyEvents()]);
       } catch (err) {
         showToast(err.message, "error");
@@ -496,8 +505,8 @@ async function loadEvents() {
 async function loadMyEvents() {
   await marketplacePostingReady;
   if (!currentUser) {
-    myEventsMiniContainer.innerHTML = `<p class="rail-loading">Sign in to see events you're organizing or attending.</p>`;
-    pastEventsContainer.innerHTML = emptyState("ti-lock", "Sign in to see past events", "Create an account or log in to track events you've organized or attended.");
+    myEventsMiniContainer.innerHTML = `<p class="rail-loading">Sign in to see listings you posted or are going to.</p>`;
+    pastEventsContainer.innerHTML = emptyState("ti-lock", "Sign in to see past listings", "Create an account or log in to keep track of listings you posted or went to.");
     if (myEventsCountBadge) myEventsCountBadge.textContent = "";
     return;
   }

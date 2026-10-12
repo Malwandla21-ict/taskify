@@ -35,74 +35,75 @@
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill" style="width:33%;"></div>
       </div>
-      <form id="registerForm">
+      <!-- novalidate: register.js checks every field itself and shows what
+           to fix under each one, instead of the browser's one-at-a-time
+           bubbles. -->
+      <form id="registerForm" novalidate>
         <div class="register-step" id="step1">
           <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Create your account</h1>
           <p class="auth-subtitle">Enter your UMP details to get started</p>
+          <p class="form-error-summary" id="step1Summary" role="alert" hidden></p>
+          <div class="form-group">
+            <label id="roleLabel"><i class="ti ti-user-check" aria-hidden="true"></i> I am a</label>
+            <div class="role-grid" role="radiogroup" aria-labelledby="roleLabel">
+              <div class="role-option active" data-role="Student" role="radio" aria-checked="true" tabindex="0">
+                <i class="ti ti-school" aria-hidden="true"></i> Student
+              </div>
+              <div class="role-option" data-role="Lecturer" role="radio" aria-checked="false" tabindex="-1">
+                <i class="ti ti-chalkboard" aria-hidden="true"></i> Lecturer
+              </div>
+            </div>
+          </div>
           <div class="form-row">
             <div class="form-group">
               <label for="firstName"><i class="ti ti-user" aria-hidden="true"></i> First Name</label>
-              <input type="text" id="firstName" placeholder="Sipho" required />
+              <input type="text" id="firstName" placeholder="Sipho" autocomplete="given-name" required />
             </div>
             <div class="form-group">
               <label for="lastName"><i class="ti ti-user" aria-hidden="true"></i> Last Name</label>
-              <input type="text" id="lastName" placeholder="Ndlovu" required />
+              <input type="text" id="lastName" placeholder="Ndlovu" autocomplete="family-name" required />
             </div>
           </div>
           <div class="form-group">
-            <label for="studentNumber"><i class="ti ti-id-badge" aria-hidden="true"></i> Student / Staff Number</label>
-            <input type="text" id="studentNumber" placeholder="2233456789" required />
+            <label for="studentNumber" id="studentNumberLabel"><i class="ti ti-id-badge" aria-hidden="true"></i> Student Number</label>
+            <input type="text" id="studentNumber" placeholder="223456789" inputmode="numeric" maxlength="9" autocomplete="off" required />
+            <p class="field-hint" id="studentNumberHint"><i class="ti ti-info-circle" aria-hidden="true"></i> <span>9 digits, as on your student card</span><span class="count" id="studentNumberCount">0/9</span></p>
           </div>
           <div class="form-group">
             <label for="email"><i class="ti ti-mail" aria-hidden="true"></i> UMP Email</label>
-            <input type="email" id="email" placeholder="2023123456@ump.ac.za" required />
+            <input type="email" id="email" placeholder="223456789@ump.ac.za" autocomplete="email" required />
+            <p class="field-hint" id="emailHint"><i class="ti ti-info-circle" aria-hidden="true"></i> <span>Your student number followed by @ump.ac.za</span></p>
           </div>
           <div class="form-group">
             <label for="phoneNumber"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp Number</label>
-            <input type="tel" id="phoneNumber" placeholder="0821234567" required />
+            <input type="tel" id="phoneNumber" placeholder="0821234567" autocomplete="tel" required />
           </div>
           <button type="button" class="primary-button" id="nextToStep2">
             Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
           </button>
         </div>
         <div class="register-step" id="step2" style="display:none;">
-          <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Account type</h1>
-          <p class="auth-subtitle">Tell us who you are at UMP</p>
+          <h1 style="font-size:26px;font-weight:800;margin-bottom:4px;">Where you are at UMP</h1>
+          <p class="auth-subtitle" id="step2Subtitle">Your faculty and year of study</p>
+          <p class="form-error-summary" id="step2Summary" role="alert" hidden></p>
           <div class="form-group">
-            <label><i class="ti ti-user-check" aria-hidden="true"></i> I am a</label>
-            <div class="role-grid">
-              <div class="role-option active" data-role="Student">
-                <i class="ti ti-school" aria-hidden="true"></i> Student
-              </div>
-              <div class="role-option" data-role="Lecturer">
-                <i class="ti ti-chalkboard" aria-hidden="true"></i> Lecturer
-              </div>
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="faculty"><i class="ti ti-building" aria-hidden="true"></i> Faculty / Department</label>
-            <select id="faculty" required>
-              <option value="">Select Faculty / Department</option>
-              <option>Agriculture &amp; Environmental Sciences</option>
-              <option>Economics, Development &amp; Business Sciences</option>
-              <option>Hospitality &amp; Tourism</option>
-              <option>Education</option>
-              <option>ICT</option>
-              <option>Administration</option>
-              <option>Finance</option>
-              <option>Student Affairs</option>
-              <option>Other</option>
-            </select>
+            <label for="faculty" id="facultyLabel"><i class="ti ti-building" aria-hidden="true"></i> Faculty</label>
+            <select id="faculty" required></select>
+            <p class="field-hint" id="facultyHint"></p>
           </div>
           <div class="form-group" id="academicYearGroup">
-            <label for="academicYear"><i class="ti ti-calendar" aria-hidden="true"></i> Academic Year</label>
+            <label for="academicYear"><i class="ti ti-calendar" aria-hidden="true"></i> Year of Study</label>
             <select id="academicYear">
-              <option value="">Select Year</option>
+              <option value="">Select your year</option>
+              <option>Higher Certificate</option>
               <option>1st Year</option>
               <option>2nd Year</option>
               <option>3rd Year</option>
+              <option>4th Year</option>
               <option>Honours</option>
+              <option>Postgraduate Diploma</option>
               <option>Masters</option>
+              <option>Doctorate</option>
             </select>
           </div>
           <div id="lecturerFieldsGroup" style="display:none;">
@@ -150,28 +151,42 @@
             <img id="profilePhotoPreview" alt="Profile photo preview" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
           </label>
           <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp" hidden />
+          <p class="form-error-summary" id="step3Summary" role="alert" hidden></p>
           <div class="form-group">
             <label for="password"><i class="ti ti-lock" aria-hidden="true"></i> Password</label>
             <div class="password-input-wrap">
-              <input type="password" id="password" placeholder="At least 8 characters, with a letter and a number" required />
+              <input type="password" id="password" placeholder="Create a password" autocomplete="new-password" aria-describedby="passwordChecklist" required />
               <button type="button" class="password-toggle" data-target="password" aria-label="Show password">
                 <i class="ti ti-eye" aria-hidden="true"></i>
               </button>
             </div>
+            <div class="password-meter" id="passwordMeter" data-score="0" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            <p class="password-meter-label" id="passwordMeterLabel" aria-live="polite"></p>
+            <ul class="password-checklist" id="passwordChecklist">
+              <li data-rule="length"><i class="ti ti-circle" aria-hidden="true"></i> At least 8 characters</li>
+              <li data-rule="letter"><i class="ti ti-circle" aria-hidden="true"></i> A letter</li>
+              <li data-rule="number"><i class="ti ti-circle" aria-hidden="true"></i> A number</li>
+              <li data-rule="mixed" class="optional"><i class="ti ti-circle-dashed" aria-hidden="true"></i> Upper and lower case <small>(stronger)</small></li>
+              <li data-rule="symbol" class="optional"><i class="ti ti-circle-dashed" aria-hidden="true"></i> A symbol like ! or # <small>(stronger)</small></li>
+              <li data-rule="personal" class="optional"><i class="ti ti-circle-dashed" aria-hidden="true"></i> Not your name or number <small>(stronger)</small></li>
+            </ul>
           </div>
           <div class="form-group">
             <label for="confirmPassword"><i class="ti ti-lock-check" aria-hidden="true"></i> Confirm Password</label>
             <div class="password-input-wrap">
-              <input type="password" id="confirmPassword" placeholder="Repeat your password" required />
+              <input type="password" id="confirmPassword" placeholder="Type it again" autocomplete="new-password" required />
               <button type="button" class="password-toggle" data-target="confirmPassword" aria-label="Show confirm password">
                 <i class="ti ti-eye" aria-hidden="true"></i>
               </button>
             </div>
+            <p class="field-hint" id="confirmHint" aria-live="polite" hidden></p>
           </div>
-          <label class="checkbox-row">
-            <input type="checkbox" id="termsCheckbox" required />
-            I agree to the <a href="./terms.html" target="_blank" rel="noopener">Terms &amp; Conditions and Privacy Policy</a>
-          </label>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="checkbox-row" id="termsRow">
+              <input type="checkbox" id="termsCheckbox" required />
+              I agree to the <a href="./terms.html" target="_blank" rel="noopener">Terms &amp; Conditions and Privacy Policy</a>
+            </label>
+          </div>
           <div class="form-row" style="margin-top:12px;">
             <button type="button" class="secondary-button" id="backToStep2">
               <i class="ti ti-arrow-left" aria-hidden="true"></i> Back

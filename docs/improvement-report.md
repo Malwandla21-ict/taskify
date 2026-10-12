@@ -145,6 +145,23 @@ Each step is one commit on `main`. Database changes are made by an **idempotent 
 - **Database:** `equipment_bookings.return_wait_notified_at` (`repair-rental-wait-schema.js`).
 - **API:** no new routes; booking views gain `waiting_for_return: { due_at }`.
 
+### After the brief: selling several, sign-up guidance, UMP faculties (12 October 2026)
+- **Selling one item or several:**
+  - the sale form asks "How many are you selling?" ("Just this one" or "Several of the same", 2–100) and won't publish until it's answered;
+  - a single item leaves the marketplace by itself once it's bought or marked sold; with several, the listing stays up ("3 left") until the last one goes;
+  - the seller sees every buyer waiting for handover, each with their own code box, and can record cash sales one at a time ("Sold one") or all at once ("Sold the rest");
+  - rules and race-safety are in [state-machines.md](state-machines.md) §2. Files: `sales.service.js` (`refreshSaleItemStatus`), `offerClosure.service.js` (`onlyOfferer`), `sales.js`, `sale-details.js`.
+  - **Database:** `sales_items.quantity`, `sales_items.quantity_sold` (`repair-sale-quantity-schema.js`).
+- **Other modules checked for the same "does it come down by itself?" flow:** tasks leave the browse list once a worker is chosen; Campus Marketplace listings leave once their date passes; rentals are reusable and stay up. Cash sales under R300 still rely on the seller pressing "Mark as Sold" (there's no in-app signal that cash changed hands) — see [open-questions.md](open-questions.md).
+- **Sign-up:**
+  - account type comes first, so the number field asks for the right thing: student numbers are **9 digits**, staff and lecturer numbers **5** (also checked on the server, which also checks that a student's email matches their number);
+  - every problem on a step is shown under its own field with a count at the top, and the first one gets focus; errors from the server (e.g. "Email is already registered") jump back to the right step and field;
+  - the password box has a live checklist (8+ characters, a letter, a number — required) plus stronger-password tips and a strength meter, and the confirm box says when they match;
+  - a student's email fills itself in from their student number.
+  - API validation errors now return the actual reason instead of "Validation failed." across controllers.
+- **UMP faculties:** the made-up list is replaced with the University of Mpumalanga's three faculties (Agriculture and Natural Sciences; Economics, Development and Business Sciences; Education), with their schools shown as a hint, plus support departments for staff. Shared by sign-up and both profile edit forms; checked on the server. `repair-ump-faculties.js` moves existing accounts onto the new names.
+- **Campus Marketplace leftovers:** the sidebar's "Create Event" quick action is now "Campus Market Days" (admins get "Post to Marketplace", which opens the form); "RSVP" is now "I'm going"; food options read "Food stalls" / "Drinks on sale"; remaining "event" wording in messages, admin screens and the terms is now "listing".
+
 ---
 
 ## 7. Tests
@@ -156,6 +173,8 @@ Run from `backend/` with `npm test`. Tests use the local practice database only:
 | `tasks.test.js` | 12 | Only the right user can act at each step; double-clicks release payment once; the poster chooses. |
 | `task-disputes.test.js` | 12 | Report a problem, admin outcomes, review reminders, privacy of dispute details. |
 | `sales.test.js` | 7 | Handover code: right code, wrong code, lockout, released once; the seller never receives the code. |
+| `sale-quantity.test.js` | 11 | One item vs several: a single item leaves once sold; several stay up until the last; simultaneous buyers can't over-hold; cash "sold one" / "sold the rest"; quantity can't be edited below what's sold or held. |
+| `registration.test.js` | 5 | 9-digit student and 5-digit staff numbers, student email must match the number, students must pick a UMP faculty. |
 | `sale-disputes.test.js` | 14 | Failed meetup, admin release, refund or retry (new code), the buyer can't cancel while disputed. |
 | `rentals.test.js` | 30 | Dates and costs, clashes including simultaneous requests, approve → pay, unpaid approvals lapse, extensions, return deadline, reminders, no charges under unapproved rules, policy-version check, the next renter waiting for an overdue item. |
 | `marketplace.test.js` | 10 | Only admins post or edit (server-enforced); marketplace categories; institutional listings need authority (and review when posted by non-admins). |
@@ -164,7 +183,7 @@ Run from `backend/` with `npm test`. Tests use the local practice database only:
 | `activity.test.js` | 5 | Action Centre shows the next action for each side. |
 | `analytics.test.js` | 9 | Admin-only access, date ranges, CSV escaping, no personal contact details in exports. |
 
-**Result (11 October 2026): 112 tests, 112 passed, 0 failed.**
+**Result (12 October 2026): 128 tests, 128 passed, 0 failed.**
 
 Also checked:
 - `repair-all.js` runs cleanly on practice;

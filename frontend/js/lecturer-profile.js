@@ -397,7 +397,11 @@ function openEditProfileModal() {
   document.getElementById("editLecturerTitle").value = latestProfile.lecturer_title || "";
   document.getElementById("editYearsExperience").value = latestProfile.years_experience ?? "";
   document.getElementById("editPhoneNumber").value = latestProfile.phone_number || "";
-  document.getElementById("editFaculty").value = latestProfile.faculty || "";
+  fillFacultySelect(document.getElementById("editFaculty"), {
+    memberType: latestProfile.member_type || "Lecturer",
+    selected: latestProfile.faculty || "",
+    hintEl: document.getElementById("editFacultyHint")
+  });
   document.getElementById("editOfficeLocation").value = latestProfile.office_location || "";
   document.getElementById("editConsultationMode").value = latestProfile.consultation_mode || "";
   document.getElementById("editAvailabilityNote").value = latestProfile.availability_note || "";
@@ -441,7 +445,8 @@ document.getElementById("saveEditProfileBtn")?.addEventListener("click", async (
     await apiRequest("/users/me", "PATCH", {
       bio: document.getElementById("editBio").value.trim(),
       phoneNumber: phoneNumber || undefined,
-      faculty: document.getElementById("editFaculty").value,
+      /* An old, pre-UMP-list faculty name is left as it is rather than re-sent. */
+      faculty: document.getElementById("editFaculty").selectedOptions[0]?.dataset.legacy ? undefined : document.getElementById("editFaculty").value,
       lecturerTitle: document.getElementById("editLecturerTitle").value || undefined,
       yearsExperience: yearsValue ? Number(yearsValue) : null,
       officeLocation: document.getElementById("editOfficeLocation").value.trim(),

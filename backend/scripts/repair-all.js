@@ -58,7 +58,9 @@ const SCRIPTS = [
   "repair-rental-lifecycle-schema.js",
   "repair-marketplace-authority-schema.js",
   "repair-feedback-schema.js",
-  "repair-rental-wait-schema.js"
+  "repair-rental-wait-schema.js",
+  "repair-sale-quantity-schema.js",
+  "repair-ump-faculties.js"
 ];
 
 function main() {

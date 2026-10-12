@@ -863,7 +863,7 @@ const REPORT_ITEM_ICONS = {
   task: "ti-checklist",
   equipment: "ti-tool",
   sales_item: "ti-tag",
-  event: "ti-calendar-event",
+  event: "ti-building-store",
   message: "ti-message-circle",
   none: "ti-user"
 };
@@ -1217,7 +1217,7 @@ function renderModerationTable() {
           </td>
         </tr>`;
       }).join("")
-    : `<tr><td colspan="6">${emptyState("ti-shield-check", "Nothing flagged", "AI-flagged tasks, sales listings, equipment and events are held from public view here until you approve or remove them.")}</td></tr>`;
+    : `<tr><td colspan="6">${emptyState("ti-shield-check", "Nothing flagged", "AI-flagged tasks, sales listings, equipment and Campus Marketplace listings are held from public view here until you approve or remove them.")}</td></tr>`;
 
   document.getElementById("moderationTableCount").textContent =
     filtered.length ? `Showing ${(moderationPage - 1) * PAGE_SIZE + 1} to ${Math.min(moderationPage * PAGE_SIZE, filtered.length)} of ${filtered.length} flagged item${filtered.length === 1 ? "" : "s"}` : "";

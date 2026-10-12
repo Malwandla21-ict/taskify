@@ -5,7 +5,7 @@ const messageReportService = require("../services/messageReport.service");
 async function startConversation(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const conversation = await conversationService.startConversation({
       contextType: req.body.contextType,
@@ -33,7 +33,7 @@ async function getUnreadCount(req, res, next) {
 async function getMessages(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const messages = await conversationService.getMessages(Number(req.params.id), req.user.id);
     return res.status(200).json({ success: true, message: "Messages fetched successfully.", data: messages });
@@ -43,7 +43,7 @@ async function getMessages(req, res, next) {
 async function sendMessage(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const message = await conversationService.sendMessage(Number(req.params.id), req.user.id, req.body.body);
     return res.status(201).json({
@@ -59,7 +59,7 @@ async function sendMessage(req, res, next) {
 async function flagMessage(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const report = await messageReportService.flagMessage({
       messageId: Number(req.params.messageId),

@@ -351,7 +351,11 @@ function openEditProfileModal() {
   refreshEditPhotoPreview();
   document.getElementById("editBio").value = latestProfile.bio || "";
   document.getElementById("editPhoneNumber").value = latestProfile.phone_number || "";
-  document.getElementById("editFaculty").value = latestProfile.faculty || "";
+  fillFacultySelect(document.getElementById("editFaculty"), {
+    memberType: latestProfile.member_type || "Student",
+    selected: latestProfile.faculty || "",
+    hintEl: document.getElementById("editFacultyHint")
+  });
   document.getElementById("editAcademicYear").value = latestProfile.academic_year || "";
   document.getElementById("editAvailabilityNote").value = latestProfile.availability_note || "";
   editSkills = [...(latestProfile.skills || [])];
@@ -387,7 +391,8 @@ document.getElementById("saveEditProfileBtn")?.addEventListener("click", async (
     await apiRequest("/users/me", "PATCH", {
       bio: document.getElementById("editBio").value.trim(),
       phoneNumber: phoneNumber || undefined,
-      faculty: document.getElementById("editFaculty").value,
+      /* An old, pre-UMP-list faculty name is left as it is rather than re-sent. */
+      faculty: document.getElementById("editFaculty").selectedOptions[0]?.dataset.legacy ? undefined : document.getElementById("editFaculty").value,
       academicYear: latestProfile.member_type === "Student" ? document.getElementById("editAcademicYear").value : undefined,
       skills: editSkills,
       availabilityNote: document.getElementById("editAvailabilityNote").value.trim()

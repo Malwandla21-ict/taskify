@@ -37,7 +37,7 @@
         <div class="section-header">
           <div>
             <h2><i class="ti ti-building-store" aria-hidden="true"></i> Coming up on campus</h2>
-            <p>Market days, stalls, swaps and approved sales — RSVP to say you're coming</p>
+            <p>Market days, stalls, swaps and approved sales — tap "I'm going" to get updates</p>
           </div>
         </div>
 
@@ -200,23 +200,24 @@
     <div class="event-step" id="eventStep3" style="display:none;">
       <div class="form-row">
         <div class="form-group">
-          <label for="eventDate"><i class="ti ti-calendar" aria-hidden="true"></i> Date &amp; Time</label>
+          <label for="eventDate"><i class="ti ti-calendar" aria-hidden="true"></i> When it opens</label>
           <input type="datetime-local" id="eventDate" required />
         </div>
         <div class="form-group">
-          <label for="eventCapacity"><i class="ti ti-users" aria-hidden="true"></i> Capacity (optional)</label>
-          <input type="number" id="eventCapacity" placeholder="Unlimited" min="1" />
+          <label for="eventCapacity"><i class="ti ti-users" aria-hidden="true"></i> Places (optional)</label>
+          <input type="number" id="eventCapacity" placeholder="No limit" min="1" />
+          <small class="category-section-hint">Only if numbers are limited, e.g. 20 stall spaces</small>
         </div>
       </div>
       <div class="form-group">
-        <label><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Food &amp; drinks</label>
+        <label><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Food &amp; drinks on sale</label>
         <label class="checkbox-row">
           <input type="checkbox" id="eventHasFood" />
-          <i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Food provided
+          <i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Food stalls
         </label>
         <label class="checkbox-row">
           <input type="checkbox" id="eventHasRefreshments" />
-          <i class="ti ti-cup" aria-hidden="true"></i> Refreshments provided
+          <i class="ti ti-cup" aria-hidden="true"></i> Drinks on sale
         </label>
       </div>
       <div class="form-group">

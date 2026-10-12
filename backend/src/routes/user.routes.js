@@ -3,6 +3,7 @@ const { body, param } = require("express-validator");
 const userController = require("../controllers/user.controller");
 const { authenticate, optionalAuthenticate } = require("../middleware/auth.middleware");
 const upload = require("../middleware/upload.middleware");
+const { ALL_FACULTY_OPTIONS } = require("../config/faculties");
 
 const router = express.Router();
 
@@ -17,7 +18,8 @@ router.patch(
   "/me",
   authenticate,
   [
-    body("faculty").optional({ checkFalsy: true }).trim().isLength({ max: 150 }).withMessage("Faculty/department is too long."),
+    body("faculty").optional({ checkFalsy: true }).trim()
+      .isIn(ALL_FACULTY_OPTIONS).withMessage("Please choose your faculty or department from the list."),
     body("academicYear").optional({ checkFalsy: true }).trim().isLength({ max: 50 }).withMessage("Academic year is too long."),
     body("phoneNumber").optional({ checkFalsy: true }).trim()
       .matches(/^(\+27|27|0)[0-9]{9}$/).withMessage("Please enter a valid South African phone number."),

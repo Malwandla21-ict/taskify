@@ -191,8 +191,29 @@
     <div class="sales-step" id="salesStep3" style="display:none;">
       <h2 style="font-size:18px;font-weight:800;margin-bottom:4px;">Pricing &amp; Confirm</h2>
       <p class="auth-subtitle">Set your price and review before publishing</p>
+      <!-- Sellers must say whether this is one item or several of the same
+           thing: a single item comes down by itself once it sells; several
+           stay up until the last one goes (sales.service.js quantity). -->
       <div class="form-group">
-        <label for="salesPrice"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Price (R)</label>
+        <label id="salesQuantityLabel"><i class="ti ti-stack-2" aria-hidden="true"></i> How many are you selling?</label>
+        <div class="role-grid choice-grid" id="salesQuantityChoice" role="radiogroup" aria-labelledby="salesQuantityLabel">
+          <label class="role-option">
+            <input type="radio" name="salesQuantityMode" value="single" class="sr-only" />
+            <i class="ti ti-square" aria-hidden="true"></i> Just this one
+          </label>
+          <label class="role-option">
+            <input type="radio" name="salesQuantityMode" value="multiple" class="sr-only" />
+            <i class="ti ti-stack-2" aria-hidden="true"></i> Several of the same
+          </label>
+        </div>
+        <p class="field-hint" id="salesQuantityHint"><i class="ti ti-info-circle" aria-hidden="true"></i> <span>A single item comes down by itself once it sells.</span></p>
+      </div>
+      <div class="form-group" id="salesQuantityGroup" hidden>
+        <label for="salesQuantity"><i class="ti ti-hash" aria-hidden="true"></i> How many do you have?</label>
+        <input type="number" id="salesQuantity" min="2" max="100" step="1" inputmode="numeric" placeholder="e.g. 5" />
+      </div>
+      <div class="form-group">
+        <label for="salesPrice" id="salesPriceLabel"><i class="ti ti-currency-dollar" aria-hidden="true"></i> Price (R)</label>
         <input type="number" id="salesPrice" placeholder="e.g. 450" required />
       </div>
       <div class="form-group">

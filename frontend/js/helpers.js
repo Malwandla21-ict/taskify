@@ -473,8 +473,8 @@ function moneyRow(label, amount, { strong = false, hint = "" } = {}) {
 /* "Food" / "Refreshments" tags on an event (the organizer ticks these when
    posting or editing it). Empty string when neither is provided. */
 function eventFoodTags(event) {
-  return (Number(event.has_food) ? `<div class="market-tag"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Food</div>` : "")
-    + (Number(event.has_refreshments) ? `<div class="market-tag"><i class="ti ti-cup" aria-hidden="true"></i> Refreshments</div>` : "");
+  return (Number(event.has_food) ? `<div class="market-tag"><i class="ti ti-tools-kitchen-2" aria-hidden="true"></i> Food stalls</div>` : "")
+    + (Number(event.has_refreshments) ? `<div class="market-tag"><i class="ti ti-cup" aria-hidden="true"></i> Drinks on sale</div>` : "");
 }
 
 /* Edit mode for the create forms: an owner's Edit button on a detail page
@@ -1650,4 +1650,116 @@ function fillCategoryFilter(selectEl, type) {
   const current = selectEl.value || "All";
   selectEl.innerHTML = `<option value="All">All Categories</option>` + categoryOptgroupsHtml(type);
   selectEl.value = categorySection(type, current) ? current : "All";
+}
+
+/* ── University of Mpumalanga faculties ──
+   UMP's three faculties and their schools (ump.ac.za "Faculties and
+   Schools", checked 2026-10-12), plus support departments for staff.
+   Keep in sync with backend/src/config/faculties.js. */
+const UMP_FACULTIES = {
+  "Faculty of Agriculture and Natural Sciences": [
+    "School of Agricultural Sciences",
+    "School of Biology and Environmental Sciences",
+    "School of Computing and Mathematical Sciences"
+  ],
+  "Faculty of Economics, Development and Business Sciences": [
+    "School of Development Studies",
+    "School of Hospitality and Tourism Management",
+    "School of Social Sciences"
+  ],
+  "Faculty of Education": [
+    "School of Early Childhood Education"
+  ]
+};
+const UMP_SUPPORT_DEPARTMENTS = ["Administration", "Finance", "ICT Services", "Library", "Student Affairs", "Other"];
+
+/* Fills a faculty <select>. Students only get the three faculties; staff
+   and lecturers also get the support departments. A saved value from
+   before the list changed is kept as its own option so editing a profile
+   never silently drops it. If hintEl is given it lists the chosen
+   faculty's schools, so a Computing or Hospitality student can tell
+   which faculty they're in. */
+function fillFacultySelect(selectEl, { memberType = "Student", selected = "", hintEl = null } = {}) {
+  if (!selectEl) return;
+  const isStudent = memberType === "Student";
+  const known = [...Object.keys(UMP_FACULTIES), ...(isStudent ? [] : UMP_SUPPORT_DEPARTMENTS)];
+  const legacy = selected && !known.includes(selected)
+    ? `<option value="${escapeHtml(selected)}" data-legacy="1">${escapeHtml(selected)} (old name, please choose again)</option>`
+    : "";
+
+  selectEl.innerHTML = `<option value="">${isStudent ? "Select your faculty" : "Select your faculty or department"}</option>
+    <optgroup label="Faculties">
+      ${Object.keys(UMP_FACULTIES).map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}
+    </optgroup>
+    ${isStudent ? "" : `<optgroup label="Support departments">
+      ${UMP_SUPPORT_DEPARTMENTS.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join("")}
+    </optgroup>`}
+    ${legacy}`;
+  selectEl.value = selected || "";
+
+  if (!hintEl) return;
+  const updateHint = () => {
+    const schools = UMP_FACULTIES[selectEl.value];
+    hintEl.innerHTML = schools
+      ? `<i class="ti ti-school" aria-hidden="true"></i> <span>Includes ${schools.map(escapeHtml).join(", ")}</span>`
+      : `<i class="ti ti-info-circle" aria-hidden="true"></i> <span>Computing is in Agriculture and Natural Sciences; Hospitality and Tourism is in Economics, Development and Business Sciences.</span>`;
+  };
+  if (!selectEl.dataset.facultyHintBound) {
+    selectEl.addEventListener("change", updateHint);
+    selectEl.dataset.facultyHintBound = "1";
+  }
+  updateHint();
+}
+
+/* ── Field-level errors ──
+   Puts a short message right under the field and outlines it in red, so
+   people see exactly what to fix instead of hunting for one sentence at
+   the bottom of the form. The error clears itself as soon as they change
+   the field. `target` is the input/select (or a wrapper like a role
+   grid); the message goes after its .form-group's last child. */
+function setFieldError(target, message) {
+  if (!target) return;
+  const group = target.closest(".form-group") || target.parentElement;
+  target.classList.add("input-invalid");
+  target.setAttribute("aria-invalid", "true");
+
+  let error = group.querySelector(":scope > .field-error");
+  if (!error) {
+    error = document.createElement("p");
+    error.className = "field-error";
+    error.id = `${target.id || "field"}-error-${Math.random().toString(36).slice(2, 7)}`;
+    group.appendChild(error);
+  }
+  error.innerHTML = `<i class="ti ti-alert-circle" aria-hidden="true"></i><span></span>`;
+  error.querySelector("span").textContent = message;
+  if (target.matches("input, select, textarea")) target.setAttribute("aria-describedby", error.id);
+
+  if (!target.dataset.errorClearBound) {
+    target.dataset.errorClearBound = "1";
+    const clear = () => clearFieldError(target);
+    target.addEventListener("input", clear);
+    target.addEventListener("change", clear);
+    target.addEventListener("click", () => { if (!target.matches("input, select, textarea")) clear(); });
+  }
+}
+
+function clearFieldError(target) {
+  if (!target) return;
+  const group = target.closest(".form-group") || target.parentElement;
+  target.classList.remove("input-invalid");
+  target.removeAttribute("aria-invalid");
+  group?.querySelector(":scope > .field-error")?.remove();
+}
+
+/* After validating a step: scroll to and focus the first field that needs
+   fixing, with a small nudge so the eye finds it. */
+function focusFirstInvalid(scope) {
+  const first = scope.querySelector(".input-invalid");
+  if (!first) return;
+  first.scrollIntoView({ behavior: "smooth", block: "center" });
+  const focusable = first.matches("input, select, textarea") ? first : first.querySelector("input, button, [tabindex]");
+  focusable?.focus({ preventScroll: true });
+  first.classList.remove("field-nudge");
+  void first.offsetWidth;
+  first.classList.add("field-nudge");
 }

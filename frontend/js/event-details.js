@@ -66,7 +66,7 @@ async function renderEventDetails(event, hasRsvped) {
       </button>`;
   } else if (hasRsvped) {
     actionArea = `<button class="primary-button" id="cancelRsvpButton" style="background:var(--ump-red);">
-                     <i class="ti ti-x" aria-hidden="true"></i> Cancel RSVP
+                     <i class="ti ti-x" aria-hidden="true"></i> Not going
                    </button>`;
   } else if (isFull) {
     actionArea = `<div class="badge red"><i class="ti ti-users" aria-hidden="true"></i> This is full</div>`;
@@ -74,7 +74,7 @@ async function renderEventDetails(event, hasRsvped) {
     actionArea = statusBadge(event.status);
   } else {
     actionArea = `<button class="primary-button" id="rsvpButton">
-                     <i class="ti ti-calendar-plus" aria-hidden="true"></i> RSVP
+                     <i class="ti ti-check" aria-hidden="true"></i> I'm going
                    </button>`;
   }
 
@@ -137,18 +137,18 @@ async function renderEventDetails(event, hasRsvped) {
   document.getElementById("reportProblemButton")?.addEventListener("click", () => openReportModal(reportTarget));
 
   document.getElementById("rsvpButton")?.addEventListener("click", async (e) => {
-    if (!requireAuthAction("Sign in to RSVP to this event.")) return;
+    if (!requireAuthAction("Sign in to say you're going.")) return;
     const btn = e.currentTarget;
     btn.disabled = true;
     btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
     try {
       await apiRequest(`/events/${eventId}/rsvp`, "POST");
-      showToast("RSVP confirmed!");
+      showToast("You're going! We'll let you know if anything changes.");
       await loadEventDetails();
     } catch (err) {
       showToast(err.message, "error");
       btn.disabled = false;
-      btn.innerHTML = `<i class="ti ti-calendar-plus" aria-hidden="true"></i> RSVP`;
+      btn.innerHTML = `<i class="ti ti-check" aria-hidden="true"></i> I'm going`;
     }
   });
 
@@ -158,12 +158,12 @@ async function renderEventDetails(event, hasRsvped) {
     btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i>`;
     try {
       await apiRequest(`/events/${eventId}/rsvp`, "DELETE");
-      showToast("RSVP cancelled.");
+      showToast("Okay, you're no longer going.");
       await loadEventDetails();
     } catch (err) {
       showToast(err.message, "error");
       btn.disabled = false;
-      btn.innerHTML = `<i class="ti ti-x" aria-hidden="true"></i> Cancel RSVP`;
+      btn.innerHTML = `<i class="ti ti-x" aria-hidden="true"></i> Not going`;
     }
   });
 

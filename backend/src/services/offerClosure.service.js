@@ -28,9 +28,12 @@ function offersTableMissing(error) {
    locked. winnerId (optional) is the person who just got the listing —
    their own open offer is marked Withdrawn (they took it another way)
    instead of Declined, and they aren't told they "lost".
+   onlyOfferer (optional) closes just that person's open offer and leaves
+   everyone else's alone — for a sales listing that still has units left
+   after one was bought.
    Returns the declined offers so the caller can notify those people
    AFTER committing. */
-async function closeOpenOffers(connection, contextType, contextId, { winnerId = null } = {}) {
+async function closeOpenOffers(connection, contextType, contextId, { winnerId = null, onlyOfferer = null } = {}) {
   try {
     await connection.execute(
       `UPDATE offers SET status = 'Expired'
@@ -41,8 +44,9 @@ async function closeOpenOffers(connection, contextType, contextId, { winnerId = 
     const [rows] = await connection.execute(
       `SELECT id, offerer_id FROM offers
        WHERE context_type = ? AND context_id = ? AND status = 'Pending'
+         ${onlyOfferer != null ? "AND offerer_id = ?" : ""}
        FOR UPDATE`,
-      [contextType, contextId]
+      onlyOfferer != null ? [contextType, contextId, onlyOfferer] : [contextType, contextId]
     );
     if (!rows.length) return [];
 

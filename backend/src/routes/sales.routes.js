@@ -25,6 +25,10 @@ const salesFieldRules = [
     .isIn(["New", "Excellent", "Good", "Fair", "Used"]).withMessage("Invalid condition status."),
   body("location").trim().notEmpty().withMessage("Location is required.")
     .isLength({ min: 2, max: 150 }).withMessage("Location must be between 2 and 150 characters."),
+  /* How many the seller has. Left out = 1 (a single item) when listing,
+     unchanged when editing. */
+  body("quantity").optional({ nullable: true })
+    .isInt({ min: 1, max: 100 }).withMessage("Quantity must be a whole number from 1 to 100."),
   applyCategorySection("sales")
 ];
 
@@ -45,7 +49,10 @@ router.put(
 router.patch(
   "/:id/sold",
   authenticate,
-  [ param("id").isInt({ min: 1 }).withMessage("Sales item ID must be a valid positive integer.") ],
+  [
+    param("id").isInt({ min: 1 }).withMessage("Sales item ID must be a valid positive integer."),
+    body("all").optional().isBoolean().withMessage("all must be true or false.")
+  ],
   salesController.markSalesItemAsSold
 );
 
