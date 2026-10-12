@@ -93,6 +93,7 @@ function orderPanel(item, order) {
         <div class="handover-code">${escapeHtml(order.handover_code)}</div>
         <p class="pay-note"><strong>Only show this code once you have the item and you're happy with it.</strong> The seller can't get paid without it. Nobody from Taskify will ever ask you for it.</p>
         ${contactLine("Seller", item.seller_phone_number)}
+        ${profilePhotoNudgeHtml("So the seller can spot you at the meetup.")}
         ${order.locked ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked.${disputed ? "" : " If you didn't get the item, cancel for a refund."}</p>` : ""}
         <div class="money-breakdown">
           ${moneyRow("Item price", order.item_price)}
@@ -116,6 +117,7 @@ function orderPanel(item, order) {
         <p class="pay-note">${formatRand(order.item_price)} is held by Taskify. Meet on campus, let them check the item, then ask for their 4-digit handover code and type it here to get paid.
           <strong>Keep hold of the item until the code is accepted.</strong></p>
         ${contactLine("Buyer", order.buyer_phone_number)}
+        ${profilePhotoNudgeHtml("So the buyer can spot you at the meetup.")}
         ${order.locked
           ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked.${disputed ? " An admin is looking at it." : " The buyer can cancel it for a refund, or you can report a problem."}</p>`
           : `<input type="text" class="handover-input" data-order-id="${order.id}" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="${escapeHtml(order.buyer_name || "The buyer")}'s 4-digit handover code" />
@@ -211,6 +213,10 @@ saleProblemForm?.addEventListener("submit", async (e) => {
     submitBtn.innerHTML = originalHtml;
   }
 });
+
+/* Things that are commonly stolen and resold — buyers get the "check
+   it's really theirs" warning on these (and on anything R1000+). */
+const HIGH_VALUE_SALE_CATEGORIES = ["Laptops & Tablets", "Electronics & Gadgets", "Cameras & Audio"];
 
 /* Orders shown on the page, by id — the buyer's own, or every buyer the
    seller is waiting on. Filled by renderSaleDetails. */
@@ -333,6 +339,7 @@ function renderSaleDetails(item) {
           ${statusBadge(item.status)}
         </div>
         ${endorsementDetailBlock(item)}
+        ${!isOwn && item.status === "Available" && (HIGH_VALUE_SALE_CATEGORIES.includes(item.category) || Number(item.price) >= 1000) ? noticeHtml("highValue") : ""}
         <div id="offersSection"></div>
       </div>
       <div class="form-panel detail-summary">

@@ -60,7 +60,9 @@ const SCRIPTS = [
   "repair-feedback-schema.js",
   "repair-rental-wait-schema.js",
   "repair-sale-quantity-schema.js",
-  "repair-ump-faculties.js"
+  "repair-ump-faculties.js",
+  "repair-acknowledgements-schema.js",
+  "repair-rental-protection-schema.js"
 ];
 
 function main() {

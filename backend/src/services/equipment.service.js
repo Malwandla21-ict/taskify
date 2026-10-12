@@ -163,7 +163,8 @@ const BOOKING_LIFECYCLE_FIELDS = `
   eb.return_due_at, eb.return_minutes_late, eb.cancelled_at, eb.cancel_reason, eb.cancel_note,
   eb.policy_version, eb.terms_snapshot,
   eb.problem_reported_at, eb.problem_reported_by, eb.problem_category, eb.problem_note, eb.return_attempted_at,
-  eb.damage_outcome, eb.damage_resolved_at
+  eb.damage_outcome, eb.damage_resolved_at, eb.return_reported_at, eb.not_returned_at,
+  (SELECT -f.amount FROM protection_fund_entries f WHERE f.booking_id = eb.id AND f.kind = 'payout') AS fund_payout
 `;
 
 /* Adds what the screens show on top of the raw row: parsed terms, overdue
@@ -179,9 +180,12 @@ function describeBooking(row, extension = null, now = new Date()) {
 
   const outOnRent = row.status === "Confirmed" && (row.picked_up_at || !row.payment_status);
   row.out_on_rent = !!outOnRent;
-  row.is_overdue = !!outOnRent && row.return_due_at != null && new Date(row.return_due_at) < now;
+  /* The renter said they've handed it back; the owner hasn't confirmed
+     yet. The renter's part is done, so it no longer counts as overdue. */
+  row.handed_back = !!outOnRent && !!row.return_reported_at;
+  row.is_overdue = !!outOnRent && !row.handed_back && row.return_due_at != null && new Date(row.return_due_at) < now;
   row.estimates = null;
-  if (outOnRent && row.return_due_at) {
+  if (outOnRent && !row.handed_back && row.return_due_at) {
     const dailyPrice = row.terms?.dailyPrice ?? row.daily_price;
     const itemValue = row.terms?.itemValue ?? row.item_value ?? null;
     row.estimates = {

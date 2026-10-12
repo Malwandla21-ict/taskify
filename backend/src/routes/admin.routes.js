@@ -15,6 +15,20 @@ router.use(authenticate, authorize("admin"), requireTwoFactor);
 
 router.get("/stats", adminController.getDashboardStats);
 
+/* What a user ticked "I understand" to, and when (config/acknowledgements.js)
+   — the evidence when a dispute or report comes in. */
+router.get(
+  "/users/:userId/acknowledgements",
+  [ param("userId").isInt({ min: 1 }).withMessage("User ID must be a valid positive integer.") ],
+  async (req, res, next) => {
+    try {
+      const { getAcknowledgementsForUser } = require("../services/acknowledgement.service");
+      const data = await getAcknowledgementsForUser(Number(req.params.userId));
+      res.json({ success: true, data });
+    } catch (error) { next(error); }
+  }
+);
+
 /* Analytics & Reports — numbers for a date range (?from=YYYY-MM-DD&to=…),
    and downloadable CSV reports. Every download is audit-logged. */
 const rangeRules = [

@@ -743,8 +743,32 @@ async function openUserDetailModal(userId) {
         <div class="admin-user-detail-row"><span>Average Rating</span><span>${Number(profile.rating_average || 0).toFixed(1)} / 5</span></div>
         <div class="admin-user-detail-row"><span>Status</span><span>${listUser.role === "user" ? "Active" : (listUser.role || "—")}</span></div>
       </div>
+      <div class="admin-user-detail-rows" id="userAcknowledgements">
+        <div class="admin-user-detail-row"><span>Rules agreed to</span><span>Loading…</span></div>
+      </div>
       ${actions.length ? `<div class="admin-user-detail-actions" id="userDetailActionButtons"></div>` : ""}
     `;
+
+    /* What they ticked "I understand" to — useful when someone says they
+       didn't know a rule. */
+    apiRequest(`/admin/users/${userId}/acknowledgements`).then(res => {
+      const box = document.getElementById("userAcknowledgements");
+      if (!box) return;
+      const rows = res.data || [];
+      const contextLink = (r) => {
+        const path = { task: "task-details", sales_item: "sale-details", equipment: "equipment-details" }[r.context_type];
+        return path ? ` · <a href="./${path}.html?id=${r.context_id}" target="_blank" rel="noopener">#${r.context_id}</a>` : "";
+      };
+      box.innerHTML = rows.length
+        ? rows.slice(0, 8).map(r => `
+            <div class="admin-user-detail-row"><span>${escapeHtml(r.title)} <small style="color:var(--muted);">v${escapeHtml(r.version)}</small></span>
+              <span>${new Date(r.created_at).toLocaleDateString()}${contextLink(r)}</span></div>`).join("")
+          + (rows.length > 8 ? `<div class="admin-user-detail-row"><span></span><span>+${rows.length - 8} more</span></div>` : "")
+        : `<div class="admin-user-detail-row"><span>Rules agreed to</span><span>None yet</span></div>`;
+    }).catch(() => {
+      const box = document.getElementById("userAcknowledgements");
+      if (box) box.innerHTML = "";
+    });
 
     if (actions.length) {
       const actionsRow = document.getElementById("userDetailActionButtons");

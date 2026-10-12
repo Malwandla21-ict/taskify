@@ -77,6 +77,7 @@
           <div class="form-group">
             <label for="phoneNumber"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i> WhatsApp Number</label>
             <input type="tel" id="phoneNumber" placeholder="0821234567" autocomplete="tel" required />
+            <p class="field-hint"><i class="ti ti-eye-off" aria-hidden="true"></i> <span>Never shown on your profile. Only the person you're trading with sees it, once a payment is held.</span></p>
           </div>
           <button type="button" class="primary-button" id="nextToStep2">
             Continue <i class="ti ti-arrow-right" aria-hidden="true"></i>
@@ -147,10 +148,11 @@
           <p class="auth-subtitle">Almost done — secure your account</p>
           <label class="upload-box" id="uploadBox" for="profilePhoto" style="cursor:pointer;flex-direction:column;gap:6px;overflow:hidden;">
             <i class="ti ti-camera" aria-hidden="true"></i>
-            <span id="profilePhotoLabel">Upload Photo (optional)</span>
+            <span id="profilePhotoLabel">Add a photo (recommended)</span>
             <img id="profilePhotoPreview" alt="Profile photo preview" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />
           </label>
           <input type="file" id="profilePhoto" accept="image/jpeg,image/png,image/webp" hidden />
+          <p class="field-hint" style="justify-content:center;text-align:center;margin:-6px 0 14px;"><i class="ti ti-camera-heart" aria-hidden="true"></i> <span>People you meet for a handover can recognise you, and listings with a face get more replies.</span></p>
           <p class="form-error-summary" id="step3Summary" role="alert" hidden></p>
           <div class="form-group">
             <label for="password"><i class="ti ti-lock" aria-hidden="true"></i> Password</label>

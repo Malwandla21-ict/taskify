@@ -377,3 +377,22 @@ async function loadDashboard() {
 }
 
 loadDashboard();
+
+/* "Add a profile photo" — only for people without one. "Later" hides it
+   for a week; it goes away for good once a photo is added (profile.js
+   updates the stored user). */
+(function showPhotoNudgeBanner() {
+  const slot = document.getElementById("photoNudgeBanner");
+  const html = profilePhotoNudgeHtml("Buyers, sellers and renters can recognise you when you meet, and they're more likely to reply.");
+  let snoozedUntil = 0;
+  try { snoozedUntil = Number(localStorage.getItem("taskifyPhotoNudgeSnooze")) || 0; } catch { /* storage blocked */ }
+  if (!slot || !html || Date.now() < snoozedUntil) return;
+
+  slot.className = "photo-nudge-banner";
+  slot.innerHTML = `${html}<button type="button" class="photo-nudge-dismiss" aria-label="Remind me later"><i class="ti ti-x" aria-hidden="true"></i></button>`;
+  slot.querySelector(".photo-nudge-dismiss").addEventListener("click", () => {
+    try { localStorage.setItem("taskifyPhotoNudgeSnooze", String(Date.now() + 7 * 86400000)); } catch { /* storage blocked */ }
+    slot.innerHTML = "";
+    slot.className = "";
+  });
+})();

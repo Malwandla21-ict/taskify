@@ -97,6 +97,7 @@ async function renderEventDetails(event, hasRsvped) {
           ${eventFoodTags(event)}
           ${statusBadge(event.status)}
         </div>
+        ${!isOwn ? noticeHtml(Number(event.has_food) || Number(event.has_refreshments) ? "marketFood" : "market") : ""}
         ${event.is_institutional && event.listing_authority ? `<p class="pay-note institutional-note"><i class="ti ti-building-bank" aria-hidden="true"></i> Authorised by (as stated by the poster): <strong>${escapeReportText(event.listing_authority)}</strong>. A Taskify admin checked this before it was shown — it is not an official university announcement.</p>` : ""}
         ${endorsementDetailBlock(event)}
       </div>

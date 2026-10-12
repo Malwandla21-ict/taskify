@@ -65,6 +65,18 @@ function setTaskSubmitLabel() {
   if (submitBtn) submitBtn.innerHTML = editingTaskId ? TASK_SUBMIT_HTML.edit : TASK_SUBMIT_HTML.create;
 }
 
+/* Academic tasks need the academic-honesty tick (backend
+   config/acknowledgements.js); it's only asked for when posting, not
+   when editing. */
+const taskAckBox = document.getElementById("taskAckBox");
+function syncTaskAcknowledgement() {
+  if (!taskAckBox) return;
+  const academic = categorySection("task", document.getElementById("category")?.value) === "Academic";
+  taskAckBox.hidden = !!editingTaskId || !academic;
+  if (!taskAckBox.hidden && !taskAckBox.querySelector("input")) renderAcknowledgementBox(taskAckBox, "academic_integrity");
+}
+document.getElementById("category")?.addEventListener("change", syncTaskAcknowledgement);
+
 function openTaskCreateModal() {
   if (!requireAuthAction("Sign in to post a task.")) return;
   editingTaskId = null;
@@ -73,12 +85,17 @@ function openTaskCreateModal() {
   setTaskSubmitLabel();
   showTaskStep(1);
   if (taskUploader) taskUploader.reset();
+  if (taskAckBox) taskAckBox.innerHTML = "";
+  syncTaskAcknowledgement();
+  const taskNudge = document.getElementById("taskPhotoNudge");
+  if (taskNudge) taskNudge.innerHTML = profilePhotoNudgeHtml("People are quicker to accept tasks from someone they can recognise.");
   taskCreateOverlay?.classList.add("open");
   taskCreateModal?.classList.add("open");
 }
 
 function openTaskEditModal(task) {
   editingTaskId = task.id;
+  syncTaskAcknowledgement();   // not asked again when editing
   taskForm?.reset();
   taskMessage.textContent = "";
   document.getElementById("title").value       = task.title || "";
@@ -559,6 +576,7 @@ taskForm?.addEventListener("submit", async e => {
   e.preventDefault();
   const price = document.getElementById("price").value.trim();
   if (!price) { showToast("Please enter a budget.", "error"); return; }
+  if (!editingTaskId && !checkAcknowledgementBoxes(taskForm)) return;
 
   const submitBtn = taskForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
@@ -579,7 +597,8 @@ taskForm?.addEventListener("submit", async e => {
       price:       Number(price),
       location:    document.getElementById("location").value.trim(),
       urgent:      document.getElementById("urgent").checked,
-      imageUrls
+      imageUrls,
+      ...(editingTaskId ? {} : { acknowledgements: readAcknowledgements(taskForm) })
     };
 
     if (editingTaskId) {
@@ -598,6 +617,7 @@ taskForm?.addEventListener("submit", async e => {
     await loadTasks();
     await loadTaskHistory();
   } catch (err) {
+    await handleAcknowledgementError(taskForm, err);
     taskMessage.textContent = err.message;
     taskMessage.style.color = "red";
     showToast(err.message, "error");

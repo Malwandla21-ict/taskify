@@ -1,6 +1,6 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
-const { start, stop, api, createUser, makeTask, makeSale, makeEquipment, assignTask, day } = require("./helpers");
+const { start, stop, api, createUser, makeTask, makeSale, makeEquipment, assignTask, day, ACKS } = require("./helpers");
 
 before(start);
 after(stop);
@@ -74,7 +74,7 @@ test("a booking request is the owner's to approve, and then the renter's to coll
   const owner = await createUser();
   const renter = await createUser();
   const item = await makeEquipment(owner);
-  const booking = (await api(renter, "POST", `/equipment/${item.id}/book`, { startDate: day(1), endDate: day(2) })).data;
+  const booking = (await api(renter, "POST", `/equipment/${item.id}/book`, { startDate: day(1), endDate: day(2), acknowledgements: ACKS })).data;
   const key = `rental-${booking.id}`;
 
   let o = await activity(owner), r = await activity(renter);

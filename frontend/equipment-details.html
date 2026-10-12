@@ -39,6 +39,9 @@
     <div class="form-group"><label><i class="ti ti-calendar" aria-hidden="true"></i> End Date</label><input type="date" id="bookingEndDate" required /></div>
     <!-- DEMO payment quote: filled in by equipment-details.js from GET /equipment/:id/rental-quote -->
     <div id="bookingQuote"></div>
+    <!-- Renter's responsibilities: must be ticked before the request is sent -->
+    <div id="bookingAckBox" data-ack-container="rental_renter"></div>
+    <div id="bookingPhotoNudge"></div>
     <div class="form-row">
       <button type="button" id="closeBookingModal" class="secondary-button"><i class="ti ti-x" aria-hidden="true"></i> Cancel</button>
       <button type="submit" class="primary-button" id="bookingSubmitButton" disabled><i class="ti ti-send" aria-hidden="true"></i> Send Request</button>

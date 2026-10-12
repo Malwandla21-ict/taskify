@@ -225,6 +225,11 @@ function renderEquipmentDetails(item) {
     bookingStartDateInput.min = today;
     bookingEndDateInput.min = today;
     renderQuotePlaceholder();
+    /* The renter's responsibilities must be ticked before the request goes. */
+    const ackBox = document.getElementById("bookingAckBox");
+    if (ackBox) { ackBox.innerHTML = ""; renderAcknowledgementBox(ackBox, "rental_renter"); }
+    const nudge = document.getElementById("bookingPhotoNudge");
+    if (nudge) nudge.innerHTML = profilePhotoNudgeHtml("The owner can recognise you when you collect it.");
     openModal(bookingModal);
   });
 
@@ -252,6 +257,7 @@ function renderEquipmentDetails(item) {
 
 bookingForm?.addEventListener("submit", async e => {
   e.preventDefault();
+  if (!checkAcknowledgementBoxes(bookingForm)) return;
   const submitBtn = bookingForm.querySelector("button[type='submit']");
   const originalHtml = submitBtn.innerHTML;
   submitBtn.disabled = true;
@@ -259,12 +265,14 @@ bookingForm?.addEventListener("submit", async e => {
   try {
     await apiRequest(`/equipment/${bookingEquipmentIdInput.value}/book`, "POST", {
       startDate: bookingStartDateInput.value,
-      endDate:   bookingEndDateInput.value
+      endDate:   bookingEndDateInput.value,
+      acknowledgements: readAcknowledgements(bookingForm)
     });
     showToast("Request sent. You'll be asked to pay only once the owner approves.");
     closeModal(bookingModal, bookingForm, bookingMessage);
     setTimeout(() => window.location.href = "./equipment.html#history", 1200);
   } catch (err) {
+    await handleAcknowledgementError(bookingForm, err);
     bookingMessage.textContent = err.message;
     bookingMessage.style.color = "red";
     showToast(err.message, "error");

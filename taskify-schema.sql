@@ -1,7 +1,7 @@
 -- Taskify database structure (tables only, no data)
 --
 -- Exported on 2026-10-11 (MySQL 8.4.8) by backend/scripts/export-schema.js.
--- 26 tables, in an order where every table comes after the
+-- 27 tables, in an order where every table comes after the
 -- tables it points to, so foreign keys can be created as it goes.
 --
 -- Load it into an EMPTY database with:
@@ -576,4 +576,19 @@ CREATE TABLE IF NOT EXISTS `trusted_devices` (
   UNIQUE KEY `uniq_trusted_device_token` (`token_hash`),
   KEY `idx_trusted_devices_user` (`user_id`),
   CONSTRAINT `fk_trusted_devices_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- user_acknowledgements
+CREATE TABLE IF NOT EXISTS `user_acknowledgements` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `kind` varchar(60) COLLATE utf8mb4_general_ci NOT NULL,
+  `version` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `context_type` varchar(40) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `context_id` int DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_ack_user` (`user_id`,`created_at`),
+  KEY `idx_ack_context` (`context_type`,`context_id`),
+  CONSTRAINT `fk_ack_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

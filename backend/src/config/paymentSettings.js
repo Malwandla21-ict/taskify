@@ -29,9 +29,25 @@ module.exports = {
     { key: "new",     label: "New",        minGoodRentals: 0,  minRating: 0,   requireNoDamage: false, maxItemValue: 1500, depositPercent: 20 }
   ],
 
-  /* Small fee on every rental that goes into the shared (simulated)
-     protection pot, instead of asking for a big deposit. */
+  /* Small fee on every rental, paid into the Taskify Protection Fund
+     instead of asking for a big deposit. */
   RENTAL_PROTECTION_FEE: { percent: 5, min: 5, max: 50 },
+
+  /* The Taskify Protection Fund (simulated): every completed rental's
+     protection fee goes in; an admin pays an owner out of it when they
+     confirm damage, or that an item was never returned. The renter is
+     never charged for that — the fund is what the fee buys.
+     Each payout is capped at the smallest of: maxPayoutPerClaim, the
+     item's listed value, and what's in the fund. Every movement is a row
+     in protection_fund_entries (protectionFund.service.js). */
+  RENTAL_PROTECTION_FUND: {
+    /* Taskify's own starting contribution, so the first claims can be
+       paid before many fees have come in. A placeholder for review. */
+    openingBalance: 2000,
+    /* The same as the "New" renter level's maxItemValue, so a new
+       renter's whole item can be covered. */
+    maxPayoutPerClaim: 1500
+  },
 
   TASKS: {
     /* After the worker marks a task done, the poster is reminded (once) to
@@ -69,6 +85,10 @@ module.exports = {
     /* Still not returned this many hours after the deadline: admins are
        asked to follow up. */
     overdueEscalationHours: 72,
+    /* The renter said "I've handed it back", but the owner hasn't
+       confirmed (or disputed) it after this many hours: the owner is
+       reminded and admins are asked to decide. The rent stays held. */
+    handbackConfirmHours: 24,
     /* Security deposits are OFF for new bookings until the deposit policy
        is approved (see config/rentalPolicy.js). Bookings made before keep
        whatever deposit they already had. */

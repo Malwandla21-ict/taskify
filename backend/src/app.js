@@ -73,6 +73,11 @@ app.get("/api/features", (req, res) => res.json({ success: true, data: {
   marketplaceAdminsOnly: !!MARKETPLACE.adminsOnlyPosting
 } }));
 
+/* The "read and tick" texts (config/acknowledgements.js) — public, so the
+   page shows exactly the wording and version the server will record. */
+const { ACKNOWLEDGEMENTS } = require("./config/acknowledgements");
+app.get("/api/acknowledgements", (req, res) => res.json({ success: true, data: ACKNOWLEDGEMENTS }));
+
 app.use(errorHandler);
 
 module.exports = app;

@@ -1,6 +1,6 @@
 const { test, before, after } = require("node:test");
 const assert = require("node:assert/strict");
-const { start, stop, api, query, createUser, makeEquipment, day, concurrently } = require("./helpers");
+const { start, stop, api, query, createUser, makeEquipment, day, concurrently, ACKS } = require("./helpers");
 const RENTAL_POLICY = require("../src/config/rentalPolicy");
 const rentalPolicy = require("../src/services/rentalPolicy.service");
 const { sendRentalReminders } = require("../src/jobs/scheduler");
@@ -17,7 +17,7 @@ before(async () => {
 after(stop);
 
 const book = (who, equipmentId, startDate = day(1), endDate = day(2)) =>
-  api(who, "POST", `/equipment/${equipmentId}/book`, { startDate, endDate });
+  api(who, "POST", `/equipment/${equipmentId}/book`, { startDate, endDate, acknowledgements: ACKS });
 const approve = (who, bookingId) => api(who, "PATCH", `/equipment/bookings/${bookingId}/confirm`);
 const pay = (who, bookingId, version = RENTAL_POLICY.version) =>
   api(who, "POST", `/equipment/bookings/${bookingId}/pay`, { acceptedPolicyVersion: version });
@@ -63,7 +63,7 @@ test("a booking can't start in the past, or end before it starts", async () => {
 
 test("a request takes no money, and new bookings have no deposit (deposit policy not approved)", async () => {
   const item = await makeEquipment(owner, { itemValue: 1000 });
-  const r = await api(renter, "POST", `/equipment/${item.id}/book`, { startDate: day(1), endDate: day(2), depositAmount: 500 });
+  const r = await api(renter, "POST", `/equipment/${item.id}/book`, { startDate: day(1), endDate: day(2), depositAmount: 500, acknowledgements: ACKS });
   assert.equal(r.status, 201, r.message);
   const row = await bookingRow(r.data.id);
   assert.equal(row.status, "Pending");

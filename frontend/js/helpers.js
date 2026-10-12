@@ -1763,3 +1763,152 @@ function focusFirstInvalid(scope) {
   void first.offsetWidth;
   first.classList.add("field-nudge");
 }
+
+/* ── "Read and tick" confirmations ──
+   For the moments with real consequences (academic tasks, selling,
+   renting out, renting), the person must tick a box before the server
+   accepts the action, and the server records which version they ticked
+   (backend config/acknowledgements.js). The text comes from the server so
+   what's shown is exactly what's recorded. */
+let acknowledgementsPromise = null;
+function loadAcknowledgements() {
+  if (!acknowledgementsPromise) {
+    acknowledgementsPromise = apiRequest("/acknowledgements")
+      .then(res => res.data || {})
+      .catch(() => { acknowledgementsPromise = null; return {}; });
+  }
+  return acknowledgementsPromise;
+}
+
+/* Fills `container` with the box for `kind`. Ticks are kept if the same
+   box is rendered again (e.g. when a form step is revisited). */
+async function renderAcknowledgementBox(container, kind) {
+  if (!container) return;
+  const all = await loadAcknowledgements();
+  const ack = all[kind];
+  if (!ack) { container.innerHTML = ""; return; }
+  const wasTicked = container.querySelector(`input[data-ack-kind="${kind}"]`)?.checked;
+  container.innerHTML = `
+    <div class="form-group ack-box">
+      <div class="ack-box-head"><i class="ti ti-alert-triangle" aria-hidden="true"></i> <strong>${escapeHtml(ack.title)}</strong></div>
+      <ul>${ack.points.map(p => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
+      <label class="checkbox-row ack-check">
+        <input type="checkbox" data-ack-kind="${escapeHtml(kind)}" data-ack-version="${escapeHtml(ack.version)}"${wasTicked ? " checked" : ""} />
+        <span>${escapeHtml(ack.agree)}</span>
+      </label>
+      <a class="ack-more" href="./terms.html#responsibilities" target="_blank" rel="noopener">Your responsibilities on Taskify <i class="ti ti-external-link" aria-hidden="true"></i></a>
+    </div>`;
+  const input = container.querySelector("input");
+  input.addEventListener("change", () => clearFieldError(container.querySelector(".ack-check")));
+}
+
+/* { kind: version } for every ticked box shown inside scope — the shape
+   the API expects as `acknowledgements`. */
+function readAcknowledgements(scope) {
+  const out = {};
+  scope.querySelectorAll("input[data-ack-kind]").forEach(input => {
+    if (input.checked && input.offsetParent !== null) out[input.dataset.ackKind] = input.dataset.ackVersion;
+  });
+  return out;
+}
+
+/* Marks every visible, unticked box in scope; true when all are ticked. */
+function checkAcknowledgementBoxes(scope) {
+  let ok = true;
+  scope.querySelectorAll("input[data-ack-kind]").forEach(input => {
+    if (input.offsetParent === null || input.checked) return;
+    setFieldError(input.closest(".ack-check"), "Please read this and tick the box to continue.");
+    ok = false;
+  });
+  if (!ok) focusFirstInvalid(scope);
+  return ok;
+}
+
+/* The server refused because the text changed or the box wasn't ticked:
+   re-render the boxes with the current wording and point at them. */
+async function handleAcknowledgementError(scope, error) {
+  if (!(error?.fields || []).some(f => f.path === "acknowledgements")) return false;
+  acknowledgementsPromise = null;
+  const boxes = [...scope.querySelectorAll("[data-ack-container]")];
+  for (const box of boxes) {
+    if (box.offsetParent === null) continue;
+    box.innerHTML = "";   // so the fresh text renders unticked
+    await renderAcknowledgementBox(box, box.dataset.ackContainer);
+    setFieldError(box.querySelector(".ack-check"), error.message);
+  }
+  focusFirstInvalid(scope);
+  return true;
+}
+
+/* ── Plain warnings ──
+   Things people should know before they act, so nobody is caught out.
+   Short and specific; shown where the decision is made. */
+const TASKIFY_NOTICES = {
+  taskWorker: {
+    icon: "ti-info-circle", title: "Before you take this on",
+    points: [
+      "Agree exactly what's included, the price and the deadline in the chat before you start.",
+      "For jobs in someone's room or off campus, meet in daylight and tell a friend where you're going.",
+      "You're paid only when the poster confirms the job is done (demo). Never pay anyone to get a job.",
+      "Academic tasks must be about learning. Don't write or complete marked work for someone — it's misconduct for both of you."
+    ]
+  },
+  highValue: {
+    icon: "ti-shield-search", title: "Buying something valuable?",
+    points: [
+      "Ask to see the box, receipt or another proof that it's theirs.",
+      "For phones and laptops, check the serial or IMEI matches the device and that it isn't locked to someone else's account.",
+      "If the price looks too good, or they rush you, walk away. Buying stolen goods is an offence even if you didn't know."
+    ]
+  },
+  chat: {
+    icon: "ti-lock", title: "Stay safe in chat",
+    points: [
+      "Never send money, banking details, passwords or your handover code here. Taskify will never ask for them.",
+      "Keep the deal on Taskify: if someone pushes you to pay or talk elsewhere, report the message."
+    ]
+  },
+  marketFood: {
+    icon: "ti-tools-kitchen-2", title: "About food stalls",
+    points: [
+      "Food and drinks are sold by the stallholders, not by Taskify or the university. Taskify doesn't check food safety.",
+      "Check ingredients for allergies before you buy."
+    ]
+  },
+  market: {
+    icon: "ti-info-circle", title: "Good to know",
+    points: [
+      "Stalls are run by students and departments. Deal with the seller directly and check things before paying.",
+      "\"I'm going\" just keeps you updated — it doesn't reserve anything."
+    ]
+  }
+};
+
+function noticeHtml(key) {
+  const n = TASKIFY_NOTICES[key];
+  if (!n) return "";
+  return `
+    <div class="notice-box" role="note">
+      <div class="notice-box-head"><i class="ti ${n.icon}" aria-hidden="true"></i> <strong>${n.title}</strong></div>
+      <ul>${n.points.map(p => `<li>${escapeHtml(p)}</li>`).join("")}</ul>
+    </div>`;
+}
+
+/* ── Profile photo nudge ──
+   A photo lets the person you're meeting recognise you, so handovers are
+   quicker and safer, and people respond more to listings with a face
+   behind them. Shown only to signed-in people who haven't added one. */
+function currentUserHasPhoto() {
+  try { return !!JSON.parse(localStorage.getItem("taskifyUser") || "{}").profilePhoto; }
+  catch { return true; }
+}
+
+function profilePhotoNudgeHtml(reason = "So the person you meet can recognise you on campus.") {
+  if (!localStorage.getItem("taskifyToken") || currentUserHasPhoto()) return "";
+  return `
+    <a class="photo-nudge" href="./profile.html#edit-photo">
+      <span class="photo-nudge-icon"><i class="ti ti-camera-plus" aria-hidden="true"></i></span>
+      <span><strong>Add a profile photo</strong><small>${escapeHtml(reason)}</small></span>
+      <i class="ti ti-chevron-right" aria-hidden="true"></i>
+    </a>`;
+}
