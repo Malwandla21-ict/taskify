@@ -440,6 +440,10 @@ function rentalTermsHtml(terms) {
         <span><strong>Paying</strong><br>You pay only after the owner approves, and then have up to ${Number(terms.paymentWindowHours)} hours (demo payment).</span></li>
       <li><i class="ti ti-arrow-back-up" aria-hidden="true"></i>
         <span><strong>Cancelling</strong><br>${escapeReportText(terms.cancellation?.summary || "")}</span></li>
+      ${terms.returning ? `<li><i class="ti ti-package-import" aria-hidden="true"></i>
+        <span><strong>Returning it</strong><br>${escapeReportText(terms.returning.summary)}</span></li>` : ""}
+      ${terms.protectionFund ? `<li><i class="ti ti-shield-check" aria-hidden="true"></i>
+        <span><strong>Protection fee</strong> <em class="rental-rule-status on">In effect (demo)</em><br>${escapeReportText(terms.protectionFund.summary)}</span></li>` : ""}
       ${rule("ti-shield-lock", "Deposit", terms.deposit)}
       ${rule("ti-calendar-minus", "Returning early", terms.earlyReturn)}
       ${rule("ti-calendar-exclamation", "Returning late", terms.lateReturn)}

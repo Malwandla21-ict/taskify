@@ -148,7 +148,7 @@ CREATE TABLE IF NOT EXISTS `equipment_bookings` (
   `renter_id` int NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
-  `status` enum('Pending','Awaiting Payment','Confirmed','Returned','Cancelled') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Pending',
+  `status` enum('Pending','Awaiting Payment','Confirmed','Returned','Not Returned','Cancelled') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Pending',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `rental_days` int DEFAULT NULL,
@@ -186,12 +186,37 @@ CREATE TABLE IF NOT EXISTS `equipment_bookings` (
   `damage_outcome` enum('renter_not_at_fault','damage_confirmed') COLLATE utf8mb4_general_ci DEFAULT NULL,
   `damage_resolved_at` timestamp NULL DEFAULT NULL,
   `return_wait_notified_at` timestamp NULL DEFAULT NULL,
+  `return_reported_at` timestamp NULL DEFAULT NULL,
+  `return_report_escalated_at` timestamp NULL DEFAULT NULL,
+  `return_disputed_at` timestamp NULL DEFAULT NULL,
+  `not_returned_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_equipment_booking_equipment` (`equipment_id`),
   KEY `fk_equipment_booking_renter` (`renter_id`),
   CONSTRAINT `fk_equipment_booking_equipment` FOREIGN KEY (`equipment_id`) REFERENCES `equipment` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_equipment_booking_renter` FOREIGN KEY (`renter_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- protection_fund_entries
+CREATE TABLE IF NOT EXISTS `protection_fund_entries` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `kind` enum('fee','payout') NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `booking_id` int DEFAULT NULL,
+  `owner_id` int DEFAULT NULL,
+  `admin_id` int DEFAULT NULL,
+  `reason` enum('damage','not_returned') DEFAULT NULL,
+  `note` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_fund_booking_kind` (`booking_id`,`kind`),
+  KEY `idx_fund_kind` (`kind`),
+  KEY `fk_fund_owner` (`owner_id`),
+  KEY `fk_fund_admin` (`admin_id`),
+  CONSTRAINT `fk_fund_booking` FOREIGN KEY (`booking_id`) REFERENCES `equipment_bookings` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_fund_owner` FOREIGN KEY (`owner_id`) REFERENCES `users` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_fund_admin` FOREIGN KEY (`admin_id`) REFERENCES `users` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- booking_extensions
 CREATE TABLE IF NOT EXISTS `booking_extensions` (

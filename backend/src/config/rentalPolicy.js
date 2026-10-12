@@ -26,7 +26,7 @@
 */
 
 module.exports = {
-  version: "2026-10-proposed-1",
+  version: "2026-10-proposed-2",
 
   deposit: {
     status: "proposed",
@@ -68,5 +68,10 @@ module.exports = {
      is collected. Paid (demo) amounts are refunded in full. */
   cancellation: {
     summary: "Before you collect the item you can cancel for a full refund (demo). If the owner can't hand it over, you're refunded in full."
+  },
+
+  /* Not a fee: how a rental ends. */
+  returning: {
+    summary: "When you hand the item back, say so on the rental with photos. The rental ends when the owner confirms they have it. If they don't confirm, or say they don't have it, a Taskify admin compares the photos and decides."
   }
 };

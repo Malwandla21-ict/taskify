@@ -10,6 +10,7 @@ ALTER TABLE equipment_bookings
 ALTER TABLE equipment_bookings
   ADD COLUMN return_reported_at         TIMESTAMP NULL DEFAULT NULL,  -- renter: "I've handed it back" (owner must confirm)
   ADD COLUMN return_report_escalated_at TIMESTAMP NULL DEFAULT NULL,  -- owner didn't confirm in time: admins asked
+  ADD COLUMN return_disputed_at         TIMESTAMP NULL DEFAULT NULL,  -- owner: "I don't have it" (an admin decides)
   ADD COLUMN not_returned_at            TIMESTAMP NULL DEFAULT NULL;  -- admin closed it as not returned
 
 -- Every movement in or out of the fund: each completed rental's fee in,

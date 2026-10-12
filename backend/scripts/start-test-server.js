@@ -12,7 +12,11 @@ const dotenv = require("dotenv");
 
 const envFile = path.join(__dirname, "..", ".env.test");
 if (!fs.existsSync(envFile)) throw new Error("backend/.env.test not found. Run: node scripts/make-test-env.js");
+/* A launcher that picked a free port (e.g. a second practice server)
+   keeps it; otherwise .env.test's PORT applies. */
+const launcherPort = process.env.PRACTICE_PORT;
 Object.assign(process.env, dotenv.parse(fs.readFileSync(envFile)));
+if (launcherPort) process.env.PORT = launcherPort;
 
 if (!["127.0.0.1", "localhost"].includes(process.env.DB_HOST) || !/_(local|test)$/.test(process.env.DB_NAME || "")) {
   throw new Error(`Refusing to start: ${process.env.DB_NAME} on ${process.env.DB_HOST} isn't a local practice database.`);

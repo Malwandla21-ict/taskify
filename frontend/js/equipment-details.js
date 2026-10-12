@@ -34,8 +34,8 @@ function renderQuote(q) {
     </div>
     ${q.allowed ? `
       <div class="money-breakdown">
-        ${moneyRow(`Rent (${q.days} day${q.days === 1 ? "" : "s"} × ${formatRand(q.dailyPrice)})`, q.rentalAmount, { hint: "goes to the owner once you return the item" })}
-        ${moneyRow("Protection fee", q.protectionFee, { hint: "small fee for the shared damage pot, not refunded" })}
+        ${moneyRow(`Rent (${q.days} day${q.days === 1 ? "" : "s"} × ${formatRand(q.dailyPrice)})`, q.rentalAmount, { hint: "goes to the owner once they confirm the item is back" })}
+        ${moneyRow("Protection fee", q.protectionFee, { hint: `goes into the Taskify Protection Fund, which can pay the owner (up to ${formatRand(q.terms.protectionFund?.maxPayoutPerClaim)}) if an admin confirms damage or loss. Not refunded.` })}
         ${moneyRow("Deposit", q.depositAmount, { hint: q.depositsEnabled ? "returned after a good return" : "none — deposits are switched off while the deposit policy is reviewed" })}
         ${moneyRow("Total to pay once approved", q.totalToHold, { strong: true })}
       </div>

@@ -148,16 +148,19 @@ async function createEquipmentReview({
 
   const booking = bookingRows[0];
 
-  if (booking.status !== "Returned") {
+  const isRenter = Number(booking.renter_id) === Number(reviewerId);
+  const isOwner = Number(booking.owner_id) === Number(reviewerId);
+
+  /* A rental an admin closed as never returned can still be reviewed by
+     the owner (about the renter) — but not by the renter who kept it. */
+  const notReturnedByOwner = booking.status === "Not Returned" && isOwner;
+  if (booking.status !== "Returned" && !notReturnedByOwner) {
     const error = new Error(
       "Reviews can only be submitted once the equipment has been returned."
     );
     error.statusCode = 400;
     throw error;
   }
-
-  const isRenter = Number(booking.renter_id) === Number(reviewerId);
-  const isOwner = Number(booking.owner_id) === Number(reviewerId);
 
   if (!isRenter && !isOwner) {
     const error = new Error(

@@ -14,6 +14,13 @@
       "port": 5000
     },
     {
+      "name": "backend-practice-alt",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["backend/scripts/start-test-server.js"],
+      "env": { "PRACTICE_PORT": "5050" },
+      "port": 5050
+    },
+    {
       "name": "explainer",
       "runtimeExecutable": "node",
       "runtimeArgs": ["explainer/tools/serve.mjs"],

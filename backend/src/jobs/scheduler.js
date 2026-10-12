@@ -1,5 +1,6 @@
 const pool = require("../config/db");
 const notificationService = require("../services/notification.service");
+const reportService = require("../services/report.service");
 const { TASKS, JOBS, RENTALS } = require("../config/paymentSettings");
 const { expireStaleBookingRequests } = require("../services/equipment.service");
 const { prettyDate, prettyDeadline } = require("../services/rentalCore.service");
@@ -80,9 +81,15 @@ async function sendTaskReviewReminders() {
    And for the NEXT booking on an overdue item that starts today or
    tomorrow (approved or paid, not collected yet): warn its renter and the
    owner (once). The renter can wait, or cancel for a full refund (demo).
+   Once the renter has said "I've handed it back", their reminders stop;
+   if the owner doesn't confirm (or dispute) that within
+   RENTALS.handbackConfirmHours, the owner is reminded and admins are
+   asked to decide (once).
+   Each admin escalation also files a report, so it shows up in the admin
+   Reports table with the buttons to settle it.
    No late fee is ever charged — config/rentalPolicy.js lateFee isn't in effect. */
 async function sendRentalReminders() {
-  const outOnRent = `eb.status = 'Confirmed' AND (eb.picked_up_at IS NOT NULL OR eb.payment_status IS NULL)`;
+  const outOnRent = `eb.status = 'Confirmed' AND (eb.picked_up_at IS NOT NULL OR eb.payment_status IS NULL) AND eb.return_reported_at IS NULL`;
   const select = `SELECT eb.id, eb.renter_id, eb.return_due_at, e.owner_id, e.name, renter.full_name AS renter_name
      FROM equipment_bookings eb
      INNER JOIN equipment e ON e.id = eb.equipment_id
@@ -187,13 +194,62 @@ async function sendRentalReminders() {
     if (!claimed.affectedRows) continue;
     await notificationService.notifyAllAdmins({
       title: "Rental Still Not Returned",
-      message: `"${b.name}" (booking #${b.id}) was due back by ${prettyDeadline(b.return_due_at)} and still hasn't been returned by ${b.renter_name || "the renter"}.${Number(b.waiting_bookings) ? ` ${b.waiting_bookings} later booking${Number(b.waiting_bookings) === 1 ? " is" : "s are"} waiting for it.` : ""} Please follow up with both people.`,
+      message: `"${b.name}" (booking #${b.id}) was due back by ${prettyDeadline(b.return_due_at)} and still hasn't been returned by ${b.renter_name || "the renter"}.${Number(b.waiting_bookings) ? ` ${b.waiting_bookings} later booking${Number(b.waiting_bookings) === 1 ? " is" : "s are"} waiting for it.` : ""} Please follow up with both people. If it isn't coming back, close it as not returned from the Reports page.`,
       contextType: "equipment_booking",
       contextId: b.id
     });
+    await reportService.recordReport({
+      reporterId: b.owner_id,
+      reportedUserId: b.renter_id,
+      contextType: "equipment_booking",
+      contextId: b.id,
+      reason: `Not returned: "${b.name}" was due back by ${prettyDeadline(b.return_due_at)} and is now more than ${RENTALS.overdueEscalationHours} hours overdue. (Filed automatically.)`,
+      category: "no_show"
+    });
   }
 
-  return { reminders: dueSoon.length, overdue: overdue.length, waiting: waiting.length, escalations: escalate.length };
+  /* The renter said they handed it back; the owner hasn't confirmed or
+     disputed it in time. The rent stays held — only the owner or an admin
+     can complete the rental. */
+  const [unconfirmed] = await pool.execute(
+    `SELECT eb.id, eb.renter_id, eb.return_reported_at, e.owner_id, e.name, renter.full_name AS renter_name
+     FROM equipment_bookings eb
+     INNER JOIN equipment e ON e.id = eb.equipment_id
+     LEFT JOIN users renter ON renter.id = eb.renter_id
+     WHERE eb.status = 'Confirmed' AND eb.return_reported_at IS NOT NULL AND eb.return_report_escalated_at IS NULL
+       AND eb.return_reported_at <= NOW() - INTERVAL ? HOUR`,
+    [RENTALS.handbackConfirmHours]
+  );
+  for (const b of unconfirmed) {
+    const [claimed] = await pool.execute(
+      `UPDATE equipment_bookings SET return_report_escalated_at = NOW() WHERE id = ? AND return_report_escalated_at IS NULL`, [b.id]
+    );
+    if (!claimed.affectedRows) continue;
+    await notificationService.createNotification({
+      userId: b.owner_id,
+      title: "Please Confirm the Return",
+      message: `${b.renter_name || "The renter"} said they handed back "${b.name}" on ${prettyDeadline(b.return_reported_at)}, and you haven't confirmed it yet. Press "Yes, it's back" on the rental to get your rent, or "I don't have it" if you don't. A Taskify admin has been asked to follow up.`,
+      contextType: "equipment_booking",
+      contextId: b.id,
+      email: true
+    });
+    await notificationService.notifyAllAdmins({
+      title: "Return Not Confirmed",
+      message: `${b.renter_name || "The renter"} said they handed back "${b.name}" (booking #${b.id}) on ${prettyDeadline(b.return_reported_at)}, but the owner hasn't confirmed it in ${RENTALS.handbackConfirmHours} hours. Check the return photos, then settle it from the Reports page.`,
+      contextType: "equipment_booking",
+      contextId: b.id
+    });
+    await reportService.recordReport({
+      reporterId: b.renter_id,
+      reportedUserId: b.owner_id,
+      contextType: "equipment_booking",
+      contextId: b.id,
+      reason: `Return not confirmed: the renter said they handed back "${b.name}" on ${prettyDeadline(b.return_reported_at)}, and the owner hasn't confirmed it in ${RENTALS.handbackConfirmHours} hours. (Filed automatically.)`,
+      category: "other"
+    });
+  }
+
+  return { reminders: dueSoon.length, overdue: overdue.length, waiting: waiting.length, escalations: escalate.length, unconfirmed: unconfirmed.length };
 }
 
 async function runScheduledJobs() {

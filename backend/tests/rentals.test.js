@@ -4,6 +4,8 @@ const { start, stop, api, query, createUser, makeEquipment, day, concurrently, A
 const RENTAL_POLICY = require("../src/config/rentalPolicy");
 const rentalPolicy = require("../src/services/rentalPolicy.service");
 const { sendRentalReminders } = require("../src/jobs/scheduler");
+const { RENTAL_PROTECTION_FUND, RENTALS } = require("../src/config/paymentSettings");
+const protectionFund = require("../src/services/protectionFund.service");
 
 let owner, renter, outsider, admin;
 
@@ -13,6 +15,10 @@ before(async () => {
   renter = await createUser();
   outsider = await createUser();
   admin = await createUser({ role: "admin", totp: true });
+  /* The practice database keeps fund rows between runs; a big opening
+     balance means payouts in these tests are never limited by the balance
+     unless a test sets it on purpose. */
+  RENTAL_PROTECTION_FUND.openingBalance = 1000000;
 });
 after(stop);
 
@@ -22,10 +28,13 @@ const approve = (who, bookingId) => api(who, "PATCH", `/equipment/bookings/${boo
 const pay = (who, bookingId, version = RENTAL_POLICY.version) =>
   api(who, "POST", `/equipment/bookings/${bookingId}/pay`, { acceptedPolicyVersion: version });
 const photos = { photoUrls: ["https://example.com/condition.jpg"], pickupCondition: "Functional" };
+const handBack = (booking, who = renter) => api(who, "PATCH", `/equipment/bookings/${booking.id}/return`, photos);
+const confirmBack = (booking) => api(owner, "PATCH", `/equipment/bookings/${booking.id}/return`, {});
+const fundRows = async (bookingId) => query(`SELECT kind, amount, reason FROM protection_fund_entries WHERE booking_id = ? ORDER BY kind`, [bookingId]);
 const bookingRow = async (id) => (await query(
   `SELECT status, payment_status, deposit_status, deposit_amount, rental_amount, protection_fee, cancel_reason,
           DATE_FORMAT(end_date, '%Y-%m-%d') AS end_date, return_due_at, return_minutes_late, policy_version, terms_snapshot,
-          condition_status, damage_outcome, return_attempted_at
+          condition_status, damage_outcome, return_attempted_at, return_reported_at, return_disputed_at, not_returned_at
    FROM equipment_bookings WHERE id = ?`, [id]))[0];
 const notices = async (userId, title, contextId) => Number((await query(
   `SELECT COUNT(*) AS n FROM notifications WHERE user_id = ? AND title = ? AND context_id = ?`, [userId, title, contextId]))[0].n);
@@ -206,7 +215,11 @@ test("each step can only be done by the right person, in the right order", async
   assert.equal((await api(renter, "PATCH", `/equipment/bookings/${booking.id}/pickup`, photos)).status, 200);
   assert.equal((await bookingRow(booking.id)).payment_status, "Held", "pickup alone pays nobody");
 
-  assert.equal((await api(renter, "PATCH", `/equipment/bookings/${booking.id}/return`, photos)).status, 200);
+  assert.equal((await handBack(booking)).status, 200);
+  assert.equal((await bookingRow(booking.id)).payment_status, "Held", "the renter's hand-back alone pays nobody");
+  assert.ok((await api(owner, "PATCH", `/equipment/bookings/${booking.id}/condition-ok`)).status >= 400, "no condition check before the owner confirms it's back");
+  assert.ok((await api(outsider, "PATCH", `/equipment/bookings/${booking.id}/return`, photos)).status >= 400, "outsiders can't record a return");
+  assert.equal((await confirmBack(booking)).status, 200);
   for (const who of [renter, outsider]) {
     assert.ok((await api(who, "PATCH", `/equipment/bookings/${booking.id}/condition-ok`)).status >= 400, "only the owner inspects");
   }
@@ -237,7 +250,8 @@ test("a late return is recorded, but no late fee is charged", async () => {
   assert.equal(view.estimates.lateReturn.amount, 40, "the non-binding estimate: one started day after the 2-hour grace");
 
   const before = await bookingRow(booking.id);
-  assert.equal((await api(renter, "PATCH", `/equipment/bookings/${booking.id}/return`, photos)).status, 200);
+  assert.equal((await handBack(booking)).status, 200);
+  assert.equal((await confirmBack(booking)).status, 200);
   const row = await bookingRow(booking.id);
   assert.ok(row.return_minutes_late >= 299 && row.return_minutes_late <= 301, `about 5 hours late: ${row.return_minutes_late}`);
   assert.equal(Number(row.rental_amount), Number(before.rental_amount), "no fee added");
@@ -427,7 +441,8 @@ test("a renter can report the owner isn't available to take it back — the atte
 test("admins settle damage reports without deducting anything", async () => {
   const item = await makeEquipment(owner);
   const booking = await onRent(item);
-  await api(renter, "PATCH", `/equipment/bookings/${booking.id}/return`, photos);
+  await handBack(booking);
+  await confirmBack(booking);
   await api(owner, "PATCH", `/equipment/bookings/${booking.id}/report-damage`, { note: "The leg clamp is snapped off." });
 
   const url = `/admin/rental-bookings/${booking.id}/resolve-damage`;
@@ -503,4 +518,195 @@ test("a booking keeps the terms it was agreed under when the policy changes", as
   } finally {
     RENTAL_POLICY.version = original;
   }
+});
+
+/* ── Returns the owner confirms ── */
+
+test("the renter's hand-back waits for the owner; lateness counts to the hand-back, and the fee goes into the fund once", async () => {
+  const item = await makeEquipment(owner, { dailyPrice: 40 });
+  const booking = await onRent(item);
+  await query(`UPDATE equipment_bookings SET return_due_at = NOW() - INTERVAL 3 HOUR WHERE id = ?`, [booking.id]);
+
+  assert.equal((await api(renter, "PATCH", `/equipment/bookings/${booking.id}/return`, { photoUrls: [] })).status, 400, "the renter needs photos");
+  assert.equal((await handBack(booking)).status, 200);
+  assert.equal((await handBack(booking)).status, 400, "only once");
+  assert.equal(await notices(owner.id, "Confirm the Return", booking.id), 1);
+  let row = await bookingRow(booking.id);
+  assert.equal(row.status, "Confirmed");
+  assert.equal(row.payment_status, "Held");
+  assert.ok(row.return_reported_at);
+  assert.deepEqual(await fundRows(booking.id), [], "nothing goes into the fund until the rental completes");
+
+  const view = (await api(renter, "GET", "/equipment/history")).data.find((b) => b.id === booking.id);
+  assert.equal(view.handed_back, true);
+  assert.equal(view.is_overdue, false, "handed back, so no longer overdue");
+
+  /* The owner is slow: confirms two hours after the hand-back. */
+  await query(`UPDATE equipment_bookings SET return_reported_at = return_reported_at - INTERVAL 2 HOUR, return_due_at = return_due_at - INTERVAL 2 HOUR WHERE id = ?`, [booking.id]);
+  assert.equal((await confirmBack(booking)).status, 200, "the owner can confirm without new photos");
+  row = await bookingRow(booking.id);
+  assert.equal(row.status, "Returned");
+  assert.equal(row.payment_status, "Released");
+  assert.ok(row.return_minutes_late >= 179 && row.return_minutes_late <= 181, `3 hours late at hand-back, not 5: ${row.return_minutes_late}`);
+  const fee = await fundRows(booking.id);
+  assert.equal(fee.length, 1);
+  assert.equal(fee[0].kind, "fee");
+  assert.equal(Number(fee[0].amount), Number(row.protection_fee));
+  assert.equal((await confirmBack(booking)).status, 400, "already returned");
+});
+
+test("the owner still needs photos to record a return the renter hasn't reported", async () => {
+  const booking = await onRent(await makeEquipment(owner));
+  assert.equal((await confirmBack(booking)).status, 400);
+  assert.equal((await api(owner, "PATCH", `/equipment/bookings/${booking.id}/return`, photos)).status, 200);
+});
+
+test("after a hand-back the renter gets no more deadline reminders; an unconfirmed one goes to admins once", async () => {
+  const booking = await onRent(await makeEquipment(owner));
+  await query(`UPDATE equipment_bookings SET return_due_at = NOW() - INTERVAL 1 HOUR WHERE id = ?`, [booking.id]);
+  await handBack(booking);
+  await sendRentalReminders();
+  assert.equal(await notices(renter.id, "Rental Overdue", booking.id), 0, "they've done their part");
+
+  await query(`UPDATE equipment_bookings SET return_reported_at = NOW() - INTERVAL ? HOUR WHERE id = ?`, [RENTALS.handbackConfirmHours + 1, booking.id]);
+  await sendRentalReminders();
+  await sendRentalReminders();
+  assert.equal(await notices(owner.id, "Please Confirm the Return", booking.id), 1);
+  assert.equal(await notices(admin.id, "Return Not Confirmed", booking.id), 1);
+  const reports = (await api(admin, "GET", "/reports")).data.filter((r) => r.context_type === "equipment_booking" && r.context_id === booking.id);
+  assert.equal(reports.length, 1, "filed once, so it shows in the Reports table");
+  assert.equal(reports[0].context_status, "ReturnOpen");
+  assert.equal(reports[0].context_rental.canConfirm, true);
+  assert.equal((await bookingRow(booking.id)).payment_status, "Held", "reminders never move money");
+});
+
+test("an owner who doesn't have it disputes the hand-back; an admin who believes the renter completes it", async () => {
+  const booking = await onRent(await makeEquipment(owner));
+  const dispute = { category: "not_handed_back", note: "I was at the lab all day, nobody gave it to me." };
+  assert.equal((await api(owner, "POST", `/equipment/bookings/${booking.id}/problem`, dispute)).status, 400, "nothing to dispute yet");
+  await handBack(booking);
+  assert.equal((await api(renter, "POST", `/equipment/bookings/${booking.id}/problem`, dispute)).status, 400, "that one is the owner's");
+  assert.equal((await api(owner, "POST", `/equipment/bookings/${booking.id}/problem`, dispute)).status, 200);
+  assert.equal((await api(owner, "POST", `/equipment/bookings/${booking.id}/problem`, dispute)).status, 409, "once");
+  assert.ok((await bookingRow(booking.id)).return_disputed_at);
+
+  const url = `/admin/rental-bookings/${booking.id}/resolve-return`;
+  for (const who of [owner, renter]) assert.equal((await api(who, "PATCH", url, { outcome: "returned" })).status, 403);
+  assert.equal((await api(admin, "PATCH", url, { outcome: "returned", compensation: 100 })).status, 400, "no payout for a returned item");
+  const r = await api(admin, "PATCH", url, { outcome: "returned", note: "The return photos show the owner's desk." });
+  assert.equal(r.status, 200, r.message);
+  const row = await bookingRow(booking.id);
+  assert.equal(row.status, "Returned");
+  assert.equal(row.payment_status, "Released");
+  assert.equal(await notices(renter.id, "Rental Closed", booking.id), 1);
+  const open = await query(`SELECT COUNT(*) AS n FROM reports WHERE context_type = 'equipment_booking' AND context_id = ? AND status = 'Pending'`, [booking.id]);
+  assert.equal(Number(open[0].n), 0, "the reports about it are resolved");
+});
+
+/* ── Items that never come back ── */
+
+test("an admin can close an overdue rental as not returned: rent released, owner paid from the fund, listing down, later bookings refunded", async () => {
+  const item = await makeEquipment(owner, { itemValue: 800 });
+  const keeper = await createUser(); // closing it as not returned blocks this renter
+  const booking = await onRent(item, keeper, day(0), day(1));
+  const later = await confirmedBooking(item, outsider, day(4), day(5));
+  const url = `/admin/rental-bookings/${booking.id}/resolve-return`;
+
+  assert.equal((await api(admin, "PATCH", url, { outcome: "not_returned" })).status, 400, "not before the deadline");
+  await query(`UPDATE equipment_bookings SET return_due_at = NOW() - INTERVAL 80 HOUR WHERE id = ?`, [booking.id]);
+  await sendRentalReminders();
+  const reports = (await api(admin, "GET", "/reports")).data.filter((r) => r.context_type === "equipment_booking" && r.context_id === booking.id);
+  assert.equal(reports.length, 1, "the overdue escalation files a report");
+  assert.equal(reports[0].context_rental.canCloseMissing, true);
+  assert.equal(reports[0].context_rental.payoutLimit, 800, "capped at the item's value");
+
+  assert.equal((await api(admin, "PATCH", url, { outcome: "returned" })).status, 400, "the renter never said it's back");
+  assert.equal((await api(admin, "PATCH", url, { outcome: "not_returned", compensation: 900 })).status, 400, "more than the item is worth");
+  assert.equal((await bookingRow(booking.id)).status, "Confirmed", "a refused payout changes nothing");
+
+  const results = await concurrently(2, () => api(admin, "PATCH", url, { outcome: "not_returned", compensation: 800, note: "No reply for 4 days." }));
+  assert.equal(results.filter((r) => r.status === 200).length, 1, "settled once");
+  const row = await bookingRow(booking.id);
+  assert.equal(row.status, "Not Returned");
+  assert.ok(row.not_returned_at);
+  assert.equal(row.payment_status, "Released", "the owner keeps the rent");
+  const fund = await fundRows(booking.id);
+  assert.deepEqual(fund.map((f) => [f.kind, Number(f.amount), f.reason]), [["fee", Number(row.protection_fee), null], ["payout", -800, "not_returned"]]);
+
+  const laterRow = await bookingRow(later.id);
+  assert.equal(laterRow.status, "Cancelled");
+  assert.equal(laterRow.cancel_reason, "item_lost");
+  assert.equal(laterRow.payment_status, "Refunded");
+  assert.equal((await query(`SELECT is_available FROM equipment WHERE id = ?`, [item.id]))[0].is_available, 0, "listing taken down");
+  assert.equal(await notices(owner.id, "Rental Closed: Not Returned", booking.id), 1);
+
+  const history = (await api(owner, "GET", "/equipment/history")).data.find((b) => b.id === booking.id);
+  assert.equal(Number(history.fund_payout), 800, "the owner sees what the fund paid");
+  assert.equal(history.status, "Not Returned");
+});
+
+test("a renter with a rental closed as not returned can't rent, and their other bookings are cancelled", async () => {
+  const keeper = await createUser();
+  const lost = await onRent(await makeEquipment(owner), keeper, day(0), day(1));
+  const other = await confirmedBooking(await makeEquipment(owner), keeper, day(5), day(6));
+  await query(`UPDATE equipment_bookings SET return_due_at = NOW() - INTERVAL 1 HOUR WHERE id = ?`, [lost.id]);
+  assert.equal((await api(admin, "PATCH", `/admin/rental-bookings/${lost.id}/resolve-return`, { outcome: "not_returned" })).status, 200);
+
+  const otherRow = await bookingRow(other.id);
+  assert.equal(otherRow.cancel_reason, "renter_blocked");
+  assert.equal(otherRow.payment_status, "Refunded");
+
+  const item = await makeEquipment(owner);
+  const q = (await api(keeper, "GET", `/equipment/${item.id}/rental-quote?startDate=${day(1)}&endDate=${day(2)}`)).data;
+  assert.equal(q.allowed, false);
+  assert.match(q.reason, /not returned/);
+  assert.equal((await book(keeper, item.id)).status, 403);
+});
+
+/* ── The protection fund ── */
+
+test("confirmed damage can be paid from the fund, capped per claim and by the balance; the renter is never charged", async () => {
+  const saved = RENTAL_PROTECTION_FUND.openingBalance;
+  try {
+    const item = await makeEquipment(owner, { itemValue: 5000 });
+    const booking = await onRent(item);
+    await handBack(booking);
+    await confirmBack(booking);
+    await api(owner, "PATCH", `/equipment/bookings/${booking.id}/report-damage`, { note: "The screen is cracked across." });
+    const url = `/admin/rental-bookings/${booking.id}/resolve-damage`;
+
+    assert.equal((await api(admin, "PATCH", url, { outcome: "renter_not_at_fault", compensation: 50 })).status, 400, "only confirmed damage pays out");
+    const over = await api(admin, "PATCH", url, { outcome: "damage_confirmed", compensation: RENTAL_PROTECTION_FUND.maxPayoutPerClaim + 1 });
+    assert.equal(over.status, 400, "over the per-claim cap");
+
+    /* Leave exactly R100 in the fund. */
+    RENTAL_PROTECTION_FUND.openingBalance = 0;
+    const balance = await protectionFund.getBalance();
+    RENTAL_PROTECTION_FUND.openingBalance = Math.round((100 - balance) * 100) / 100;
+    assert.equal(await protectionFund.getBalance(), 100);
+    assert.equal((await api(admin, "PATCH", url, { outcome: "damage_confirmed", compensation: 150 })).status, 400, "more than the fund holds");
+
+    const before = await bookingRow(booking.id);
+    const r = await api(admin, "PATCH", url, { outcome: "damage_confirmed", compensation: 100, note: "Repair quote R100." });
+    assert.equal(r.status, 200, r.message);
+    assert.equal(await protectionFund.getBalance(), 0);
+    const after = await bookingRow(booking.id);
+    assert.equal(Number(after.rental_amount), Number(before.rental_amount), "nothing added to the renter");
+    const msg = await query(`SELECT message FROM notifications WHERE user_id = ? AND title = 'Damage Report Settled' AND context_id = ?`, [owner.id, booking.id]);
+    assert.match(msg[0].message, /R100\.00 has been paid to you from the Taskify Protection Fund/);
+
+    const summary = (await api(admin, "GET", "/admin/protection-fund")).data;
+    assert.equal(summary.balance, 0);
+    assert.equal((await api(owner, "GET", "/admin/protection-fund")).status, 403);
+  } finally {
+    RENTAL_PROTECTION_FUND.openingBalance = saved;
+  }
+});
+
+test("the quote and terms explain what the protection fee pays for", async () => {
+  const item = await makeEquipment(owner);
+  const q = (await api(renter, "GET", `/equipment/${item.id}/rental-quote?startDate=${day(1)}&endDate=${day(2)}`)).data;
+  assert.equal(q.terms.protectionFund.maxPayoutPerClaim, RENTAL_PROTECTION_FUND.maxPayoutPerClaim);
+  assert.match(q.terms.protectionFund.summary, /Taskify Protection Fund/);
+  assert.match(q.terms.returning.summary, /owner confirms/);
 });

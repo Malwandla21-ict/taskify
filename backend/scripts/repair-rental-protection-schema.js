@@ -14,6 +14,8 @@ dotenv.config({ path: path.resolve(__dirname, "../../.env") });
       rental only completes once the owner, or an admin, confirms it);
     - return_report_escalated_at: when admins were asked to step in because
       the owner hadn't confirmed that hand-back;
+    - return_disputed_at: when the owner said "I don't have it" after the
+      renter reported a hand-back (an admin decides);
     - not_returned_at: when an admin closed the rental as not returned;
     - protection_fund_entries: every movement in or out of the fund — the
       fee from each completed rental in, each admin payout to an owner out.
@@ -32,6 +34,7 @@ const BOOKING_STATUSES = "'Pending','Awaiting Payment','Confirmed','Returned','N
 const COLUMNS = [
   ["return_reported_at", "TIMESTAMP NULL DEFAULT NULL"],
   ["return_report_escalated_at", "TIMESTAMP NULL DEFAULT NULL"],
+  ["return_disputed_at", "TIMESTAMP NULL DEFAULT NULL"],
   ["not_returned_at", "TIMESTAMP NULL DEFAULT NULL"]
 ];
 

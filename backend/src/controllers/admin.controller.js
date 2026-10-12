@@ -8,6 +8,7 @@ const equipmentService = require("../services/equipment.service");
 const analyticsService = require("../services/analytics.service");
 const feedbackService = require("../services/feedback.service");
 const reportExportService = require("../services/reportExport.service");
+const protectionFundService = require("../services/protectionFund.service");
 
 async function getDashboardStats(req, res, next) {
   try {
@@ -89,8 +90,28 @@ async function resolveRentalDamage(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
-    const booking = await equipmentService.resolveRentalDamage(Number(req.params.bookingId), req.user.id, req.body.outcome, req.body.note);
+    const booking = await equipmentService.resolveRentalDamage(
+      Number(req.params.bookingId), req.user.id, req.body.outcome, req.body.note, Number(req.body.compensation || 0)
+    );
     return res.status(200).json({ success: true, message: "Damage report settled.", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function resolveRentalReturn(req, res, next) {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
+
+    const booking = await equipmentService.resolveReturn(
+      Number(req.params.bookingId), req.user.id, req.body.outcome, req.body.note, Number(req.body.compensation || 0)
+    );
+    return res.status(200).json({ success: true, message: "Rental settled.", data: booking });
+  } catch (error) { next(error); }
+}
+
+async function getProtectionFund(req, res, next) {
+  try {
+    return res.status(200).json({ success: true, data: await protectionFundService.getSummary() });
   } catch (error) { next(error); }
 }
 
@@ -231,6 +252,8 @@ module.exports = {
   resolveTaskDispute,
   resolveSaleDispute,
   resolveRentalDamage,
+  resolveRentalReturn,
+  getProtectionFund,
   verifyLecturer,
   unverifyLecturer,
   promoteUser,

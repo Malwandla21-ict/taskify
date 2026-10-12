@@ -1,6 +1,9 @@
 const pool = require("../config/db");
 const auditLogService = require("./auditlog.service");
 const notificationService = require("./notification.service");
+const protectionFund = require("./protectionFund.service");
+const { returnDecisionsFor } = require("./rentalCore.service");
+const { RENTAL_PROTECTION_FUND } = require("../config/paymentSettings");
 
 /* What a report can be about. 'equipment' is the listing itself (reported
    from equipment-details.html); 'equipment_booking' is one specific rental
@@ -211,18 +214,38 @@ async function enrichReportsWithContext(rows) {
   const bookingMap = new Map();
   if (bookingIds.length) {
     /* A rental with an open damage report (owner's condition check) gets
-       the damage outcomes in the admin Reports table. */
+       the damage outcomes in the admin Reports table; one whose return is
+       in doubt (hand-back not confirmed or disputed, or overdue) gets the
+       return outcomes. `rental` carries what the admin needs to decide,
+       including the most the Taskify Protection Fund can pay for it. */
     const [bookingRows] = await pool.query(
-      `SELECT eb.id, eb.equipment_id, e.name, eb.condition_status, eb.damage_outcome
+      `SELECT eb.id, eb.equipment_id, e.name, e.item_value, eb.status, eb.condition_status, eb.damage_outcome,
+              eb.payment_status, eb.picked_up_at, eb.return_due_at, eb.return_reported_at, eb.return_disputed_at,
+              eb.rental_amount
        FROM equipment_bookings eb
        INNER JOIN equipment e ON eb.equipment_id = e.id
        WHERE eb.id IN (?)`,
       [bookingIds]
     );
-    bookingRows.forEach(b => bookingMap.set(b.id, {
-      title: b.name, linkId: b.equipment_id,
-      status: b.condition_status === "Damaged" && !b.damage_outcome ? "DamageReported" : null
-    }));
+    const fundBalance = bookingRows.length ? await protectionFund.getBalance() : 0;
+    bookingRows.forEach(b => {
+      const damageOpen = b.condition_status === "Damaged" && !b.damage_outcome;
+      const { canConfirm, canCloseMissing } = returnDecisionsFor(b);
+      bookingMap.set(b.id, {
+        title: b.name, linkId: b.equipment_id,
+        status: damageOpen ? "DamageReported" : (canConfirm || canCloseMissing) ? "ReturnOpen" : null,
+        rental: {
+          canConfirm, canCloseMissing,
+          returnReportedAt: b.return_reported_at, returnDisputed: !!b.return_disputed_at,
+          returnDueAt: b.return_due_at,
+          itemValue: b.item_value == null ? null : Number(b.item_value),
+          rent: b.rental_amount == null ? null : Number(b.rental_amount),
+          payoutLimit: protectionFund.payoutLimit({ itemValue: b.item_value, balance: fundBalance }),
+          fundBalance,
+          maxPayoutPerClaim: RENTAL_PROTECTION_FUND.maxPayoutPerClaim
+        }
+      });
+    });
   }
 
   const salesMap = new Map();
@@ -282,7 +305,9 @@ async function enrichReportsWithContext(rows) {
       context_link_id: context ? context.linkId : null,
       /* Tasks and sales: lets the admin Reports table offer dispute outcomes. */
       context_status: context && context.status ? context.status : null,
-      context_order_id: context && context.orderId ? context.orderId : null
+      context_order_id: context && context.orderId ? context.orderId : null,
+      /* Rentals: what the damage / return outcomes need. */
+      context_rental: context && context.rental ? context.rental : null
     };
   });
 }

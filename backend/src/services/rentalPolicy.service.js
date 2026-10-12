@@ -1,5 +1,5 @@
 const RENTAL_POLICY = require("../config/rentalPolicy");
-const { RENTALS } = require("../config/paymentSettings");
+const { RENTALS, RENTAL_PROTECTION_FEE, RENTAL_PROTECTION_FUND } = require("../config/paymentSettings");
 /* Same rounding as trust.service.js (kept local so trust.service can use this file). */
 const roundMoney = (value) => Math.round(Number(value) * 100) / 100;
 
@@ -60,7 +60,16 @@ function currentTerms({ dailyPrice = null, itemValue = null } = {}) {
     deposit: { ...ruleView("deposit"), enabled: RENTALS.depositsEnabled && isEnforceable("deposit") },
     earlyReturn: ruleView("earlyReturnRefund"),
     lateReturn: { ...ruleView("lateFee"), graceHours: RENTAL_POLICY.lateFee.graceHours },
-    cancellation: { summary: RENTAL_POLICY.cancellation.summary }
+    cancellation: { summary: RENTAL_POLICY.cancellation.summary },
+    returning: { summary: RENTAL_POLICY.returning.summary },
+    /* Not a proposal: what the protection fee pays for, today (demo). */
+    protectionFund: {
+      feePercent: RENTAL_PROTECTION_FEE.percent,
+      feeMin: RENTAL_PROTECTION_FEE.min,
+      feeMax: RENTAL_PROTECTION_FEE.max,
+      maxPayoutPerClaim: RENTAL_PROTECTION_FUND.maxPayoutPerClaim,
+      summary: `Instead of a deposit, you pay a protection fee (${RENTAL_PROTECTION_FEE.percent}% of the rent, R${RENTAL_PROTECTION_FEE.min} to R${RENTAL_PROTECTION_FEE.max}) into the Taskify Protection Fund. If an admin confirms the item was damaged or not returned, the owner can be paid from the fund — up to R${RENTAL_PROTECTION_FUND.maxPayoutPerClaim}, and never more than the item's value. You aren't charged for that, but it goes on your Taskify record, and an item that isn't returned stops you renting on Taskify.`
+    }
   };
 }
 

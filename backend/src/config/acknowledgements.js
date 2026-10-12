@@ -12,6 +12,8 @@
   Keep each point short and concrete — these are read on a phone, mid-task.
 */
 
+const { RENTAL_PROTECTION_FUND } = require("./paymentSettings");
+
 const ACKNOWLEDGEMENTS = {
   academic_integrity: {
     version: "2026-10-12",
@@ -39,27 +41,27 @@ const ACKNOWLEDGEMENTS = {
   },
 
   rental_owner: {
-    version: "2026-10-12",
+    version: "2026-10-12.2",
     title: "Before you rent this out",
     when: "listing equipment for rent",
     points: [
       "It's mine to lend — not university property or someone else's.",
       "It works and is safe to use, and I've described any faults.",
-      "I'll check it with the renter at pickup and at return. The photos taken then are what protect me if it comes back damaged.",
-      "Taskify doesn't insure items. If there's damage, an admin looks at the evidence and decides who was at fault; Taskify doesn't charge anyone."
+      "I'll check it with the renter at pickup, and confirm on Taskify when it's back with me. The photos taken then are what protect me if it comes back damaged.",
+      `Taskify doesn't charge renters for damage. If an admin confirms damage, or that the item wasn't returned, I can be paid from the Taskify Protection Fund — up to R${RENTAL_PROTECTION_FUND.maxPayoutPerClaim} and never more than the item's value. It isn't full insurance.`
     ],
     agree: "I understand and confirm the above."
   },
 
   rental_renter: {
-    version: "2026-10-12",
+    version: "2026-10-12.2",
     title: "Before you rent",
     when: "requesting a rental",
     points: [
       "From pickup until I return it, I'm responsible for the item, including loss or damage.",
       "I'll check it and take the pickup photos before I use it, and report a problem straight away instead of using it.",
-      "I'll return it by the deadline. Late returns are recorded, and the next renter may be waiting for it.",
-      "If damage is confirmed by an admin, it stays on my Taskify record."
+      "I'll return it by the deadline, and say on Taskify when I've handed it back. The rental ends when the owner confirms they have it. Late returns are recorded.",
+      "If an admin confirms damage, it stays on my Taskify record. If I don't return the item, an admin can close the rental as not returned — that's on my record and stops me renting on Taskify."
     ],
     agree: "I understand my responsibilities as a renter."
   }

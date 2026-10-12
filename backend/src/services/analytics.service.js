@@ -1,4 +1,5 @@
 const pool = require("../config/db");
+const protectionFundService = require("./protectionFund.service");
 
 /*
   Admin Analytics — read-only numbers for a chosen date range, plus the
@@ -173,10 +174,19 @@ async function transactions(range) {
   const saleRefunds = await one(
     `SELECT COUNT(*) AS n, SUM(total_amount) AS refunded FROM sale_orders WHERE status = 'Refunded' AND ${within("updated_at")}`, p
   );
+  /* A rental an admin closed as not returned still released the rent,
+     at not_returned_at. Its protection fee went into the fund, not to
+     Taskify, so rental fees are reported under protectionFund. */
   const rentalMoney = await one(
-    `SELECT COUNT(*) AS completed, SUM(rental_amount) AS released, SUM(protection_fee) AS fees
-     FROM equipment_bookings WHERE payment_status = 'Released' AND ${within("returned_at")}`, p
+    `SELECT COUNT(*) AS completed, SUM(rental_amount) AS released
+     FROM equipment_bookings WHERE payment_status = 'Released' AND ${within("COALESCE(returned_at, not_returned_at)")}`, p
   );
+  const fundMoney = await one(
+    `SELECT COALESCE(SUM(CASE WHEN kind = 'fee' THEN amount ELSE 0 END), 0) AS fees_in,
+            COALESCE(SUM(CASE WHEN kind = 'payout' THEN -amount ELSE 0 END), 0) AS paid_out
+     FROM protection_fund_entries WHERE ${within("created_at")}`, p
+  );
+  const fund = await protectionFundService.getSummary();
   const rentalCancelled = await one(
     `SELECT COUNT(*) AS n FROM equipment_bookings WHERE status = 'Cancelled' AND ${within("updated_at")}`, p
   );
@@ -193,7 +203,7 @@ async function transactions(range) {
     `SELECT day, SUM(amount) AS n FROM (
        SELECT ${sastDay("updated_at")} AS day, amount FROM payments WHERE status = 'Released' AND ${within("updated_at")}
        UNION ALL SELECT ${sastDay("released_at")}, item_price FROM sale_orders WHERE status = 'Released' AND ${within("released_at")}
-       UNION ALL SELECT ${sastDay("returned_at")}, rental_amount FROM equipment_bookings WHERE payment_status = 'Released' AND ${within("returned_at")}
+       UNION ALL SELECT ${sastDay("COALESCE(returned_at, not_returned_at)")}, rental_amount FROM equipment_bookings WHERE payment_status = 'Released' AND ${within("COALESCE(returned_at, not_returned_at)")}
      ) r GROUP BY day`,
     [...p, ...p, ...p]
   );
@@ -206,8 +216,17 @@ async function transactions(range) {
     money: {
       released: Math.round(released * 100) / 100,
       refunded: Math.round((num(taskMoney.refunded) + num(saleRefunds.refunded)) * 100) / 100,
-      protectionFees: Math.round((num(saleMoney.fees) + num(rentalMoney.fees)) * 100) / 100,
+      /* Buyer-paid protection fees on sales: Taskify's (simulated) revenue. */
+      saleProtectionFees: Math.round(num(saleMoney.fees) * 100) / 100,
       heldNow: Math.round(num(heldNow.held) * 100) / 100
+    },
+    /* Rental protection fees in and payouts to owners out, in this
+       range; the balance is all-time (protectionFund.service.js). */
+    protectionFund: {
+      feesIn: Math.round(num(fundMoney.fees_in) * 100) / 100,
+      paidOut: Math.round(num(fundMoney.paid_out) * 100) / 100,
+      balance: fund.balance,
+      maxPayoutPerClaim: fund.maxPayoutPerClaim
     },
     releasedSeries: series(releasedRows, range)
   };
@@ -232,7 +251,7 @@ async function speed(range) {
   );
   const bookings = await one(
     `SELECT COUNT(*) AS requested,
-            SUM(approved_at IS NOT NULL OR status IN ('Confirmed', 'Returned')) AS approved
+            SUM(approved_at IS NOT NULL OR status IN ('Confirmed', 'Returned', 'Not Returned')) AS approved
      FROM equipment_bookings WHERE ${within("created_at")}`, p
   );
   const expired = await one(
@@ -312,7 +331,7 @@ async function funnels(range) {
      FROM sales_items WHERE ${within("created_at")}`, p
   );
   const rentals = await one(
-    `SELECT COUNT(*) AS requested, SUM(approved_at IS NOT NULL OR status IN ('Confirmed', 'Returned')) AS approved,
+    `SELECT COUNT(*) AS requested, SUM(approved_at IS NOT NULL OR status IN ('Confirmed', 'Returned', 'Not Returned')) AS approved,
             SUM(status = 'Returned') AS completed, SUM(status = 'Cancelled') AS cancelled
      FROM equipment_bookings WHERE ${within("created_at")}`, p
   );

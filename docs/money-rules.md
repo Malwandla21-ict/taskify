@@ -11,7 +11,10 @@ This is switched by `DEMO_MODE: true` in `backend/src/config/paymentSettings.js`
 | `SALES.escrowThreshold` | R300 | Sales at or above this go through Taskify Protection (held money + handover code). |
 | `SALES.protectionFeePercent` | 3% | A fee the buyer pays on protected sales. The seller gets the full price. |
 | `SALES.maxCodeAttempts` | 5 | Wrong handover-code tries before the order locks. |
-| `RENTAL_PROTECTION_FEE` | 5%, min R5, max R50 | A fee on every rental, added to the rent. |
+| `RENTAL_PROTECTION_FEE` | 5%, min R5, max R50 | A fee on every rental, added to the rent. It goes into the Taskify Protection Fund (below), not to Taskify. |
+| `RENTAL_PROTECTION_FUND.openingBalance` | R2,000 | Taskify's own starting contribution to the fund, so early claims can be paid. A placeholder for review. |
+| `RENTAL_PROTECTION_FUND.maxPayoutPerClaim` | R1,500 | The most one claim can pay an owner. Also never more than the item's value or what's in the fund. |
+| `RENTALS.handbackConfirmHours` | 24 | After the renter says "I've handed it back", the owner has this long to confirm or dispute it before admins are asked. |
 | `RENTALS.paymentWindowHours` | 24 | Time to pay after the owner approves (or until the end of the start day, if sooner). |
 | `RENTALS.requestExpiryHours` | 48 | An unanswered request expires. |
 | `RENTALS.returnTime` | 18:00 (SAST) | When an item is due back on the last day. |
@@ -21,9 +24,36 @@ This is switched by `DEMO_MODE: true` in `backend/src/config/paymentSettings.js`
 | `TASKS.reviewReminderHours` / `reviewEscalationHours` | 48 / 168 | Reminders to a poster who hasn't confirmed a finished task. |
 | `NEGOTIATION` | 3 counters, 48 h | Limits on in-app offers. |
 
-Nothing is ever released, refunded or charged automatically because a deadline passed. Releasing a task payment needs the poster's confirmation or an admin's decision. A sale is released only by the buyer's code or an admin. Rent is released when the return is recorded.
+Nothing is ever released, refunded or charged automatically because a deadline passed. Releasing a task payment needs the poster's confirmation or an admin's decision. A sale is released only by the buyer's code or an admin. Rent is released when the **owner** confirms the item is back, or an admin does.
 
-**To connect a real provider later:** each demo status change is in one service function: `acceptTask`/`confirmTaskCompletion` (tasks), `buySalesItem`/`releaseSaleOrder`/`cancelSaleOrder` (sales), and `payBooking`/`returnEquipment` (rentals). Those are the places to call the provider. A real payment must be **verified by the provider** before a booking becomes `Confirmed`; it must not be assumed. This needs the legal and provider answers in [open-questions.md](open-questions.md) first.
+### Returns the owner confirms
+
+- The renter presses **"I've handed it back"** and adds photos. The rent stays held, and their deadline reminders stop.
+- The owner presses **"Yes, it's back"** to complete the rental and get the rent, or **"I don't have it"** to dispute it.
+- Lateness is measured to the renter's hand-back, so a slow owner doesn't make the renter look late. After a dispute, it's measured to when the return is finally recorded.
+- If the owner doesn't answer within `handbackConfirmHours`, or disputes it, a report appears in the admin Reports table. The admin either confirms it was returned or closes it as not returned.
+
+### Items that never come back
+
+Once a rental is past its deadline, an admin can **close it as not returned** from the Reports table. Rentals 72 hours overdue are filed there automatically. Closing it:
+- releases the rent to the owner, who can also be paid from the fund;
+- takes the listing down, and cancels and refunds anyone else booked on that item;
+- puts it on the renter's record. A renter with a rental closed as not returned **can't rent again**, and their other uncollected bookings are cancelled and refunded.
+
+The renter is never charged.
+
+### The Taskify Protection Fund
+
+Renters pay a small protection fee instead of a deposit. When a rental completes, its fee goes into the fund. When an admin **confirms damage**, or **closes a rental as not returned**, they can pay the owner from the fund. The renter is never charged for it.
+
+- Each payout is capped at the smallest of `maxPayoutPerClaim`, the item's listed value, and the fund balance. A larger amount is refused, not quietly reduced.
+- Every movement is a row in `protection_fund_entries`: fees are positive, payouts negative. The balance is `openingBalance` plus all rows. A rental adds its fee once and is paid out at most once (a unique key). Payouts run under a database lock, so two admins can't spend the same money.
+- Deleting a listing never changes the fund's history: entries keep their amount, and the booking link becomes empty.
+- Admin analytics shows fees in, payouts out and the balance separately from sale protection fees, which are Taskify's revenue.
+
+It is **not insurance**. Owners are told this when they list (`rental_owner` acknowledgement) and renters see it in the rental terms. Like everything else here it's a demo: a real launch needs a provider that can hold the pooled money and pay owners, plus the legal review in [open-questions.md](open-questions.md).
+
+**To connect a real provider later:** each demo status change is in one service function: `acceptTask`/`confirmTaskCompletion` (tasks), `buySalesItem`/`releaseSaleOrder`/`cancelSaleOrder` (sales), `payBooking`/`completeReturn`/`resolveReturn` (rentals), and `payOwner` (protection fund payouts). Those are the places to call the provider. A real payment must be **verified by the provider** before a booking becomes `Confirmed`; it must not be assumed. This needs the legal and provider answers in [open-questions.md](open-questions.md) first.
 
 ---
 

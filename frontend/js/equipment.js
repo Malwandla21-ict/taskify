@@ -90,11 +90,13 @@ function openRentalPhotoModal(bookingId, mode, listedCondition = "", byOwner = f
     rentalPhotoIntro.textContent = "Take photos of the item right now, before you use it — front, back and any scratches it already has. These are your proof of the condition you received it in.";
     submitRentalPhotosLabel.textContent = "Confirm Pickup";
   } else {
-    rentalPhotoTitle.innerHTML = `<i class="ti ti-package-export" aria-hidden="true"></i> Return Equipment`;
+    rentalPhotoTitle.innerHTML = byOwner
+      ? `<i class="ti ti-package-import" aria-hidden="true"></i> Record the Return`
+      : `<i class="ti ti-package-export" aria-hidden="true"></i> I've Handed It Back`;
     rentalPhotoIntro.textContent = byOwner
-      ? "Record the return once the item is back with you. Take photos of it as you received it — they're compared with the pickup photos."
-      : "Take photos of the item as it's handed back. The owner compares these with the pickup photos before the deposit is released.";
-    submitRentalPhotosLabel.textContent = "Confirm Return";
+      ? "Record the return once the item is back with you. Take photos of it as you received it — they're compared with the pickup photos. This completes the rental and releases your rent (demo)."
+      : "Take photos of the item as you hand it back. The owner is asked to confirm they have it — that completes the rental. If they don't, a Taskify admin compares these photos and decides.";
+    submitRentalPhotosLabel.textContent = byOwner ? "Record Return" : "Tell the Owner";
   }
   openModal(rentalPhotoModal);
 }
@@ -126,17 +128,15 @@ submitRentalPhotosBtn?.addEventListener("click", async () => {
     const photoUrls = await rentalPhotoUploader.upload("equipment");
     const body = mode === "pickup" ? { photoUrls, pickupCondition: pickupConditionInput.value } : { photoUrls };
     const res = await apiRequest(`/equipment/bookings/${rentalPhotoBookingId.value}/${mode === "pickup" ? "pickup" : "return"}`, "PATCH", body);
-    /* The owner's rent is released on return (not pickup), so only a
-       return plays the "released" pop-up. The deposit stays held until
+    /* The owner's rent is released when the owner records the return (not
+       at pickup, and not when the renter says they've handed it back), so
+       only that plays the "released" pop-up. The deposit stays held until
        the owner checks the item's condition. */
     const booking = res?.data || {};
     if (mode === "return" && booking.payment_status === "Released") {
-      const isRenter = !!currentUser && Number(booking.renter_id) === Number(currentUser.id);
-      showPaymentMoment("released", isRenter
-        ? `Equipment returned. ${formatRand(booking.rental_amount)} sent to the owner, who will now check its condition.`
-        : `Equipment returned. ${formatRand(booking.rental_amount)} released to you. Please check its condition.`);
+      showPaymentMoment("released", `Return recorded. ${formatRand(booking.rental_amount)} released to you. Please check its condition.`);
     } else {
-      showToast(mode === "pickup" ? "Pickup confirmed. Enjoy the rental!" : "Equipment returned. The owner will check its condition.");
+      showToast(mode === "pickup" ? "Pickup confirmed. Enjoy the rental!" : "Done. The owner has been asked to confirm they have it.");
     }
     closeRentalPhotoModal();
     await loadEquipment();
@@ -480,9 +480,12 @@ function bookingMoneyLine(booking, isOwner) {
       ? "An admin found the renter wasn't at fault for the reported damage."
       : "Owner confirmed it came back in the same condition.",
     Damaged: booking.damage_outcome === "damage_confirmed"
-      ? "Damage confirmed by an admin. Nothing was charged."
+      ? `Damage confirmed by an admin. Nothing was charged to the renter.${Number(booking.fund_payout) > 0 ? ` The owner was paid ${formatRand(booking.fund_payout)} from the Taskify Protection Fund.` : ""}`
       : "Damage reported — an admin will review."
   }[booking.condition_status] || "";
+  const notReturnedText = booking.status === "Not Returned"
+    ? `A Taskify admin closed this rental as not returned. The rent was released to the owner${Number(booking.fund_payout) > 0 ? `, plus ${formatRand(booking.fund_payout)} from the Taskify Protection Fund` : ""}.`
+    : "";
 
   return `
     <div class="booking-money-line">
@@ -492,6 +495,7 @@ function bookingMoneyLine(booking, isOwner) {
         : `<div><i class="ti ti-shield-lock" aria-hidden="true"></i> No deposit</div>`}
       ${booking.pickup_condition ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> Condition at pickup: <strong>${escapeHtml(booking.pickup_condition)}</strong> (confirmed by renter)</div>` : ""}
       ${conditionText ? `<div><i class="ti ti-clipboard-check" aria-hidden="true"></i> ${conditionText}</div>` : ""}
+      ${notReturnedText ? `<div style="color:var(--ump-red);"><i class="ti ti-package-off" aria-hidden="true"></i> ${notReturnedText}</div>` : ""}
       ${booking.damage_note ? `<div style="color:var(--ump-red);"><i class="ti ti-alert-triangle" aria-hidden="true"></i> "${escapeReportText(booking.damage_note)}"</div>` : ""}
       ${booking.pickup_photos?.length ? `<div style="margin-top:6px;">Pickup photos</div>${conditionPhotoStrip(booking.pickup_photos, `pickup-${booking.id}`)}` : ""}
       ${booking.return_photos?.length ? `<div style="margin-top:6px;">Return photos</div>${conditionPhotoStrip(booking.return_photos, `return-${booking.id}`)}` : ""}
@@ -506,7 +510,9 @@ const CANCEL_REASON_TEXT = {
   request_expired: "The request expired without an answer.",
   payment_expired: "Not paid in time, so the approval lapsed.",
   dates_taken: "Those dates were booked by someone else.",
-  defective_at_pickup: "The renter refused the item at pickup."
+  defective_at_pickup: "The renter refused the item at pickup.",
+  item_lost: "Cancelled because the item wasn't returned by the previous renter.",
+  renter_blocked: "Cancelled by Taskify because the renter can no longer rent equipment."
 };
 
 /* What stage a booking is at, in plain words. */
@@ -516,7 +522,11 @@ function rentalStage(b) {
   if (b.status === "Confirmed" && !b.out_on_rent) return b.waiting_for_return
     ? { label: "Waiting for item", tone: "red" }
     : { label: "Ready for collection", tone: "blue" };
+  if (b.status === "Confirmed" && b.handed_back) return b.return_disputed_at
+    ? { label: "Return disputed", tone: "red" }
+    : { label: "Handed back — awaiting owner", tone: "gold" };
   if (b.status === "Confirmed") return b.is_overdue ? { label: "Overdue", tone: "red" } : { label: "Out on rent", tone: "blue" };
+  if (b.status === "Not Returned") return { label: "Not returned", tone: "red" };
   if (b.status === "Returned" && b.condition_status === "Pending") return { label: "Return check", tone: "gold" };
   if (b.status === "Returned" && b.condition_status === "Damaged" && !b.damage_outcome) return { label: "Damage reported", tone: "red" };
   if (b.status === "Returned") return { label: "Completed", tone: "" };
@@ -543,6 +553,18 @@ function rentalTimeline(b, isOwner) {
   }
   if (["Confirmed", "Awaiting Payment", "Pending"].includes(b.status) && b.return_due_at) {
     line("ti-clock", `Due back by <strong>${rentalDeadline(b.return_due_at)}</strong>`, b.is_overdue ? "overdue" : "");
+  }
+  if (b.handed_back) {
+    const when = `<strong>${rentalDeadline(b.return_reported_at)}</strong>`;
+    if (b.return_disputed_at) {
+      line("ti-package-import", isOwner
+        ? `The renter says they handed it back on ${when}, but you told us you don't have it. A Taskify admin will compare the photos and decide. If you get it back, record the return.`
+        : `You said you handed it back on ${when}, but the owner says they don't have it. A Taskify admin will compare the photos and decide.`, "problem");
+    } else {
+      line("ti-package-import", isOwner
+        ? `The renter says they handed it back on ${when}. If you have it, confirm to complete the rental and get your rent (demo).`
+        : `You said you handed it back on ${when}. Waiting for the owner to confirm they have it — that completes the rental.`);
+    }
   }
   if (b.status === "Returned" && b.return_minutes_late != null) {
     line("ti-clock-check", `Returned ${lateLabel(b.return_minutes_late)}${b.return_minutes_late > 0 ? " — no late fee is charged (not in effect)" : ""}.`);
@@ -606,9 +628,17 @@ function rentalActions(b, isOwner, isRenter) {
       rentalBtn("cancel", id, "ti-x", "Cancel (full refund)", "outline danger")
     );
     if (isOwner) buttons.push(rentalBtn("owner-cancel", id, "ti-ban", "Can't hand it over", "outline danger"));
+  } else if (b.status === "Confirmed" && b.handed_back) {
+    /* The renter said it's back: the owner confirms, or says they don't
+       have it (an admin then decides). */
+    if (isOwner) {
+      buttons.push(rentalBtn("confirm-back", id, "ti-circle-check", "Yes, it's back"));
+      if (!b.return_disputed_at) buttons.push(rentalBtn("not-back", id, "ti-help-circle", "I don't have it", "outline danger"));
+    }
+    buttons.push(rentalBtn("problem", id, "ti-alert-triangle", "Report a problem", "outline"));
   } else if (b.status === "Confirmed") {
     if (isRenter) {
-      buttons.push(`<button type="button" class="market-action-btn return-equipment-btn" data-booking-id="${id}" data-new-flow="${legacy ? "" : "1"}"><i class="ti ti-package-export" aria-hidden="true"></i> Return item${legacy ? "" : " (add photos)"}</button>`);
+      buttons.push(`<button type="button" class="market-action-btn return-equipment-btn" data-booking-id="${id}" data-new-flow="${legacy ? "" : "1"}"><i class="ti ti-package-export" aria-hidden="true"></i> ${legacy ? "Return item" : "I've handed it back (add photos)"}</button>`);
       if (!legacy && !x && !b.is_overdue) buttons.push(rentalBtn("extend", id, "ti-calendar-plus", "Ask for more days", "outline"));
       if (x?.status === "Awaiting Payment") buttons.push(rentalBtn("pay-extension", id, "ti-credit-card", "Pay for extension"));
       if (x) buttons.push(rentalBtn("withdraw-extension", id, "ti-arrow-back-up", "Withdraw extension", "outline"));
@@ -625,7 +655,7 @@ function rentalActions(b, isOwner, isRenter) {
       `<button type="button" class="market-action-btn condition-ok-btn" data-booking-id="${id}"><i class="ti ti-circle-check" aria-hidden="true"></i> Condition OK</button>`,
       `<button type="button" class="market-action-btn outline danger report-damage-btn" data-booking-id="${id}"><i class="ti ti-alert-triangle" aria-hidden="true"></i> Report damage</button>`
     );
-  } else if (b.status === "Returned" && (isOwner || isRenter)) {
+  } else if ((b.status === "Returned" && (isOwner || isRenter)) || (b.status === "Not Returned" && isOwner)) {
     buttons.push(b.my_review_id
       ? `<button class="market-action-btn outline edit-review-btn" data-review-id="${b.my_review_id}" data-rating="${b.my_review_rating ?? ""}" data-comment="${escapeReportText(b.my_review_comment ?? "")}"><i class="ti ti-edit" aria-hidden="true"></i> Edit review</button>
          <button class="market-action-btn outline danger delete-review-btn" data-review-id="${b.my_review_id}" aria-label="Delete review"><i class="ti ti-trash" aria-hidden="true"></i></button>`
@@ -903,6 +933,7 @@ const RENTAL_PROBLEM_OPTIONS = {
   ],
   owner: [
     ["renter_unreachable", "The renter isn't responding about the return"],
+    ["not_handed_back", "The renter says it's back, but I don't have it"],
     ["other", "Something else"]
   ]
 };
@@ -976,10 +1007,13 @@ function openExtendModal(b) {
   preview();
 }
 
-function openProblemModal(b, isOwner) {
-  const options = RENTAL_PROBLEM_OPTIONS[isOwner ? "owner" : "renter"];
+/* preset: open with this problem chosen (the owner's "I don't have it"). */
+function openProblemModal(b, isOwner, preset = null) {
+  /* "I don't have it" only makes sense once the renter says it's back. */
+  const options = RENTAL_PROBLEM_OPTIONS[isOwner ? "owner" : "renter"]
+    .filter(([v]) => v !== "not_handed_back" || (b.handed_back && !b.return_disputed_at));
   openRentalAction({
-    title: "Report a problem",
+    title: preset === "not_handed_back" ? "You don't have it back?" : "Report a problem",
     icon: "ti-alert-triangle",
     danger: true,
     submitLabel: `<i class="ti ti-send" aria-hidden="true"></i> Report problem`,
@@ -987,9 +1021,10 @@ function openProblemModal(b, isOwner) {
       <p class="pay-note">The ${isOwner ? "renter" : "owner"} is told and a Taskify admin will look at it. Nothing is charged or refunded automatically.</p>
       <div class="form-group">
         <label for="rentalProblemCategory">What's wrong?</label>
-        <select id="rentalProblemCategory">${options.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>
+        <select id="rentalProblemCategory">${options.map(([v, l]) => `<option value="${v}"${v === preset ? " selected" : ""}>${l}</option>`).join("")}</select>
       </div>
-      ${noteField("rentalProblemNote", "Describe what happened", "e.g. I waited at the library at 17:30 but they didn't come.", 10)}`,
+      ${preset === "not_handed_back" ? `<p class="pay-note">The rental stays open and your rent stays held. A Taskify admin compares the pickup and return photos and decides — and if the item isn't coming back, can pay you from the Taskify Protection Fund.</p>` : ""}
+      ${noteField("rentalProblemNote", "Describe what happened", preset === "not_handed_back" ? "e.g. I was in the lab all afternoon and nobody brought it." : "e.g. I waited at the library at 17:30 but they didn't come.", 10)}`,
     onSubmit: async () => {
       await apiRequest(`/equipment/bookings/${b.id}/problem`, "POST", {
         category: document.getElementById("rentalProblemCategory").value,
@@ -1040,7 +1075,8 @@ const SIMPLE_RENTAL_ACTIONS = {
   "approve-extension": [null, "PATCH", "extension/approve", "Extension approved. The renter has been asked to pay."],
   "decline-extension": ["Decline this extension? The current deadline stays.", "PATCH", "extension/decline", "Extension declined."],
   "withdraw-extension": ["Withdraw your extension request? The current deadline stays.", "PATCH", "extension/cancel", "Extension request withdrawn."],
-  "pay-extension": ["Pay for the extension now (demo)? Your return deadline moves once it's paid.", "POST", "extension/pay", null]
+  "pay-extension": ["Pay for the extension now (demo)? Your return deadline moves once it's paid.", "POST", "extension/pay", null],
+  "confirm-back": ["Confirm you have the item back? This completes the rental and releases your rent (demo).", "PATCH", "return", null]
 };
 
 equipmentHistoryContainer?.addEventListener("click", async (e) => {
@@ -1055,6 +1091,7 @@ equipmentHistoryContainer?.addEventListener("click", async (e) => {
     if (action === "pay") return await openPayModal(b);
     if (action === "extend") return openExtendModal(b);
     if (action === "problem") return openProblemModal(b, isOwner);
+    if (action === "not-back") return openProblemModal(b, isOwner, "not_handed_back");
     if (action === "owner-cancel") return openOwnerCancelModal(b);
     if (action === "refuse") return openRefuseModal(b);
 
@@ -1067,7 +1104,9 @@ equipmentHistoryContainer?.addEventListener("click", async (e) => {
     btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Working…`;
     try {
       const res = await apiRequest(`/equipment/bookings/${b.id}/${path}`, method);
-      if (action === "pay-extension") {
+      if (action === "confirm-back") {
+        showPaymentMoment("released", `Return confirmed. ${formatRand(res.data?.rental_amount)} released to you. Please check its condition.`);
+      } else if (action === "pay-extension") {
         showPaymentMoment("held", `Extension paid. It's now due back by ${rentalDeadline(res.data?.return_due_at)}.`);
       } else if (action === "approve" && res.data?.status === "Confirmed") {
         showToast("Booking confirmed.");
