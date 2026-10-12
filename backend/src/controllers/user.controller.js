@@ -10,7 +10,7 @@ async function getUserProfile(req, res, next) {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed.",
+        message: errors.array()[0].msg,
         errors: errors.array()
       });
     }
@@ -51,7 +51,7 @@ async function updateMyProfileDetails(req, res, next) {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+      return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
     }
 
     const profile = await userService.updateProfileDetails(req.user.id, {
@@ -82,7 +82,7 @@ async function changeMyPassword(req, res, next) {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+      return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
     }
 
     const result = await authService.changePassword(req.user.id, req.body.currentPassword, req.body.newPassword);

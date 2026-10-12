@@ -66,6 +66,31 @@ Items priced at **R300 or more**, or sold at a price agreed through an in-app of
 
 A `Reserved` item can't be edited, deleted or marked sold.
 
+### One item or several (`sales_items.quantity`, `quantity_sold`)
+
+When listing, the seller must say whether it's **just this one** or **several of the same** (2–100). The item state is never set directly; it's worked out from three numbers every time one of them changes (`refreshSaleItemStatus` in `sales.service.js`, inside the same transaction):
+
+`left = quantity − quantity_sold − orders still Held or Disputed`
+
+| Item state | When |
+|---|---|
+| `Available` | `left` > 0: someone can still buy one. It stays on the Sales page. |
+| `Reserved` | `left` = 0 but some units are waiting for handover. It leaves the Sales page; a cancelled or refunded order brings it back. |
+| `Sold` | `quantity_sold` = `quantity`. It's gone for good. |
+
+So a **single item** (quantity 1) leaves the marketplace as soon as it's bought or marked sold — exactly as before. A listing with **several** stays up until the last one has gone.
+
+| Move | Effect |
+|---|---|
+| Buyer pays (or an offer is accepted) | Holds one unit. The item row is locked while units are counted, so buyers paying at the same moment can never hold more than the seller has. One open order per buyer per listing. Other people's offers stay open while units are left; they're closed when none are. |
+| Seller enters a buyer's code / admin chooses **release** | `quantity_sold` + 1 |
+| Order cancelled / refunded | Frees that unit |
+| Cash sale: "Sold one" / "Mark as Sold" | `quantity_sold` + 1 (`PATCH /api/sales/:id/sold`) |
+| Cash sale: "Sold the rest" | Every free unit sold (`{ "all": true }`). Units waiting for handover are never touched. |
+| Seller edits the quantity | Must stay above what's already sold or held. |
+
+The seller sees every buyer waiting for handover on the item page, each with their own code box (`open_orders`); they never see anyone's code.
+
 ---
 
 ## 3. Rental booking (`equipment_bookings.status`)

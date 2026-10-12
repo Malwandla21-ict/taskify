@@ -11,7 +11,7 @@ async function createSalesItem(req, res, next) {
       description: req.body.description, category: req.body.category,
       section: req.body.section, price: req.body.price,
       conditionStatus: req.body.conditionStatus, location: req.body.location,
-      imageUrls: req.body.imageUrls || []
+      imageUrls: req.body.imageUrls || [], quantity: req.body.quantity
     });
 
     return res.status(201).json({ success: true, message: "Sales item listed successfully.", data: item });
@@ -27,7 +27,8 @@ async function updateSalesItem(req, res, next) {
       title: req.body.title, description: req.body.description,
       category: req.body.category, section: req.body.section,
       price: req.body.price, conditionStatus: req.body.conditionStatus,
-      location: req.body.location, imageUrls: req.body.imageUrls || []
+      location: req.body.location, imageUrls: req.body.imageUrls || [],
+      quantity: req.body.quantity
     });
 
     return res.status(200).json({ success: true, message: "Listing updated successfully.", data: item });
@@ -66,8 +67,15 @@ async function markSalesItemAsSold(req, res, next) {
     const errors = validationResult(req);
     if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
-    const item = await salesService.markSalesItemAsSold(Number(req.params.id), req.user.id);
-    return res.status(200).json({ success: true, message: "Sales item marked as sold.", data: item });
+    const item = await salesService.markSalesItemAsSold(Number(req.params.id), req.user.id, { all: req.body?.all === true });
+    const free = Number(item.quantity) - Number(item.quantity_sold) - Number(item.quantity_on_hold);
+    const held = Number(item.quantity_on_hold);
+    const message = item.status === "Sold"
+      ? "Sales item marked as sold."
+      : free > 0
+        ? `Sale recorded. ${free} still for sale.`
+        : `Sale recorded. ${held === 1 ? "The last one is" : `The last ${held} are`} waiting for a buyer's handover.`;
+    return res.status(200).json({ success: true, message, data: item });
   } catch (error) { next(error); }
 }
 

@@ -72,7 +72,7 @@ async function notifyInstitutionalReview({ eventId, organizerId, title, authorit
 function toMysqlDatetime(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) {
-    const error = new Error("Invalid event date.");
+    const error = new Error("Please choose a valid date and time for the listing.");
     error.statusCode = 400;
     throw error;
   }
@@ -127,7 +127,7 @@ async function createEvent({
     });
     await notificationService.notifyAllAdmins({
       title: "Content Blocked",
-      message: `An event titled "${(title || "").trim()}" was blocked at creation for violating content policy (${moderation.flaggedCategories.join(", ")}).`,
+      message: `A Campus Marketplace listing titled "${(title || "").trim()}" was blocked at creation for violating content policy (${moderation.flaggedCategories.join(", ")}).`,
       email: true
     });
 
@@ -169,7 +169,7 @@ async function createEvent({
     await notificationService.createNotification({
       userId: organizerId,
       title: "Listing Held for Review",
-      message: `Your event "${title.trim()}" was flagged by our moderation system and is held from public view until an admin reviews it. We'll let you know as soon as it's approved.`,
+      message: `Your Campus Marketplace listing "${title.trim()}" was flagged by our moderation system and is held from public view until an admin reviews it. We'll let you know as soon as it's approved.`,
       contextType: "event",
       contextId: result.insertId,
       email: true
@@ -240,12 +240,12 @@ async function rsvpToEvent(eventId, userId) {
     [eventId]
   );
   if (eventRows.length === 0) {
-    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+    const error = new Error("Listing not found."); error.statusCode = 404; throw error;
   }
   const event = eventRows[0];
 
   if (event.status !== "Upcoming") {
-    const error = new Error("This event is no longer accepting RSVPs."); error.statusCode = 400; throw error;
+    const error = new Error("This listing has ended or been closed, so you can't say you're going."); error.statusCode = 400; throw error;
   }
 
   const [existing] = await pool.execute(
@@ -253,7 +253,7 @@ async function rsvpToEvent(eventId, userId) {
     [eventId, userId]
   );
   if (existing.length > 0) {
-    const error = new Error("You have already RSVP'd to this event."); error.statusCode = 400; throw error;
+    const error = new Error("You've already said you're going."); error.statusCode = 400; throw error;
   }
 
   if (event.capacity) {
@@ -262,7 +262,7 @@ async function rsvpToEvent(eventId, userId) {
       [eventId]
     );
     if (countRows[0].count >= event.capacity) {
-      const error = new Error("This event is fully booked."); error.statusCode = 400; throw error;
+      const error = new Error("This listing is full — no more places."); error.statusCode = 400; throw error;
     }
   }
 
@@ -276,8 +276,8 @@ async function rsvpToEvent(eventId, userId) {
   );
   await notificationService.createNotification({
     userId: event.organizer_id,
-    title: "New RSVP",
-    message: `${userRows[0]?.full_name || "A student"} RSVP'd to "${event.title}".`
+    title: "Someone's Going",
+    message: `${userRows[0]?.full_name || "A student"} is going to "${event.title}".`
   });
 
   return getEventById(eventId);
@@ -289,7 +289,7 @@ async function cancelRsvp(eventId, userId) {
     [eventId, userId]
   );
   if (rows.length === 0) {
-    const error = new Error("You have not RSVP'd to this event."); error.statusCode = 400; throw error;
+    const error = new Error("You haven't said you're going to this listing."); error.statusCode = 400; throw error;
   }
   await pool.execute(
     `DELETE FROM event_rsvps WHERE event_id = ? AND user_id = ?`,
@@ -315,16 +315,16 @@ async function updateEvent(eventId, userId, {
   );
 
   if (rows.length === 0) {
-    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+    const error = new Error("Listing not found."); error.statusCode = 404; throw error;
   }
 
   const event = rows[0];
 
   if (Number(event.organizer_id) !== Number(userId)) {
-    const error = new Error("Only the organizer can edit this event."); error.statusCode = 403; throw error;
+    const error = new Error("Only the person who posted this listing can edit it."); error.statusCode = 403; throw error;
   }
   if (event.status !== "Upcoming" || Number(event.has_passed)) {
-    const error = new Error("Only upcoming events can be edited."); error.statusCode = 400; throw error;
+    const error = new Error("Only upcoming listings can be edited."); error.statusCode = 400; throw error;
   }
 
   const going = Number(event.rsvp_count);
@@ -388,8 +388,8 @@ async function updateEvent(eventId, userId, {
     );
     await Promise.all(attendees.map(a => notificationService.createNotification({
       userId: a.user_id,
-      title: "Event Updated",
-      message: `The ${what} of "${title.trim()}", an event you're going to, has changed. Check the event page for the new details.`,
+      title: "Listing Updated",
+      message: `The ${what} of "${title.trim()}", a Campus Marketplace listing you're going to, has changed. Check the listing for the new details.`,
       contextType: "event",
       contextId: eventId
     })));
@@ -403,10 +403,10 @@ async function deleteEvent(eventId, userId) {
     `SELECT id, organizer_id FROM events WHERE id = ? LIMIT 1`, [eventId]
   );
   if (rows.length === 0) {
-    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+    const error = new Error("Listing not found."); error.statusCode = 404; throw error;
   }
   if (Number(rows[0].organizer_id) !== Number(userId)) {
-    const error = new Error("Only the organizer can delete this event."); error.statusCode = 403; throw error;
+    const error = new Error("Only the person who posted this listing can delete it."); error.statusCode = 403; throw error;
   }
   await pool.execute(`DELETE FROM events WHERE id = ?`, [eventId]);
 }
@@ -431,13 +431,13 @@ async function getEventById(eventId) {
 async function getEventByIdForViewing(eventId, viewerId = null, viewerRole = null) {
   const event = await getEventById(eventId);
   if (!event) {
-    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+    const error = new Error("Listing not found."); error.statusCode = 404; throw error;
   }
 
   const isOwner = viewerId != null && Number(event.organizer_id) === Number(viewerId);
   const isAdmin = viewerRole === "admin";
   if (event.moderation_status !== "clean" && !isOwner && !isAdmin) {
-    const error = new Error("Event not found."); error.statusCode = 404; throw error;
+    const error = new Error("Listing not found."); error.statusCode = 404; throw error;
   }
 
   return event;

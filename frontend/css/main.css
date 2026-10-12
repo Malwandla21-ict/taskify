@@ -1727,7 +1727,7 @@ textarea { min-height: 110px; resize: vertical; }
   line-height: 1.6;
 }
 .booking-money-line strong { color: var(--text); }
-#bookingSubmitButton:disabled, #simulateBuyButton:disabled, #releaseOrderButton:disabled {
+#bookingSubmitButton:disabled, #simulateBuyButton:disabled, .release-order-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
@@ -3933,4 +3933,124 @@ button .tk-loader { font-size: 1.35em; margin: -0.2em 0; }
 .net-pill.online { background: var(--ump-green); }
 @media (max-width: 560px) {
   .net-pill { border-radius: 16px; }
+}
+
+/* ==============================
+   FORM GUIDANCE (sign-up and other multi-step forms)
+   A field that needs fixing gets a red outline and a short message right
+   under it saying what's wrong, instead of one sentence at the bottom of
+   the form. Hints sit under a field before anything's wrong; the
+   password checklist ticks itself off as you type.
+============================== */
+.field-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.field-hint .ti { font-size: 13px; }
+.field-hint .count { margin-left: auto; font-variant-numeric: tabular-nums; font-weight: 600; }
+.field-hint.ok { color: var(--ump-green); }
+
+.field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ump-red);
+  animation: sk-reveal 0.2s var(--ease-out) both;
+}
+.field-error .ti { font-size: 14px; margin-top: 1px; flex: 0 0 auto; }
+.field-error button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--ump-navy);
+  font: inherit;
+  text-decoration: underline;
+}
+
+input.input-invalid, select.input-invalid, textarea.input-invalid {
+  border-color: var(--ump-red);
+  background: #FFF8F8;
+}
+input.input-invalid:focus, select.input-invalid:focus, textarea.input-invalid:focus {
+  border-color: var(--ump-red);
+  box-shadow: 0 0 0 3px rgba(224,58,62,0.12);
+}
+.role-grid.input-invalid .role-option,
+.checkbox-row.input-invalid { color: var(--ump-red); }
+.checkbox-row.input-invalid input { outline: 2px solid var(--ump-red); outline-offset: 2px; }
+
+/* A field the person needs to look at gets a brief nudge. */
+@keyframes field-nudge {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.field-nudge { animation: field-nudge 0.28s var(--ease-in-out) 1; }
+
+/* Summary at the top of a step: "2 things to fix before you continue". */
+.form-error-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+  border-radius: var(--radius);
+  background: rgba(224,58,62,0.07);
+  border: 1px solid rgba(224,58,62,0.25);
+  color: var(--ump-red);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.form-error-summary[hidden] { display: none; }
+
+/* Password strength + checklist. */
+.password-meter {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-top: 8px;
+}
+.password-meter span {
+  height: 4px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background 0.2s var(--ease-out);
+}
+.password-meter[data-score="1"] span:nth-child(-n+1) { background: var(--ump-red); }
+.password-meter[data-score="2"] span:nth-child(-n+2) { background: var(--ump-gold); }
+.password-meter[data-score="3"] span:nth-child(-n+3) { background: var(--ump-green); }
+.password-meter[data-score="4"] span { background: var(--ump-green); }
+.password-meter-label { font-size: 11.5px; font-weight: 600; color: var(--muted); margin-top: 5px; }
+
+.password-checklist {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 12px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.password-checklist li { display: flex; align-items: center; gap: 6px; transition: color 0.15s; }
+.password-checklist li .ti { font-size: 14px; }
+.password-checklist li.met { color: var(--ump-green); }
+.password-checklist li.missing { color: var(--ump-red); font-weight: 600; }
+.password-checklist li.optional { font-style: normal; }
+
+/* Radio choices drawn as the same pill buttons as the sign-up role picker. */
+.choice-grid .role-option:has(input:checked) { background: var(--ump-navy); color: white; border-color: var(--ump-navy); }
+.choice-grid .role-option:has(input:focus-visible) { outline: 2px solid var(--ump-blue); outline-offset: 2px; }
+.choice-grid .role-option { margin: 0; }
+
+/* "3 left" / "2 of 5 sold" on a sales card. */
+.market-tag.quantity-tag { background: rgba(0,155,114,0.10); color: var(--ump-green); }
+@media (max-width: 420px) {
+  .password-checklist { grid-template-columns: 1fr; }
 }

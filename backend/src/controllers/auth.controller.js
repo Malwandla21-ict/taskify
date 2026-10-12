@@ -6,7 +6,7 @@ const { requestContext } = require("../services/securityLog.service");
 function validationFailure(req, res) {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
     return true;
   }
   return false;

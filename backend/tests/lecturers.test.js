@@ -14,7 +14,7 @@ after(stop);
 
 const register = (email, memberType) => api(null, "POST", "/auth/register", {
   fullName: "Test Person", email, phoneNumber: "0710000000", password: "TestPass123",
-  studentNumber: "2023123456", memberType
+  studentNumber: memberType === "Student" ? email.split("@")[0] : "12345", memberType
 });
 
 test("a student-number email can't sign up as a lecturer or staff member", async () => {

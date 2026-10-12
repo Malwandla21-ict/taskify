@@ -8,7 +8,7 @@ async function createReview(req, res, next) {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed.",
+        message: errors.array()[0].msg,
         errors: errors.array()
       });
     }
@@ -41,7 +41,7 @@ async function createEquipmentReview(req, res, next) {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed.",
+        message: errors.array()[0].msg,
         errors: errors.array()
       });
     }
@@ -74,7 +74,7 @@ async function updateReview(req, res, next) {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed.",
+        message: errors.array()[0].msg,
         errors: errors.array()
       });
     }
@@ -107,7 +107,7 @@ async function deleteReview(req, res, next) {
     if (!errors.isEmpty()) {
       return res.status(400).json({
         success: false,
-        message: "Validation failed.",
+        message: errors.array()[0].msg,
         errors: errors.array()
       });
     }

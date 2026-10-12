@@ -61,7 +61,7 @@ function escapeSaleText(value) {
 }
 
 const reportSaleProblemButton = (order) => `
-  <button class="secondary-button" id="reportSaleProblemButton" data-order-id="${order.id}" style="margin-top:6px;">
+  <button class="secondary-button report-sale-problem-btn" data-order-id="${order.id}" style="margin-top:6px;">
     <i class="ti ti-alert-triangle" aria-hidden="true"></i> Meetup failed? Report a problem
   </button>`;
 
@@ -100,7 +100,7 @@ function orderPanel(item, order) {
           ${moneyRow("Held", order.total_amount, { strong: true })}
         </div>
         ${disputed ? "" : `
-          <button class="secondary-button" id="cancelOrderButton" data-order-id="${order.id}" style="color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+          <button class="secondary-button cancel-order-btn" data-order-id="${order.id}" style="color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
             <i class="ti ti-arrow-back-up" aria-hidden="true"></i> Cancel &amp; get refund
           </button>
           <p class="pay-note" style="margin-top:6px;">Seller didn't turn up or the item isn't right? Cancelling refunds you straight away. Report a problem if you need an admin to step in.</p>
@@ -118,12 +118,12 @@ function orderPanel(item, order) {
         ${contactLine("Buyer", order.buyer_phone_number)}
         ${order.locked
           ? `<p class="pay-note blocked">Too many wrong codes were entered, so this order is locked.${disputed ? " An admin is looking at it." : " The buyer can cancel it for a refund, or you can report a problem."}</p>`
-          : `<input type="text" id="handoverCodeInput" class="handover-input" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="Buyer's 4-digit handover code" />
-             <button class="primary-button" id="releaseOrderButton" data-order-id="${order.id}" style="width:100%;">
+          : `<input type="text" class="handover-input" data-order-id="${order.id}" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="••••" aria-label="${escapeHtml(order.buyer_name || "The buyer")}'s 4-digit handover code" />
+             <button class="primary-button release-order-btn" data-order-id="${order.id}" style="width:100%;">
                <i class="ti ti-lock-open" aria-hidden="true"></i> Confirm handover &amp; get paid
              </button>
              <p class="pay-note" style="margin-top:8px;">${order.attempts_left} attempt${order.attempts_left === 1 ? "" : "s"} left.</p>`}
-        <button class="secondary-button" id="cancelOrderButton" data-order-id="${order.id}" style="margin-top:6px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+        <button class="secondary-button cancel-order-btn" data-order-id="${order.id}" style="margin-top:6px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
           <i class="ti ti-x" aria-hidden="true"></i> Cancel sale (refund buyer)
         </button>
         ${disputed ? "" : reportSaleProblemButton(order)}
@@ -212,6 +212,10 @@ saleProblemForm?.addEventListener("submit", async (e) => {
   }
 });
 
+/* Orders shown on the page, by id — the buyer's own, or every buyer the
+   seller is waiting on. Filled by renderSaleDetails. */
+let ordersById = new Map();
+
 async function loadSaleDetails() {
   try {
     const res = await apiRequest(`/sales/${saleId}`);
@@ -234,6 +238,22 @@ function renderSaleDetails(item) {
   const order = item.my_order;
   const activeOrder = order && ["Held", "Disputed"].includes(order.status) ? order : null;
 
+  /* How many: a single item, or several of the same (sales.service.js). */
+  const quantity = Number(item.quantity || 1);
+  const sold = Number(item.quantity_sold || 0);
+  const onHold = Number(item.quantity_on_hold || 0);
+  const left = Math.max(0, quantity - sold - onHold);
+  const isMulti = quantity > 1;
+  /* Every buyer the seller is waiting on (several only when isMulti). */
+  const sellerOpenOrders = isOwn ? (item.open_orders || []) : [];
+  ordersById = new Map([order, ...sellerOpenOrders].filter(Boolean).map(o => [String(o.id), o]));
+
+  const quantityNote = isMulti
+    ? `<p class="pay-note" style="display:flex;align-items:center;gap:6px;"><i class="ti ti-stack-2" aria-hidden="true"></i> ${isOwn
+        ? `<span><strong>${sold} of ${quantity}</strong> sold${onHold ? `, <strong>${onHold}</strong> waiting for handover` : ""}, <strong>${left}</strong> still for sale. The listing comes down by itself when the last one goes.</span>`
+        : `<span><strong>${left}</strong> of ${quantity} still available.</span>`}</p>`
+    : "";
+
   /* Messaging the seller opens once you've bought through Taskify
      Protection — or straight away on cheap cash items, where messaging is
      how you arrange the sale. The server decides (item.can_message, see
@@ -244,29 +264,46 @@ function renderSaleDetails(item) {
        </button>`
     : "";
 
+  /* Cash sales (no protected order): a single item is "Mark as Sold";
+     with several, one sale at a time, or the rest in one go. */
+  const markSoldButtons = !isMulti
+    ? `<button class="secondary-button mark-sold-btn" data-item-id="${item.id}" style="margin-top:10px;">
+         <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
+       </button>`
+    : `<button class="secondary-button mark-sold-btn" data-item-id="${item.id}" style="margin-top:10px;">
+         <i class="ti ti-circle-check" aria-hidden="true"></i> ${left > 1 ? "Sold one (paid in cash)" : "Sold the last one"}
+       </button>
+       ${left > 1 ? `<button class="secondary-button mark-sold-btn" data-item-id="${item.id}" data-all="1" style="margin-top:10px;">
+         <i class="ti ti-checks" aria-hidden="true"></i> Sold the rest (${left})
+       </button>` : ""}`;
+
   let actionArea;
-  if (activeOrder) {
-    actionArea = `${orderPanel(item, activeOrder)}${activeOrder.role === "buyer" ? messageSellerButton() : ""}`;
-  } else if (isOwn) {
-    actionArea = `${orderPanel(item, order)}<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>
+  if (isOwn) {
+    /* The seller sees every buyer waiting for handover (with several there
+       can be more than one), then what's left to do with the listing. */
+    const waitingPanels = sellerOpenOrders.map(o => orderPanel(item, o)).join("");
+    actionArea = `${waitingPanels || orderPanel(item, order)}<div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your item</div>
+       ${quantityNote}
        ${item.status === "Available" ? `
          <a href="./sales.html?edit=${item.id}" class="secondary-button" style="margin-top:10px;">
            <i class="ti ti-edit" aria-hidden="true"></i> Edit Listing
          </a>
-         <button class="secondary-button mark-sold-btn" data-item-id="${item.id}" style="margin-top:10px;">
-           <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
-         </button>` : ""}
-       <button class="secondary-button delete-sale-btn" data-item-id="${item.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
+         ${markSoldButtons}` : ""}
+       ${sellerOpenOrders.length ? "" : `<button class="secondary-button delete-sale-btn" data-item-id="${item.id}" style="margin-top:10px;color:var(--ump-red);border-color:rgba(224,58,62,0.3);">
          <i class="ti ti-trash" aria-hidden="true"></i> Delete Listing
-       </button>`;
+       </button>`}`;
+  } else if (activeOrder) {
+    actionArea = `${orderPanel(item, activeOrder)}${activeOrder.role === "buyer" ? messageSellerButton() : ""}`;
   } else if (item.status === "Reserved") {
-    actionArea = `<div class="badge gold"><i class="ti ti-clock" aria-hidden="true"></i> Reserved — another student is buying this</div>`;
+    actionArea = `<div class="badge gold"><i class="ti ti-clock" aria-hidden="true"></i> ${isMulti
+      ? "All the ones left are reserved by other buyers — check back in case one is cancelled"
+      : "Reserved — another student is buying this"}</div>`;
   } else if (item.status !== "Available") {
     actionArea = `${orderPanel(item, order)}<div class="badge gold"><i class="ti ti-lock" aria-hidden="true"></i> Already sold</div>${messageSellerButton()}`;
   } else if (rules.requiresProtection) {
     /* In-app offers (js/offers.js) are only on protected items. Starts
        hidden for signed-in users until offers.js knows they can offer. */
-    actionArea = `${orderPanel(item, order)}${protectionExplainerPanel(rules)}
+    actionArea = `${orderPanel(item, order)}${quantityNote}${protectionExplainerPanel(rules)}
        <button class="primary-button" id="buyProtectedButton">
          <i class="ti ti-shield-lock" aria-hidden="true"></i> Buy with Taskify Protection
        </button>
@@ -275,7 +312,7 @@ function renderSaleDetails(item) {
        </button>
        ${messageSellerButton()}`;
   } else {
-    actionArea = `${safetyTipsPanel(rules)}${messageSellerButton(true)}`;
+    actionArea = `${quantityNote}${safetyTipsPanel(rules)}${messageSellerButton(true)}`;
   }
 
   saleDetailsContainer.innerHTML = `
@@ -320,7 +357,7 @@ function renderSaleDetails(item) {
           </div>
         </div>
         <div style="margin-bottom:20px;">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Price</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">Price${isMulti ? " (each)" : ""}</div>
           <div class="market-price">R${escapeHtml(item.price)}</div>
         </div>
         ${actionArea}
@@ -394,30 +431,35 @@ function renderSaleDetails(item) {
     };
   }
 
-  document.getElementById("reportSaleProblemButton")?.addEventListener("click", () => openSaleProblemModal(order));
-
-  document.getElementById("handoverCodeInput")?.addEventListener("input", (e) => {
-    e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
+  saleDetailsContainer.querySelectorAll(".report-sale-problem-btn").forEach(btn => {
+    btn.addEventListener("click", () => openSaleProblemModal(ordersById.get(btn.dataset.orderId)));
   });
 
-  document.getElementById("releaseOrderButton")?.addEventListener("click", async (e) => {
+  saleDetailsContainer.querySelectorAll(".handover-input").forEach(input => {
+    input.addEventListener("input", (e) => {
+      e.target.value = e.target.value.replace(/\D/g, "").slice(0, 4);
+    });
+  });
+
+  saleDetailsContainer.querySelectorAll(".release-order-btn").forEach(button => button.addEventListener("click", async (e) => {
     const btn = e.currentTarget;
-    const code = document.getElementById("handoverCodeInput").value.trim();
+    const thisOrder = ordersById.get(btn.dataset.orderId);
+    const code = saleDetailsContainer.querySelector(`.handover-input[data-order-id="${btn.dataset.orderId}"]`).value.trim();
     if (!/^\d{4}$/.test(code)) { showToast("Enter the buyer's 4-digit code.", "error"); return; }
     btn.disabled = true;
     btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Checking…`;
     try {
       await apiRequest(`/sales/orders/${btn.dataset.orderId}/release`, "POST", { code });
-      showPaymentMoment("released", `Code accepted. ${formatRand(order.item_price)} released to you.`);
+      showPaymentMoment("released", `Code accepted. ${formatRand(thisOrder?.item_price)} released to you.`);
     } catch (err) {
       showToast(err.message, "error");
     }
     await loadSaleDetails();
-  });
+  }));
 
-  document.getElementById("cancelOrderButton")?.addEventListener("click", async (e) => {
+  saleDetailsContainer.querySelectorAll(".cancel-order-btn").forEach(button => button.addEventListener("click", async (e) => {
     const btn = e.currentTarget;
-    const isBuyer = order?.role === "buyer";
+    const isBuyer = ordersById.get(btn.dataset.orderId)?.role === "buyer";
     if (!confirm(isBuyer
       ? "Cancel this order? Your money will be refunded (demo) and the item goes back on sale."
       : "Cancel this sale? The buyer will be refunded (demo) and your item goes back on sale.")) return;
@@ -430,22 +472,25 @@ function renderSaleDetails(item) {
       showToast(err.message, "error");
     }
     await loadSaleDetails();
-  });
+  }));
 
-  document.querySelector(".mark-sold-btn")?.addEventListener("click", async (e) => {
+  saleDetailsContainer.querySelectorAll(".mark-sold-btn").forEach(button => button.addEventListener("click", async (e) => {
     const btn = e.currentTarget;
+    const all = btn.dataset.all === "1";
+    if (all && !confirm(`Mark the remaining ${left} as sold? The listing will come down.`)) return;
+    const originalHtml = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Updating…`;
     try {
-      await apiRequest(`/sales/${saleId}/sold`, "PATCH");
-      showToast("Item marked as sold!");
+      const res = await apiRequest(`/sales/${saleId}/sold`, "PATCH", all ? { all: true } : null);
+      showToast(res.message || "Item marked as sold!");
       await loadSaleDetails();
     } catch (err) {
       showToast(err.message, "error");
       btn.disabled = false;
-      btn.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold`;
+      btn.innerHTML = originalHtml;
     }
-  });
+  }));
 
   document.querySelector(".delete-sale-btn")?.addEventListener("click", async (e) => {
     if (!confirm("Permanently delete this listing?")) return;

@@ -26,10 +26,10 @@ const eventFieldRules = [
   body("listingAuthority").optional({ nullable: true }).isString().isLength({ max: 300 }).withMessage("Keep the authorisation note under 300 characters."),
   /* section is worked out from the category (applyCategorySection below) */
   body("location").trim().notEmpty().withMessage("Location is required."),
-  body("eventDate").notEmpty().withMessage("Event date is required.")
-    .isISO8601().withMessage("Event date must be a valid date/time.")
+  body("eventDate").notEmpty().withMessage("Please choose a date and time.")
+    .isISO8601().withMessage("Please choose a valid date and time.")
     .custom(value => {
-      if (new Date(value) <= new Date()) throw new Error("Event date must be in the future.");
+      if (new Date(value) <= new Date()) throw new Error("The date must be in the future.");
       return true;
     }),
   body("capacity").optional({ nullable: true }).isInt({ min: 1 }).withMessage("Capacity must be a positive number."),
@@ -60,9 +60,9 @@ router.put(
   authenticate,
   marketplacePoster,
   [
-    param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer."),
+    param("id").isInt({ min: 1 }).withMessage("Listing ID must be a valid positive integer."),
     ...eventFieldRules,
-    body("imageUrls").optional().isArray({ max: 5 }).withMessage("An event can have up to 5 images.")
+    body("imageUrls").optional().isArray({ max: 5 }).withMessage("A listing can have up to 5 images.")
   ],
   eventController.updateEvent
 );
@@ -70,21 +70,21 @@ router.put(
 router.post(
   "/:id/rsvp",
   authenticate,
-  [ param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer.") ],
+  [ param("id").isInt({ min: 1 }).withMessage("Listing ID must be a valid positive integer.") ],
   eventController.rsvpToEvent
 );
 
 router.delete(
   "/:id/rsvp",
   authenticate,
-  [ param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer.") ],
+  [ param("id").isInt({ min: 1 }).withMessage("Listing ID must be a valid positive integer.") ],
   eventController.cancelRsvp
 );
 
 router.delete(
   "/:id",
   authenticate,
-  [ param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer.") ],
+  [ param("id").isInt({ min: 1 }).withMessage("Listing ID must be a valid positive integer.") ],
   eventController.deleteEvent
 );
 
@@ -102,7 +102,7 @@ router.delete(
 router.get(
   "/:id",
   optionalAuthenticate,
-  [ param("id").isInt({ min: 1 }).withMessage("Event ID must be a valid positive integer.") ],
+  [ param("id").isInt({ min: 1 }).withMessage("Listing ID must be a valid positive integer.") ],
   eventController.getEventById
 );
 

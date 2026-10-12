@@ -5,6 +5,7 @@ const twoFactorController = require("../controllers/twoFactor.controller");
 const upload = require("../middleware/upload.middleware");
 const { authenticate } = require("../middleware/auth.middleware");
 const { loginLimiter, registerLimiter, emailActionLimiter, twoFactorLimiter } = require("../middleware/rateLimit.middleware");
+const { ALL_FACULTY_OPTIONS, FACULTY_NAMES } = require("../config/faculties");
 
 const router = express.Router();
 
@@ -36,14 +37,31 @@ router.post(
       .matches(/[A-Za-z]/).withMessage("Password must contain at least one letter.")
       .matches(/[0-9]/).withMessage("Password must contain at least one number."),
 
-    body("studentNumber").optional({ checkFalsy: true }).trim()
-      .isLength({ max: 50 }).withMessage("Student/staff number must be under 50 characters."),
+    /* UMP student numbers are 9 digits; staff and lecturer numbers are 5.
+       A student's email is their student number, so the two must match. */
+    body("studentNumber").trim().notEmpty().withMessage("Your student or staff number is required.").bail()
+      .custom((value, { req }) => {
+        const isStudent = !req.body.memberType || req.body.memberType === "Student";
+        if (isStudent && !/^\d{9}$/.test(value)) throw new Error("Your student number must be exactly 9 digits.");
+        if (!isStudent && !/^\d{5}$/.test(value)) throw new Error("Your staff number must be exactly 5 digits.");
+        const local = String(req.body.email || "").trim().toLowerCase().split("@")[0];
+        if (isStudent && /^\d+$/.test(local) && local !== value) {
+          throw new Error("Your student email should be your student number — check that both match.");
+        }
+        return true;
+      }),
 
     body("memberType").optional({ checkFalsy: true })
       .isIn(["Student", "Lecturer", "Staff"]).withMessage("Account type must be Student, Lecturer or Staff."),
 
     body("faculty").optional({ checkFalsy: true }).trim()
-      .isLength({ max: 150 }).withMessage("Faculty must be under 150 characters."),
+      .isIn(ALL_FACULTY_OPTIONS).withMessage("Please choose your faculty or department from the list.")
+      .custom((value, { req }) => {
+        if ((!req.body.memberType || req.body.memberType === "Student") && !FACULTY_NAMES.includes(value)) {
+          throw new Error("Students need to choose one of the three UMP faculties.");
+        }
+        return true;
+      }),
 
     body("academicYear").optional({ checkFalsy: true }).trim()
       .isLength({ max: 50 }).withMessage("Academic year must be under 50 characters."),

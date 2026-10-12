@@ -55,6 +55,7 @@ function updateSalesPreview() {
   const condition = document.getElementById("salesCondition").value;
   const location  = document.getElementById("salesLocation").value.trim();
   const price     = document.getElementById("salesPrice").value.trim();
+  const quantity  = selectedQuantity();
 
   salesPreview.innerHTML = `
     <h3 style="font-size:16px;font-weight:700;margin-bottom:8px;">${escapeHtml(title || "Item title")}</h3>
@@ -66,8 +67,91 @@ function updateSalesPreview() {
       <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(location || "Location")}</div>
     </div>
     <div style="margin-top:14px;font-size:13px;color:var(--muted);">
-      Price: <strong style="color:var(--ump-green);font-size:16px;">R${escapeHtml(price || "0")}</strong>
+      Price: <strong style="color:var(--ump-green);font-size:16px;">R${escapeHtml(price || "0")}</strong>${quantity > 1 ? ` each · <strong>${quantity}</strong> available` : ""}
     </div>`;
+}
+
+/* ── One item or several of the same ──
+   The seller has to choose. A single item comes down by itself once it
+   sells; with several, the listing stays up until the last one has gone
+   (backend: sales.service.js quantity). */
+const salesQuantityChoice = document.getElementById("salesQuantityChoice");
+const salesQuantityGroup  = document.getElementById("salesQuantityGroup");
+const salesQuantityInput  = document.getElementById("salesQuantity");
+
+function quantityMode() {
+  return salesForm?.querySelector("input[name='salesQuantityMode']:checked")?.value || "";
+}
+
+function selectedQuantity() {
+  if (quantityMode() !== "multiple") return 1;
+  const n = Number(salesQuantityInput?.value);
+  return Number.isInteger(n) && n >= 2 ? n : 1;
+}
+
+function syncQuantityUI() {
+  const mode = quantityMode();
+  if (salesQuantityGroup) salesQuantityGroup.hidden = mode !== "multiple";
+  const hint = document.getElementById("salesQuantityHint");
+  if (hint) hint.querySelector("span").textContent = mode === "multiple"
+    ? "Your listing stays up until the last one sells. Buyers see how many are left."
+    : mode === "single"
+      ? "Your listing comes down by itself once it sells."
+      : "Choose one, so we know when to take the listing down.";
+  const priceLabel = document.getElementById("salesPriceLabel");
+  if (priceLabel) priceLabel.innerHTML = `<i class="ti ti-currency-dollar" aria-hidden="true"></i> ${mode === "multiple" ? "Price each (R)" : "Price (R)"}`;
+  updateSalesPreview();
+}
+
+salesQuantityChoice?.addEventListener("change", () => {
+  clearFieldError(salesQuantityChoice);
+  syncQuantityUI();
+  if (quantityMode() === "multiple") salesQuantityInput?.focus();
+});
+salesQuantityInput?.addEventListener("input", updateSalesPreview);
+salesForm?.addEventListener("reset", () => setTimeout(syncQuantityUI, 0));
+
+function validateSalesStep3() {
+  let ok = true;
+  const mode = quantityMode();
+  if (!mode) {
+    setFieldError(salesQuantityChoice, "Choose whether you're selling just this one or several of the same.");
+    ok = false;
+  } else if (mode === "multiple") {
+    const n = Number(salesQuantityInput.value);
+    if (!Number.isInteger(n) || n < 2 || n > 100) {
+      setFieldError(salesQuantityInput, "Enter how many you have — a whole number from 2 to 100.");
+      ok = false;
+    }
+  }
+  const priceInput = document.getElementById("salesPrice");
+  if (!priceInput.value.trim() || Number(priceInput.value) < 0) {
+    setFieldError(priceInput, "Enter a price.");
+    ok = false;
+  }
+  if (!ok) focusFirstInvalid(document.getElementById("salesStep3"));
+  return ok;
+}
+
+/* "3 left" for buyers; "2 of 5 sold" for the seller. */
+function quantityTag(item, { owner = false } = {}) {
+  const quantity = Number(item.quantity || 1);
+  if (quantity <= 1) return "";
+  const sold = Number(item.quantity_sold || 0);
+  const held = Number(item.quantity_on_hold || 0);
+  const left = Math.max(0, quantity - sold - held);
+  return owner
+    ? `<div class="market-tag quantity-tag"><i class="ti ti-stack-2" aria-hidden="true"></i> ${sold} of ${quantity} sold${held ? ` · ${held} waiting for handover` : ""}</div>`
+    : `<div class="market-tag quantity-tag"><i class="ti ti-stack-2" aria-hidden="true"></i> ${left} left</div>`;
+}
+
+/* The cash "sold" button: a single item is "Mark as Sold"; with several
+   left it records one sale at a time. */
+function markSoldLabel(item) {
+  const left = Number(item.quantity || 1) - Number(item.quantity_sold || 0) - Number(item.quantity_on_hold || 0);
+  return Number(item.quantity || 1) > 1 && left > 1
+    ? `<i class="ti ti-circle-check" aria-hidden="true"></i> Sold one`
+    : `<i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold`;
 }
 
 function validateSalesStep1() {
@@ -113,6 +197,7 @@ function openSalesCreateModal() {
   setSalesSubmitLabel();
   showSalesStep(1);
   if (salesUploader) salesUploader.reset();
+  syncQuantityUI();
   salesCreateOverlay?.classList.add("open");
   salesCreateModal?.classList.add("open");
 }
@@ -127,6 +212,11 @@ function openSalesEditModal(item) {
   document.getElementById("salesCondition").value   = item.condition_status || "Good";
   document.getElementById("salesLocation").value    = item.location || "";
   document.getElementById("salesPrice").value       = item.price ?? "";
+  const multiple = Number(item.quantity || 1) > 1;
+  const modeInput = salesForm.querySelector(`input[name='salesQuantityMode'][value='${multiple ? "multiple" : "single"}']`);
+  if (modeInput) modeInput.checked = true;
+  if (salesQuantityInput) salesQuantityInput.value = multiple ? item.quantity : "";
+  syncQuantityUI();
   if (salesUploader) salesUploader.setExisting(item.image_urls || []);
   updateSalesPreview();
   setSalesSubmitLabel();
@@ -252,18 +342,19 @@ function saleCard(item) {
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
           <div class="market-tag"><i class="ti ti-map-pin" aria-hidden="true"></i> ${escapeHtml(item.location)}</div>
+          ${quantityTag(item, { owner: isOwn })}
           ${endorsementBadge(item)}
         </div>
         <div class="market-footer">
-          <div class="market-price">R${escapeHtml(item.price)}</div>
+          <div class="market-price">R${escapeHtml(item.price)}${Number(item.quantity) > 1 ? ` <span>each</span>` : ""}</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <a href="./sale-details.html?id=${item.id}" class="market-action-btn">
               <i class="ti ti-eye" aria-hidden="true"></i> View
             </a>
             ${isOwn ? `
               <div class="badge navy"><i class="ti ti-user" aria-hidden="true"></i> Your Item</div>
-              <button class="market-action-btn outline mark-sold-btn" data-item-id="${item.id}">
-                <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
+              <button class="market-action-btn outline mark-sold-btn" data-item-id="${item.id}" data-multi="${Number(item.quantity) > 1 ? 1 : ""}">
+                ${markSoldLabel(item)}
               </button>
               <button class="market-action-btn outline delete-sale-btn" data-item-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
                 <i class="ti ti-trash" aria-hidden="true"></i> Delete
@@ -296,18 +387,20 @@ function myListingCard(item) {
         <div class="market-tags">
           <div class="market-tag"><i class="ti ti-tag" aria-hidden="true"></i> ${escapeHtml(item.category)}</div>
           ${conditionBadge(item.condition_status)}
+          ${quantityTag(item, { owner: true })}
           ${endorsementBadge(item)}
-          <div class="market-price" style="font-size:16px;">R${escapeHtml(item.price)}</div>
+          <div class="market-price" style="font-size:16px;">R${escapeHtml(item.price)}${Number(item.quantity) > 1 ? " each" : ""}</div>
         </div>
-        <div style="display:flex;gap:8px;margin-top:14px;">
-          ${item.status === "Reserved" ? `
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+          ${Number(item.quantity_on_hold) > 0 ? `
             <a href="./sale-details.html?id=${item.id}" class="market-action-btn" style="flex:1;justify-content:center;">
-              <i class="ti ti-lock-open" aria-hidden="true"></i> Buyer paid — enter code
-            </a>` : !isSold ? `
-            <button class="market-action-btn mark-sold-btn" data-item-id="${item.id}" style="flex:1;">
-              <i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold
+              <i class="ti ti-lock-open" aria-hidden="true"></i> ${Number(item.quantity_on_hold) > 1 ? `${item.quantity_on_hold} buyers paid — enter codes` : "Buyer paid — enter code"}
+            </a>` : ""}
+          ${!isSold ? `
+            <button class="market-action-btn mark-sold-btn" data-item-id="${item.id}" data-multi="${Number(item.quantity) > 1 ? 1 : ""}" style="flex:1;">
+              ${markSoldLabel(item)}
             </button>` : ""}
-          ${item.status === "Reserved" ? "" : `<button class="market-action-btn outline delete-sale-btn" data-item-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
+          ${Number(item.quantity_on_hold) > 0 ? "" : `<button class="market-action-btn outline delete-sale-btn" data-item-id="${item.id}" style="background:rgba(224,58,62,0.08);color:var(--ump-red);border-color:rgba(224,58,62,0.20);">
             <i class="ti ti-trash" aria-hidden="true"></i> Delete
           </button>`}
         </div>
@@ -413,16 +506,17 @@ function attachMarkSoldEvents() {
     btn.dataset.bound = "1";
     btn.addEventListener("click", async () => {
       btn.disabled = true;
+      const originalHtml = btn.innerHTML;
       btn.innerHTML = `<i class="ti ti-loader" aria-hidden="true"></i> Updating…`;
       try {
-        await apiRequest(`/sales/${btn.dataset.itemId}/sold`, "PATCH");
-        showToast("Item marked as sold!");
+        const res = await apiRequest(`/sales/${btn.dataset.itemId}/sold`, "PATCH");
+        showToast(res.message || "Item marked as sold!");
         await loadSalesItems();
         await loadMySalesItems();
       } catch (err) {
         showToast(err.message, "error");
         btn.disabled = false;
-        btn.innerHTML = `<i class="ti ti-circle-check" aria-hidden="true"></i> Mark as Sold`;
+        btn.innerHTML = originalHtml;
       }
     });
   });
@@ -471,6 +565,7 @@ document.getElementById("viewAllListingsLink")?.addEventListener("click", (e) =>
 
 salesForm?.addEventListener("submit", async e => {
   e.preventDefault();
+  if (!validateSalesStep3()) return;
   const submitBtn = salesForm.querySelector("button[type='submit']");
   submitBtn.disabled = true;
   submitBtn.innerHTML = `${taskifyMarkLoader()} ${editingSalesId ? "Saving…" : "Publishing…"}`;
@@ -490,6 +585,7 @@ salesForm?.addEventListener("submit", async e => {
       price:           Number(document.getElementById("salesPrice").value.trim()),
       conditionStatus: document.getElementById("salesCondition").value,
       location:        document.getElementById("salesLocation").value.trim(),
+      quantity:        selectedQuantity(),
       imageUrls
     };
 

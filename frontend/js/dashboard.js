@@ -60,7 +60,7 @@ if (onboardingOverlay && currentUser && !currentUser.has_seen_onboarding) {
 let carouselTimer = null;
 
 function spotlightIconFor(type) {
-  if (type === "event") return "ti-calendar-event";
+  if (type === "event") return "ti-building-store";
   if (type === "rental") return "ti-camera";
   if (type === "sale") return "ti-shopping-cart";
   return "ti-clipboard-check";
@@ -259,7 +259,7 @@ function spotlightItem(ev) {
       <div class="spotlight-thumb">
         ${ev.image_urls?.length
           ? `<img src="${escapeHtml(ev.image_urls[0])}" alt="${escapeHtml(ev.title)}" style="width:100%;height:100%;object-fit:cover;" />`
-          : `<div class="media-placeholder light navy"><i class="ti ti-calendar-event" aria-hidden="true"></i></div>`}
+          : `<div class="media-placeholder light navy"><i class="ti ti-building-store" aria-hidden="true"></i></div>`}
         <div class="spotlight-date-badge"><span>${month}</span><strong>${day}</strong></div>
       </div>
       <div class="spotlight-info">

@@ -502,6 +502,8 @@ CREATE TABLE IF NOT EXISTS `sales_items` (
   `condition_status` enum('New','Excellent','Good','Fair','Used') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Good',
   `location` varchar(150) COLLATE utf8mb4_general_ci NOT NULL,
   `status` enum('Available','Reserved','Sold') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'Available',
+  `quantity` int NOT NULL DEFAULT 1,
+  `quantity_sold` int NOT NULL DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `image_urls` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin,
   `moderation_status` enum('clean','pending_review','removed') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'clean',

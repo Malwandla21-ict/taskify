@@ -29,7 +29,7 @@ async function listUsers(req, res, next) {
 async function promoteUser(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const user = await adminService.promoteUserToAdmin(Number(req.params.userId), req.user.id);
     return res.status(200).json({ success: true, message: "User promoted to admin.", data: user });
@@ -67,7 +67,7 @@ async function downloadExport(req, res, next) {
 async function resolveTaskDispute(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const task = await taskService.resolveTaskDispute(Number(req.params.taskId), req.user.id, req.body.outcome, req.body.note);
     return res.status(200).json({ success: true, message: "Dispute settled.", data: task });
@@ -77,7 +77,7 @@ async function resolveTaskDispute(req, res, next) {
 async function resolveSaleDispute(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const order = await salesService.resolveSaleDispute(Number(req.params.orderId), req.user.id, req.body.outcome, req.body.note);
     return res.status(200).json({ success: true, message: "Sale problem settled.", data: order });
@@ -87,7 +87,7 @@ async function resolveSaleDispute(req, res, next) {
 async function resolveRentalDamage(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const booking = await equipmentService.resolveRentalDamage(Number(req.params.bookingId), req.user.id, req.body.outcome, req.body.note);
     return res.status(200).json({ success: true, message: "Damage report settled.", data: booking });
@@ -97,7 +97,7 @@ async function resolveRentalDamage(req, res, next) {
 async function verifyLecturer(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const user = await adminService.setLecturerVerified(Number(req.params.userId), true, req.user.id);
     return res.status(200).json({ success: true, message: "Lecturer verified.", data: user });
@@ -107,7 +107,7 @@ async function verifyLecturer(req, res, next) {
 async function unverifyLecturer(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const user = await adminService.setLecturerVerified(Number(req.params.userId), false, req.user.id);
     return res.status(200).json({ success: true, message: "Lecturer verification removed.", data: user });
@@ -117,7 +117,7 @@ async function unverifyLecturer(req, res, next) {
 async function demoteAdmin(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const user = await adminService.demoteAdminToUser(Number(req.params.userId), req.user.id);
     return res.status(200).json({ success: true, message: "Admin demoted successfully.", data: user });
@@ -127,7 +127,7 @@ async function demoteAdmin(req, res, next) {
 async function unsuspendUser(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const user = await moderationService.unsuspendUser(Number(req.params.userId), req.user.id);
     return res.status(200).json({ success: true, message: "User unsuspended successfully.", data: user });
@@ -137,7 +137,7 @@ async function unsuspendUser(req, res, next) {
 async function banUser(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const user = await moderationService.banUser(Number(req.params.userId), req.user.id, req.body.reason);
     return res.status(200).json({ success: true, message: "User banned successfully.", data: user });
@@ -147,7 +147,7 @@ async function banUser(req, res, next) {
 async function unbanUser(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const user = await moderationService.unbanUser(Number(req.params.userId), req.user.id);
     return res.status(200).json({ success: true, message: "User unbanned successfully.", data: user });
@@ -157,7 +157,7 @@ async function unbanUser(req, res, next) {
 async function refundPayment(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const result = await moderationService.refundPayment(Number(req.params.taskId), req.user.id, req.body.reason);
     return res.status(200).json({ success: true, message: "Payment refunded successfully.", data: result });
@@ -174,7 +174,7 @@ async function getModerationQueue(req, res, next) {
 async function clearModerationFlag(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const result = await adminService.clearModerationFlag(
       req.params.contentType, Number(req.params.contentId), req.user.id
@@ -186,7 +186,7 @@ async function clearModerationFlag(req, res, next) {
 async function removeContent(req, res, next) {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: "Validation failed.", errors: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ success: false, message: errors.array()[0].msg, errors: errors.array() });
 
     const result = await adminService.removeContent(
       req.params.contentType, Number(req.params.contentId), req.user.id, req.body.reason

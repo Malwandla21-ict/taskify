@@ -26,6 +26,9 @@ const SELECT_FIELDS = `
   si.id, si.seller_id, si.title, si.description, si.category,
   si.section, si.price, si.condition_status, si.location,
   si.status, si.created_at, si.image_urls, si.moderation_status,
+  si.quantity, si.quantity_sold,
+  (SELECT COUNT(*) FROM sale_orders so_open
+    WHERE so_open.sales_item_id = si.id AND so_open.status IN ('Held', 'Disputed')) AS quantity_on_hold,
   u.full_name AS seller_name,
   u.profile_photo_url AS seller_profile_photo,
   u.member_type AS seller_member_type,
@@ -33,9 +36,67 @@ const SELECT_FIELDS = `
   u.lecturer_verified AS seller_lecturer_verified
 `;
 
+/* ── How many the seller has ──
+   quantity 1 is a single item: it leaves the marketplace as soon as it
+   sells. With more than one, the listing stays up — each protected
+   purchase holds one unit, each handover (or "Sold one" for cash sales)
+   uses one up — until the last one has gone.
+
+     available = quantity - quantity_sold - orders still waiting for handover
+
+   status is worked out from those numbers, never set directly:
+     Sold      every unit has gone
+     Reserved  nothing left to buy right now (all remaining units held)
+     Available at least one unit can still be bought
+   Call this inside the same transaction as whatever changed the numbers. */
+async function refreshSaleItemStatus(connection, itemId) {
+  await connection.execute(
+    `UPDATE sales_items si
+     SET si.status = CASE
+       WHEN si.quantity_sold >= si.quantity THEN 'Sold'
+       WHEN si.quantity - si.quantity_sold - (
+         SELECT COUNT(*) FROM sale_orders so
+         WHERE so.sales_item_id = si.id AND so.status IN ('Held', 'Disputed')
+       ) <= 0 THEN 'Reserved'
+       ELSE 'Available'
+     END
+     WHERE si.id = ?`,
+    [itemId]
+  );
+  const [rows] = await connection.execute(`SELECT status FROM sales_items WHERE id = ?`, [itemId]);
+  return rows[0]?.status;
+}
+
+/* Locks the item row and counts what's left. */
+async function lockSaleItemUnits(connection, itemId) {
+  const [rows] = await connection.execute(
+    `SELECT quantity, quantity_sold, status FROM sales_items WHERE id = ? FOR UPDATE`, [itemId]
+  );
+  if (!rows.length) {
+    const error = new Error("Sales item not found."); error.statusCode = 404; throw error;
+  }
+  const [held] = await connection.execute(
+    `SELECT COUNT(*) AS n FROM sale_orders WHERE sales_item_id = ? AND status IN ('Held', 'Disputed')`, [itemId]
+  );
+  const row = rows[0];
+  const onHold = Number(held[0].n);
+  return {
+    quantity: Number(row.quantity),
+    sold: Number(row.quantity_sold),
+    onHold,
+    available: Number(row.quantity) - Number(row.quantity_sold) - onHold,
+    status: row.status
+  };
+}
+
+function normalizeQuantity(quantity) {
+  const n = Number(quantity);
+  return Number.isInteger(n) && n >= 1 ? n : 1;
+}
+
 async function createSalesItem({
   sellerId, title, description, category, section,
-  price, conditionStatus, location, imageUrls = []
+  price, conditionStatus, location, imageUrls = [], quantity = 1
 }) {
   const moderation = await contentModerationService.evaluateListingContent({ title, description, imageUrls });
 
@@ -59,15 +120,16 @@ async function createSalesItem({
     `INSERT INTO sales_items (
        seller_id, title, description, category, section,
        price, condition_status, location, status, image_urls,
-       moderation_status, moderation_flags
-     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?, ?, ?)`,
+       moderation_status, moderation_flags, quantity
+     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Available', ?, ?, ?, ?)`,
     [
       sellerId, title.trim(), description.trim(), category.trim(),
       section || "Academic", Number(price),
       conditionStatus || "Good", location.trim(),
       imageUrls.length ? JSON.stringify(imageUrls) : null,
       moderation.flagged ? "pending_review" : "clean",
-      moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null
+      moderation.flagged ? JSON.stringify(moderation.flaggedCategories) : null,
+      normalizeQuantity(quantity)
     ]
   );
 
@@ -95,10 +157,12 @@ async function createSalesItem({
 /* Only the seller, and only while the item is "Available" — once a
    buyer's payment is held (Reserved) or it's Sold, the listing is fixed. */
 async function updateSalesItem(itemId, userId, {
-  title, description, category, section, price, conditionStatus, location, imageUrls = []
+  title, description, category, section, price, conditionStatus, location, imageUrls = [], quantity
 }) {
   const [rows] = await pool.execute(
-    `SELECT id, seller_id, status, moderation_status, moderation_flags FROM sales_items WHERE id = ? LIMIT 1`, [itemId]
+    `SELECT si.id, si.seller_id, si.status, si.moderation_status, si.moderation_flags, si.quantity, si.quantity_sold,
+            (SELECT COUNT(*) FROM sale_orders so WHERE so.sales_item_id = si.id AND so.status IN ('Held', 'Disputed')) AS on_hold
+     FROM sales_items si WHERE si.id = ? LIMIT 1`, [itemId]
   );
 
   if (rows.length === 0) {
@@ -118,6 +182,18 @@ async function updateSalesItem(itemId, userId, {
     throw error;
   }
 
+  /* You can't say you have fewer than have already sold or are waiting
+     for handover. Leaving quantity out keeps it as it is. */
+  const committed = Number(item.quantity_sold) + Number(item.on_hold);
+  const newQuantity = quantity === undefined || quantity === null || quantity === ""
+    ? Number(item.quantity)
+    : normalizeQuantity(quantity);
+  if (newQuantity <= committed) {
+    const error = new Error(`${committed} of these ${committed === 1 ? "has" : "have"} already sold or ${committed === 1 ? "is" : "are"} waiting for handover, so you need more than ${committed} to keep the listing up.`);
+    error.statusCode = 400;
+    throw error;
+  }
+
   const moderation = await moderateListingEdit({
     contentType: "sales_item", userId, title, description, imageUrls, current: item
   });
@@ -128,7 +204,7 @@ async function updateSalesItem(itemId, userId, {
     `UPDATE sales_items
      SET title = ?, description = ?, category = ?, section = ?,
          price = ?, condition_status = ?, location = ?, image_urls = ?,
-         moderation_status = ?, moderation_flags = ?
+         moderation_status = ?, moderation_flags = ?, quantity = ?
      WHERE id = ? AND status = 'Available'`,
     [
       title.trim(), description.trim(), category.trim(),
@@ -136,9 +212,11 @@ async function updateSalesItem(itemId, userId, {
       conditionStatus || "Good", location.trim(),
       imageUrls.length ? JSON.stringify(imageUrls) : null,
       moderation.moderationStatus, moderation.moderationFlags,
+      newQuantity,
       itemId
     ]
   );
+  if (result.affectedRows === 1) await refreshSaleItemStatus(pool, itemId);
 
   if (result.affectedRows === 0) {
     const error = new Error("Someone bought this item while you were editing it, so your changes weren't saved.");
@@ -316,6 +394,17 @@ async function buySalesItem(itemId, buyerId, { agreedPrice = null, beforeCommit 
     const error = new Error("This item is no longer available."); error.statusCode = 400; throw error;
   }
 
+  /* One open order per buyer per listing — on a listing with several,
+     a second "Buy" would otherwise quietly hold another unit. */
+  const [mine] = await pool.execute(
+    `SELECT 1 FROM sale_orders WHERE sales_item_id = ? AND buyer_id = ? AND status IN ('Held', 'Disputed') LIMIT 1`,
+    [itemId, buyerId]
+  );
+  if (mine.length) {
+    const error = new Error("You already have an order on this item waiting for handover. Finish or cancel that one first.");
+    error.statusCode = 400; throw error;
+  }
+
   const rules = agreedPrice != null
     ? paymentRulesFor(agreedPrice, { forceProtection: true })
     : paymentRulesFor(item.price);
@@ -331,14 +420,15 @@ async function buySalesItem(itemId, buyerId, { agreedPrice = null, beforeCommit 
   try {
     await connection.beginTransaction();
 
-    /* Conditional update = only one buyer can ever reserve the item, even
-       if two people press "Buy" at the same moment. */
-    const [reserve] = await connection.execute(
-      `UPDATE sales_items SET status = 'Reserved' WHERE id = ? AND status = 'Available'`,
-      [itemId]
-    );
-    if (reserve.affectedRows !== 1) {
-      const error = new Error("Someone else has just reserved this item."); error.statusCode = 409; throw error;
+    /* The item row is locked while units are counted, so two people
+       pressing "Buy" at the same moment can never hold more units than
+       the seller has — the second one waits, then sees what's left. */
+    const units = await lockSaleItemUnits(connection, itemId);
+    if (units.available <= 0) {
+      const error = new Error(units.quantity > 1
+        ? "Someone else has just reserved the last one."
+        : "Someone else has just reserved this item.");
+      error.statusCode = 409; throw error;
     }
 
     const [result] = await connection.execute(
@@ -352,8 +442,13 @@ async function buySalesItem(itemId, buyerId, { agreedPrice = null, beforeCommit 
 
     if (beforeCommit) await beforeCommit(connection, item);
 
-    /* The item is taken — every other open offer on it is closed. */
-    closedOffers = await closeOpenOffers(connection, "sales_item", itemId, { winnerId: buyerId });
+    /* Nothing left to buy → every other open offer on it is closed. With
+       units still left, only this buyer's own open offer is withdrawn. */
+    const statusNow = await refreshSaleItemStatus(connection, itemId);
+    closedOffers = await closeOpenOffers(connection, "sales_item", itemId, {
+      winnerId: buyerId,
+      onlyOfferer: statusNow === "Available" ? buyerId : null
+    });
 
     await connection.commit();
   } catch (error) {
@@ -438,7 +533,10 @@ async function releaseSaleOrder(orderId, sellerId, code) {
          WHERE id = ? AND status = ?`,
         [wasDisputed, wasDisputed, orderId, locked.status]
       );
-      await connection.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [order.sales_item_id]);
+      await connection.execute(
+        `UPDATE sales_items SET quantity_sold = quantity_sold + 1 WHERE id = ?`, [order.sales_item_id]
+      );
+      await refreshSaleItemStatus(connection, order.sales_item_id);
       if (wasDisputed) await resolvePartyReports(connection, order);
     } else {
       attempts = Number(locked.code_attempts) + 1;
@@ -555,10 +653,7 @@ async function cancelSaleOrder(orderId, userId) {
        WHERE id = ? AND status = ?`,
       [wasDisputed, wasDisputed, role, orderId, order.status]
     );
-    await connection.execute(
-      `UPDATE sales_items SET status = 'Available' WHERE id = ? AND status = 'Reserved'`,
-      [order.sales_item_id]
-    );
+    await refreshSaleItemStatus(connection, order.sales_item_id);
     if (wasDisputed) await resolvePartyReports(connection, order);
     await connection.commit();
   } catch (error) {
@@ -711,15 +806,16 @@ async function resolveSaleDispute(orderId, adminId, outcomeKey, note = "") {
         `UPDATE sale_orders SET dispute_outcome = 'released', dispute_resolved_at = NOW(), status = 'Released', released_at = NOW()
          WHERE id = ? AND status = 'Disputed'`, [orderId]
       );
-      await connection.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [order.sales_item_id]);
+      await connection.execute(
+        `UPDATE sales_items SET quantity_sold = quantity_sold + 1 WHERE id = ?`, [order.sales_item_id]
+      );
+      await refreshSaleItemStatus(connection, order.sales_item_id);
     } else if (outcomeKey === "refund") {
       await connection.execute(
         `UPDATE sale_orders SET dispute_outcome = 'refunded', dispute_resolved_at = NOW(), status = 'Refunded'
          WHERE id = ? AND status = 'Disputed'`, [orderId]
       );
-      await connection.execute(
-        `UPDATE sales_items SET status = 'Available' WHERE id = ? AND status = 'Reserved'`, [order.sales_item_id]
-      );
+      await refreshSaleItemStatus(connection, order.sales_item_id);
     } else {
       /* A fresh code and a fresh set of attempts — the old code may have
          been seen or half-guessed during the failed meetup. */
@@ -758,7 +854,12 @@ async function resolveSaleDispute(orderId, adminId, outcomeKey, note = "") {
   return rows[0];
 }
 
-async function markSalesItemAsSold(itemId, userId) {
+/* A sale made outside Taskify Protection (cash in person). A single item
+   is sold and leaves the marketplace. With several, it records ONE sale —
+   or every unit still free with { all: true } ("I've sold the rest") —
+   and the listing stays up until none are left. Units waiting for a
+   protected handover are never touched here. */
+async function markSalesItemAsSold(itemId, userId, { all = false } = {}) {
   const [itemRows] = await pool.execute(
     `SELECT id, seller_id, status FROM sales_items WHERE id = ? LIMIT 1`, [itemId]
   );
@@ -772,20 +873,41 @@ async function markSalesItemAsSold(itemId, userId) {
   if (Number(item.seller_id) !== Number(userId)) {
     const error = new Error("Only the seller can mark this item as sold."); error.statusCode = 403; throw error;
   }
-  if (item.status === "Sold") {
-    const error = new Error("This item is already marked as sold."); error.statusCode = 400; throw error;
-  }
-  if (item.status === "Reserved") {
-    const error = new Error("A buyer has paid for this item through Taskify Protection. Enter their handover code on the item page instead."); error.statusCode = 400; throw error;
+
+  const connection = await pool.getConnection();
+  let closedOffers = [];
+  let statusNow;
+  try {
+    await connection.beginTransaction();
+    const units = await lockSaleItemUnits(connection, itemId);
+    if (units.sold >= units.quantity) {
+      const error = new Error("This item is already marked as sold."); error.statusCode = 400; throw error;
+    }
+    if (units.available <= 0) {
+      const error = new Error(units.quantity > 1
+        ? "Every one that's left has a buyer's payment held through Taskify Protection. Enter their handover codes instead."
+        : "A buyer has paid for this item through Taskify Protection. Enter their handover code on the item page instead.");
+      error.statusCode = 400; throw error;
+    }
+
+    const count = all ? units.available : 1;
+    await connection.execute(`UPDATE sales_items SET quantity_sold = quantity_sold + ? WHERE id = ?`, [count, itemId]);
+    statusNow = await refreshSaleItemStatus(connection, itemId);
+
+    /* Offers stay open while there are still some to buy. */
+    if (statusNow !== "Available") closedOffers = await closeOpenOffers(connection, "sales_item", itemId);
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
   }
 
-  await pool.execute(`UPDATE sales_items SET status = 'Sold' WHERE id = ?`, [itemId]);
-
-  const closedOffers = await closeOpenOffers(pool, "sales_item", itemId);
   const sold = await getSalesItemById(itemId);
   await notifyClosedOffers(closedOffers, {
     contextType: "sales_item", contextId: itemId, title: sold.title,
-    reason: "the seller marked it as sold"
+    reason: statusNow === "Sold" ? "the seller marked it as sold" : "the last ones are already promised to buyers"
   });
   return sold;
 }
@@ -825,6 +947,24 @@ async function getSalesItemByIdForViewing(itemId, viewerId = null, viewerRole = 
   item.payment_rules = paymentRulesFor(item.price);
   item.my_order = await getLatestOrderForViewer(item.id, viewerId);
 
+  /* With several units the seller can have more than one buyer waiting
+     at once — every order still waiting for handover, each with its own
+     code box. (Never the codes themselves: see orderViewFor.) */
+  if (isOwner) {
+    const [openRows] = await pool.execute(
+      `SELECT so.*, buyer.full_name AS buyer_name, buyer.phone_number AS buyer_phone_number
+       FROM sale_orders so
+       INNER JOIN users buyer ON so.buyer_id = buyer.id
+       WHERE so.sales_item_id = ? AND so.status IN ('Held', 'Disputed')
+       ORDER BY so.created_at ASC, so.id ASC`,
+      [item.id]
+    );
+    item.open_orders = openRows.map(row => ({
+      ...orderViewFor(row, viewerId),
+      buyer_phone_number: row.buyer_phone_number || null
+    }));
+  }
+
   /* Phone numbers are never in public listing data — the buyer and seller
      only see each other's once a (demo) payment is held between them. */
   if (item.my_order && ["Held", "Disputed", "Released"].includes(item.my_order.status)) {
@@ -858,7 +998,10 @@ async function deleteSalesItem(itemId, userId) {
   if (Number(item.seller_id) !== Number(userId)) {
     const error = new Error("Only the seller can delete this listing."); error.statusCode = 403; throw error;
   }
-  if (item.status === "Reserved") {
+  const [openOrders] = await pool.execute(
+    `SELECT COUNT(*) AS n FROM sale_orders WHERE sales_item_id = ? AND status IN ('Held', 'Disputed')`, [itemId]
+  );
+  if (Number(openOrders[0].n) > 0) {
     const error = new Error("A buyer's payment is being held for this item. Cancel the order first, then delete the listing."); error.statusCode = 400; throw error;
   }
 

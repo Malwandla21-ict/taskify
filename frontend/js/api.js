@@ -193,6 +193,14 @@ function handleSessionExpired() {
   window.location.href = "./login.html";
 }
 
+/* The server's message, plus which fields failed validation (error.fields
+   = [{ path, msg }]) so a form can point at the exact box to fix. */
+function apiError(data) {
+  const error = new Error(data.message || "Something went wrong.");
+  error.fields = Array.isArray(data.errors) ? data.errors : [];
+  return error;
+}
+
 async function apiRequest(endpoint, method = "GET", body = null, token = null) {
   startTopLoader();
   try {
@@ -224,7 +232,7 @@ async function apiRequest(endpoint, method = "GET", body = null, token = null) {
       throw new Error("Your session has expired. Please log in again.");
     }
 
-    if (!response.ok) throw new Error(data.message || "Something went wrong.");
+    if (!response.ok) throw apiError(data);
 
     return data;
   } finally {
@@ -275,7 +283,7 @@ function apiMultipartRequest(endpoint, method, formData, token = null, { onUploa
       }
 
       if (xhr.status < 200 || xhr.status >= 300) {
-        reject(new Error(data.message || "Something went wrong."));
+        reject(apiError(data));
         return;
       }
       resolve(data);
