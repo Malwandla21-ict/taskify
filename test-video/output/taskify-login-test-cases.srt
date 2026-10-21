@@ -1,0 +1,55 @@
+1
+00:00:00,088 --> 00:00:17,263
+This video tests the login module of Taskify, the UMP student marketplace. We run five test cases on a local practice copy of the system, signed in with a registered UMP student account, and compare each actual result with the expected result.
+
+2
+00:00:17,983 --> 00:00:25,233
+Test case one: valid login. We enter the correct email address and the correct password, then click Sign In.
+
+3
+00:00:29,092 --> 00:00:39,792
+Taskify confirms the login and opens the student's dashboard. The user logged in successfully, so test case one passes. We log out before the next test.
+
+4
+00:00:45,505 --> 00:00:51,955
+Test case two: wrong password. We use the same correct email address, but type a wrong password.
+
+5
+00:00:54,165 --> 00:01:08,740
+An error message appears: invalid email or password, and the user stays on the login page. It deliberately doesn't say which one was wrong, so nobody can use it to find out who has an account. Test case two passes.
+
+6
+00:01:09,600 --> 00:01:16,125
+Test case three: empty fields. We leave both the email and the password empty, and click Sign In.
+
+7
+00:01:16,465 --> 00:01:25,940
+Validation messages appear under both fields, asking for the email and the password, and nothing is sent to the server. Test case three passes.
+
+8
+00:01:26,763 --> 00:01:37,288
+Test case four: invalid email. In the email field we type abc123, which is not an email address, and fill in a password as normal.
+
+9
+00:01:39,087 --> 00:01:47,312
+An invalid email message appears under the email field, with an example of the correct format. Test case four passes.
+
+10
+00:01:48,137 --> 00:01:57,512
+Test case five: forgot password. On the login page, we click Forgot password, enter the account's email address, and ask for a reset link.
+
+11
+00:01:59,142 --> 00:02:10,392
+Taskify confirms that a reset link has been sent. On this practice copy, emails are printed in the server's terminal instead of being sent, so we take the reset link from there.
+
+12
+00:02:13,332 --> 00:02:19,282
+The link opens the reset password page. We choose a new password, confirm it, and save.
+
+13
+00:02:22,899 --> 00:02:31,674
+Finally, we log in with the new password, and it works. The password reset process started and completed, so test case five passes.
+
+14
+00:02:33,902 --> 00:02:39,977
+All five test cases passed. That concludes the testing of the Taskify login module.

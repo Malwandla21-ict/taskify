@@ -33,10 +33,12 @@
     <div class="auth-right">
       <h1>Welcome back</h1>
       <p class="auth-subtitle">Sign in with your UMP email</p>
-      <form id="loginForm">
+      <!-- novalidate: login.js checks the fields itself and shows the
+           message under each one, instead of the browser's bubbles. -->
+      <form id="loginForm" novalidate>
         <div class="form-group">
           <label for="email"><i class="ti ti-mail" aria-hidden="true"></i> UMP Email</label>
-          <input type="email" id="email" placeholder="2023123456@ump.ac.za" required />
+          <input type="email" id="email" placeholder="202312345@ump.ac.za" required />
         </div>
         <div class="form-group">
           <label for="password"><i class="ti ti-lock" aria-hidden="true"></i> Password</label>

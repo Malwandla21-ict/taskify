@@ -37,8 +37,30 @@ if (loginForm) {
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
-    const email    = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
+    const emailInput    = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+    const email    = emailInput.value.trim();
+    const password = passwordInput.value.trim();
+
+    /* Same field-level messages as the register form, checked before
+       anything is sent, so an empty or malformed email never reaches the
+       server (and never counts as a failed login attempt). */
+    const problems = [];
+    if (!email) {
+      problems.push([emailInput, "Enter your UMP email address."]);
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      problems.push([emailInput, "Invalid email address. Use your UMP email, e.g. 202312345@ump.ac.za."]);
+    }
+    if (!password) problems.push([passwordInput, "Enter your password."]);
+
+    loginForm.querySelectorAll(".input-invalid").forEach(clearFieldError);
+    if (problems.length) {
+      problems.forEach(([target, message]) => setFieldError(target, message));
+      showMessage("");
+      focusFirstInvalid(loginForm);
+      return;
+    }
+
     const deviceToken = localStorage.getItem(trustedDeviceKey(email)) || undefined;
 
     const submitBtn = loginForm.querySelector("button[type='submit']");

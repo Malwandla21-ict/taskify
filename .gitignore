@@ -16,3 +16,11 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+# Demo account password written by backend/scripts/seed-demo-data.js
+backend/scripts/demo-data/logins.txt
+
+# Login test video: local test-account passwords, generated audio/video
+test-video/test-account.json
+test-video/audio/
+test-video/output/frames/
+test-video/output/*.mp4

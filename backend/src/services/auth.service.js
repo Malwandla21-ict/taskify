@@ -363,7 +363,8 @@ async function loginUser({ email, password, deviceToken = null, ip = null, userA
         password_hash, role, rating_average, total_reviews,
         suspension_reason, ban_reason,
         lecturer_title, years_experience, office_location, consultation_mode,
-        is_verified, totp_enabled, totp_method, token_version, failed_login_attempts, lockout_until
+        is_verified, totp_enabled, totp_method, token_version, failed_login_attempts, lockout_until,
+        has_seen_onboarding
       FROM users
       WHERE email = ?
       LIMIT 1
