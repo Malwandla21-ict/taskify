@@ -24,3 +24,9 @@ test-video/test-account.json
 test-video/audio/
 test-video/output/frames/
 test-video/output/*.mp4
+
+# Working files kept on this PC, not part of the app
+claude/
+Claude outputs/
+explainer/
+test-video/
