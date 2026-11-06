@@ -30,3 +30,4 @@ claude/
 Claude outputs/
 explainer/
 test-video/
+.claude/
